@@ -41,6 +41,7 @@ jobs:
 
     - name: Commit and Push changes
       run: |
+        git config --global user.name 'github-actions[bot]'
         git config --global user.email 'github-actions[bot]@users.noreply.github.com'
         
         # Sync data to docs/ for the dashboard
