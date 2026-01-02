@@ -3,7 +3,8 @@
     --card-bg: #161b22;
     --text-primary: #c9d1d9;
     --text-secondary: #8b949e;
-    --accent: #2ea043; /* GitHub Green */
+    --accent: #2ea043;
+    /* GitHub Green */
     --accent-glow: rgba(46, 160, 67, 0.4);
     --border: #30363d;
     --font-mono: 'JetBrains Mono', monospace;
@@ -85,7 +86,7 @@ header {
     border: 1px solid var(--border);
     border-radius: 8px;
     padding: 1.5rem;
-    box-shadow: 0 4px 6px rgba(0,0,0,0.3);
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
 }
 
 .stat-card {
@@ -107,6 +108,16 @@ header {
     color: var(--accent);
     margin-top: 0.5rem;
     text-shadow: 0 0 20px var(--accent-glow);
+    overflow-wrap: break-word;
+    /* Ensure hydration/wrapping */
+    line-height: 1.1;
+}
+
+#stat-top-mx {
+    font-size: 1.5rem;
+    /* Smaller font for domain names */
+    word-break: break-all;
+    /* Force break if still too long */
 }
 
 /* Charts Grid */
