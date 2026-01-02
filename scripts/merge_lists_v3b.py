@@ -209,7 +209,7 @@ def main() -> None:
          "https://raw.githubusercontent.com/infiniteloopltd/TempEmailDomainMXRecords/refs/heads/master/TempEmailDomainMXRecords.csv",
          parse_tempemail_mx_csv),
         ("doodad_labs_blocklist",
-         "https://raw.githubusercontent.com/doodad-labs/disposable-email-domains/master/disposable_email_blocklist.conf",
+         "https://raw.githubusercontent.com/doodad-labs/disposable-email-domains/refs/heads/main/data/domains.txt",
          parse_line_list),
     ]
 
