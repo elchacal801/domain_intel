@@ -3,11 +3,38 @@
 async function fetchData(url) {
     const response = await fetch(url);
     const data = await response.text();
-    const rows = data.split('\n').slice(1); // Skip header
-    return rows.map(row => {
-        const cols = row.split(',');
-        return cols;
-    }).filter(row => row.length > 1);
+    const rows = data.split('\n').filter(r => r.trim() !== '');
+    const header = rows.shift(); // Skip header
+    return rows.map(row => parseCSVRow(row));
+}
+
+// Robust CSV parser to handle quoted strings with commas (e.g. "Company, Inc.")
+function parseCSVRow(str) {
+    const result = [];
+    let current = '';
+    let inQuote = false;
+
+    for (let i = 0; i < str.length; i++) {
+        const char = str[i];
+        if (char === '"') {
+            inQuote = !inQuote;
+        } else if (char === ',' && !inQuote) {
+            result.push(current);
+            current = '';
+        } else {
+            current += char;
+        }
+    }
+    result.push(current);
+
+    // Clean up quotes
+    return result.map(val => {
+        val = val.trim();
+        if (val.startsWith('"') && val.endsWith('"')) {
+            return val.slice(1, -1);
+        }
+        return val;
+    });
 }
 
 function truncate(str, n) {
