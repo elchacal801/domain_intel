@@ -1,0 +1,53 @@
+name: Daily Data Update
+
+on:
+  schedule:
+    # Run at 00:00 UTC every day
+    - cron: '0 0 * * *'
+  workflow_dispatch:
+    # Allow manual trigger
+
+jobs:
+  update-intelligence:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+    - uses: actions/checkout@v3
+
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.10'
+
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
+
+    - name: 1. Update Domain Lists (Merge Sources)
+      # Fetches fresh data from upstream sources
+      run: python scripts/merge_lists_v3b.py
+
+    - name: 2. Enrich Infrastructure (MX/ASN)
+      # Resolves new domains to infrastructure
+      # Using 50 workers for speed regarding DNS
+      run: python scripts/enrich_infrastructure.py --workers 50
+
+    - name: 3. Generate Pivots (Stats)
+      # Re-calculates top providers/ASNs
+      run: python scripts/generate_pivots.py
+
+    - name: Commit and Push changes
+      run: |
+        git config --global user.name 'github-actions[bot]'
+        git config --global user.email 'github-actions[bot]@users.noreply.github.com'
+        git add data/*.csv
+        # Only commit if there are changes
+        if git diff --staged --quiet; then
+          echo "No changes to commit"
+        else
+          git commit -m "Automated Data Update: $(date +'%Y-%m-%d')"
+          git push
+        fi

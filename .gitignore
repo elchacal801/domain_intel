@@ -1,0 +1,19 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.env
+venv/
+env/
+
+# Project Data
+# We exclude the large enriched files or temporary outputs if desired, 
+# but keep the core CSVs if they are part of the 'public' repo intent.
+# Assuming the user wants to publish the finalized CSVs, we won't ignore them.
+# Ignoring only verification/test artifacts.
+test_*.csv
+
+# OS
+.DS_Store
+Thumbs.db
