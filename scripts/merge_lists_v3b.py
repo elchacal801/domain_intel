@@ -208,6 +208,9 @@ def main() -> None:
         ("tempemail_mxrecords_csv",
          "https://raw.githubusercontent.com/infiniteloopltd/TempEmailDomainMXRecords/refs/heads/master/TempEmailDomainMXRecords.csv",
          parse_tempemail_mx_csv),
+        ("doodad_labs_blocklist",
+         "https://raw.githubusercontent.com/doodad-labs/disposable-email-domains/master/disposable_email_blocklist.conf",
+         parse_line_list),
     ]
 
     # ---- Allowlist source (separate output) ----
