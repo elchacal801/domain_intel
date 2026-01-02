@@ -41,9 +41,13 @@ jobs:
 
     - name: Commit and Push changes
       run: |
-        git config --global user.name 'github-actions[bot]'
         git config --global user.email 'github-actions[bot]@users.noreply.github.com'
-        git add data/*.csv
+        
+        # Sync data to docs/ for the dashboard
+        mkdir -p docs/data
+        cp data/*.csv docs/data/
+        
+        git add data/*.csv docs/data/*.csv
         # Only commit if there are changes
         if git diff --staged --quiet; then
           echo "No changes to commit"

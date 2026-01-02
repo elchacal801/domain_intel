@@ -7,7 +7,11 @@ The goal of this project is to move beyond simple static blocklists and provide 
 > [!NOTE]
 > This repository **updates itself automatically** every day via GitHub Actions. The data in `data/` is always current.
 
-## 📂 Project Structure
+## � Live Dashboard
+View the real-time threat intelligence visualization:
+> **[👉 View Live Dashboard](https://elchacal801.github.io/domain_intel/)**
+
+## �📂 Project Structure
 
 *   **`data/`**: The authoritative source for domain lists and derived intelligence.
     *   `dea_domains.csv`: The strict list of disposable provider domains.

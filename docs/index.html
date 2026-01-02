@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Domain Intel | Threat Dashboard</title>
+    <link rel="stylesheet" href="styles.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&family=Inter:wght@400;600&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <div class="logo">
+                <span class="icon">🛡️</span>
+                <h1>DOMAIN INTEL <span class="badge">LIVE</span></h1>
+            </div>
+            <p class="subtitle">Real-time Disposable & Abuse Infrastructure Tracking</p>
+            <div class="meta">
+                <span id="last-updated">Updated: Loading...</span>
+                <a href="https://github.com/elchacal801/domain_intel" class="github-link">View Repo</a>
+            </div>
+        </header>
+
+        <div class="stats-grid">
+            <div class="card stat-card">
+                <h3>Total Disposable Domains</h3>
+                <div class="big-number" id="stat-total-dea">...</div>
+            </div>
+            <div class="card stat-card">
+                <h3>Active Abuse ASNs</h3>
+                <div class="big-number" id="stat-total-asn">...</div>
+            </div>
+            <div class="card stat-card">
+                <h3>Top Mail Provider</h3>
+                <div class="big-number" id="stat-top-mx">...</div>
+            </div>
+        </div>
+
+        <div class="charts-grid">
+            <div class="card chart-card">
+                <h3>Top 10 Abuse Hosting Providers (ASNs)</h3>
+                <canvas id="asnChart"></canvas>
+            </div>
+            <div class="card chart-card">
+                <h3>Top 10 Disposable MX Providers</h3>
+                <canvas id="mxChart"></canvas>
+            </div>
+        </div>
+
+        <footer>
+            <p>Data generated daily by <a href="https://github.com/elchacal801/domain_intel">Domain Intel Pipeline</a>.</p>
+        </footer>
+    </div>
+    <script src="app.js"></script>
+</body>
+</html>
