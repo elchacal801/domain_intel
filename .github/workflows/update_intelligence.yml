@@ -28,7 +28,7 @@ jobs:
 
     - name: 1. Update Domain Lists (Merge Sources)
       # Fetches fresh data from upstream sources
-      run: python scripts/merge_lists_v3b.py
+      run: python scripts/merge_lists_v3b.py --include-stopforumspam
 
     - name: 2. Enrich Infrastructure (MX/ASN)
       # Resolves new domains to infrastructure

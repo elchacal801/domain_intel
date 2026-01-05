@@ -164,8 +164,8 @@ def main() -> None:
                     help="Include deviceandbrowserinfo disposable API")
     ap.add_argument("--device-mode", choices=["dea", "high"], default="dea",
                     help="Where to place deviceandbrowserinfo domains")
-    ap.add_argument("--no-allowlist-filter", action="store_true",
-                    help="Do NOT subtract allowlist from DEA/high-abuse outputs (not recommended)")
+    ap.add_argument("--filter-allowlist", action="store_true",
+                    help="Subtract allowlist from DEA/high-abuse outputs (default: False)")
 
     args = ap.parse_args()
 
@@ -274,13 +274,13 @@ def main() -> None:
     write_csv(allow, args.allow_out)
     log(f"[*] Wrote allowlist CSV: {args.allow_out}")
 
-    # Apply allowlist filtering unless disabled
-    if not args.no_allowlist_filter:
+    # Apply allowlist filtering only if requested
+    if args.filter_allowlist:
         dea_before = len(dea)
         dea -= allow
         log(f"[*] DEA after allowlist filter: {len(dea)}  (removed {dea_before - len(dea)})")
     else:
-        log("[*] NOTE: Allowlist filtering disabled (--no-allowlist-filter).")
+        log("[*] NOTE: Allowlist filtering disabled (default). Use --filter-allowlist to enable.")
 
     # Write DEA output
     write_csv(dea, args.dea_out)
@@ -298,7 +298,7 @@ def main() -> None:
 
     # keep tiers clean: remove DEA overlap; also remove allowlist unless disabled
     high -= dea
-    if not args.no_allowlist_filter:
+    if args.filter_allowlist:
         high -= allow
 
     log(f"[*] High-abuse total (deduped, minus DEA & allowlist): {len(high)}")
