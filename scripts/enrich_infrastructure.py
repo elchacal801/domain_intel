@@ -21,7 +21,8 @@ import dns.resolver
 import dns.reversename
 import socket
 import time
-from concurrent.futures import ThreadPoolExecutor, as_completed
+import functools
+from concurrent.futures import ThreadPoolExecutor
 from typing import Dict, List, Optional, Tuple
 from tqdm import tqdm
 
@@ -154,7 +155,7 @@ def main():
     parser = argparse.ArgumentParser(description="Enrich domains with MX/Infrastructure data.")
     parser.add_argument("--input", default="data/dea_domains.csv", help="Input CSV path")
     parser.add_argument("--output", default="data/dea_domains_enriched.csv", help="Output CSV path")
-    parser.add_argument("--workers", type=int, default=20, help="Concurrency level")
+    parser.add_argument("--workers", type=int, default=50, help="Concurrency level")
     parser.add_argument("--limit", type=int, default=0, help="Limit number of domains (for testing)")
     
     args = parser.parse_args()
@@ -200,16 +201,14 @@ def main():
     
     results = []
     
+    # Use partial to pass the fixed resolver argument
+    process_func = functools.partial(process_domain, resolver_factory=resolver)
+
     with ThreadPoolExecutor(max_workers=args.workers) as executor:
-        future_to_domain = {executor.submit(process_domain, d, resolver): d for d in domains}
-        
-        for future in tqdm(as_completed(future_to_domain), total=len(domains), unit="dom"):
-            try:
-                data = future.result()
-                results.append(data)
-            except Exception as e:
-                # Should be caught inside process_domain, but just in case
-                pass
+        # map is cleaner and more memory efficient than creating {{futures}} dict
+        iterator = executor.map(process_func, domains)
+        for res in tqdm(iterator, total=len(domains), unit="dom"):
+             results.append(res)
 
     # Write output
     headers = ["domain", "primary_mx", "mx_ip", "asn", "asn_name", "bgp_prefix", "cc", "registry", "mx_records", "error"]

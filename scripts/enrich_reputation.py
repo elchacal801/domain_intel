@@ -8,6 +8,7 @@ Adds reputation and age data to domains.
 
 Input: CSV with 'domain'
 Output: CSV with 'is_rbl_listed', 'creation_date', 'domain_age_days'
+Optimized: Higher concurrency with ThreadPoolExecutor map.
 """
 
 import argparse
@@ -16,7 +17,7 @@ import dns.resolver
 import requests
 import time
 import datetime
-from concurrent.futures import ThreadPoolExecutor, as_completed
+from concurrent.futures import ThreadPoolExecutor
 from typing import Dict, List, Optional
 from tqdm import tqdm
 
@@ -28,12 +29,7 @@ RBLS = [
 
 def check_rbl(domain: str, resolver) -> List[str]:
     """Returns list of RBLs the domain (or its IP) is listed in."""
-    # RBLs usually check IPs, but some check domains (DBL).
-    # For now, we'll try DBL for domains, or resolve IP and check IP RBLs.
-    # Spamhaus DBL is dbl.spamhaus.org.
-    
     hits = []
-    
     # 1. Domain Block List (DBL) check
     try:
         q = f"{domain}.dbl.spamhaus.org"
@@ -41,7 +37,6 @@ def check_rbl(domain: str, resolver) -> List[str]:
         hits.append("spamhaus_dbl")
     except Exception:
         pass
-
     return hits
 
 def get_rdap_age(domain: str) -> Dict[str, str]:
@@ -73,15 +68,10 @@ def get_rdap_age(domain: str) -> Dict[str, str]:
                 res["creation_date"] = dt.strftime("%Y-%m-%d")
                 delta = datetime.datetime.now() - dt
                 res["age_days"] = str(delta.days)
-    except Exception as e:
+    except Exception:
         pass
     
     return res
-
-def process_chunk(domains: List[Dict]):
-    # This function is not used if we use futures per domain, 
-    # but useful if we batch. We'll do per-domain for simplicity.
-    pass
 
 def process_one(row: Dict) -> Dict:
     resolver = dns.resolver.Resolver()
@@ -109,26 +99,38 @@ def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--input", default="data/dea_domains_enriched.csv")
     ap.add_argument("--output", default="data/dea_domains_reputation.csv")
-    ap.add_argument("--workers", type=int, default=10) 
+    ap.add_argument("--workers", type=int, default=50) 
     args = ap.parse_args()
     
     rows = []
-    with open(args.input, "r", encoding="utf-8") as f:
-        reader = csv.DictReader(f)
-        for r in reader:
-            rows.append(r)
+    try:
+        with open(args.input, "r", encoding="utf-8") as f:
+            reader = csv.DictReader(f)
+            rows = list(reader)
+            fieldnames = reader.fieldnames if reader.fieldnames else []
+    except FileNotFoundError:
+        print("[!] Input file not found.")
+        return
             
     # Add new headers
-    fieldnames = reader.fieldnames + ["rbl_hits", "creation_date", "age_days"]
+    new_cols = ["rbl_hits", "creation_date", "age_days"]
+    for c in new_cols:
+        if c not in fieldnames:
+            fieldnames.append(c)
     
-    print(f"[*] Processing {len(rows)} domains for reputation/age...")
+    print(f"[*] Processing {len(rows)} domains for reputation/age with {args.workers} workers...")
     
     results = []
+    # Use map instead of submitting futures to a list to save memory
     with ThreadPoolExecutor(max_workers=args.workers) as exe:
-        futures = {exe.submit(process_one, r.copy()): r for r in rows}
+        # map is lazy-ish, but for lists it might consume. 
+        # However, it yields results in order, which is nice.
+        # We wrap in list() to consume all, or iterate.
+        iterator = exe.map(process_one, rows)
         
-        for fut in tqdm(as_completed(futures), total=len(rows)):
-            results.append(fut.result())
+        # Wrap with tqdm for progress
+        for res in tqdm(iterator, total=len(rows)):
+            results.append(res)
             
     with open(args.output, "w", newline="", encoding="utf-8") as f:
         writer = csv.DictWriter(f, fieldnames=fieldnames)
