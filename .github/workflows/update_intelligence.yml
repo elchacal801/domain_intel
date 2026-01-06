@@ -35,9 +35,20 @@ jobs:
       # Using 50 workers for speed regarding DNS
       run: python scripts/enrich_infrastructure.py --workers 50
 
-    - name: 3. Generate Pivots (Stats)
-      # Re-calculates top providers/ASNs
-      run: python scripts/generate_pivots.py
+    - name: 3. Enrich Reputation (RBL/RDAP)
+      # Check Spamhaus/RDAP age
+      run: python scripts/enrich_reputation.py --input data/dea_domains_enriched.csv --output data/dea_domains_reputation.csv
+
+    - name: 4. Web Probe (Active Fingerprint)
+      # HTTP Grabbing (from Azure IP)
+      run: python scripts/probe_web.py --input data/dea_domains_reputation.csv --output data/dea_domains_probed.csv
+
+    - name: 5. Generate Pivots (Stats)
+      # Re-calculates top providers/ASNs using the fullest dataset
+      run: python scripts/generate_pivots.py --input data/dea_domains_probed.csv
+
+    - name: 6. Export CTI (STIX 2.1)
+      run: python scripts/export_stix.py --input data/dea_domains_probed.csv
 
     - name: Commit and Push changes
       run: |
@@ -47,8 +58,9 @@ jobs:
         # Sync data to docs/ for the dashboard
         mkdir -p docs/data
         cp data/*.csv docs/data/
+        cp data/*.json docs/data/
         
-        git add data/*.csv docs/data/*.csv
+        git add data/*.csv docs/data/*.csv docs/data/*.json
         # Only commit if there are changes
         if git diff --staged --quiet; then
           echo "No changes to commit"

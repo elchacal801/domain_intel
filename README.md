@@ -16,14 +16,20 @@ View the real-time threat intelligence visualization:
 *   **`data/`**: The authoritative source for domain lists and derived intelligence.
     *   `dea_domains.csv`: The strict list of disposable provider domains.
     *   `high_abuse_domains.csv`: Domains linked to spam/abuse but not strictly disposable.
-    *   `dea_domains_enriched.csv`: The fully enriched dataset (MX, IP, ASN).
-    *   `mx_counts.csv`: Analysis of top Mail Exchange providers used by these domains.
+    *   `dea_domains_enriched.csv`: Enriched with DNS/MX infrastructure.
+    *   `dea_domains_reputation.csv`: Added RBL status and Domain Age (creation date).
+    *   `dea_domains_probed.csv`: Active HTTP/S fingerprint data (titles, server headers).
+    *   `domain_intel_bundle.json`: STIX 2.1 CTI Bundle for ingestion into Threat Intelligence Platforms.
+    *   `mx_counts.csv`: Analysis of top Mail Exchange providers.
     *   `risky_asn_list.csv`: Autonomous Systems hosting high concentrations of abuse domains.
-*   **`scripts/`**: The Python pipeline to reproduce my work.
+*   **`scripts/`**: The Python pipeline.
     *   `merge_lists_v3b.py`: Aggregates and cleans public sources.
     *   `enrich_infrastructure.py`: Performs bulk DNS/ASN resolution.
+    *   `enrich_reputation.py`: Checks RBLs and queries RDAP for domain age.
+    *   `probe_web.py`: Performs active HTTP/S fingerprinting (simulating visiting the site).
     *   `generate_pivots.py`: Generates the intelligence pivot datasets.
-*   **`docs/`**: Documentation and methodology.
+    *   `export_stix.py`: Exports intelligence to STIX 2.1 JSON.
+*   **`docs/`**: Documentation and dashboard.
     *   `detection_logic.md`: Vendor-agnostic logic for using this data in detection engineering.
 
 ## 🚀 Getting Started
