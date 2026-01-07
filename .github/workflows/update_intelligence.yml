@@ -60,9 +60,12 @@ jobs:
         # Sync data to docs/ for the dashboard
         mkdir -p docs/data
         cp data/*.csv docs/data/
-        cp data/*.json docs/data/
         
-        git add data/*.csv docs/data/*.csv docs/data/*.json
+        # Compress the heavy STIX bundle (exceeds 100MB)
+        gzip -f data/domain_intel_bundle.json
+        cp data/*.json.gz docs/data/
+        
+        git add data/*.csv docs/data/*.csv data/*.json.gz docs/data/*.json.gz
         # Only commit if there are changes
         if git diff --staged --quiet; then
           echo "No changes to commit"
