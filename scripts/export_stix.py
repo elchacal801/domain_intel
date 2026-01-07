@@ -24,7 +24,7 @@ def get_timestamp():
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--input", default="data/dea_domains_enriched.csv", help="Last enriched CSV")
-    ap.add_argument("--output", default="docs/data/domain_intel_bundle.json")
+    ap.add_argument("--output", default="data/domain_intel_bundle.json")
     args = ap.parse_args()
     
     print(f"[*] Reading {args.input}...")
