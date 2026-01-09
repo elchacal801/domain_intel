@@ -49,7 +49,14 @@ jobs:
       # Re-calculates top providers/ASNs using the fullest dataset
       run: python scripts/generate_pivots.py --input data/dea_domains_probed.csv
 
-    - name: 6. Export CTI (STIX 2.1)
+    - name: 6. Infrastructure Intel (ASN/VPN/Tor)
+      # Fetches & Enriches suspicious infrastructure lists
+      run: |
+        python scripts/asn_intel.py
+        python scripts/vpn_intel.py
+        python scripts/tor_intel.py
+
+    - name: 7. Export CTI (STIX 2.1)
       run: python scripts/export_stix.py --input data/dea_domains_probed.csv
 
     - name: Commit and Push changes
