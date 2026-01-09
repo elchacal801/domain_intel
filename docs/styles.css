@@ -73,6 +73,61 @@ header {
     text-decoration: underline;
 }
 
+/* Briefing Card */
+.briefing-card {
+    margin-bottom: 2rem;
+    border-left: 4px solid var(--accent);
+    background: linear-gradient(to right, rgba(46, 160, 67, 0.05), transparent);
+}
+
+.briefing-header {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    margin-bottom: 1rem;
+}
+
+.briefing-header h2 {
+    margin: 0;
+    font-family: var(--font-mono);
+    font-size: 1.5rem;
+    color: var(--text-primary);
+}
+
+.briefing-text {
+    font-size: 1.1rem;
+    line-height: 1.6;
+    margin-bottom: 1.5rem;
+    color: var(--text-primary);
+}
+
+.briefing-details {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 2rem;
+    padding-top: 1rem;
+    border-top: 1px solid var(--border);
+}
+
+.briefing-col h4 {
+    margin-top: 0;
+    margin-bottom: 0.8rem;
+    color: var(--text-secondary);
+    text-transform: uppercase;
+    font-size: 0.85rem;
+    letter-spacing: 1px;
+}
+
+.briefing-col ul {
+    margin: 0;
+    padding-left: 1.2rem;
+}
+
+.briefing-col li {
+    margin-bottom: 0.5rem;
+    color: var(--text-primary);
+}
+
 /* Stats Grid */
 .stats-grid {
     display: grid;
@@ -125,6 +180,7 @@ header {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(500px, 1fr));
     gap: 1.5rem;
+    margin-bottom: 2rem;
 }
 
 .chart-card h3 {

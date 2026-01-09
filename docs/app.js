@@ -46,6 +46,27 @@ async function initDashboard() {
     document.getElementById('last-updated').textContent = `Updated: ${new Date().toLocaleDateString()}`;
 
     try {
+        // --- 0. Load AI Briefing ---
+        try {
+            const briefingResp = await fetch('data/daily_briefing.json');
+            if (briefingResp.ok) {
+                const b = await briefingResp.json();
+
+                document.getElementById('briefing-container').style.display = 'block';
+                document.getElementById('briefing-headline').textContent = b.headline || "Daily Intelligence Briefing";
+                document.getElementById('briefing-date').textContent = b.date || new Date().toISOString().split('T')[0];
+                document.getElementById('briefing-summary').textContent = b.summary || "No summary available.";
+
+                const riskList = document.getElementById('briefing-risks');
+                riskList.innerHTML = (b.key_risks || []).map(r => `<li>${r}</li>`).join('');
+
+                const actionList = document.getElementById('briefing-actions');
+                actionList.innerHTML = (b.action_items || []).map(a => `<li>${a}</li>`).join('');
+            }
+        } catch (e) {
+            console.log("No briefing found or JSON error", e);
+        }
+
         // --- 1. Load ASN Counts ---
         const asnData = await fetchData('data/asn_counts.csv');
         // Format: asn, asn_name, domain_count
