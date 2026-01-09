@@ -3,7 +3,12 @@
 export_stix.py
 
 Converts enriched CSV data into STIX 2.1 JSON bundle.
-Optimized for performance: Streams output JSON to handle large datasets (200k+).
+Now supports:
+- Enriched Domains (dea_domains_enriched.csv)
+- Suspicious ASNs (suspicious_asns.csv)
+- VPN/VPS ASNs (vpn_asns.csv)
+- Tor ASNs (tor_asns.csv)
+- Tor Exit Nodes (tor_nodes.csv)
 """
 
 import argparse
@@ -11,6 +16,7 @@ import csv
 import json
 import uuid
 import datetime
+import os
 import sys
 
 # Constants for STIX
@@ -18,38 +24,114 @@ IDENTITY_UUID = uuid.uuid5(uuid.NAMESPACE_DNS, "domain_intel_github_action")
 IDENTITY_ID = f"identity--{IDENTITY_UUID}"
 
 def get_timestamp():
-    # STIX 2.1 requires UTC timestamps
     return datetime.datetime.now(datetime.timezone.utc).strftime("%Y-%m-%dT%H:%M:%S.%fZ")
 
-def main():
-    ap = argparse.ArgumentParser()
-    ap.add_argument("--input", default="data/dea_domains_enriched.csv", help="Last enriched CSV")
-    ap.add_argument("--output", default="data/domain_intel_bundle.json")
-    args = ap.parse_args()
+def write_indicator(out, value, indicator_type, labels, name, description=""):
+    """Helper to write a single STIX indicator to the open file handle."""
     
-    print(f"[*] Reading {args.input}...")
-    try:
-        # Check file line count first for progress (optional, but helpful)
-        total_lines = 0
-        with open(args.input, "r", encoding="utf-8") as f:
-            total_lines = sum(1 for _ in f) - 1 # minus header
-    except FileNotFoundError:
-        print("[!] Input file not found.")
+    # Determine Pattern
+    if indicator_type == "domain-name":
+        pattern = f"[domain-name:value = '{value}']"
+    elif indicator_type == "autonomous-system":
+        # Ensure 'AS' prefix is handled or not, STIX usually expects number, 
+        # but the pattern standard is [autonomous-system:number = 12345]
+        # value input usually "AS12345". STIX spec says 'number' is integer.
+        # But 'value' checking is complex. Let's assume passed value is safe or handle it.
+        # Actually simplest pattern for AS is: [autonomous-system:number = 12345]
+        # We need to strip 'AS' if present.
+        clean_asn = value.upper().replace("AS", "")
+        if not clean_asn.isdigit():
+            return # Skip invalid
+        pattern = f"[autonomous-system:number = {clean_asn}]"
+    elif indicator_type == "ipv4-addr":
+        pattern = f"[ipv4-addr:value = '{value}']"
+    else:
         return
 
-    print(f"[*] Streaming STIX conversion for ~{total_lines} records to {args.output}...")
+    # ID generation
+    ind_id = f"indicator--{uuid.uuid5(uuid.NAMESPACE_DNS, pattern)}"
+    
+    obj = {
+        "type": "indicator",
+        "spec_version": "2.1",
+        "id": ind_id,
+        "created": get_timestamp(),
+        "modified": get_timestamp(),
+        "name": name,
+        "description": description,
+        "pattern": pattern,
+        "pattern_type": "stix",
+        "valid_from": get_timestamp(),
+        "labels": labels,
+        "created_by_ref": IDENTITY_ID
+    }
+    
+    out.write(',\n')
+    json.dump(obj, out, indent=4)
 
-    # Open output file
+def process_file(out, filepath, kind, base_labels):
+    """Generic CSV processor."""
+    if not os.path.exists(filepath):
+        print(f"[!] Skipping {filepath} (Not Found)")
+        return
+
+    print(f"[*] Processing {kind} from {filepath}...")
+    try:
+        with open(filepath, "r", encoding="utf-8") as f:
+            reader = csv.DictReader(f)
+            count = 0
+            for row in reader:
+                if kind == "domain":
+                    val = row.get("domain")
+                    if val:
+                        labels = base_labels + ["suspicious-domain"]
+                        write_indicator(out, val, "domain-name", labels, f"Suspicious Domain: {val}")
+                        count += 1
+
+                elif kind == "asn":
+                    val = row.get("ASN", row.get("asn"))
+                    name = row.get("Name", row.get("asn_name", "Unknown"))
+                    if val:
+                        labels = base_labels
+                        desc = f"Suspicious ASN: {val} ({name})"
+                        write_indicator(out, val, "autonomous-system", labels, desc, desc)
+                        count += 1
+                
+                elif kind == "ip":
+                    val = row.get("IP", row.get("ip"))
+                    if val:
+                        labels = base_labels
+                        desc = f"Suspicious IP: {val} (Tor Exit)"
+                        write_indicator(out, val, "ipv4-addr", labels, desc, desc)
+                        count += 1
+                        
+            print(f"    - Added {count} indicators.")
+    except Exception as e:
+        print(f"[!] Error processing {filepath}: {e}")
+
+def main():
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--input", default="data/dea_domains_enriched.csv", help="Main Domain Input")
+    parser.add_argument("--output", default="data/domain_intel_bundle.json")
+    # Optional overrides for other files
+    parser.add_argument("--suspicious-asns", default="data/suspicious_asns.csv")
+    parser.add_argument("--vpn-asns", default="data/vpn_asns.csv")
+    parser.add_argument("--tor-nodes", default="data/tor_nodes.csv")
+    parser.add_argument("--tor-asns", default="data/tor_asns.csv")
+    
+    args = parser.parse_args()
+    
+    print(f"[*] Starting STIX Export to {args.output}...")
+
     with open(args.output, "w", encoding="utf-8") as out:
-        # Write Bundle Header
+        # Bundle Header
         bundle_id = f"bundle--{uuid.uuid4()}"
         out.write('{\n')
         out.write(f'  "type": "bundle",\n')
         out.write(f'  "id": "{bundle_id}",\n')
         out.write('  "objects": [\n')
 
-        # Write Identity Object
-        # We write it manually to control comma placement easily
+        # Identity
         identity_obj = {
             "type": "identity",
             "spec_version": "2.1",
@@ -60,59 +142,28 @@ def main():
             "identity_class": "system",
             "description": "Automated Domain Intelligence GitHub Action/Bot"
         }
-        
         json.dump(identity_obj, out, indent=4)
         
-        # Track if we need a comma
-        first_item = False 
+        # Process Domains (Main Input)
+        process_file(out, args.input, "domain", ["malicious-activity", "anomalous-activity"])
         
-        # Process CSV
-        with open(args.input, "r", encoding="utf-8") as f:
-            reader = csv.DictReader(f)
-            
-            count = 0
-            for row in reader:
-                domain = row.get("domain")
-                if not domain: continue
+        # Process Suspicious ASNs
+        process_file(out, args.suspicious_asns, "asn", ["malicious-activity", "hosting-provider"])
+        
+        # Process VPN ASNs
+        process_file(out, args.vpn_asns, "asn", ["anonymization", "vpn-provider"])
+        
+        # Process Tor ASNs
+        process_file(out, args.tor_asns, "asn", ["anonymization", "tor-network"])
+        
+        # Process Tor Nodes
+        process_file(out, args.tor_nodes, "ip", ["anonymization", "tor-exit"])
 
-                # Always add comma before next item (since Identity was first)
-                out.write(',\n')
-                
-                # Create Indicator Object
-                # Deterministic ID based on domain to avoid dups if run multiple times (optional, but good practice)
-                # Using random UUID for now to be safe/simple, or v5 with namespace?
-                # Let's use v5 for stability between runs if needed, but random is faster/easier logic.
-                # Actually, STIX requires ID uniqueness. v5 is better for deduplication.
-                ind_id = f"indicator--{uuid.uuid5(uuid.NAMESPACE_DNS, domain)}"
-                
-                # Check for other attributes to enrich labels
-                labels = ["malicious-activity", "anomalous-activity"]
-                
-                indicator_obj = {
-                    "type": "indicator",
-                    "spec_version": "2.1",
-                    "id": ind_id,
-                    "created": get_timestamp(),
-                    "modified": get_timestamp(),
-                    "name": f"Suspicious Domain: {domain}",
-                    "pattern": f"[domain-name:value = '{domain}']",
-                    "pattern_type": "stix",
-                    "valid_from": get_timestamp(),
-                    "labels": labels,
-                    "created_by_ref": IDENTITY_ID
-                }
-                
-                json.dump(indicator_obj, out, indent=4)
-                count += 1
-                
-                if count % 10000 == 0:
-                    print(f"[*] Processed {count}...", end='\r')
-
-        # Close JSON structure
+        # Close Bundle
         out.write('\n  ]\n')
         out.write('}\n')
 
-    print(f"\n[*] Done. Wrote {count} indicators to {args.output}")
+    print("[*] STIX Export Complete.")
 
 if __name__ == "__main__":
     main()
