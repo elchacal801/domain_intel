@@ -2,90 +2,75 @@
 """
 enrich_infrastructure.py
 
-Enriches a list of domains with infrastructure intelligence:
-1. Validates domain
-2. Resolves MX records (Mail Exchange)
-3. Resolves the Primary MX's IP address (A record)
-4. Enriches IP with ASN data via Team Cymru's DNS service
+High-performance domain enrichment using AsyncIO.
+Resolves MX, A, and ASN records for thousands of domains concurrently.
 
-Input: CSV with a 'domain' column (defaults to dea_domains.csv)
-Output: CSV with added infrastructure columns (defaults to dea_domains_enriched.csv)
-
-Usage:
-  python enrich_infrastructure.py --input dea_domains.csv --output dea_domains_enriched.csv --workers 50
+Architecture:
+- Async Producer-Consumer pattern (or massive gather with Semaphore)
+- dns.asyncresolver for non-blocking DNS
+- Team Cymru IP-to-ASN mapping
 """
 
 import argparse
 import csv
+import asyncio
+import dns.asyncresolver
 import dns.resolver
 import dns.reversename
-import socket
-import time
-import functools
-from concurrent.futures import ThreadPoolExecutor
-from typing import Dict, List, Optional, Tuple
-from tqdm import tqdm
+import sys
+import os
+from typing import Dict, List, Tuple
+from tqdm.asyncio import tqdm_asyncio
 
 # Constants
 CYMRU_ASN_SUFFIX = "origin.asn.cymru.com"
-DEFAULT_TIMEOUT = 5.0
-DEFAULT_LIFETIME = 10.0
+DEFAULT_TIMEOUT = 4.0
+DEFAULT_LIFETIME = 8.0
+MAX_CONCURRENCY = 1000 # Default connections
 
-class InfrastructureResolver:
-    def __init__(self, nameservers: Optional[List[str]] = None):
-        self.resolver = dns.resolver.Resolver()
+class AsyncResolver:
+    def __init__(self, nameservers: List[str] = None):
+        self.resolver = dns.asyncresolver.Resolver()
         if nameservers:
             self.resolver.nameservers = nameservers
-        else:
-            # Use reliable public DNS for reproducibility if local is flaky, 
-            # though default local resolver is usually best.
-            # Using Google/Cloudflare can sometimes hit rate limits on detailed lookups.
-            # We'll stick to system default but set timeouts.
-            pass
-            
+        
         self.resolver.timeout = DEFAULT_TIMEOUT
         self.resolver.lifetime = DEFAULT_LIFETIME
 
-    def resolve_mx(self, domain: str) -> List[Tuple[int, str]]:
+    async def resolve_mx(self, domain: str) -> List[Tuple[int, str]]:
         """Returns sorted list of (priority, hostname) tuples."""
         try:
-            answers = self.resolver.resolve(domain, 'MX')
-            # Sort by priority
+            answers = await self.resolver.resolve(domain, 'MX')
             records = sorted([(r.preference, str(r.exchange).strip('.')) for r in answers], key=lambda x: x[0])
             return records
         except Exception:
             return []
 
-    def resolve_a(self, hostname: str) -> Optional[str]:
+    async def resolve_a(self, hostname: str) -> str:
         """Returns the first A record IP address."""
+        if not hostname: return ""
         try:
-            answers = self.resolver.resolve(hostname, 'A')
+            answers = await self.resolver.resolve(hostname, 'A')
             for r in answers:
                 return r.to_text()
         except Exception:
-            return None
-        return None
+            return ""
+        return ""
 
-    def resolve_asn(self, ip_address: str) -> Dict[str, str]:
+    async def resolve_asn(self, ip_address: str) -> Dict[str, str]:
         """
-        Resolves ASN info using Team Cymru IP-to-ASN DNS service.
-        Query: reversed_ip.origin.asn.cymru.com TXT
-        Response: "ASN | CIDR | CC | REGISTRY | ALLOC_DATE"
+        Resolves ASN using Team Cymru DNS Interface.
         """
         if not ip_address:
             return {}
             
         try:
             rev_name = dns.reversename.from_address(ip_address)
-            # from_address gives "4.3.2.1.in-addr.arpa."
-            # We need "4.3.2.1.origin.asn.cymru.com"
-            # Extract just the reversed numbers
             reversed_ip = str(rev_name).lower().replace('.in-addr.arpa.', '')
             query = f"{reversed_ip}.{CYMRU_ASN_SUFFIX}"
             
-            answers = self.resolver.resolve(query, 'TXT')
+            answers = await self.resolver.resolve(query, 'TXT')
             for r in answers:
-                # Text usually looks like "15169 | 8.8.8.0/24 | US | arin | 2000-03-30"
                 txt = r.to_text().strip('"')
                 parts = [p.strip() for p in txt.split('|')]
                 if len(parts) >= 1:
@@ -99,130 +84,135 @@ class InfrastructureResolver:
             pass
         return {}
 
-def process_domain(domain: str, resolver_factory) -> Dict:
-    # Create a resolver instance per thread if needed, or share thread-safe one.
-    # dns.resolver.Resolver is generally thread-safe for queries if not modifying config.
-    resolver = resolver_factory
-    
-    result = {
-        "domain": domain,
-        "mx_records": "",
-        "primary_mx": "",
-        "mx_ip": "",
-        "asn": "",
-        "asn_name": "", # Team Cymru basic query doesn't give name, usually requires another lookup (AS description)
-        "bgp_prefix": "",
-        "cc": "",
-        "error": ""
-    }
+    async def resolve_asn_name(self, asn: str) -> str:
+        """
+        Optional: Start separate query for ASN name if needed.
+        Query: AS<ASN>.asn.cymru.com TXT
+        """
+        if not asn: return ""
+        try:
+            query = f"AS{asn}.asn.cymru.com"
+            answers = await self.resolver.resolve(query, 'TXT')
+            for r in answers:
+                txt = r.to_text().strip('"')
+                parts = [p.strip() for p in txt.split('|')]
+                # "15169 | US | arin | 2000-03-30 | GOOGLE"
+                if len(parts) >= 5:
+                    return parts[4]
+        except Exception:
+            pass
+        return ""
 
-    try:
-        # 1. MX
-        mxs = resolver.resolve_mx(domain)
-        if mxs:
-            result["mx_records"] = ";".join([f"{p} {h}" for p, h in mxs])
-            result["primary_mx"] = mxs[0][1] # Lowest preference
-            
-            # 2. IP of Primary MX
-            ip = resolver.resolve_a(result["primary_mx"])
-            if ip:
+async def process_domain(sem: asyncio.Semaphore, resolver: AsyncResolver, domain: str) -> Dict:
+    async with sem:
+        result = {
+            "domain": domain,
+            "mx_records": "",
+            "primary_mx": "",
+            "mx_ip": "",
+            "asn": "",
+            "asn_name": "",
+            "bgp_prefix": "",
+            "cc": "",
+            "registry": "",
+            "error": ""
+        }
+        
+        try:
+            # 1. Resolve MX
+            mxs = await resolver.resolve_mx(domain)
+            if mxs:
+                result["mx_records"] = ";".join([f"{p} {h}" for p, h in mxs])
+                result["primary_mx"] = mxs[0][1]
+                
+                # 2. Resolve A Record of Primary MX
+                ip = await resolver.resolve_a(result["primary_mx"])
                 result["mx_ip"] = ip
                 
-                # 3. ASN of IP
-                asn_data = resolver.resolve_asn(ip)
-                result.update(asn_data)
-                
-                # Optional: Resolve ASN Name? 
-                # (Requires "AS<ASN>.asn.cymru.com" TXT query)
-                if asn_data.get("asn"):
-                    try:
-                        as_query = f"AS{asn_data['asn']}.asn.cymru.com"
-                        as_answers = resolver.resolver.resolve(as_query, 'TXT')
-                        for r in as_answers:
-                            # "15169 | US | arin | 2000-03-30 | GOOGLE"
-                            parts = [p.strip() for p in r.to_text().strip('"').split('|')]
-                            if len(parts) >= 5:
-                                result["asn_name"] = parts[4]
-                    except Exception:
-                        pass
-                        
-    except Exception as e:
-        result["error"] = str(e)
+                # 3. Resolve ASN of IP
+                if ip:
+                    asn_data = await resolver.resolve_asn(ip)
+                    result.update(asn_data)
+                    
+                    # 4. Resolve ASN Name (Optional, adds time)
+                    # To be super fast, we might skip this or do it only if ASN found
+                    if result.get("asn"):
+                        result["asn_name"] = await resolver.resolve_asn_name(result["asn"])
 
-    return result
+        except Exception as e:
+            result["error"] = str(e)
+            
+        return result
 
-def main():
-    parser = argparse.ArgumentParser(description="Enrich domains with MX/Infrastructure data.")
-    parser.add_argument("--input", default="data/dea_domains.csv", help="Input CSV path")
-    parser.add_argument("--output", default="data/dea_domains_enriched.csv", help="Output CSV path")
-    parser.add_argument("--workers", type=int, default=50, help="Concurrency level")
-    parser.add_argument("--limit", type=int, default=0, help="Limit number of domains (for testing)")
-    
-    args = parser.parse_args()
-
+async def runner(input_file: str, output_file: str, concurrency: int, limit: int = 0):
     # Read domains
     domains = []
+    print(f"[*] Reading {input_file}...")
     try:
-        with open(args.input, "r", encoding="utf-8") as f:
+        with open(input_file, "r", encoding="utf-8-sig") as f:
             reader = csv.DictReader(f)
-            # Handle headerless logic if 'domain' not in fields, but merge_lists_v3b produces 'domain' header
+            # Schema check
             if not reader.fieldnames or "domain" not in reader.fieldnames:
-                # Fallback if someone edited it manually
-                print(f"[!] Warning: 'domain' header not found in {args.input}. using first column.")
+                print("[!] 'domain' header missing. Falling back to plain list read.")
                 f.seek(0)
-                # Re-read plain
-                csv_reader = csv.reader(f)
-                header = next(csv_reader)
-                if "domain" in header:
-                     # It was there, maybe casing issue?
-                     pass
-                else:
-                     # Assume file is just list of domains
-                     f.seek(0)
-                     for line in f:
-                         d = line.strip()
-                         if d: domains.append(d)
+                for line in f:
+                    d = line.strip()
+                    if d and not d.startswith('#'): domains.append(d)
+                # Remove header row if it got caught
+                if domains and "domain" in domains[0].lower(): domains.pop(0)
             else:
                 for row in reader:
                     if row.get("domain"):
                         domains.append(row["domain"])
     except FileNotFoundError:
-        print(f"[!] Input file {args.input} not found.")
+        print(f"[!] File not found: {input_file}")
         return
 
-    if args.limit > 0:
-        domains = domains[:args.limit]
+    if limit > 0:
+        print(f"[*] Limiting to first {limit} domains.")
+        domains = domains[:limit]
 
-    print(f"[*] Processing {len(domains)} domains with {args.workers} workers...")
+    print(f"[*] Enriched {len(domains)} domains with concurrency={concurrency}...")
     
-    # Initialize Resolver
-    # sharing one resolver object is fine usually
-    resolver = InfrastructureResolver()
+    # Setup Async
+    resolver = AsyncResolver()
+    sem = asyncio.Semaphore(concurrency)
+    
+    tasks = [process_domain(sem, resolver, d) for d in domains]
     
     results = []
-    
-    # Use partial to pass the fixed resolver argument
-    process_func = functools.partial(process_domain, resolver_factory=resolver)
-
-    with ThreadPoolExecutor(max_workers=args.workers) as executor:
-        # map is cleaner and more memory efficient than creating {{futures}} dict
-        iterator = executor.map(process_func, domains)
-        for res in tqdm(iterator, total=len(domains), unit="dom"):
-             results.append(res)
-
+    # Use tqdm to show progress of completed futures
+    for f in tqdm_asyncio.as_completed(tasks, total=len(tasks), unit="dom"):
+        res = await f
+        results.append(res)
+        
     # Write output
+    print(f"[*] Writing results to {output_file}...")
     headers = ["domain", "primary_mx", "mx_ip", "asn", "asn_name", "bgp_prefix", "cc", "registry", "mx_records", "error"]
     
-    print(f"[*] Writing results to {args.output}...")
-    with open(args.output, "w", newline="", encoding="utf-8") as f:
+    with open(output_file, "w", newline="", encoding="utf-8") as f:
         writer = csv.DictWriter(f, fieldnames=headers)
         writer.writeheader()
         for r in results:
-            # Filter to just our headers
-            out_row = {k: r.get(k, "") for k in headers}
-            writer.writerow(out_row)
+            # Clean dict
+            row_out = {h: r.get(h, "") for h in headers}
+            writer.writerow(row_out)
             
     print("[*] Done.")
+
+def main():
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--input", default="data/dea_domains.csv")
+    parser.add_argument("--output", default="data/dea_domains_enriched.csv")
+    parser.add_argument("--workers", type=int, default=MAX_CONCURRENCY, help="Async concurrency limit (default 1000)")
+    parser.add_argument("--limit", type=int, default=0)
+    
+    args = parser.parse_args()
+    
+    if sys.platform == 'win32':
+        asyncio.set_event_loop_policy(asyncio.WindowsSelectorEventLoopPolicy())
+        
+    asyncio.run(runner(args.input, args.output, args.workers, args.limit))
 
 if __name__ == "__main__":
     main()
