@@ -68,14 +68,18 @@ jobs:
         OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
         GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
       run: |
-        # Only run if keys exist to avoid failure on forks/missing secrets
-        if [ ! -z "$GEMINI_API_KEY" ]; then
+        # Run if either key is present
+        if [ -n "$GEMINI_API_KEY" ] || [ -n "$OPENAI_API_KEY" ]; then
+          echo "AI Keys detected. Running Analysis..."
+          
+          # Typosquat & Classification (run if keys exist, scripts handle internal fallback)
           python scripts/ai_typosquat.py --limit 500
           python scripts/ai_classify_web.py --limit 500
-        fi
-        
-        if [ ! -z "$OPENAI_API_KEY" ] || [ ! -z "$GEMINI_API_KEY" ]; then
-           python scripts/ai_briefing.py
+          
+          # Briefing
+          python scripts/ai_briefing.py
+        else
+          echo "No AI keys found. Skipping AI Analysis."
         fi
 
     - name: 6.8 Sync AI Artifacts

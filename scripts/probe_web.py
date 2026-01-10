@@ -15,11 +15,8 @@ import aiohttp
 import sys
 from typing import Dict, Any, List
 
-USER_AGENTS = [
-    "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36",
-    "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/14.0.3 Safari/605.1.15",
-    "Mozilla/5.0 (X11; Linux x86_64; rv:89.0) Gecko/20100101 Firefox/89.0"
-]
+# Explicit Research User-Agent (Best Practice)
+USER_AGENT = "DomainIntelResearch/1.0 (+https://github.com/elchacal801/domain_intel; contact: open-issue-on-repo)"
 
 def get_title(html: str) -> str:
     if not html: return ""
@@ -36,10 +33,13 @@ async def fetch(session: aiohttp.ClientSession, url: str, proxy: str = None) -> 
         "title": ""
     }
     try:
-        headers = {"User-Agent": random.choice(USER_AGENTS)}
+        headers = {"User-Agent": USER_AGENT}
         
         # Reduced timeout to fail fast
         timeout = aiohttp.ClientTimeout(total=8, connect=4)
+        
+        # Jitter: Be polite to destination infrastructure
+        await asyncio.sleep(random.uniform(0.05, 0.2)) 
         
         async with session.get(
             url, 
@@ -69,13 +69,7 @@ async def worker(queue: asyncio.Queue, session: aiohttp.ClientSession, proxy: st
         try:
             domain = row.get("domain")
             if domain:
-                # Run HTTP/HTTPS sequentially or parallel?
-                # Parallel is slightly better for latency per domain, but uses 2x connections.
-                # Let's use gather for speed.
-                
-                # Careful: large gather here means 2 * workers concurrent requests.
-                # If workers=500, that's 1000 open connections.
-                
+                # Parallel fetch of HTTP and HTTPS
                 task_https = fetch(session, f"https://{domain}", proxy)
                 task_http = fetch(session, f"http://{domain}", proxy)
                 
@@ -89,12 +83,11 @@ async def worker(queue: asyncio.Queue, session: aiohttp.ClientSession, proxy: st
                 row["http_server"] = res_http["server"]
                 row["http_title"] = res_http["title"]
         except Exception as e:
-            # Fallback
             pass
         finally:
             queue.task_done()
 
-async def prober(input_file: str, output_file: str, max_workers: int, proxy: str):
+async def prober(input_file: str, output_file: str, max_workers: int, proxy: str, limit: int = 0):
     rows = []
     fieldnames = []
     
@@ -107,6 +100,11 @@ async def prober(input_file: str, output_file: str, max_workers: int, proxy: str
     except FileNotFoundError:
         print(f"[!] Input {input_file} not found.")
         return
+
+    # Filter/Limit
+    if limit > 0:
+        print(f"[*] Limiting probe to first {limit} domains.")
+        rows = rows[:limit]
 
     # Add new output columns
     new_cols = ["http_status", "http_title", "http_server", "https_status", "https_title", "https_server"]
@@ -133,10 +131,6 @@ async def prober(input_file: str, output_file: str, max_workers: int, proxy: str
             workers.append(task)
             
         # Wait for queue to process
-        # Using a progress bar loop would be nicer than just join, 
-        # but join is easiest for now. 
-        # Let's do a simple progress monitor.
-        
         while not queue.empty():
             done = len(rows) - queue.qsize()
             print(f"[*] Progress: {done}/{len(rows)}", end='\r')
@@ -160,8 +154,9 @@ def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--input", default="data/dea_domains.csv")
     ap.add_argument("--output", default="data/dea_domains_probed.csv")
-    ap.add_argument("--workers", type=int, default=200) # Increased default slightly
+    ap.add_argument("--workers", type=int, default=50, help="Concurrency limit. Default 50 (Reasonable for public scanning).") 
     ap.add_argument("--proxy", help="Proxy URL (e.g. http://localhost:8080)")
+    ap.add_argument("--limit", type=int, default=0, help="Max domains to scan (for testing).")
     
     args = ap.parse_args()
     
@@ -169,7 +164,7 @@ def main():
     if sys.platform == 'win32':
         asyncio.set_event_loop_policy(asyncio.WindowsSelectorEventLoopPolicy())
         
-    asyncio.run(prober(args.input, args.output, args.workers, args.proxy))
+    asyncio.run(prober(args.input, args.output, args.workers, args.proxy, args.limit))
 
 if __name__ == "__main__":
     main()

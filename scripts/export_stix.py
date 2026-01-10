@@ -22,23 +22,18 @@ import sys
 # Constants for STIX
 IDENTITY_UUID = uuid.uuid5(uuid.NAMESPACE_DNS, "domain_intel_github_action")
 IDENTITY_ID = f"identity--{IDENTITY_UUID}"
+TLP_CLEAR_ID = "marking-definition--613f2e26-407d-48c7-9eca-b8e91df99dc9" # Standard STIX TLP:CLEAR UUID
 
 def get_timestamp():
     return datetime.datetime.now(datetime.timezone.utc).strftime("%Y-%m-%dT%H:%M:%S.%fZ")
 
-def write_indicator(out, value, indicator_type, labels, name, description=""):
+def write_indicator(out, value, indicator_type, labels, name, description="", confidence=50):
     """Helper to write a single STIX indicator to the open file handle."""
     
     # Determine Pattern
     if indicator_type == "domain-name":
         pattern = f"[domain-name:value = '{value}']"
     elif indicator_type == "autonomous-system":
-        # Ensure 'AS' prefix is handled or not, STIX usually expects number, 
-        # but the pattern standard is [autonomous-system:number = 12345]
-        # value input usually "AS12345". STIX spec says 'number' is integer.
-        # But 'value' checking is complex. Let's assume passed value is safe or handle it.
-        # Actually simplest pattern for AS is: [autonomous-system:number = 12345]
-        # We need to strip 'AS' if present.
         clean_asn = value.upper().replace("AS", "")
         if not clean_asn.isdigit():
             return # Skip invalid
@@ -63,13 +58,23 @@ def write_indicator(out, value, indicator_type, labels, name, description=""):
         "pattern_type": "stix",
         "valid_from": get_timestamp(),
         "labels": labels,
-        "created_by_ref": IDENTITY_ID
+        "indicator_types": ["malicious-activity" if "malicious" in str(labels) else "anomalous-activity"],
+        "confidence": confidence,
+        "created_by_ref": IDENTITY_ID,
+        "object_marking_refs": [TLP_CLEAR_ID],
+        "external_references": [
+            {
+                "source_name": "Domain Intel Repo",
+                "description": "Automated threat intelligence pipeline",
+                "url": "https://github.com/elchacal801/domain_intel"
+            }
+        ]
     }
     
     out.write(',\n')
     json.dump(obj, out, indent=4)
 
-def process_file(out, filepath, kind, base_labels):
+def process_file(out, filepath, kind, base_labels, confidence=50):
     """Generic CSV processor."""
     if not os.path.exists(filepath):
         print(f"[!] Skipping {filepath} (Not Found)")
@@ -85,7 +90,7 @@ def process_file(out, filepath, kind, base_labels):
                     val = row.get("domain")
                     if val:
                         labels = base_labels + ["suspicious-domain"]
-                        write_indicator(out, val, "domain-name", labels, f"Suspicious Domain: {val}")
+                        write_indicator(out, val, "domain-name", labels, f"Suspicious Domain: {val}",confidence=confidence)
                         count += 1
 
                 elif kind == "asn":
@@ -94,7 +99,7 @@ def process_file(out, filepath, kind, base_labels):
                     if val:
                         labels = base_labels
                         desc = f"Suspicious ASN: {val} ({name})"
-                        write_indicator(out, val, "autonomous-system", labels, desc, desc)
+                        write_indicator(out, val, "autonomous-system", labels, desc, desc, confidence=confidence)
                         count += 1
                 
                 elif kind == "ip":
@@ -102,7 +107,7 @@ def process_file(out, filepath, kind, base_labels):
                     if val:
                         labels = base_labels
                         desc = f"Suspicious IP: {val} (Tor Exit)"
-                        write_indicator(out, val, "ipv4-addr", labels, desc, desc)
+                        write_indicator(out, val, "ipv4-addr", labels, desc, desc, confidence=confidence)
                         count += 1
                         
             print(f"    - Added {count} indicators.")
@@ -140,24 +145,40 @@ def main():
             "modified": get_timestamp(),
             "name": "Domain Intel Bot",
             "identity_class": "system",
-            "description": "Automated Domain Intelligence GitHub Action/Bot"
+            "description": "Automated Domain Intelligence GitHub Action/Bot",
+            "object_marking_refs": [TLP_CLEAR_ID]
         }
         json.dump(identity_obj, out, indent=4)
         
+        # TLP Marking Definition
+        out.write(',\n')
+        tlp_obj = {
+            "type": "marking-definition",
+            "spec_version": "2.1",
+            "id": TLP_CLEAR_ID,
+            "created": "2017-01-20T00:00:00.000Z",
+            "definition_type": "tlp",
+            "name": "TLP:CLEAR",
+            "definition": {
+                "tlp": "clear"
+            }
+        }
+        json.dump(tlp_obj, out, indent=4)
+        
         # Process Domains (Main Input)
-        process_file(out, args.input, "domain", ["malicious-activity", "anomalous-activity"])
+        process_file(out, args.input, "domain", ["malicious-activity", "anomalous-activity"], confidence=60)
         
         # Process Suspicious ASNs
-        process_file(out, args.suspicious_asns, "asn", ["malicious-activity", "hosting-provider"])
+        process_file(out, args.suspicious_asns, "asn", ["malicious-activity", "hosting-provider"], confidence=70)
         
         # Process VPN ASNs
-        process_file(out, args.vpn_asns, "asn", ["anonymization", "vpn-provider"])
+        process_file(out, args.vpn_asns, "asn", ["anonymization", "vpn-provider"], confidence=50)
         
         # Process Tor ASNs
-        process_file(out, args.tor_asns, "asn", ["anonymization", "tor-network"])
+        process_file(out, args.tor_asns, "asn", ["anonymization", "tor-network"], confidence=90)
         
         # Process Tor Nodes
-        process_file(out, args.tor_nodes, "ip", ["anonymization", "tor-exit"])
+        process_file(out, args.tor_nodes, "ip", ["anonymization", "tor-exit"], confidence=95)
 
         # Close Bundle
         out.write('\n  ]\n')

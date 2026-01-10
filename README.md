@@ -116,6 +116,14 @@ By tracking the MX records (e.g., `mail.private-email.com`) and ASNs (e.g., `Dig
 
 See [docs/detection_logic.md](docs/detection_logic.md) for details on how I apply this to fraud detection.
 
+## ⚠️ Responsible Use
+
+This project performs active reconnaissance (HTTP probing) and aggregates data that may be sensitive.
+
+* **Rate Limits**: The web probe script (`probe_web.py`) is rate-limited and uses a clearly identifiable User-Agent (`DomainIntelResearch/1.0`). Please respect target infrastructure.
+* **Intent**: This data is for defensive research, fraud prevention, and detection engineering. Do not use it for offensive targeting.
+* **Opt-Out**: If you own a domain or ASN listed here and believe it is a false positive (or wish to block our probes), please open a GitHub Issue.
+
 ## 📜 License
 
-Public Domain / MIT. Use this data freely for research or commercial setups.
+MIT License. Use this data freely for research or defensive setups. See [LICENSE](LICENSE) for details.
