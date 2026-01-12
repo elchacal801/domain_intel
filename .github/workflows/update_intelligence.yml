@@ -92,7 +92,7 @@ jobs:
       - name: Upload Result Shard
         uses: actions/upload-artifact@v4
         with:
-          name: results
+          name: result-shard-${{ matrix.shard }}
           path: data/result_part_${{ matrix.shard }}.csv
           retention-days: 1
 
@@ -118,7 +118,8 @@ jobs:
       - name: Download Results
         uses: actions/download-artifact@v4
         with:
-          name: results
+          pattern: result-shard-*
+          merge-multiple: true
           path: data
 
       - name: Merge Results
