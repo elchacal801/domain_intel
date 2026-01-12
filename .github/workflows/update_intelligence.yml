@@ -35,7 +35,7 @@ jobs:
     - name: 2. Enrich Infrastructure (MX/ASN)
       # Resolves new domains to infrastructure
       # using AsyncIO with high concurrency (1000+)
-      run: python scripts/enrich_infrastructure.py --workers 1500
+      run: python scripts/enrich_infrastructure.py --workers 200
 
     - name: 3. Enrich Reputation (RBL/RDAP)
       # Check Spamhaus/RDAP age

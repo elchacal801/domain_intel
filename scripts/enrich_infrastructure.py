@@ -26,7 +26,7 @@ from tqdm.asyncio import tqdm_asyncio
 CYMRU_ASN_SUFFIX = "origin.asn.cymru.com"
 DEFAULT_TIMEOUT = 4.0
 DEFAULT_LIFETIME = 8.0
-MAX_CONCURRENCY = 1000 # Default connections
+MAX_CONCURRENCY = 200 # Default connections
 
 class AsyncResolver:
     def __init__(self, nameservers: List[str] = None):
