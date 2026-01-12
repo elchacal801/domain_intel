@@ -13,8 +13,6 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: write
-    outputs:
-      shards: ${{ steps.set-matrix.outputs.shards }}
     steps:
       - uses: actions/checkout@v3
 
@@ -37,7 +35,7 @@ jobs:
           python scripts/split_data.py --input data/dea_domains.csv --chunks 10 --output-prefix data/dea_part
 
       - name: Upload Shards
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: shards
           path: data/dea_part_*.csv
@@ -67,7 +65,7 @@ jobs:
           if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
 
       - name: Download Shards
-        uses: actions/download-artifact@v3
+        uses: actions/download-artifact@v4
         with:
           name: shards
           path: data
@@ -92,7 +90,7 @@ jobs:
           rm start_temp.csv reputation_temp.csv
 
       - name: Upload Result Shard
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: results
           path: data/result_part_${{ matrix.shard }}.csv
@@ -118,7 +116,7 @@ jobs:
           if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
 
       - name: Download Results
-        uses: actions/download-artifact@v3
+        uses: actions/download-artifact@v4
         with:
           name: results
           path: data
