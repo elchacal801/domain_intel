@@ -5,111 +5,176 @@ on:
     # Run at 00:00 UTC every day
     - cron: '0 0 * * *'
   workflow_dispatch:
-    # Allow manual trigger
   push:
     branches: [ "main" ]
 
 jobs:
-  update-intelligence:
+  setup:
     runs-on: ubuntu-latest
     permissions:
       contents: write
+    outputs:
+      shards: ${{ steps.set-matrix.outputs.shards }}
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.10'
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
+
+      - name: 1. Update & Merge Sources
+        run: python scripts/merge_lists_v3b.py --include-stopforumspam
+
+      - name: 2. Split Data (Sharding)
+        run: |
+          # Split into 10 chunks
+          python scripts/split_data.py --input data/dea_domains.csv --chunks 10 --output-prefix data/dea_part
+
+      - name: Upload Shards
+        uses: actions/upload-artifact@v3
+        with:
+          name: shards
+          path: data/dea_part_*.csv
+          retention-days: 1
+
+  process_shard:
+    needs: setup
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        shard: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]
+      fail-fast: false
+    permissions:
+        contents: read
 
     steps:
-    - uses: actions/checkout@v3
+      - uses: actions/checkout@v3
 
-    - name: Set up Python
-      uses: actions/setup-python@v4
-      with:
-        python-version: '3.10'
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.10'
 
-    - name: Install dependencies
-      run: |
-        python -m pip install --upgrade pip
-        if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
 
-    - name: 1. Update Domain Lists (Merge Sources)
-      # Fetches fresh data from upstream sources
-      run: python scripts/merge_lists_v3b.py --include-stopforumspam
+      - name: Download Shards
+        uses: actions/download-artifact@v3
+        with:
+          name: shards
+          path: data
 
-    - name: 2. Enrich Infrastructure (MX/ASN)
-      # Resolves new domains to infrastructure
-      # using AsyncIO with high concurrency (1000+)
-      run: python scripts/enrich_infrastructure.py --workers 200
-
-    - name: 3. Enrich Reputation (RBL/RDAP)
-      # Check Spamhaus/RDAP age
-      run: python scripts/enrich_reputation.py --input data/dea_domains_enriched.csv --output data/dea_domains_reputation.csv
-
-    - name: 4. Web Probe (Active Fingerprint)
-      # HTTP Grabbing (from Azure IP)
-      run: python scripts/probe_web.py --input data/dea_domains_reputation.csv --output data/dea_domains_probed.csv
-
-    - name: 5. Generate Pivots (Stats)
-      # Re-calculates top providers/ASNs using the fullest dataset
-      run: python scripts/generate_pivots.py --input data/dea_domains_probed.csv
-
-    - name: 6. Infrastructure Intel (ASN/VPN/Tor)
-      # Fetches & Enriches suspicious infrastructure lists
-      run: |
-        python scripts/asn_intel.py
-        python scripts/vpn_intel.py
-        python scripts/tor_intel.py
-
-    - name: 6.5 Data Hygiene & Enrichment
-      # Clean schema and fetch missing ASN names (RIPE/HT)
-      run: |
-        python scripts/clean_data.py
-        python scripts/enrich_asns.py
-
-    - name: 6.7 AI Analysis (Typosquat/Classify/Briefing)
-      # Light-weight AI passes if keys are present
-      env:
-        OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
-        GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
-      run: |
-        # Run if either key is present
-        if [ -n "$GEMINI_API_KEY" ] || [ -n "$OPENAI_API_KEY" ]; then
-          echo "AI Keys detected. Running Analysis..."
+      - name: Process Shard ${{ matrix.shard }}
+        run: |
+          PART_FILE="data/dea_part_${{ matrix.shard }}.csv"
+          OUT_FILE="data/result_part_${{ matrix.shard }}.csv"
           
-          # Typosquat & Classification (run if keys exist, scripts handle internal fallback)
-          python scripts/ai_typosquat.py --limit 500
-          python scripts/ai_classify_web.py --limit 500
+          echo "Processing $PART_FILE..."
           
-          # Briefing
-          python scripts/ai_briefing.py
-        else
-          echo "No AI keys found. Skipping AI Analysis."
-        fi
+          # 1. Enrich Infrastructure (MX/ASN)
+          # Reduced workers to stay safe per runner
+          python scripts/enrich_infrastructure.py --input "$PART_FILE" --output start_temp.csv --workers 200
+          
+          # 2. Enrich Reputation (Input=Enriched infrastructure)
+          python scripts/enrich_reputation.py --input start_temp.csv --output reputation_temp.csv
+          
+          # 3. Web Probe (Input=Reputation)
+          python scripts/probe_web.py --input reputation_temp.csv --output "$OUT_FILE" --workers 50
+          
+          rm start_temp.csv reputation_temp.csv
 
-    - name: 6.8 Sync AI Artifacts
-      run: |
-        # Move AI outputs to docs/data for dashboard consumption
-        cp data/daily_briefing.json docs/data/ || true
-        cp data/ai_typosquats.csv docs/data/ || true
-        cp data/ai_classifications.csv docs/data/ || true
+      - name: Upload Result Shard
+        uses: actions/upload-artifact@v3
+        with:
+          name: results
+          path: data/result_part_${{ matrix.shard }}.csv
+          retention-days: 1
 
-    - name: 7. Export CTI (STIX 2.1)
-      run: python scripts/export_stix.py --input data/dea_domains_probed.csv
+  finalize:
+    needs: process_shard
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      
+    steps:
+      - uses: actions/checkout@v3
 
-    - name: Commit and Push changes
-      run: |
-        git config --global user.name 'github-actions[bot]'
-        git config --global user.email 'github-actions[bot]@users.noreply.github.com'
-        
-        # Sync data to docs/ for the dashboard
-        mkdir -p docs/data
-        cp data/*.csv docs/data/
-        
-        # Compress the heavy STIX bundle (exceeds 100MB)
-        gzip -f data/domain_intel_bundle.json
-        cp data/*.json.gz docs/data/
-        
-        git add data/*.csv docs/data/*.csv data/*.json.gz docs/data/*.json.gz docs/data/daily_briefing.json
-        # Only commit if there are changes
-        if git diff --staged --quiet; then
-          echo "No changes to commit"
-        else
-          git commit -m "Automated Data Update: $(date +'%Y-%m-%d')"
-          git push
-        fi
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.10'
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
+
+      - name: Download Results
+        uses: actions/download-artifact@v3
+        with:
+          name: results
+          path: data
+
+      - name: Merge Results
+        run: |
+          # Merges all result_part_*.csv into dea_domains_probed.csv
+          python scripts/merge_results.py --pattern "data/result_part_*.csv" --output data/dea_domains_probed.csv
+
+      - name: Generate Pivots & Stats
+        run: python scripts/generate_pivots.py --input data/dea_domains_probed.csv
+
+      - name: Infrastructure Intel (ASN/VPN/Tor)
+        run: |
+          python scripts/asn_intel.py
+          python scripts/vpn_intel.py
+          python scripts/tor_intel.py
+
+      - name: Data Hygiene & Enrichment (Clean Data)
+        run: |
+           # Running clean_data.py last to clean the merged big file
+           python scripts/clean_data.py
+           python scripts/enrich_asns.py
+
+      - name: AI Analysis (Optional)
+        env:
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+        run: |
+          if [ -n "$GEMINI_API_KEY" ] || [ -n "$OPENAI_API_KEY" ]; then
+            python scripts/ai_typosquat.py --limit 500
+            python scripts/ai_classify_web.py --limit 500
+            python scripts/ai_briefing.py
+          fi
+          # Sync artifacts
+          cp data/daily_briefing.json docs/data/ || true
+          cp data/ai_typosquats.csv docs/data/ || true
+          cp data/ai_classifications.csv docs/data/ || true
+
+      - name: Export STIX
+        run: python scripts/export_stix.py --input data/dea_domains_probed.csv
+
+      - name: Commit and Push changes
+        run: |
+          git config --global user.name 'github-actions[bot]'
+          git config --global user.email 'github-actions[bot]@users.noreply.github.com'
+          
+          mkdir -p docs/data
+          cp data/*.csv docs/data/
+          gzip -f data/domain_intel_bundle.json
+          cp data/*.json.gz docs/data/
+          
+          git add data/*.csv docs/data/*.csv data/*.json.gz docs/data/*.json.gz docs/data/daily_briefing.json
+          if git diff --staged --quiet; then
+            echo "No changes to commit"
+          else
+            git commit -m "Automated Map Shard Update: $(date +'%Y-%m-%d')"
+            git push
+          fi
