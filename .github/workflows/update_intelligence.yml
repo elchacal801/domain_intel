@@ -148,8 +148,8 @@ jobs:
           GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
         run: |
           if [ -n "$GEMINI_API_KEY" ] || [ -n "$OPENAI_API_KEY" ]; then
-            python scripts/ai_typosquat.py --limit 500
-            python scripts/ai_classify_web.py --limit 500
+            python scripts/ai_typosquat.py --limit 2500
+            python scripts/ai_classify_web.py --limit 2500
             python scripts/ai_briefing.py
           fi
           # Sync artifacts
@@ -159,6 +159,9 @@ jobs:
 
       - name: Export STIX
         run: python scripts/export_stix.py --input data/dea_domains_probed.csv
+
+      - name: Cleanup Shards
+        run: rm data/*_part_*.csv
 
       - name: Commit and Push changes
         run: |

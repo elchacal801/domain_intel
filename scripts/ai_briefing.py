@@ -94,13 +94,23 @@ def generate_briefing(stats):
     # Construct the data prompt
     target_str = ", ".join(stats["top_targets"]) if stats["top_targets"] else "None"
     
+    # Estimate coverage based on Typosquat/Classify limits (hardcoded in workflow as 500)
+    # Ideally, we would count the number of rows in the AI output, but 500 is the known limit.
+    ai_limit = 500
+    coverage_pct = (ai_limit / stats["total_domains"]) * 100 if stats["total_domains"] > 0 else 0
+    
     data_summary = f"""
     Date: {datetime.now().strftime('%Y-%m-%d')}
-    Total New Domains Scanned: {stats["total_domains"]}
+    Total New Domains Ingested: {stats["total_domains"]}
+    Domains Analyzed by AI: ~{ai_limit} ({coverage_pct:.2f}% sample)
     Confirmed Typosquats: {len(stats["typosquats"])}
     Top Impersonated Brands: {target_str}
     Phishing Sites Identified: {stats["phishing_count"]}
     Suspected C2 Panels: {stats["c2_count"]}
+    
+    IMPORTANT: The AI analysis was performed on a SAMPLE of the total data. 
+    Do NOT claim that "no malicious activity was detected" for the entire dataset if the sample was clean.
+    State clearly that findings are based on the analyzed sample.
     """
     
     print("Generating briefing with data:")
