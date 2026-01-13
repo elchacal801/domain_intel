@@ -24,13 +24,14 @@ def normalize(s: str) -> str:
 
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument("--input", default="data/dea_domains_enriched.csv")
+    parser.add_argument("--input", default="data/dea_domains_probed.csv")
     args = parser.parse_args()
 
     # Aggregators
     mx_counts: Counter[str] = collections.Counter()
     asn_counts: Counter[str] = collections.Counter()
     mx_asn_map: Dict[str, Counter[str]] = collections.defaultdict(collections.Counter)
+    server_counts: Counter[str] = collections.Counter()
     
     # ASN Metadata map (ASN -> Name)
     asn_meta: Dict[str, str] = {}
@@ -38,13 +39,20 @@ def main():
     # Read Input
     total_processed = 0
     try:
-        with open(args.input, "r", encoding="utf-8") as f:
+        with open(args.input, "r", encoding="utf-8-sig", errors="replace") as f:
             reader = csv.DictReader(f)
             for row in reader:
                 domain = row.get("domain", "")
                 mx = normalize(row.get("primary_mx", ""))
                 asn = row.get("asn", "")
                 asn_name = row.get("asn_name", "")
+                
+                # Server stats (prefer HTTPS, fallback to HTTP)
+                server = row.get("https_server", "").strip() or row.get("http_server", "").strip()
+                if server:
+                    # Simplify server names (e.g. "nginx/1.18.0" -> "nginx", "Cloudflare" -> "Cloudflare")
+                    server_simple = server.split('/')[0].split(' ')[0]
+                    server_counts[server_simple] += 1
                 
                 # Skip failed resolutions if needed, or count them as "Unknown"
                 if not mx:
@@ -65,7 +73,7 @@ def main():
                     mx_asn_map[mx][asn_key] += 1
                     
     except FileNotFoundError:
-        print(f"[!] Input file {args.input} not found. Run enrich_infrastructure.py first.")
+        print(f"[!] Input file {args.input} not found. Run sharding pipeline first.")
         return
 
     print(f"[*] Processed {total_processed} enriched records.")
@@ -118,6 +126,14 @@ def main():
         w.writerow(["asn", "asn_name", "risk_score_domains"])
         for asn, count in asn_counts.most_common():
              w.writerow([asn, asn_meta.get(asn, ""), count])
+
+    # 5. web_server_counts.csv
+    print("[*] Generating web_server_counts.csv...")
+    with open("data/web_server_counts.csv", "w", newline="", encoding="utf-8") as f:
+        w = csv.writer(f)
+        w.writerow(["server", "count"])
+        for srv, count in server_counts.most_common(20): # Top 20 only
+             w.writerow([srv, count])
 
     print("[*] Done.")
 

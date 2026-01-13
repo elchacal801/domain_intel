@@ -144,6 +144,69 @@ async function initDashboard() {
         const totalDomains = mxData.reduce((acc, curr) => acc + parseInt(curr[1] || 0), 0);
         document.getElementById('stat-total-dea').textContent = totalDomains.toLocaleString();
 
+        // --- 4. Web Servers ---
+        try {
+            const serverData = await fetchData('data/web_server_counts.csv');
+            const topServers = serverData.slice(0, 8); // Top 8
+
+            const srvCtx = document.getElementById('serverChart').getContext('2d');
+            new Chart(srvCtx, {
+                type: 'doughnut',
+                data: {
+                    labels: topServers.map(r => r[0]),
+                    datasets: [{
+                        data: topServers.map(r => parseInt(r[1])),
+                        backgroundColor: [
+                            '#238636', '#DA3633', '#8957e5', '#d29922',
+                            '#f778ba', '#77bdfb', '#56d364', '#f0883e'
+                        ],
+                        borderWidth: 0
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        legend: { position: 'right' }
+                    }
+                }
+            });
+        } catch (e) { console.log('No server stats yet'); }
+
+        // --- 5. AI Classifications ---
+        try {
+            const aiData = await fetchData('data/ai_classifications.csv');
+            // Group by category
+            const aiCounts = {};
+            aiData.forEach(row => {
+                const cat = row[1] || 'Unknown';
+                aiCounts[cat] = (aiCounts[cat] || 0) + 1;
+            });
+
+            const aiLabels = Object.keys(aiCounts);
+            const aiValues = Object.values(aiCounts);
+
+            const aiCtx = document.getElementById('aiChart').getContext('2d');
+            new Chart(aiCtx, {
+                type: 'doughnut',
+                data: {
+                    labels: aiLabels,
+                    datasets: [{
+                        data: aiValues,
+                        backgroundColor: [
+                            '#DA3633', '#d29922', '#1f6feb', '#238636', '#8957e5'
+                        ],
+                        borderWidth: 0
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        legend: { position: 'right' }
+                    }
+                }
+            });
+        } catch (e) { console.log('No AI stats yet'); }
+
     } catch (e) {
         console.error("Error loading data:", e);
     }
