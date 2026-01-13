@@ -121,11 +121,16 @@ def main():
     
     # SEADS doesn't take a file input for keywords usually, it takes arguments.
     # But running 50 separate process calls is noisy.
-    # Note: seads supports -config config.yaml. We should generate a yaml on the fly.
     
+    # Randomly sample keywords to prevent OOM / Timeout on free runners
+    import random
+    if len(keywords) > 10:
+        logging.info(f"Sampling 10 keywords from {len(keywords)} to prevent OOM/Timeout...")
+        keywords = random.sample(keywords, 10)
+
     config_data = {
         "queries": [{"query": k} for k in keywords],
-        "concurrency": 4, # Be gentle
+        "concurrency": 2, # Reduced from 4 to 2 for stability
         # "global-domain-exclusion": {"exclusion-list": ["google.com", "bing.com"]} # etc
     }
     
