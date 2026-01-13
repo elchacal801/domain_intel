@@ -70,13 +70,22 @@ pip install -r requirements.txt
 To run the AI modules (`scripts/ai_*.py`), you need API keys.
 
 1. Create a `.env` file in the root directory:
+1. Create a `.env` file in the root directory:
 
-   ```env
-   OPENAI_API_KEY=sk-...
-   GEMINI_API_KEY=AIza...
-   ```
+    ```env
+    OPENAI_API_KEY=sk-...
+    GEMINI_API_KEY=AIza...
+    ```
 
-2. For GitHub Actions, add these as **Repository Secrets**.
+1. For GitHub Actions, add these as **Repository Secrets**.
+
+### 4. Proactive Discovery (New)
+
+* **Ad Intelligence**: `run_seads.py` scans search engines for malicious ads targeting specific keywords (Config: `config/seads_keywords.txt`).
+* **Typosquat Generation**: `generate_permutations.py` (via `dnstwist`) generates thousands of potential lookalike domains for high-value targets.
+* **Visual Fingerprinting**: `visual_fingerprint.py` uses headless browsers to group domains by visual similarity (pHash), effectively tracking phishing kits.
+
+## 📁 Repository Structurets**
 
 ### Reproducing the Intelligence
 
