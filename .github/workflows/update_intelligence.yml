@@ -2,8 +2,8 @@ name: Daily Data Update
 
 on:
   schedule:
-    # Run at 00:00 UTC every day
-    - cron: '0 0 * * *'
+    # Run at 00:00 UTC every Monday (Sunday night US)
+    - cron: '0 0 * * 1'
   workflow_dispatch:
   push:
     branches: [ "main" ]
@@ -141,6 +141,16 @@ jobs:
            # Running clean_data.py last to clean the merged big file
            python scripts/clean_data.py
            python scripts/enrich_asns.py
+
+      - name: Visual Fingerprinting (Optional)
+        run: |
+          # Install browser dependencies
+          python -m playwright install chromium
+          # Run visual analysis on top 200 interesting domains
+          python scripts/visual_fingerprint.py --limit 200
+          # Sync artifacts
+          cp data/visual_clusters.json docs/data/ || true
+          cp data/visual_hashes.csv docs/data/ || true
 
       - name: AI Analysis (Optional)
         env:
