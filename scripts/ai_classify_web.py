@@ -142,9 +142,11 @@ def main():
     items = read_probed_domains(args.input, args.limit)
     print(f"Found {len(items)} items with content to classify.")
 
-    # Reset output
-    if os.path.exists(args.output):
-        os.remove(args.output)
+    # Reset/Init output
+    headers = ["domain", "category", "reason", "confidence"]
+    with open(args.output, 'w', newline='', encoding='utf-8') as f:
+        writer = csv.DictWriter(f, fieldnames=headers)
+        writer.writeheader()
 
     import math
     from tqdm import tqdm

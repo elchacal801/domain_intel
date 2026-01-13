@@ -133,9 +133,11 @@ def main():
     import math
     from tqdm import tqdm
     
-    # Reset output file if new run (optional, maybe we want append? Let's overwrite for daily clean run)
-    if os.path.exists(args.output):
-        os.remove(args.output)
+    # Reset/Init output file with headers
+    headers = ["domain", "target", "reason", "confidence"]
+    with open(args.output, 'w', newline='', encoding='utf-8') as f:
+        writer = csv.DictWriter(f, fieldnames=headers)
+        writer.writeheader()
 
     num_batches = math.ceil(len(all_domains) / args.batch_size)
     

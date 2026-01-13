@@ -142,7 +142,9 @@ def generate_briefing(stats):
         return briefing
         
     except Exception as e:
-        print(f"Error calling LLM: {e}")
+        print(f"Error calling LLM or generating briefing: {e}")
+        import traceback
+        traceback.print_exc()
         # Fallback
         return {
             "date": datetime.now().strftime('%Y-%m-%d'),
