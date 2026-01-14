@@ -106,16 +106,17 @@ async def capture_and_hash(domains: List[str], concurrency: int) -> List[dict]:
                         except:
                             return None
 
-                    # Screenshot
+                    # Screenshot (JPEG for smaller size)
+                    # We capture as PNG in memory for hashing (better precision), but save as JPEG for web display
                     png_bytes = await page.screenshot(full_page=False)
-                    
-                    # Save to disk for dashboard
-                    screenshot_path = f"data/screenshots/{domain}.png"
-                    os.makedirs("data/screenshots", exist_ok=True)
-                    with open(screenshot_path, "wb") as f:
-                        f.write(png_bytes)
-                        
                     img = Image.open(BytesIO(png_bytes))
+
+                    # Save to disk for dashboard (Convert to JPEG)
+                    screenshot_path = f"data/screenshots/{domain}.jpg"
+                    os.makedirs("data/screenshots", exist_ok=True)
+                    
+                    rgb_im = img.convert('RGB')
+                    rgb_im.save(screenshot_path, format='JPEG', quality=70, optimize=True)
                     
                     # Hash
                     phash = str(imagehash.phash(img))
