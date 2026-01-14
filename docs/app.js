@@ -221,7 +221,7 @@ async function initDashboard() {
                         const count = cluster.count;
                         const mainDomain = cluster.domains[0];
                         // Use screenshot of the first domain in cluster
-                        const imgPath = `data/screenshots/${mainDomain}.png`;
+                        const imgPath = `data/screenshots/${mainDomain}.jpg`;
 
                         const card = document.createElement('div');
                         card.className = 'cluster-card';
