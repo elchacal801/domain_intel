@@ -13,6 +13,7 @@ import os
 import sys
 import argparse
 import csv
+import json
 import logging
 import subprocess
 import dnstwist

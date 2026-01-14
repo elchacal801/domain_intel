@@ -49,6 +49,24 @@ def install_seads():
     logging.info("SEADS not found. Assuming Docker usage or manual install for now.")
     # For this script, we will assume the user or CI has 'seads' available
     # Or we use 'go install' if go is available.
+    
+    # Try to download pre-built binary for Windows
+    if platform.system() == "Windows":
+        try:
+            url = f"https://github.com/andpalmier/seads/releases/download/{SEADS_VERSION}/seads_Windows_x86_64.zip"
+            logging.info(f"Downloading SEADS from {url}...")
+            r = requests.get(url, stream=True)
+            if r.status_code == 200:
+                with zipfile.ZipFile(BytesIO(r.content)) as z:
+                    for filename in z.namelist():
+                        if filename.endswith(".exe"):
+                            with open(BINARY_NAME, "wb") as f:
+                                f.write(z.read(filename))
+                            logging.info(f"Downloaded and extracted {BINARY_NAME}")
+                            return os.path.abspath(BINARY_NAME)
+        except Exception as e:
+            logging.error(f"Failed to download binary: {e}")
+
     if shutil.which("go"):
         logging.info("Go found. Installing seads via go install...")
         try:
@@ -114,18 +132,26 @@ def parse_seads_output(current_keyword=""):
 
 def main():
     seads_bin = install_seads()
-    keywords = load_keywords()
-    
-    logging.info(f"Starting Scan for {len(keywords)} keywords using {seads_bin}...")
     
     # SEADS Refactor: Run iteratively per keyword to prevent OOM/Hang
     # This allows us to kill the process if a specific keyword hangs (like 'secure' on Yahoo)
     
-    # Randomly sample keywords to prevent OOM / Timeout on free runners
-    import random
-    if len(keywords) > 10:
-        logging.info(f"Sampling 10 keywords from {len(keywords)} to prevent OOM/Timeout...")
-        keywords = random.sample(keywords, 10)
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--keywords", help="Comma-separated list of keywords to scan (overrides file)")
+    args = parser.parse_args()
+
+    if args.keywords:
+        keywords = [k.strip() for k in args.keywords.split(",") if k.strip()]
+        logging.info(f"Using manual keywords: {keywords}")
+    else:
+        all_keywords = load_keywords()
+        # Random sample of 10 to prevent OOM/Timeouts on Github Actions
+        # In a real full run, you might want all.
+        import random
+        keywords = random.sample(all_keywords, min(len(all_keywords), 10))
+        logging.info(f"Loaded {len(all_keywords)} keywords. Sampling {len(keywords)}: {keywords}")
+
+    logging.info(f"Starting Scan for {len(keywords)} keywords using {seads_bin}...")
 
     # Initialize output file if it doesn't exist
     if not os.path.exists(OUTPUT_CSV):
