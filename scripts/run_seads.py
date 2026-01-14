@@ -71,7 +71,7 @@ def load_keywords():
         # Filter comments and empty lines
         return [line.strip() for line in f if line.strip() and not line.startswith('#')]
 
-def parse_seads_output():
+def parse_seads_output(current_keyword=""):
     """Converts the JSON output from SEADS into our CSV format."""
     if not os.path.exists(OUTPUT_JSON):
         logging.warning("No JSON output found from SEADS.")
@@ -95,8 +95,7 @@ def parse_seads_output():
     with open(OUTPUT_CSV, 'a', newline='', encoding='utf-8') as f:
         fields = ['query', 'ad_domain', 'display_url', 'link', 'engine']
         writer = csv.DictWriter(f, fieldnames=fields)
-        if not file_exists:
-            writer.writeheader()
+        # Header handled in main initialization
             
         for item in findings:
             # Normalize fields based on Seads schema
@@ -119,8 +118,8 @@ def main():
     
     logging.info(f"Starting Scan for {len(keywords)} keywords using {seads_bin}...")
     
-    # SEADS doesn't take a file input for keywords usually, it takes arguments.
-    # But running 50 separate process calls is noisy.
+    # SEADS Refactor: Run iteratively per keyword to prevent OOM/Hang
+    # This allows us to kill the process if a specific keyword hangs (like 'secure' on Yahoo)
     
     # Randomly sample keywords to prevent OOM / Timeout on free runners
     import random
@@ -128,35 +127,86 @@ def main():
         logging.info(f"Sampling 10 keywords from {len(keywords)} to prevent OOM/Timeout...")
         keywords = random.sample(keywords, 10)
 
-    config_data = {
-        "queries": [{"query": k} for k in keywords],
-        "concurrency": 2, # Reduced from 4 to 2 for stability
-        # "global-domain-exclusion": {"exclusion-list": ["google.com", "bing.com"]} # etc
-    }
-    
-    import yaml
-    temp_config = "temp_seads_config.yaml"
-    with open(temp_config, 'w') as f:
-        yaml.dump(config_data, f)
+    # Initialize output file if it doesn't exist
+    if not os.path.exists(OUTPUT_CSV):
+        with open(OUTPUT_CSV, 'w', newline='', encoding='utf-8') as f:
+            writer = csv.DictWriter(f, fieldnames=['query', 'ad_domain', 'display_url', 'link', 'engine'])
+            writer.writeheader()
+
+    for i, keyword in enumerate(keywords):
+        logging.info(f"[{i+1}/{len(keywords)}] Scanning for: '{keyword}'")
         
-    cmd = [
-        seads_bin,
-        "-config", temp_config,
-        "-out", OUTPUT_JSON,
-        "-screenshot", "", # Disable for this pass
-        "-noredirect" # Just get the ad link, don't follow chains (speed)
-    ]
-    
+        # Create temp config for just this keyword
+        config_data = {
+            "queries": [{"query": keyword}],
+            "concurrency": 1, # Strict Serial to save RAM
+        }
+        
+        import yaml
+        temp_config = f"temp_seads_{i}.yaml"
+        with open(temp_config, 'w') as f:
+            yaml.dump(config_data, f)
+            
+        cmd = [
+            seads_bin,
+            "-config", temp_config,
+            "-out", OUTPUT_JSON,  # This will be overwritten each time
+            "-screenshot", "",
+            "-noredirect"
+        ]
+        
+        try:
+            # Enforce 2-minute timeout per keyword
+            subprocess.run(cmd, check=False, timeout=120) 
+            # Parse immediately and append
+            parse_seads_output(keyword)
+        except subprocess.TimeoutExpired:
+            logging.error(f"Timeout expired for keyword '{keyword}'. Skipping...")
+        except Exception as e:
+            logging.error(f"Error running seads for '{keyword}': {e}")
+        finally:
+            if os.path.exists(temp_config):
+                os.remove(temp_config)
+            # Clean up json output to avoid duplicates
+            if os.path.exists(OUTPUT_JSON):
+                os.remove(OUTPUT_JSON)
+
+def parse_seads_output(current_keyword=""):
+    """Parses JSON and appends to CSV."""
+    if not os.path.exists(OUTPUT_JSON):
+        return
+
+    findings = []
     try:
-        subprocess.run(cmd, check=False) # Don't error out script if seads fails slightly
-    except FileNotFoundError:
-        logging.error("SEADS binary execution failed. Is it installed?")
-    
-    parse_seads_output()
-    
-    # Clean up
-    if os.path.exists(temp_config):
-        os.remove(temp_config)
+        with open(OUTPUT_JSON, 'r', encoding='utf-8') as f:
+            data = json.load(f)
+            if isinstance(data, list):
+                findings = data
+    except Exception as e:
+        # JSON might be empty or malformed
+        return
+
+    count = 0
+    with open(OUTPUT_CSV, 'a', newline='', encoding='utf-8') as f:
+        fields = ['query', 'ad_domain', 'display_url', 'link', 'engine']
+        writer = csv.DictWriter(f, fieldnames=fields)
+        # Header already written in main()
+            
+        for item in findings:
+            row = {
+                'query': item.get('Keyword', current_keyword),
+                'ad_domain': item.get('Domain', ''),
+                'display_url': item.get('DisplayUrl', ''),
+                'link': item.get('Link', ''),
+                'engine': item.get('Engine', 'unknown')
+            }
+            if row['ad_domain']:
+                writer.writerow(row)
+                count += 1
+                
+    if count > 0:
+        logging.info(f"  Found {count} ads for '{current_keyword}'")
+
 
 if __name__ == "__main__":
     main()

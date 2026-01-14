@@ -236,6 +236,59 @@ def main() -> None:
         else:
             high_sources.append(("deviceandbrowserinfo_api", device_url, parse_json_domains))
 
+    # ---- Local Discovery Artifacts (Seads / Dnstwist) ----
+    # If these files exist (e.g. downloaded from previous job), merge them into DEA list for probing.
+    
+    # 1. Seads (discovered_ads.csv)
+    seads_file = "data/discovered_ads.csv"
+    if os.path.exists(seads_file):
+        def parse_seads_csv(text: str) -> Set[str]:
+            out = set()
+            reader = csv.DictReader(text.splitlines())
+            for row in reader:
+                d = normalize_domain(row.get("ad_domain", ""))
+                if is_valid_domain(d):
+                    out.add(d)
+            return out
+            
+        # We use "file://" scheme or just handle file logic, but safe_fetch_parse uses urlopen.
+        # Let's just manually read it since it's local.
+        try:
+             with open(seads_file, 'r', encoding='utf-8') as f:
+                doms = parse_seads_csv(f.read())
+                log(f"  [+] {'seads_discovery':28s} {len(doms):7d} domains  (local)")
+                dea |= doms
+        except Exception as e:
+            log(f"  [!] Failed to read {seads_file}: {e}")
+
+    # 2. Dnstwist (potential_typosquats.csv)
+    twist_file = "data/potential_typosquats.csv"
+    if os.path.exists(twist_file):
+        def parse_twist_csv(text: str) -> Set[str]:
+            out = set()
+            reader = csv.DictReader(text.splitlines())
+            # Column is 'domain' or 'domain-name' (normalized by generate_permutations.py)
+            # We'll check both or just grab the first column
+            if not reader.fieldnames: return out
+            
+            col = "domain" if "domain" in reader.fieldnames else "domain-name"
+            if col not in reader.fieldnames and len(reader.fieldnames) > 0:
+                col = reader.fieldnames[0] # Fallback
+                
+            for row in reader:
+                d = normalize_domain(row.get(col, ""))
+                if is_valid_domain(d):
+                    out.add(d)
+            return out
+
+        try:
+             with open(twist_file, 'r', encoding='utf-8') as f:
+                doms = parse_twist_csv(f.read())
+                log(f"  [+] {'dnstwist_discovery':28s} {len(doms):7d} domains  (local)")
+                dea |= doms
+        except Exception as e:
+            log(f"  [!] Failed to read {twist_file}: {e}")
+
     # ---- Execute pulls ----
     log("[*] Fetching DEA sources...")
     dea: Set[str] = set()

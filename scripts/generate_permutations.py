@@ -14,6 +14,7 @@ import sys
 import argparse
 import csv
 import logging
+import subprocess
 import dnstwist
 
 # Configure dnstwist logging to be less noisy if needed
@@ -28,20 +29,48 @@ def load_targets():
     with open(INPUT_FILE, 'r') as f:
         return [line.strip() for line in f if line.strip() and not line.startswith('#')]
 
+
 def run_dnstwist(domain):
     """
-    Runs dnstwist generation logic.
+    Runs dnstwist generation logic via CLI.
     """
     try:
-        # dnstwist python usage is a bit constrained, usually CLI is preferred.
-        # But we can instantiate the class.
+        # We'll use JSON format for easier parsing
+        # Use a unique temp file per domain to avoid collision if parallelized later
+        import uuid
+        temp_json = f"temp_dnstwist_{uuid.uuid4().hex}.json"
         
-        # Note: dnstwist structure changes often. This assumes v2.x API or similar.
-        # If import fails, we might shell out.
+        # dnstwist CLI:
+        # -r: registered only (resolve)
+        # -f json: json format
+        # -o file: output to file
+        # -t 50: threads
+        cmd = [
+            sys.executable, "-m", "dnstwist", 
+            "--registered", 
+            "--format", "json", 
+            "--output", temp_json,
+            "--threads", "50",
+            domain
+        ]
         
-        fuzzer = dnstwist.DomainFuzzer(domain)
-        fuzzer.generate()
-        return fuzzer.domains # List of dicts
+        # This will block until finished. Can be slow for large domains.
+        result = subprocess.run(cmd, capture_output=True, text=True, check=False)
+        
+        if result.returncode != 0:
+            logging.warning(f"dnstwist exited with {result.returncode} for {domain}")
+            
+        data = []
+        if os.path.exists(temp_json):
+            try:
+                with open(temp_json, 'r', encoding='utf-8') as f:
+                    data = json.load(f)
+            except Exception as e:
+                logging.error(f"Failed to parse dnstwist output for {domain}: {e}")
+            finally:
+                os.remove(temp_json)
+                
+        return data
         
     except Exception as e:
         logging.error(f"Error fuzzing {domain}: {e}")
@@ -53,22 +82,37 @@ def main():
     
     all_results = []
     
-    for target in targets:
-        logging.info(f"Fuzzing {target}...")
+    for i, target in enumerate(targets):
+        logging.info(f"[{i+1}/{len(targets)}] Fuzzing {target}...")
         results = run_dnstwist(target)
         # enrich with source
         for r in results:
             r['source_target'] = target
+            # dnstwist json keys: 'domain', 'fuzzer', ...
+            # Normalize to 'domain-name' for CSV consistency if needed, but strict 'domain' is fine
+            
         all_results.extend(results)
         
     logging.info(f"Generated {len(all_results)} permutations.")
     
     # Save to CSV
-    # dnstwist returns keys like: {'domain-name': '...', 'fuzzer': '...'}
-    keys = ['domain-name', 'fuzzer', 'source_target']
+    # Collect all possible keys
+    if not all_results:
+        logging.warning("No results found.")
+        return
+
+    keys = set()
+    for r in all_results:
+        keys.update(r.keys())
+    
+    fieldnames = sorted(list(keys))
+    # Ensure 'domain' is first
+    if 'domain' in fieldnames:
+        fieldnames.remove('domain')
+        fieldnames.insert(0, 'domain')
     
     with open(OUTPUT_FILE, 'w', newline='', encoding='utf-8') as f:
-        writer = csv.DictWriter(f, fieldnames=keys, extrasaction='ignore')
+        writer = csv.DictWriter(f, fieldnames=fieldnames, extrasaction='ignore')
         writer.writeheader()
         for res in all_results:
             writer.writerow(res)
