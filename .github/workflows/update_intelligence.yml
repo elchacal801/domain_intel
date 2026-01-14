@@ -186,6 +186,8 @@ jobs:
           # Sync artifacts
           cp data/visual_clusters.json docs/data/ || true
           cp data/visual_hashes.csv docs/data/ || true
+          mkdir -p docs/data/screenshots
+          cp -r data/screenshots/* docs/data/screenshots/ || true
 
       - name: AI Analysis (Optional)
         env:

@@ -245,6 +245,7 @@ def main() -> None:
     # 1. Seads (discovered_ads.csv)
     seads_file = "data/discovered_ads.csv"
     if os.path.exists(seads_file):
+        log(f"  [+] Found local seads file: {seads_file}")
         def parse_seads_csv(text: str) -> Set[str]:
             out = set()
             reader = csv.DictReader(text.splitlines())

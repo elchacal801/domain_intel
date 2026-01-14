@@ -6,6 +6,61 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Domain Intel | Threat Dashboard</title>
     <link rel="stylesheet" href="styles.css">
+    <style>
+        .cluster-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 20px;
+        }
+
+        .cluster-card {
+            background: #0d1117;
+            border: 1px solid #30363d;
+            border-radius: 6px;
+            overflow: hidden;
+        }
+
+        .cluster-img {
+            width: 100%;
+            height: 160px;
+            object-fit: cover;
+            border-bottom: 1px solid #30363d;
+        }
+
+        .cluster-info {
+            padding: 10px;
+        }
+
+        .cluster-count {
+            background: #da3633;
+            color: white;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-size: 0.8em;
+            font-weight: bold;
+        }
+
+        .cluster-domains {
+            margin-top: 8px;
+            font-size: 0.85em;
+            color: #8b949e;
+            max-height: 80px;
+            overflow-y: auto;
+        }
+
+        .domain-link {
+            display: block;
+            color: #58a6ff;
+            text-decoration: none;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .domain-link:hover {
+            text-decoration: underline;
+        }
+    </style>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <link
         href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&family=Inter:wght@400;600&display=swap"
@@ -22,7 +77,8 @@
             <p class="subtitle">Real-time Disposable & Abuse Infrastructure Tracking</p>
             <div class="meta">
                 <span id="last-updated">Updated: Loading...</span>
-                <a href="data/domain_intel_bundle.json.gz" class="download-link" title="Download CTI Bundle (STIX 2.1)">📥
+                <a href="data/domain_intel_bundle.json.gz" class="download-link"
+                    title="Download CTI Bundle (STIX 2.1)">📥
                     STIX JSON (GZ)</a>
                 <a href="https://github.com/elchacal801/domain_intel" class="github-link">View Repo</a>
             </div>
@@ -34,7 +90,7 @@
                 <span id="briefing-date" class="badge">Today</span>
             </div>
             <p id="briefing-summary" class="briefing-text">Loading analysis...</p>
-            
+
             <div class="briefing-details">
                 <div class="briefing-col">
                     <h4>⚠️ Key Risks</h4>
@@ -81,6 +137,17 @@
             <div class="card chart-card">
                 <h3>AI Threat Classification</h3>
                 <canvas id="aiChart"></canvas>
+            </div>
+        </div>
+
+        <div id="visual-intel-container" class="card chart-card" style="display:none; margin-top:20px;">
+            <h3>👁️ Visual Phishing Forensics</h3>
+            <p style="color:#8b949e; font-size:0.9em; margin-bottom:15px;">
+                AI-driven visual clustering has identified groups of visually identical domains, indicating shared
+                phishing kits or infrastructure.
+            </p>
+            <div id="cluster-gallery" class="cluster-grid">
+                <!-- Clusters injected here -->
             </div>
         </div>
 

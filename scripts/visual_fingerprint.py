@@ -108,6 +108,13 @@ async def capture_and_hash(domains: List[str], concurrency: int) -> List[dict]:
 
                     # Screenshot
                     png_bytes = await page.screenshot(full_page=False)
+                    
+                    # Save to disk for dashboard
+                    screenshot_path = f"data/screenshots/{domain}.png"
+                    os.makedirs("data/screenshots", exist_ok=True)
+                    with open(screenshot_path, "wb") as f:
+                        f.write(png_bytes)
+                        
                     img = Image.open(BytesIO(png_bytes))
                     
                     # Hash

@@ -207,6 +207,48 @@ async function initDashboard() {
             });
         } catch (e) { console.log('No AI stats yet'); }
 
+        // --- 6. Visual Forensics ---
+        try {
+            const visualResp = await fetch('data/visual_clusters.json');
+            if (visualResp.ok) {
+                const clusters = await visualResp.json();
+                if (clusters.length > 0) {
+                    document.getElementById('visual-intel-container').style.display = 'block';
+                    const gallery = document.getElementById('cluster-gallery');
+
+                    // Take top 6 largest clusters
+                    clusters.slice(0, 6).forEach(cluster => {
+                        const count = cluster.count;
+                        const mainDomain = cluster.domains[0];
+                        // Use screenshot of the first domain in cluster
+                        const imgPath = `data/screenshots/${mainDomain}.png`;
+
+                        const card = document.createElement('div');
+                        card.className = 'cluster-card';
+
+                        // Domain list HTML
+                        const domainList = cluster.domains.map(d =>
+                            `<a href="http://${d}" target="_blank" class="domain-link">${d}</a>`
+                        ).join('');
+
+                        card.innerHTML = `
+                            <img src="${imgPath}" class="cluster-img" onerror="this.src='https://via.placeholder.com/280x160?text=Screenshot+Missing'">
+                            <div class="cluster-info">
+                                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+                                    <span class="cluster-count">${count} Domains</span>
+                                    <span style="font-size:0.8em; color:#8b949e;">Visual Match</span>
+                                </div>
+                                <div class="cluster-domains">
+                                    ${domainList}
+                                </div>
+                            </div>
+                        `;
+                        gallery.appendChild(card);
+                    });
+                }
+            }
+        } catch (e) { console.log('No visual clusters yet', e); }
+
     } catch (e) {
         console.error("Error loading data:", e);
     }
