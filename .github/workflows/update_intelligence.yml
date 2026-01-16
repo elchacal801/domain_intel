@@ -2,8 +2,8 @@ name: Daily Data Update
 
 on:
   schedule:
-    # Run at 00:00 UTC every Monday (Sunday night US)
-    - cron: '0 0 * * 1'
+    # Run at 11:00 UTC (6:00 AM EST) daily
+    - cron: '0 11 * * *'
   workflow_dispatch:
   push:
     branches: [ "main" ]

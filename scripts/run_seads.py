@@ -148,7 +148,7 @@ def main():
         # Random sample of 10 to prevent OOM/Timeouts on Github Actions
         # In a real full run, you might want all.
         import random
-        keywords = random.sample(all_keywords, min(len(all_keywords), 10))
+        keywords = random.sample(all_keywords, min(len(all_keywords), 30))
         logging.info(f"Loaded {len(all_keywords)} keywords. Sampling {len(keywords)}: {keywords}")
 
     logging.info(f"Starting Scan for {len(keywords)} keywords using {seads_bin}...")
