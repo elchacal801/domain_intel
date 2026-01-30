@@ -242,6 +242,13 @@ def main() -> None:
     # ---- Local Discovery Artifacts (Seads / Dnstwist) ----
     # If these files exist (e.g. downloaded from previous job), merge them into DEA list for probing.
     
+    # ---- Execute pulls ----
+    log("[*] Fetching DEA sources...")
+    dea: Set[str] = set()
+
+    # ---- Local Discovery Artifacts (Seads / Dnstwist) ----
+    # If these files exist (e.g. downloaded from previous job), merge them into DEA list for probing.
+    
     # 1. Seads (discovered_ads.csv)
     seads_file = "data/discovered_ads.csv"
     if os.path.exists(seads_file):
@@ -294,8 +301,7 @@ def main() -> None:
             log(f"  [!] Failed to read {twist_file}: {e}")
 
     # ---- Execute pulls ----
-    log("[*] Fetching DEA sources...")
-    dea: Set[str] = set()
+    # Main source loops
 
     for name, url, parser in dea_sources:
         if name == "yopmail_alternates_html":

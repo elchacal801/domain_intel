@@ -76,6 +76,18 @@ jobs:
           path: data/dea_part_*.csv
           retention-days: 1
 
+      - name: Upload Raw Lists
+        uses: actions/upload-artifact@v4
+        with:
+          name: raw-lists
+          path: |
+            data/dea_domains.csv
+            data/high_abuse_domains.csv
+            data/dea_allowlist.csv
+            data/discovered_ads.csv
+            data/potential_typosquats.csv
+          retention-days: 1
+
   process_shard:
     needs: setup
     runs-on: ubuntu-latest
@@ -155,6 +167,19 @@ jobs:
         with:
           pattern: result-shard-*
           merge-multiple: true
+          path: data
+
+      - name: Download Discovery Intel
+        uses: actions/download-artifact@v4
+        with:
+          name: discovery-intel
+          path: data
+        continue-on-error: true
+
+      - name: Download Raw Lists
+        uses: actions/download-artifact@v4
+        with:
+          name: raw-lists
           path: data
 
       - name: Merge Results
