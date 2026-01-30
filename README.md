@@ -17,6 +17,8 @@ View the real-time threat intelligence visualization, now featuring an **AI-gene
 * **`data/`**: The authoritative source for domain lists and derived intelligence.
   * `dea_domains.csv`: The strict list of disposable provider domains.
   * `dea_domains_probed.csv`: Active HTTP/S fingerprint data (titles, server headers). **[Primary Artifact]**
+  * `discovered_ads.csv`: **[NEW]** Malicious ads targeting keywords detected by SEADS.
+  * `potential_typosquats.csv`: **[NEW]** Permutations of target domains (dnstwist).
   * `web_server_counts.csv`: **[NEW]** Top web servers (Nginx, Cloudflare) detected via fingerprinting.
   * `ai_typosquats.csv`: Domains impersonating high-value targets (Google, Banks) detected by AI.
   * `ai_classifications.csv`: Web pages classified as Phishing, Parked, or Legitimate by AI.
@@ -70,7 +72,6 @@ pip install -r requirements.txt
 To run the AI modules (`scripts/ai_*.py`), you need API keys.
 
 1. Create a `.env` file in the root directory:
-1. Create a `.env` file in the root directory:
 
     ```env
     OPENAI_API_KEY=sk-...
@@ -79,15 +80,11 @@ To run the AI modules (`scripts/ai_*.py`), you need API keys.
 
 1. For GitHub Actions, add these as **Repository Secrets**.
 
-### 4. Proactive Discovery (New)
+### Proactive Discovery (New)
 
 * **Ad Intelligence**: `run_seads.py` scans search engines for malicious ads targeting specific keywords (Config: `config/seads_keywords.txt`).
 * **Typosquat Generation**: `generate_permutations.py` (via `dnstwist`) generates thousands of potential lookalike domains for high-value targets.
 * **Visual Fingerprinting**: `visual_fingerprint.py` uses headless browsers to group domains by visual similarity (pHash), effectively tracking phishing kits.
-
-## 📁 Repository Structurets**
-
-### Reproducing the Intelligence
 
 ### Reproducing the Intelligence
 
