@@ -99,16 +99,19 @@ def parse_seads_output(current_keyword=""):
     try:
         with open(OUTPUT_JSON, 'r', encoding='utf-8') as f:
             data = json.load(f)
-            # SEADS json structure varies, let's assume standard list of findings
-            # Adjust based on actual structure
             if isinstance(data, list):
                 findings = data
+            elif isinstance(data, dict):
+                # Handle potential single-object or wrapper structure
+                findings = [data]
     except Exception as e:
         logging.error(f"Failed to parse findings: {e}")
         return
 
+    if not findings:
+        return
+
     # Write CSV
-    file_exists = os.path.exists(OUTPUT_CSV)
     count = 0
     with open(OUTPUT_CSV, 'a', newline='', encoding='utf-8') as f:
         fields = ['query', 'ad_domain', 'display_url', 'link', 'engine']
@@ -116,19 +119,36 @@ def parse_seads_output(current_keyword=""):
         # Header handled in main initialization
             
         for item in findings:
-            # Normalize fields based on Seads schema
+            # Helper to get value with multiple potential keys
+            def get_val(keys):
+                for k in keys:
+                    if k in item:
+                        return item[k]
+                return ''
+
             row = {
-                'query': item.get('Keyword', ''),
-                'ad_domain': item.get('Domain', ''), # The visible domain
-                'display_url': item.get('DisplayUrl', ''),
-                'link': item.get('Link', ''), # The clickthrough (often encoded)
-                'engine': item.get('Engine', 'unknown')
+                'query': get_val(['Keyword', 'keyword', 'query']),
+                'ad_domain': get_val(['Domain', 'domain', 'ad_domain']), 
+                'display_url': get_val(['DisplayUrl', 'display_url', 'displayUrl']),
+                'link': get_val(['Link', 'link', 'url']),
+                'engine': get_val(['Engine', 'engine', 'source'])
             }
+            
+            # Fallback: if query is empty, use current_keyword
+            if not row['query']:
+                row['query'] = current_keyword
+
             if row['ad_domain']:
                 writer.writerow(row)
                 count += 1
-                
-    logging.info(f"Appended {count} ads to {OUTPUT_CSV}")
+            else:
+                # Debug log for missing domain
+                logging.debug(f"Skipping item with missing domain: {item.keys()}")
+
+    if count > 0:
+        logging.info(f"Appended {count} ads to {OUTPUT_CSV}")
+    else:
+        logging.warning(f"Parsed 0 ads from {len(findings)} raw items. Check JSON keys: {findings[0].keys() if findings else '[]'}")
 
 def main():
     seads_bin = install_seads()
@@ -197,41 +217,7 @@ def main():
             if os.path.exists(OUTPUT_JSON):
                 os.remove(OUTPUT_JSON)
 
-def parse_seads_output(current_keyword=""):
-    """Parses JSON and appends to CSV."""
-    if not os.path.exists(OUTPUT_JSON):
-        return
 
-    findings = []
-    try:
-        with open(OUTPUT_JSON, 'r', encoding='utf-8') as f:
-            data = json.load(f)
-            if isinstance(data, list):
-                findings = data
-    except Exception as e:
-        # JSON might be empty or malformed
-        return
-
-    count = 0
-    with open(OUTPUT_CSV, 'a', newline='', encoding='utf-8') as f:
-        fields = ['query', 'ad_domain', 'display_url', 'link', 'engine']
-        writer = csv.DictWriter(f, fieldnames=fields)
-        # Header already written in main()
-            
-        for item in findings:
-            row = {
-                'query': item.get('Keyword', current_keyword),
-                'ad_domain': item.get('Domain', ''),
-                'display_url': item.get('DisplayUrl', ''),
-                'link': item.get('Link', ''),
-                'engine': item.get('Engine', 'unknown')
-            }
-            if row['ad_domain']:
-                writer.writerow(row)
-                count += 1
-                
-    if count > 0:
-        logging.info(f"  Found {count} ads for '{current_keyword}'")
 
 
 if __name__ == "__main__":
