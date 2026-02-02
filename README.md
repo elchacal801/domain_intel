@@ -56,7 +56,12 @@ This repository provides different layers of data for different security roles:
   * **AI Modules**:
     * `ai_typosquat.py`: Uses LLM to detect semantic typosquatting (Limit: 50k/day).
     * `ai_classify_web.py`: Uses LLM to classify web page intent (Limit: 50k/day).
+    * `ai_typosquat.py`: Uses LLM to detect semantic typosquatting (Limit: 50k/day).
+    * `ai_classify_web.py`: Uses LLM to classify web page intent (Limit: 50k/day).
     * `ai_briefing.py`: Generates the daily dashboard briefing.
+  * **Analytics & Whois (New)**:
+    * `track_history.py`: Daily tracker for Domain Growth and Liveness (Stats).
+    * `drip_whois.py`: Slow, rate-limited Registrar enumeration (Port 43).
 
 * **`docs/`**: Documentation and dashboard code (`index.html`, `app.js`).
 

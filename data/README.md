@@ -66,6 +66,8 @@ The data flow moves from **Inputs** &rarr; **Discovery** &rarr; **Enrichment** &
 | **`risky_asn_list.csv`** | `generate_pivots.py` | **Internal Threat Map**. A ranking of ASNs based specifically on *your* observed target data. Differs from global lists. |
 | **`web_server_counts.csv`** | `generate_pivots.py` | **Technology Fingerprints**. Breakdown of web servers (Nginx, Apache, LiteSpeed) used by the infrastructure. |
 | **`mx_asn_counts.csv`** | `generate_pivots.py` | **Infrastructure Mapping**. Links MX providers to their underlying Hosting ASNs. |
+| **`history.csv`** | `track_history.py` | **Growth Analytics**. Daily tracking of Total Domains vs. Live Domains. Used by the visual dashboard. |
+| **`domain_registrars.csv`** | `drip_whois.py` | **Whois Database**. A slowly accumulated database of Domain Registrars (e.g., GoDaddy, NameCheap) for live domains. Populated via slow-drip to avoid rate limits. |
 
 ---
 
