@@ -33,7 +33,8 @@ logging.basicConfig(level=logging.INFO, format='[%(levelname)s] %(message)s')
 logger = logging.getLogger(__name__)
 
 # Constants
-TOR_EXIT_URL = "https://check.torproject.org/torbulkexitlist"
+TOR_EXIT_URL = "https://www.dan.me.uk/torlist/?exit" # Warning: 30min rate limit
+# Fallback if rate limited: https://check.torproject.org/torbulkexitlist
 TOR_ASN_URL = "https://raw.githubusercontent.com/NullifiedCode/ASN-Lists/main/Malicious/Tor/ASN.txt"
 
 CYMRU_ASN_QUERY = "AS{asn}.asn.cymru.com"

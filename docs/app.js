@@ -255,6 +255,10 @@ async function initDashboard() {
             // Format: risk_tag, count
 
             if (riskData.length > 0) {
+                // Update total stat
+                const totalRisk = riskData.reduce((acc, curr) => acc + parseInt(curr[1]), 0);
+                document.getElementById('stat-total-risk').textContent = totalRisk.toLocaleString();
+
                 const riskCtx = document.getElementById('riskChart').getContext('2d');
                 new Chart(riskCtx, {
                     type: 'bar',
@@ -280,6 +284,8 @@ async function initDashboard() {
                         }
                     }
                 });
+            } else {
+                document.getElementById('stat-total-risk').textContent = "0";
             }
         } catch (e) { console.log('No risk stats yet', e); }
 
