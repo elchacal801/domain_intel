@@ -154,7 +154,7 @@ graph TD
         I --> K["Reputation (OTX/SafeBrowsing)"]
         K --> L[Web Probing]
         L --> S[Shodan Enrichment]
-        L --> W[Whois (Port 43)]
+        L --> W["Whois (Port 43)"]
     end
 
     subgraph Intelligence
