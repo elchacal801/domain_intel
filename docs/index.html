@@ -1,169 +1,157 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Domain Intel | Threat Dashboard</title>
-    <link rel="stylesheet" href="styles.css">
-    <style>
-        .cluster-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-            gap: 20px;
-        }
-
-        .cluster-card {
-            background: #0d1117;
-            border: 1px solid #30363d;
-            border-radius: 6px;
-            overflow: hidden;
-        }
-
-        .cluster-img {
-            width: 100%;
-            height: 160px;
-            object-fit: cover;
-            border-bottom: 1px solid #30363d;
-        }
-
-        .cluster-info {
-            padding: 10px;
-        }
-
-        .cluster-count {
-            background: #da3633;
-            color: white;
-            padding: 2px 6px;
-            border-radius: 4px;
-            font-size: 0.8em;
-            font-weight: bold;
-        }
-
-        .cluster-domains {
-            margin-top: 8px;
-            font-size: 0.85em;
-            color: #8b949e;
-            max-height: 80px;
-            overflow-y: auto;
-        }
-
-        .domain-link {
-            display: block;
-            color: #58a6ff;
-            text-decoration: none;
-            overflow: hidden;
-            text-overflow: ellipsis;
-            white-space: nowrap;
-        }
-
-        .domain-link:hover {
-            text-decoration: underline;
-        }
-    </style>
+    <title>Domain Intel | Analytics</title>
+    <!-- Tailwind for modern styling -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Chart.js -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <link
-        href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&family=Inter:wght@400;600&display=swap"
-        rel="stylesheet">
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
+    
+    <style>
+        body { font-family: 'Inter', sans-serif; background-color: #0f172a; color: #e2e8f0; }
+        .card { background-color: #1e293b; border: 1px solid #334155; }
+    </style>
 </head>
+<body class="p-8">
 
-<body>
-    <div class="container">
-        <header>
-            <div class="logo">
-                <span class="icon">🛡️</span>
-                <h1>DOMAIN INTEL <span class="badge">LIVE</span></h1>
+    <div class="max-w-6xl mx-auto space-y-8">
+        
+        <!-- Header -->
+        <div class="flex justify-between items-center">
+            <div>
+                <h1 class="text-3xl font-bold text-white">Domain Intelligence</h1>
+                <p class="text-slate-400">Tracking the growth and liveness of the threat dataset.</p>
             </div>
-            <p class="subtitle">Real-time Disposable & Abuse Infrastructure Tracking</p>
-            <div class="meta">
-                <span id="last-updated">Updated: Loading...</span>
-                <a href="data/domain_intel_bundle.json.gz" class="download-link"
-                    title="Download CTI Bundle (STIX 2.1)">📥
-                    STIX JSON (GZ)</a>
-                <a href="https://github.com/elchacal801/domain_intel" class="github-link">View Repo</a>
+            <div class="text-right">
+                <p id="last-updated" class="text-sm text-slate-500">Updated: Loading...</p>
             </div>
-        </header>
+        </div>
 
-        <div id="briefing-container" class="card briefing-card" style="display:none;">
-            <div class="briefing-header">
-                <h2 id="briefing-headline">Daily Intelligence Briefing</h2>
-                <span id="briefing-date" class="badge">Today</span>
-            </div>
-            <p id="briefing-summary" class="briefing-text">Loading analysis...</p>
-
-            <div class="briefing-details">
-                <div class="briefing-col">
-                    <h4>⚠️ Key Risks</h4>
-                    <ul id="briefing-risks"></ul>
-                </div>
-                <div class="briefing-col">
-                    <h4>🛡️ Recommended Actions</h4>
-                    <ul id="briefing-actions"></ul>
+        <!-- Key Metrics -->
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div class="card p-6 rounded-xl">
+                <p class="text-sm font-semibold text-slate-400 uppercase tracking-wider">Total Probe Size</p>
+                <div class="flex items-end mt-2">
+                    <h2 id="total-count" class="text-3xl font-bold text-white">...</h2>
                 </div>
             </div>
-        </div>
-
-        <div class="stats-grid">
-            <div class="card stat-card">
-                <h3>Total Live Disposable Domains</h3>
-                <div class="big-number" id="stat-total-dea">...</div>
+            <div class="card p-6 rounded-xl border-emerald-900/50 bg-emerald-900/10">
+                <p class="text-sm font-semibold text-emerald-400 uppercase tracking-wider">Live Threats</p>
+                <div class="flex items-end mt-2">
+                    <h2 id="live-count" class="text-3xl font-bold text-emerald-300">...</h2>
+                    <span id="live-percent" class="ml-2 text-sm text-emerald-500 mb-1">...</span>
+                </div>
+                <p class="text-xs text-emerald-600/70 mt-1">Responding to HTTP or Mail</p>
             </div>
-            <div class="card stat-card">
-                <h3>Active Abuse ASNs</h3>
-                <div class="big-number" id="stat-total-asn">...</div>
-            </div>
-            <div class="card stat-card">
-                <h3>Top Mail Provider</h3>
-                <div class="big-number" id="stat-top-mx">...</div>
-            </div>
-        </div>
-
-        <div class="charts-grid">
-            <div class="card chart-card">
-                <h3>Top 10 Abuse Hosting Providers (ASNs)</h3>
-                <canvas id="asnChart"></canvas>
-            </div>
-            <div class="card chart-card">
-                <h3>Top 10 Disposable MX Providers</h3>
-                <canvas id="mxChart"></canvas>
+            <div class="card p-6 rounded-xl border-slate-700/50 bg-slate-800/50">
+                <p class="text-sm font-semibold text-slate-500 uppercase tracking-wider">Dead / Inactive</p>
+                <div class="flex items-end mt-2">
+                    <h2 id="dead-count" class="text-3xl font-bold text-slate-500">...</h2>
+                </div>
             </div>
         </div>
 
-        <div class="charts-grid">
-            <div class="card chart-card">
-                <h3>Top Web Servers (Fingerprinted)</h3>
-                <canvas id="serverChart"></canvas>
-            </div>
-            <div class="card chart-card">
-                <h3>AI Threat Classification</h3>
-                <canvas id="aiChart"></canvas>
+        <!-- Main Chart -->
+        <div class="card p-6 rounded-xl">
+            <h3 class="text-lg font-semibold text-white mb-4">Growth History</h3>
+            <div class="relative h-96 w-full">
+                <canvas id="growthChart"></canvas>
             </div>
         </div>
 
-        <div class="charts-grid">
-            <div class="card chart-card">
-                <h3>High Risk Registrars & Signals</h3>
-                <canvas id="riskChart"></canvas>
-            </div>
-        </div>
-
-        <div id="visual-intel-container" class="card chart-card" style="display:none; margin-top:20px;">
-            <h3>👁️ Visual Phishing Forensics</h3>
-            <p style="color:#8b949e; font-size:0.9em; margin-bottom:15px;">
-                AI-driven visual clustering has identified groups of visually identical domains, indicating shared
-                phishing kits or infrastructure.
-            </p>
-            <div id="cluster-gallery" class="cluster-grid">
-                <!-- Clusters injected here -->
-            </div>
-        </div>
-
-        <footer>
-            <p>Data generated daily by <a href="https://github.com/elchacal801/domain_intel">Domain Intel Pipeline</a>.
-            </p>
-        </footer>
     </div>
-    <script src="app.js"></script>
-</body>
 
+    <script>
+        async function loadData() {
+            try {
+                // Fetch the JSON generated by our python script
+                const response = await fetch('history.json');
+                const data = await response.json();
+
+                if (!data || data.length === 0) return;
+
+                // Get latest entry
+                const latest = data[data.length - 1];
+                
+                // Update DOM
+                document.getElementById('last-updated').innerText = `Data as of: ${latest.date}`;
+                document.getElementById('total-count').innerText = latest.total.toLocaleString();
+                document.getElementById('live-count').innerText = latest.live.toLocaleString();
+                document.getElementById('dead-count').innerText = latest.dead.toLocaleString();
+                
+                const percent = ((latest.live / latest.total) * 100).toFixed(1);
+                document.getElementById('live-percent').innerText = `(${percent}%)`;
+
+                // Prepare Chart Data
+                const dates = data.map(d => d.date);
+                const total = data.map(d => d.total);
+                const live = data.map(d => d.live);
+
+                renderChart(dates, total, live);
+
+            } catch (error) {
+                console.error("Failed to load history data:", error);
+            }
+        }
+
+        function renderChart(dates, total, live) {
+            const ctx = document.getElementById('growthChart').getContext('2d');
+            
+            new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: dates,
+                    datasets: [
+                        {
+                            label: 'Total Domains',
+                            data: total,
+                            borderColor: '#94a3b8', // Slate-400
+                            backgroundColor: 'rgba(148, 163, 184, 0.1)',
+                            fill: true,
+                            tension: 0.4,
+                            pointRadius: 4,
+                            pointHoverRadius: 6
+                        },
+                        {
+                            label: 'Live Threats',
+                            data: live,
+                            borderColor: '#10b981', // Emerald-500
+                            backgroundColor: 'rgba(16, 185, 129, 0.2)',
+                            fill: true,
+                            tension: 0.4,
+                            pointRadius: 4,
+                            pointHoverRadius: 6
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            labels: { color: '#cbd5e1' }
+                        }
+                    },
+                    scales: {
+                        y: {
+                            grid: { color: '#334155' },
+                            ticks: { color: '#94a3b8' }
+                        },
+                        x: {
+                            grid: { display: false },
+                            ticks: { color: '#94a3b8' }
+                        }
+                    }
+                }
+            });
+        }
+
+        // Initialize
+        loadData();
+    </script>
+</body>
 </html>

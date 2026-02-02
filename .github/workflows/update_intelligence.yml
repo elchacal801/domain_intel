@@ -194,7 +194,9 @@ jobs:
           python scripts/merge_results.py --pattern "data/result_part_*.csv" --output data/dea_domains_probed.csv
 
       - name: Generate Pivots & Stats
-        run: python scripts/generate_pivots.py --input data/dea_domains_probed.csv
+        run: |
+          python scripts/generate_pivots.py --input data/dea_domains_probed.csv
+          python scripts/track_history.py
 
       - name: Infrastructure Intel (ASN/VPN/Tor)
         run: |
@@ -251,7 +253,8 @@ jobs:
           gzip -f data/domain_intel_bundle.json
           cp data/*.json.gz docs/data/
           
-          git add data docs/data
+          git add data docs
+
           if git diff --staged --quiet; then
             echo "No changes to commit"
           else
