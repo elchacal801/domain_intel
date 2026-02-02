@@ -32,6 +32,7 @@ def main():
     asn_counts: Counter[str] = collections.Counter()
     mx_asn_map: Dict[str, Counter[str]] = collections.defaultdict(collections.Counter)
     server_counts: Counter[str] = collections.Counter()
+    risk_counts: Counter[str] = collections.Counter()
     
     # ASN Metadata map (ASN -> Name)
     asn_meta: Dict[str, str] = {}
@@ -46,6 +47,7 @@ def main():
                 mx = normalize(row.get("primary_mx", ""))
                 asn = row.get("asn", "")
                 asn_name = row.get("asn_name", "")
+                risks = row.get("risk_tags", "").strip()
                 
                 # Server stats (prefer HTTPS, fallback to HTTP)
                 server = row.get("https_server", "").strip() or row.get("http_server", "").strip()
@@ -54,6 +56,14 @@ def main():
                     server_simple = server.split('/')[0].split(' ')[0]
                     server_counts[server_simple] += 1
                 
+                # Risk Counts
+                if risks:
+                    # Handle multiple tags if semicolon separated
+                    for tag in risks.split(';'):
+                        t = tag.strip()
+                        if t:
+                            risk_counts[t] += 1
+
                 # Skip failed resolutions if needed, or count them as "Unknown"
                 if not mx:
                     continue
@@ -118,8 +128,7 @@ def main():
             for asn, count in asn_subcounts.most_common():
                 w.writerow([mx, asn, asn_meta.get(asn, ""), count])
 
-    # 4. risky_asn_list.csv (Threshold: > 5 domains? Or just all sorted)
-    # The prompt asks for "High-risk hosting ASNs". We'll include all but sorted by risk (count).
+    # 4. risky_asn_list.csv
     print("[*] Generating risky_asn_list.csv...")
     with open("data/risky_asn_list.csv", "w", newline="", encoding="utf-8") as f:
         w = csv.writer(f)
@@ -135,7 +144,16 @@ def main():
         for srv, count in server_counts.most_common(20): # Top 20 only
              w.writerow([srv, count])
 
+    # 6. risk_counts.csv
+    print("[*] Generating risk_counts.csv...")
+    with open("data/risk_counts.csv", "w", newline="", encoding="utf-8") as f:
+        w = csv.writer(f)
+        w.writerow(["risk_tag", "count"])
+        for tag, count in risk_counts.most_common():
+             w.writerow([tag, count])
+
     print("[*] Done.")
+
 
 if __name__ == "__main__":
     main()

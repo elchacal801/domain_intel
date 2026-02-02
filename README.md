@@ -121,13 +121,51 @@ To run the AI modules (`scripts/ai_*.py`), you need API keys.
     python scripts/ai_briefing.py
     ```
 
-## 🧠 Methodology
+## 🧠 Methodology \& Architecture
+
+### Data Pipeline
+
+```mermaid
+graph TD
+    subgraph Discovery
+        A[Keywords] -->|SEADS| B(Discovered Ads)
+        C[Targets] -->|DNSTwist| D(Typosquats)
+        E[Open Sources] -->|Merge| F(Raw Lists)
+    end
+
+    subgraph Enrichment
+        F & B & D --> G{Sharding}
+        G --> H[Async DNS Resolution]
+        H -->|MX, A, NS| I[ASN Enrichment]
+        H -->|Nameservers| J[Registrar Risk Analysis]
+        I --> K[Reputation Check]
+        K --> L[Web Probing]
+    end
+
+    subgraph Intelligence
+        L --> M{Aggregation}
+        M --> N[Visual Forensics]
+        M --> O[Risk & Threat Tagging]
+        M --> P(Daily Briefing LLM)
+    end
+
+    subgraph Output
+        N & O & P --> Q[Live Dashboard]
+        N & O & P --> R[STIX 2.1 Bundle]
+    end
+
+    style J fill:#bbf,stroke:#333,stroke-width:2px,color:black
+    style N fill:#bfb,stroke:#333,stroke-width:2px,color:black
+```
+
+### Detection Logic
 
 My approach focuses on **infrastructure reuse**. Threat actors can register thousands of domains (`.xyz`, `.ga`, `.tk`) cheaply, but they often point them to a smaller set of mail servers or hosting providers.
 
-By tracking the MX records (e.g., `mail.private-email.com`) and ASNs (e.g., `DigitalOcean`), we can detect new, unknown domains belonging to these abuse families before they appear on static blocklists.
-
-**New AI Layer**: We now use lightweight LLMs to perform cognitive tasks that regex cannot handle, such as detecting visual homoglyphs in domain names (Typosquatting) and understanding the intent of a webpage title (e.g., "Login - Secure" on a non-standard domain).
+1. **Infrastructure Tracking**: By tracking MX records and ASNs, we detect new domains belonging to known abuse families.
+2. **High-Risk Registrars**: We analyze Name Server (NS) records to identify domains registered through "bulletproof" providers (e.g., **Nicenic**) that ignore abuse reports.
+3. **Visual Forensics**: Headless browsers capture screenshots and generate perceptual hashes (pHash) to group visually identical phishing pages (e.g., identical crypto scam templates).
+4. **AI Analysis**: Lightweight LLMs classify page intent and generate executive summaries.
 
 See [docs/detection_logic.md](docs/detection_logic.md) for details on how I apply this to fraud detection.
 

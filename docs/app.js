@@ -249,6 +249,40 @@ async function initDashboard() {
             }
         } catch (e) { console.log('No visual clusters yet', e); }
 
+        // --- 7. High Risk Signals (Registrars) ---
+        try {
+            const riskData = await fetchData('data/risk_counts.csv');
+            // Format: risk_tag, count
+
+            if (riskData.length > 0) {
+                const riskCtx = document.getElementById('riskChart').getContext('2d');
+                new Chart(riskCtx, {
+                    type: 'bar',
+                    data: {
+                        labels: riskData.map(r => r[0].replace('HighRisk:', '')), // Clean label
+                        datasets: [{
+                            label: 'Domains Detected',
+                            data: riskData.map(r => parseInt(r[1])),
+                            backgroundColor: 'rgba(218, 54, 51, 0.7)', // Red
+                            borderColor: '#da3633',
+                            borderWidth: 1
+                        }]
+                    },
+                    options: {
+                        indexAxis: 'y',
+                        responsive: true,
+                        plugins: {
+                            legend: { display: false }
+                        },
+                        scales: {
+                            x: { grid: { color: '#30363d' } },
+                            y: { grid: { display: false } }
+                        }
+                    }
+                });
+            }
+        } catch (e) { console.log('No risk stats yet', e); }
+
     } catch (e) {
         console.error("Error loading data:", e);
     }
