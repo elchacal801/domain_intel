@@ -172,12 +172,26 @@ graph TD
 
 ### Detection Logic
 
-My approach focuses on **infrastructure reuse**. Threat actors can register thousands of domains (`.xyz`, `.ga`, `.tk`) cheaply, but they often point them to a smaller set of mail servers or hosting providers.
+### 1. Discovery
 
-1. **Infrastructure Tracking**: By tracking MX records and ASNs, we detect new domains belonging to known abuse families.
+We use multiple methods to find specific, targeted threats:
+
+* **Permutations (`dnstwist`)**: We generate thousands of "lookalike" domains (e.g., `g0ogle.com`, `goog1e.com`) to catch typosquatters.
+* **Ad Scanning (`seads`)**: We scan search engine ads for keywords (e.g., "crypto login") to find malicious ads leading to phishing sites.
+* **Certificate Transparency (`crt.sh`)**: We monitor SSL certificate logs to detect subdomains and infrastructure *before* it becomes active in DNS.
+
+### 2. Enrichment
+
+Once we have a list of domains, we enrich them with deep infrastructure data:
+
+* **DNS & MX**: Who handles their email? (e.g., is it a throwaway provider?)
+* **ASN & IP**: Who hosts the server? (e.g., is it a known "bulletproof" hoster in a high-risk jurisdiction?)
+* **Reputation (OTX)**: We cross-reference domains against **AlienVault OTX** to identify known malware/phishing campaigns.
+* **Infrastructure Tracking**: By tracking MX records and ASNs, we detect new domains belonging to known abuse families.
+
 2. **High-Risk Registrars**: We analyze Name Server (NS) records to identify domains registered through "bulletproof" providers (e.g., **Nicenic**) that ignore abuse reports.
-3. **Visual Forensics**: Headless browsers capture screenshots and generate perceptual hashes (pHash) to group visually identical phishing pages (e.g., identical crypto scam templates).
-4. **AI Analysis**: Lightweight LLMs classify page intent and generate executive summaries.
+2. **Visual Forensics**: Headless browsers capture screenshots and generate perceptual hashes (pHash) to group visually identical phishing pages (e.g., identical crypto scam templates).
+3. **AI Analysis**: Lightweight LLMs classify page intent and generate executive summaries.
 
 See [docs/detection_logic.md](docs/detection_logic.md) for details on how I apply this to fraud detection.
 
