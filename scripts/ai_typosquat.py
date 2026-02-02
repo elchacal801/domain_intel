@@ -19,7 +19,8 @@ load_dotenv()
 
 # Constants
 # Switching to OpenAI for reliability during test
-MODEL = "gpt-5-mini" 
+PRIMARY_MODEL = "gpt-5-mini" 
+FALLBACK_MODEL = "gpt-4o-mini"
 OUTPUT_FILE = "data/ai_typosquats.csv"
 INPUT_FILE = "data/dea_domains.csv"
 
@@ -75,14 +76,25 @@ def analyze_batch(domains: List[str]) -> List[Dict]:
 
     try:
         domain_list_str = "\n".join(domains)
-        response = completion(
-            model=MODEL,
-            messages=[
-                {"role": "system", "content": SYSTEM_PROMPT},
-                {"role": "user", "content": f"Analyze these domains:\n{domain_list_str}"}
-            ],
-            response_format={ "type": "json_object" }
-        )
+        
+        try:
+            response = completion(
+                model=PRIMARY_MODEL,
+                messages=[
+                    {"role": "system", "content": SYSTEM_PROMPT},
+                    {"role": "user", "content": f"Analyze these domains:\n{domain_list_str}"}
+                ],
+                response_format={ "type": "json_object" }
+            )
+        except Exception:
+            response = completion(
+                model=FALLBACK_MODEL,
+                messages=[
+                    {"role": "system", "content": SYSTEM_PROMPT},
+                    {"role": "user", "content": f"Analyze these domains:\n{domain_list_str}"}
+                ],
+                response_format={ "type": "json_object" }
+            )
         
         content = response.choices[0].message.content
         import json

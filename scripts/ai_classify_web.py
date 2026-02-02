@@ -23,7 +23,8 @@ from litellm import completion
 load_dotenv()
 
 # Constants
-MODEL = "gpt-5-nano"
+PRIMARY_MODEL = "gpt-5-nano"
+FALLBACK_MODEL = "gpt-4o-mini"
 OUTPUT_FILE = "data/ai_classifications.csv"
 INPUT_FILE = "data/dea_domains_probed.csv"
 
@@ -91,14 +92,25 @@ def classify_batch(items: List[Dict]) -> List[Dict]:
     prompt_str = "\n".join(prompt_lines)
 
     try:
-        response = completion(
-            model=MODEL,
-            messages=[
-                {"role": "system", "content": SYSTEM_PROMPT},
-                {"role": "user", "content": f"Classify this batch:\n{prompt_str}"}
-            ],
-            response_format={ "type": "json_object" }
-        )
+        try:
+            response = completion(
+                model=PRIMARY_MODEL,
+                messages=[
+                    {"role": "system", "content": SYSTEM_PROMPT},
+                    {"role": "user", "content": f"Classify this batch:\n{prompt_str}"}
+                ],
+                response_format={ "type": "json_object" }
+            )
+        except Exception:
+            # Fallback silently or with minimal log
+            response = completion(
+                model=FALLBACK_MODEL,
+                messages=[
+                    {"role": "system", "content": SYSTEM_PROMPT},
+                    {"role": "user", "content": f"Classify this batch:\n{prompt_str}"}
+                ],
+                response_format={ "type": "json_object" }
+            )
         
         content = response.choices[0].message.content
         import json

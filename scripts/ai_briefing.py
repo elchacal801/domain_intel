@@ -24,8 +24,9 @@ from litellm import completion
 load_dotenv()
 
 # Constants
-# Using OpenAI for high-quality English summarization
-MODEL = "gpt-5.2" 
+# Primary: GPT-5.2 (High Quality), Fallback: GPT-4o (Reliable)
+PRIMARY_MODEL = "gpt-5.2" 
+FALLBACK_MODEL = "gpt-4o"
 OUTPUT_FILE = "docs/data/daily_briefing.json"
 TYPOSQUAT_FILE = "data/ai_typosquats.csv"
 CLASSIFICATION_FILE = "data/ai_classifications.csv"
@@ -116,43 +117,57 @@ def generate_briefing(stats):
     print("Generating briefing with data:")
     print(data_summary)
 
+    # Try Primary AI Model
     try:
+        print(f"[*] Attempting generation with {PRIMARY_MODEL}...")
         response = completion(
-            model=MODEL,
+            model=PRIMARY_MODEL,
             messages=[
                 {"role": "system", "content": SYSTEM_PROMPT},
                 {"role": "user", "content": f"Data for briefing:\n{data_summary}"}
             ],
             response_format={ "type": "json_object" }
         )
-        
-        content = response.choices[0].message.content
-        
-        # Parse JSON
-        import json
-        if "```json" in content:
-            content = content.replace("```json", "").replace("```", "")
-        elif "```" in content:
-            content = content.replace("```", "")
-            
-        briefing = json.loads(content)
-        # Ensure date matches today just in case LLM hallucinations
-        briefing["date"] = datetime.now().strftime('%Y-%m-%d')
-        
-        return briefing
-        
     except Exception as e:
-        print(f"Error calling LLM or generating briefing: {e}")
-        import traceback
-        traceback.print_exc()
-        # Fallback
-        return {
-            "date": datetime.now().strftime('%Y-%m-%d'),
-            "headline": " Automated Analysis Completed",
-            "summary": f"Processed {stats['total_domains']} domains. Identified {len(stats['typosquats'])} typosquats.",
-            "key_risks": ["Review Typosquats CSV"],
-            "action_items": ["Verify high confidence alerts"]
-        }
+        print(f"[!] {PRIMARY_MODEL} failed ({e}). Falling back to {FALLBACK_MODEL}...")
+        try:
+            response = completion(
+                model=FALLBACK_MODEL,
+                messages=[
+                    {"role": "system", "content": SYSTEM_PROMPT},
+                    {"role": "user", "content": f"Data for briefing:\n{data_summary}"}
+                ],
+                response_format={ "type": "json_object" }
+            )
+        except Exception as e2:
+            print(f"[!] Fallback failed too: {e2}")
+            # Return Mock/Fallback dict if both fail
+            return {
+                "date": datetime.now().strftime('%Y-%m-%d'),
+                "headline": "Full Manual Analysis Required",
+                "summary": f"AI Generation Failed. Processed {stats['total_domains']} domains.",
+                "key_risks": ["AI Unavailable"],
+                "action_items": ["Check API Keys", "Check Logs"]
+            }
+
+    content = response.choices[0].message.content
+    
+    # Parse JSON
+    import json
+    if "```json" in content:
+        content = content.replace("```json", "").replace("```", "")
+    elif "```" in content:
+        content = content.replace("```", "")
+        
+    briefing = json.loads(content)
+    # Ensure date matches today just in case LLM hallucinations
+    briefing["date"] = datetime.now().strftime('%Y-%m-%d')
+    briefing["model_used"] = response.model # Track which model worked
+    
+    return briefing
+        
+    # Fallback/Mock logic is now handled above in the nested try/except
+    pass
 
 def save_briefing(briefing):
     os.makedirs(os.path.dirname(OUTPUT_FILE), exist_ok=True)
