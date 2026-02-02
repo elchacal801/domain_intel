@@ -128,9 +128,9 @@ def parse_seads_output(current_keyword=""):
 
             row = {
                 'query': get_val(['Keyword', 'keyword', 'query']),
-                'ad_domain': get_val(['Domain', 'domain', 'ad_domain']), 
-                'display_url': get_val(['DisplayUrl', 'display_url', 'displayUrl']),
-                'link': get_val(['Link', 'link', 'url']),
+                'ad_domain': get_val(['Domain', 'domain', 'ad_domain', 'final-domain-url']), 
+                'display_url': get_val(['DisplayUrl', 'display_url', 'displayUrl', 'final-domain-url']), # Fallback to domain if no display URL
+                'link': get_val(['Link', 'link', 'url', 'OriginalAdURL', 'adsUrl']),
                 'engine': get_val(['Engine', 'engine', 'source'])
             }
             
