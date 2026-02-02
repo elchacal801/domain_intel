@@ -189,9 +189,9 @@ Once we have a list of domains, we enrich them with deep infrastructure data:
 * **Reputation (OTX)**: We cross-reference domains against **AlienVault OTX** to identify known malware/phishing campaigns.
 * **Infrastructure Tracking**: By tracking MX records and ASNs, we detect new domains belonging to known abuse families.
 
-2. **High-Risk Registrars**: We analyze Name Server (NS) records to identify domains registered through "bulletproof" providers (e.g., **Nicenic**) that ignore abuse reports.
-2. **Visual Forensics**: Headless browsers capture screenshots and generate perceptual hashes (pHash) to group visually identical phishing pages (e.g., identical crypto scam templates).
-3. **AI Analysis**: Lightweight LLMs classify page intent and generate executive summaries.
+* **High-Risk Registrars**: We analyze Name Server (NS) records to identify domains registered through "bulletproof" providers (e.g., **Nicenic**) that ignore abuse reports.
+* **Visual Forensics**: Headless browsers capture screenshots and generate perceptual hashes (pHash) to group visually identical phishing pages (e.g., identical crypto scam templates).
+* **AI Analysis**: Lightweight LLMs classify page intent and generate executive summaries.
 
 See [docs/detection_logic.md](docs/detection_logic.md) for details on how I apply this to fraud detection.
 

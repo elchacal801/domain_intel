@@ -26,8 +26,7 @@ The data flow moves from **Inputs** &rarr; **Discovery** &rarr; **Enrichment** &
 | **`discovered_ads.csv`** | `run_seads.py` | **Malicious Ads**. Domains found running "Sponsored" ads on search engines for sensitive keywords. |
 | **`potential_typosquats.csv`** | `generate_permutations.py` | **Typosquats**. Generated list of lookalike domains (e.g., `g0ogle.com`) that *might* exist. |
 | **`discovered_certs.csv`** | `discover_ct.py` | **Certificate Logs**. Subdomains and certificates found via Certificate Transparency (crt.sh/Censys). |
-| **`discovered_certs.csv`** | `discover_ct.py` | **Certificate Logs**. Subdomains and certificates found via Certificate Transparency (crt.sh/Censys). |
-| **`dea_domains.csv`** | `merge_lists_v3b.py` | **Disposable Email Providers**. Aggregated from multiple open-source feeds (StopForumSpam, burnout, etc.). <br> **Why:** preventing fraud by blocking registrations from temporary mailboxes. |
+| **`dea_domains.csv`** | `merge_lists_v3b.py` | **Disposable Email Providers**. Aggregated from multiple open-source feeds (StopForumSpam, burnout, etc.). Why: preventing fraud by blocking registrations from temporary mailboxes. |
 | **`high_abuse_domains.csv`** | `merge_lists_v3b.py` | **Known Bad Domains**. A subset of domains flagged by high-confidence abuse feeds. |
 
 ---
@@ -49,9 +48,9 @@ The data flow moves from **Inputs** &rarr; **Discovery** &rarr; **Enrichment** &
 
 | File | Generator Script | Description & Importance |
 | :--- | :--- | :--- |
-| **`dea_domains_probed.csv`** | `probe_web.py` | **The Master Dataset**. Contains *everything*: DNS, ASN, HTTP Fingerprints (Title, Server), and Risk Tags for thousands of domains. <br> **Why:** This is the source of truth for all dashboards and pivots. It proves which domains are actually *alive* and what they are hosting. |
-| **`domain_intel_bundle.json.gz`** | `update_intelligence.yml` | **Export Bundle**. A compressed JSON version of the probed data. <br> **Why:** Optimized for programmatic ingestion by other tools/SIEMs. |
-| **`ai_classifications.csv`** | `ai_classify_web.py` | **AI Analysis**. LLM-based categorization of the site content (e.g., "Phishing", "Parked", "Legitimate"). <br> **Why:** Adds human-like judgment at scale to flag threats regex misses. |
+| **`dea_domains_probed.csv`** | `probe_web.py` | **The Master Dataset**. Contains *everything*: DNS, ASN, HTTP Fingerprints (Title, Server), and Risk Tags for thousands of domains. Why: This is the source of truth for all dashboards and pivots. It proves which domains are actually *alive* and what they are hosting. |
+| **`domain_intel_bundle.json.gz`** | `update_intelligence.yml` | **Export Bundle**. A compressed JSON version of the probed data. Why: Optimized for programmatic ingestion by other tools/SIEMs. |
+| **`ai_classifications.csv`** | `ai_classify_web.py` | **AI Analysis**. LLM-based categorization of the site content (e.g., "Phishing", "Parked", "Legitimate"). Why: Adds human-like judgment at scale to flag threats regex misses. |
 | **`ai_typosquats.csv`** | `ai_typosquat.py` | **Semantic Typosquats**. AI detected lookalikes based on meaning/visuals, not just spelling. |
 
 ---
