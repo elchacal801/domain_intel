@@ -256,6 +256,7 @@ jobs:
             echo "No changes to commit"
           else
             git commit -m "Automated Map Shard Update: $(date +'%Y-%m-%d')"
-            git pull --rebase origin main
+            # Use -X theirs to prioritize the workflow's fresh generated data over concurrent remote changes
+            git pull --rebase -X theirs origin main
             git push
           fi
