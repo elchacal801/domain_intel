@@ -25,7 +25,7 @@ load_dotenv()
 
 # Constants
 # Using OpenAI for high-quality English summarization
-MODEL = "gpt-3.5-turbo" 
+MODEL = "gpt-5.2-chat" 
 OUTPUT_FILE = "docs/data/daily_briefing.json"
 TYPOSQUAT_FILE = "data/ai_typosquats.csv"
 CLASSIFICATION_FILE = "data/ai_classifications.csv"
@@ -166,7 +166,7 @@ def main():
         # Alternatively, fallback to Gemini if OpenAI missing
         if os.getenv("GEMINI_API_KEY"):
             global MODEL
-            MODEL = "gemini/gemini-pro"
+            MODEL = "gemini/gemini-3-flash"
         else:
             sys.exit(1)
 

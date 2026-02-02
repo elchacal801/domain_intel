@@ -23,7 +23,7 @@ from litellm import completion
 load_dotenv()
 
 # Constants
-MODEL = "gpt-4o-mini"
+MODEL = "gpt-5-nano"
 OUTPUT_FILE = "data/ai_classifications.csv"
 INPUT_FILE = "data/dea_domains_probed.csv"
 

@@ -19,7 +19,7 @@ load_dotenv()
 
 # Constants
 # Switching to OpenAI for reliability during test
-MODEL = "gpt-4o-mini" 
+MODEL = "gpt-5-mini" 
 OUTPUT_FILE = "data/ai_typosquats.csv"
 INPUT_FILE = "data/dea_domains.csv"
 
