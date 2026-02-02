@@ -1,157 +1,328 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Domain Intel | Analytics</title>
-    <!-- Tailwind for modern styling -->
-    <script src="https://cdn.tailwindcss.com"></script>
+    <title>Domain Intelligence | Dashboard</title>
+
+    <!-- Fonts -->
+    <link
+        href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&family=Inter:wght@400;600;800&display=swap"
+        rel="stylesheet">
+
     <!-- Chart.js -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <!-- Google Fonts -->
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
-    
+
+    <!-- Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
     <style>
-        body { font-family: 'Inter', sans-serif; background-color: #0f172a; color: #e2e8f0; }
-        .card { background-color: #1e293b; border: 1px solid #334155; }
+        :root {
+            --bg-dark: #0d1117;
+            --bg-card: #161b22;
+            --border: #30363d;
+            --text-main: #c9d1d9;
+            --text-muted: #8b949e;
+            --accent: #58a6ff;
+            --danger: #da3633;
+            --success: #2ea043;
+            --warning: #d29922;
+        }
+
+        body {
+            background-color: var(--bg-dark);
+            color: var(--text-main);
+            font-family: 'Inter', sans-serif;
+            margin: 0;
+            padding: 20px;
+        }
+
+        h1,
+        h2,
+        h3 {
+            font-family: 'JetBrains Mono', monospace;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            display: grid;
+            grid-template-columns: 300px 1fr;
+            gap: 20px;
+        }
+
+        /* Sidebar Stats */
+        .sidebar {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .stat-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            padding: 20px;
+            border-radius: 8px;
+        }
+
+        .stat-value {
+            font-size: 2em;
+            font-weight: 800;
+            margin: 10px 0;
+            display: block;
+        }
+
+        .stat-label {
+            color: var(--text-muted);
+            font-size: 0.85em;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        /* Main Content */
+        .main-content {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .dashboard-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 24px;
+        }
+
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            border-bottom: 1px solid var(--border);
+            padding-bottom: 10px;
+        }
+
+        .card-title {
+            font-size: 1.1em;
+            font-weight: 600;
+            color: var(--text-main);
+        }
+
+        /* Briefing Section */
+        #briefing-container {
+            border-left: 4px solid var(--accent);
+            background: linear-gradient(90deg, rgba(88, 166, 255, 0.1) 0%, rgba(22, 27, 34, 0) 100%);
+        }
+
+        .briefing-meta {
+            font-size: 0.8em;
+            color: var(--accent);
+            margin-bottom: 10px;
+        }
+
+        /* Charts Grid */
+        .charts-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+
+        .chart-container {
+            position: relative;
+            height: 300px;
+            width: 100%;
+        }
+
+        /* Visual Forensics */
+        .gallery-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 15px;
+        }
+
+        .cluster-card {
+            background: #000;
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            overflow: hidden;
+        }
+
+        .cluster-img {
+            width: 100%;
+            height: 160px;
+            object-fit: cover;
+            opacity: 0.8;
+            transition: opacity 0.2s;
+        }
+
+        .cluster-img:hover {
+            opacity: 1;
+        }
+
+        .cluster-info {
+            padding: 10px;
+            font-size: 0.9em;
+        }
+
+        .domain-link {
+            display: block;
+            color: var(--accent);
+            text-decoration: none;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
     </style>
 </head>
-<body class="p-8">
 
-    <div class="max-w-6xl mx-auto space-y-8">
-        
-        <!-- Header -->
-        <div class="flex justify-between items-center">
-            <div>
-                <h1 class="text-3xl font-bold text-white">Domain Intelligence</h1>
-                <p class="text-slate-400">Tracking the growth and liveness of the threat dataset.</p>
-            </div>
-            <div class="text-right">
-                <p id="last-updated" class="text-sm text-slate-500">Updated: Loading...</p>
-            </div>
-        </div>
+<body>
 
-        <!-- Key Metrics -->
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-            <div class="card p-6 rounded-xl">
-                <p class="text-sm font-semibold text-slate-400 uppercase tracking-wider">Total Probe Size</p>
-                <div class="flex items-end mt-2">
-                    <h2 id="total-count" class="text-3xl font-bold text-white">...</h2>
+    <div class="container">
+        <!-- SIDEBAR -->
+        <aside class="sidebar">
+            <div class="stat-card">
+                <span class="stat-label">Total Validated</span>
+                <span id="stat-total-dea" class="stat-value" style="color: var(--text-main)">...</span>
+                <span class="stat-label">New Today: <span id="stat-new-today">...</span></span>
+            </div>
+
+            <div class="stat-card" style="border-color: var(--success);">
+                <span class="stat-label" style="color: var(--success)">Live Threats</span>
+                <span id="stat-live-dea" class="stat-value" style="color: var(--success)">...</span>
+                <span class="stat-label">Responding (HTTP/MX)</span>
+            </div>
+
+            <div class="stat-card" style="border-color: var(--danger);">
+                <span class="stat-label" style="color: var(--danger)">High Risk</span>
+                <span id="stat-total-risk" class="stat-value" style="color: var(--danger)">...</span>
+                <span class="stat-label">Flagged Registrars/ASN</span>
+            </div>
+
+            <div class="stat-card">
+                <span class="stat-label">Top MX Provider</span>
+                <span id="stat-top-mx" class="stat-value" style="font-size: 1.2em;">...</span>
+            </div>
+
+            <div class="stat-card">
+                <span class="stat-label">Total ASNs</span>
+                <span id="stat-total-asn" class="stat-value">...</span>
+            </div>
+
+            <div class="stat-card">
+                <span class="stat-label">Last Updated</span>
+                <span id="last-updated" style="display:block; margin-top:5px; font-family:monospace;">...</span>
+            </div>
+        </aside>
+
+        <!-- MAIN CONTENT -->
+        <main class="main-content">
+
+            <!-- HEADER -->
+            <div style="display:flex; justify-content:space-between; align-items:center;">
+                <h1 style="font-size: 2em; margin:0;">
+                    <i class="fa-solid fa-shield-halved" style="color: var(--accent); margin-right:10px;"></i>
+                    Domain Intelligence Unit
+                </h1>
+                <a href="https://github.com/elchacal801/domain_intel"
+                    style="color:var(--text-muted); text-decoration:none;">
+                    <i class="fa-brands fa-github"></i> View Repo
+                </a>
+            </div>
+
+            <!-- 1. AI BRIEFING (Restored) -->
+            <div id="briefing-container" class="dashboard-card" style="display:none;">
+                <div class="card-header" style="border:none; margin-bottom:10px;">
+                    <div class="card-title">
+                        <i class="fa-solid fa-robot" style="margin-right:8px;"></i> AI Daily Briefing
+                    </div>
+                    <div class="briefing-meta" id="briefing-date"></div>
+                </div>
+                <h2 id="briefing-headline" style="margin-top:0; color: white;">Loading...</h2>
+                <p id="briefing-summary" style="line-height:1.6; color: #d0d7de;"></p>
+
+                <div style="display:grid; grid-template-columns: 1fr 1fr; gap:20px; margin-top:20px;">
+                    <div style="background: rgba(218,54,51,0.1); padding:15px; border-radius:6px;">
+                        <h4 style="color: var(--danger); margin-top:0;">⚠️ Key Risks</h4>
+                        <ul id="briefing-risks" style="padding-left:20px; margin-bottom:0;"></ul>
+                    </div>
+                    <div style="background: rgba(46,160,67,0.1); padding:15px; border-radius:6px;">
+                        <h4 style="color: var(--success); margin-top:0;">🛡️ Recommended Actions</h4>
+                        <ul id="briefing-actions" style="padding-left:20px; margin-bottom:0;"></ul>
+                    </div>
                 </div>
             </div>
-            <div class="card p-6 rounded-xl border-emerald-900/50 bg-emerald-900/10">
-                <p class="text-sm font-semibold text-emerald-400 uppercase tracking-wider">Live Threats</p>
-                <div class="flex items-end mt-2">
-                    <h2 id="live-count" class="text-3xl font-bold text-emerald-300">...</h2>
-                    <span id="live-percent" class="ml-2 text-sm text-emerald-500 mb-1">...</span>
+
+            <!-- 2. GROWTH HISTORY (New) -->
+            <div class="dashboard-card">
+                <div class="card-header">
+                    <div class="card-title">Dataset Growth & Liveness</div>
                 </div>
-                <p class="text-xs text-emerald-600/70 mt-1">Responding to HTTP or Mail</p>
-            </div>
-            <div class="card p-6 rounded-xl border-slate-700/50 bg-slate-800/50">
-                <p class="text-sm font-semibold text-slate-500 uppercase tracking-wider">Dead / Inactive</p>
-                <div class="flex items-end mt-2">
-                    <h2 id="dead-count" class="text-3xl font-bold text-slate-500">...</h2>
+                <div class="chart-container" style="height: 250px;">
+                    <canvas id="growthChart"></canvas>
                 </div>
             </div>
-        </div>
 
-        <!-- Main Chart -->
-        <div class="card p-6 rounded-xl">
-            <h3 class="text-lg font-semibold text-white mb-4">Growth History</h3>
-            <div class="relative h-96 w-full">
-                <canvas id="growthChart"></canvas>
+            <!-- 3. INFRASTRUCTURE PIVOTS (Merged Old + New) -->
+            <div class="charts-grid">
+                <!-- Registrars (New) -->
+                <div class="dashboard-card">
+                    <div class="card-header">
+                        <div class="card-title">Top Registrars (Live Domains)</div>
+                    </div>
+                    <div class="chart-container">
+                        <canvas id="registrarChart"></canvas>
+                    </div>
+                </div>
+
+                <!-- Web Servers (Old) -->
+                <div class="dashboard-card">
+                    <div class="card-header">
+                        <div class="card-title">Web Server Technologies</div>
+                    </div>
+                    <div class="chart-container">
+                        <canvas id="serverChart"></canvas>
+                    </div>
+                </div>
+
+                <!-- Hosting ASNs (Old) -->
+                <div class="dashboard-card">
+                    <div class="card-header">
+                        <div class="card-title">Top Hosting ASNs</div>
+                    </div>
+                    <div class="chart-container">
+                        <canvas id="asnChart"></canvas>
+                    </div>
+                </div>
+
+                <!-- MX Providers (Old) -->
+                <div class="dashboard-card">
+                    <div class="card-header">
+                        <div class="card-title">Top Mail Providers (MX)</div>
+                    </div>
+                    <div class="chart-container">
+                        <canvas id="mxChart"></canvas>
+                    </div>
+                </div>
             </div>
-        </div>
 
+            <!-- 4. VISUAL FORENSICS (Old) -->
+            <div id="visual-intel-container" class="dashboard-card" style="display:none;">
+                <div class="card-header">
+                    <div class="card-title">
+                        <i class="fa-solid fa-camera" style="margin-right:8px;"></i> Visual Phishing Clusters
+                    </div>
+                </div>
+                <div class="gallery-grid" id="cluster-gallery">
+                    <!-- JS Injected -->
+                </div>
+            </div>
+
+        </main>
     </div>
 
-    <script>
-        async function loadData() {
-            try {
-                // Fetch the JSON generated by our python script
-                const response = await fetch('history.json');
-                const data = await response.json();
-
-                if (!data || data.length === 0) return;
-
-                // Get latest entry
-                const latest = data[data.length - 1];
-                
-                // Update DOM
-                document.getElementById('last-updated').innerText = `Data as of: ${latest.date}`;
-                document.getElementById('total-count').innerText = latest.total.toLocaleString();
-                document.getElementById('live-count').innerText = latest.live.toLocaleString();
-                document.getElementById('dead-count').innerText = latest.dead.toLocaleString();
-                
-                const percent = ((latest.live / latest.total) * 100).toFixed(1);
-                document.getElementById('live-percent').innerText = `(${percent}%)`;
-
-                // Prepare Chart Data
-                const dates = data.map(d => d.date);
-                const total = data.map(d => d.total);
-                const live = data.map(d => d.live);
-
-                renderChart(dates, total, live);
-
-            } catch (error) {
-                console.error("Failed to load history data:", error);
-            }
-        }
-
-        function renderChart(dates, total, live) {
-            const ctx = document.getElementById('growthChart').getContext('2d');
-            
-            new Chart(ctx, {
-                type: 'line',
-                data: {
-                    labels: dates,
-                    datasets: [
-                        {
-                            label: 'Total Domains',
-                            data: total,
-                            borderColor: '#94a3b8', // Slate-400
-                            backgroundColor: 'rgba(148, 163, 184, 0.1)',
-                            fill: true,
-                            tension: 0.4,
-                            pointRadius: 4,
-                            pointHoverRadius: 6
-                        },
-                        {
-                            label: 'Live Threats',
-                            data: live,
-                            borderColor: '#10b981', // Emerald-500
-                            backgroundColor: 'rgba(16, 185, 129, 0.2)',
-                            fill: true,
-                            tension: 0.4,
-                            pointRadius: 4,
-                            pointHoverRadius: 6
-                        }
-                    ]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: {
-                        legend: {
-                            labels: { color: '#cbd5e1' }
-                        }
-                    },
-                    scales: {
-                        y: {
-                            grid: { color: '#334155' },
-                            ticks: { color: '#94a3b8' }
-                        },
-                        x: {
-                            grid: { display: false },
-                            ticks: { color: '#94a3b8' }
-                        }
-                    }
-                }
-            });
-        }
-
-        // Initialize
-        loadData();
-    </script>
+    <!-- Load App Logic -->
+    <script src="app.js"></script>
 </body>
+
 </html>

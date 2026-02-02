@@ -283,10 +283,105 @@ async function initDashboard() {
             }
         } catch (e) { console.log('No risk stats yet', e); }
 
+        // --- 0a. Load History/Growth (New) ---
+        try {
+            const histResp = await fetch('history.json');
+            if (histResp.ok) {
+                const hData = await histResp.json();
+                if (hData.length > 0) {
+                    const latest = hData[hData.length - 1];
+                    // Update Sidebar
+                    document.getElementById('stat-live-dea').textContent = latest.live.toLocaleString();
+
+                    const prev = hData.length > 1 ? hData[hData.length - 2] : null;
+                    const newCount = prev ? (latest.total - prev.total) : 0;
+                    document.getElementById('stat-new-today').textContent = newCount > 0 ? `+${newCount}` : "0";
+
+                    // Render Chart
+                    const gCtx = document.getElementById('growthChart').getContext('2d');
+                    new Chart(gCtx, {
+                        type: 'line',
+                        data: {
+                            labels: hData.map(d => d.date),
+                            datasets: [
+                                {
+                                    label: 'Total Domains',
+                                    data: hData.map(d => d.total),
+                                    borderColor: '#8b949e',
+                                    backgroundColor: 'rgba(139, 148, 158, 0.1)',
+                                    fill: true,
+                                    tension: 0.3
+                                },
+                                {
+                                    label: 'Live Threats',
+                                    data: hData.map(d => d.live),
+                                    borderColor: '#2ea043',
+                                    backgroundColor: 'rgba(46, 160, 67, 0.2)',
+                                    fill: true,
+                                    tension: 0.3
+                                }
+                            ]
+                        },
+                        options: {
+                            responsive: true,
+                            maintainAspectRatio: false,
+                            plugins: { legend: { position: 'top' } },
+                            scales: {
+                                y: { grid: { color: '#30363d' } },
+                                x: { grid: { display: false } }
+                            }
+                        }
+                    });
+                }
+            }
+        } catch (e) { console.log('History load fail', e); }
+
+        // --- 0b. Load Registrars (New) ---
+        try {
+            const regData = await fetchData('data/domain_registrars.csv');
+            // Format: domain, registrar, date
+            const regCounts = {};
+            regData.forEach(r => {
+                const reg = r[1] || 'Unknown';
+                regCounts[reg] = (regCounts[reg] || 0) + 1;
+            });
+            // Sort
+            const sortedReg = Object.entries(regCounts)
+                .sort((a, b) => b[1] - a[1])
+                .slice(0, 10);
+
+            if (sortedReg.length > 0) {
+                const rCtx = document.getElementById('registrarChart').getContext('2d');
+                new Chart(rCtx, {
+                    type: 'bar',
+                    data: {
+                        labels: sortedReg.map(x => truncate(x[0], 20)),
+                        datasets: [{
+                            label: 'Domains',
+                            data: sortedReg.map(x => x[1]),
+                            backgroundColor: 'rgba(210, 153, 34, 0.7)', // Warning Color
+                            borderColor: '#d29922',
+                            borderWidth: 1
+                        }]
+                    },
+                    options: {
+                        indexAxis: 'y',
+                        responsive: true,
+                        plugins: { legend: { display: false } },
+                        scales: {
+                            x: { grid: { color: '#30363d' } },
+                            y: { grid: { display: false } }
+                        }
+                    }
+                });
+            }
+        } catch (e) { console.log('Registrar load fail', e); }
+
     } catch (e) {
         console.error("Error loading data:", e);
     }
 }
+
 
 // Chart.js Global Defaults
 Chart.defaults.color = '#8b949e';
