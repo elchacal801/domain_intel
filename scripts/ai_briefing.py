@@ -95,9 +95,8 @@ def generate_briefing(stats):
     # Construct the data prompt
     target_str = ", ".join(stats["top_targets"]) if stats["top_targets"] else "None"
     
-    # Estimate coverage based on Typosquat/Classify limits (hardcoded in workflow as 500)
-    # Ideally, we would count the number of rows in the AI output, but 500 is the known limit.
-    ai_limit = 500
+    # Estimate coverage based on Typosquat/Classify limits
+    ai_limit = 1000
     coverage_pct = (ai_limit / stats["total_domains"]) * 100 if stats["total_domains"] > 0 else 0
     
     data_summary = f"""
