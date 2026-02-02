@@ -28,6 +28,11 @@ jobs:
         
       - name: Dnstwist Proactive Hunt
         run: python scripts/generate_permutations.py
+
+      - name: Run CT Discovery
+        env:
+          CENSYS_API_KEY: ${{ secrets.CENSYS_API_KEY }}
+        run: python scripts/discover_ct.py
         
       - name: Upload Discovery Intel
         uses: actions/upload-artifact@v4
@@ -36,6 +41,7 @@ jobs:
           path: |
             data/discovered_ads.csv
             data/potential_typosquats.csv
+            data/discovered_certs.csv
           retention-days: 7
 
   setup:
@@ -121,6 +127,8 @@ jobs:
           path: data
 
       - name: Process Shard ${{ matrix.shard }}
+        env:
+          ALIENVAULT_OTX_API_KEY: ${{ secrets.ALIENVAULT_OTX_API_KEY }}
         run: |
           PART_FILE="data/dea_part_${{ matrix.shard }}.csv"
           OUT_FILE="data/result_part_${{ matrix.shard }}.csv"

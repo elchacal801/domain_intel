@@ -300,6 +300,23 @@ def main() -> None:
         except Exception as e:
             log(f"  [!] Failed to read {twist_file}: {e}")
 
+    # 3. CT Logs (discovered_certs.csv)
+    ct_file = "data/discovered_certs.csv"
+    if os.path.exists(ct_file):
+        try:
+             with open(ct_file, 'r', encoding='utf-8') as f:
+                reader = csv.DictReader(f)
+                ct_doms = set()
+                if reader.fieldnames and "domain" in reader.fieldnames:
+                    for row in reader:
+                        d = normalize_domain(row.get("domain", ""))
+                        if is_valid_domain(d):
+                            ct_doms.add(d)
+                log(f"  [+] {'ct_log_discovery':28s} {len(ct_doms):7d} domains  (local)")
+                dea |= ct_doms
+        except Exception as e:
+            log(f"  [!] Failed to read {ct_file}: {e}")
+
     # ---- Execute pulls ----
     # Main source loops
 

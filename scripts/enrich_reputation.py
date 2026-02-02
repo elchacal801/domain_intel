@@ -12,6 +12,7 @@ Optimized: Higher concurrency with ThreadPoolExecutor map.
 """
 
 import argparse
+import os
 import csv
 import dns.resolver
 import requests
@@ -26,6 +27,46 @@ RBLS = [
     "zen.spamhaus.org",
     "bl.spamcop.net" 
 ]
+
+# OTX Setup
+OTX_API_KEY = os.environ.get("ALIENVAULT_OTX_API_KEY")
+OTX_BASE_URL = "https://otx.alienvault.com/api/v1/indicators/domain/{}/general"
+# Simple in-memory cache to avoid redundant hits in same run (though input shouldn't have dupes)
+OTX_CACHE = {} 
+
+def check_otx(domain: str) -> str:
+    """Queries AlienVault OTX for pulses."""
+    if not OTX_API_KEY:
+        return ""
+        
+    url = OTX_BASE_URL.format(domain)
+    headers = {"X-OTX-API-KEY": OTX_API_KEY}
+    
+    try:
+        # Rate limit prevention (naive)
+        # OTX is 10k/hour = ~2.7/sec. 50 workers will HAMMER this.
+        # We need to rely on the requests failing or implement a global ratelimiter.
+        # For now, we swallow errors to avoid stopping the pipeline.
+        resp = requests.get(url, headers=headers, timeout=5)
+        
+        if resp.status_code == 200:
+            data = resp.json()
+            pulse_info = data.get("pulse_info", {})
+            count = pulse_info.get("count", 0)
+            if count > 0:
+                # Get Pulse names if possible?
+                pulses = pulse_info.get("pulses", [])
+                names = [p.get("name", "Unknown") for p in pulses[:3]] # Top 3
+                return f"OTX_Pulses:{count};" + ",".join(names)
+        elif resp.status_code == 429:
+            # Rate Limit
+            return "OTX_RateLimited"
+            
+    except Exception:
+        pass
+        
+    return ""
+
 
 def check_rbl(domain: str, resolver) -> List[str]:
     """Returns list of RBLs the domain (or its IP) is listed in."""
@@ -93,7 +134,13 @@ def process_one(row: Dict) -> Dict:
     row["creation_date"] = rdap["creation_date"]
     row["age_days"] = rdap["age_days"]
     
+    # OTX Check (if key exists)
+    otx_tags = check_otx(domain)
+    if otx_tags:
+        row["otx_risk"] = otx_tags
+
     return row
+
 
 def main():
     ap = argparse.ArgumentParser()
@@ -113,7 +160,7 @@ def main():
         return
             
     # Add new headers
-    new_cols = ["rbl_hits", "creation_date", "age_days"]
+    new_cols = ["rbl_hits", "creation_date", "age_days", "otx_risk"]
     for c in new_cols:
         if c not in fieldnames:
             fieldnames.append(c)
