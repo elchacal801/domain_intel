@@ -78,7 +78,8 @@ The data flow moves from **Inputs** &rarr; **Discovery** &rarr; **Enrichment** &
 | File | Generator Script | Description |
 | :--- | :--- | :--- |
 | **`suspicious_asns.csv`** | `asn_intel.py` | **Global Bad ASNs**. Aggregated list of "Bulletproof" hosters known for protecting cybercriminals (e.g., Njalla, FlokiNET). |
-| **`tor_nodes.csv`** | `tor_intel.py` | **Tor Exit Nodes**. Live list of Tor IPs. Used to detect traffic coming from the dark web. |
+| **`tor_nodes.csv`** | `tor_intel.py` | **Tor Exit Nodes**. Live list of Tor IPs fetched from `dan.me.uk`. Used to detect traffic coming from known anonymity exit points. |
+
 | **`tor_asns.csv`** | `tor_intel.py` | **Tor ASNs**. Networks that run a high density of Tor nodes. |
 | **`vpn_asns.csv`** | `vpn_intel.py` | **VPN/Proxy Networks**. ASNs belonging to commercial VPNs (NordVPN, ExpressVPN). Useful for detecting masked traffic. |
 
