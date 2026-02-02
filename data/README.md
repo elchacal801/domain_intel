@@ -39,6 +39,7 @@ The data flow moves from **Inputs** &rarr; **Discovery** &rarr; **Enrichment** &
 | :--- | :--- | :--- |
 | **`dea_domains_enriched.csv`** | `enrich_infrastructure.py` | **Infrastructure Data**. Adds MX Records, Name Servers (NS), and ASN info to the raw domain list. |
 | **`dea_domains_reputation.csv`** | `enrich_reputation.py` | **Reputation Scoring**. Adds Google Safe Browsing and VirusTotal scores to the enriched list. |
+| **`shodan_intelligence.csv`** | `enrich_shodan.py` | **Vulnerability Scan**. Adds open ports, OS info, and CVEs found on the target IPs via Shodan. |
 
 ---
 

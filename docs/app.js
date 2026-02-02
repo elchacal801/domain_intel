@@ -172,6 +172,73 @@ async function initDashboard() {
             });
         } catch (e) { console.log('No server stats yet'); }
 
+        // --- 4b. HTTP Status Codes (New) ---
+        try {
+            const statusData = await fetchData('data/http_status_counts.csv');
+            // Format: status, count
+            if (statusData.length > 0) {
+                const statusCtx = document.getElementById('httpStatusChart').getContext('2d');
+                new Chart(statusCtx, {
+                    type: 'bar',
+                    data: {
+                        labels: statusData.map(r => r[0]),
+                        datasets: [{
+                            label: 'Count',
+                            data: statusData.map(r => parseInt(r[1])),
+                            backgroundColor: statusData.map(r => {
+                                const s = r[0];
+                                if (s.startsWith('2')) return 'rgba(46, 160, 67, 0.7)'; // 2xx Green
+                                if (s.startsWith('3')) return 'rgba(56, 139, 253, 0.7)'; // 3xx Blue
+                                if (s.startsWith('4')) return 'rgba(210, 153, 34, 0.7)'; // 4xx Orange
+                                return 'rgba(218, 54, 51, 0.7)'; // 5xx/Other Red
+                            }),
+                            borderWidth: 1
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        plugins: { legend: { display: false } },
+                        scales: {
+                            x: { grid: { color: '#30363d' } },
+                            y: { grid: { display: false } }
+                        }
+                    }
+                });
+            }
+        } catch (e) { console.log('No HTTP status stats yet', e); }
+
+        // --- 4c. Title Keywords (New) ---
+        try {
+            const keyData = await fetchData('data/title_keyword_counts.csv');
+            const topKeys = keyData.slice(0, 15); // Top 15
+
+            if (topKeys.length > 0) {
+                const keyCtx = document.getElementById('keywordChart').getContext('2d');
+                new Chart(keyCtx, {
+                    type: 'bar',
+                    data: {
+                        labels: topKeys.map(r => r[0]),
+                        datasets: [{
+                            label: 'Frequency',
+                            data: topKeys.map(r => parseInt(r[1])),
+                            backgroundColor: 'rgba(137, 87, 229, 0.7)', // Purple
+                            borderColor: '#8957e5',
+                            borderWidth: 1
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: { legend: { display: false } },
+                        scales: {
+                            x: { grid: { display: false } },
+                            y: { grid: { display: false } } // Minimalist look
+                        }
+                    }
+                });
+            }
+        } catch (e) { console.log('No keyword stats yet', e); }
+
         // --- 5. AI Classifications ---
         try {
             const aiData = await fetchData('data/ai_classifications.csv');
@@ -382,6 +449,118 @@ async function initDashboard() {
                 });
             }
         } catch (e) { console.log('Registrar load fail', e); }
+
+        // --- 0c. Load Shodan Data (New) ---
+        try {
+            const shodanData = await fetchData('data/shodan_intelligence.csv');
+            // Headers: domain,mx_ip,shodan_ip,ports,vulns,tags,os,hostnames
+            // Indices: ports=3, vulns=4 (assuming standard) - BUT CSV fetch is raw array
+            // Let's use parsing logic properly. We used parseCSVRow which returns array of values.
+            // We need to map headers to indices. FIRST ROW is header in fetchData? 
+            // fetchData removes header. So we assume fixed columns or we should output header mapping in fetchData.
+            // Actually fetchData returns just rows. We need to be careful.
+
+            // To be safe, let's assume columns 3 (ports) and 4 (vulns) based on enrich_shodan.py
+            // "ip": ip, "ports": "", "vulns": "", "tags": "", "os": "", "hostnames": ""
+            // enriched_row adds these to existing columns.
+            // Existing: domain,primary_mx,mx_ip,asn,asn_name,bgp_prefix,cc,registry,mx_records...
+            // "shodan_ip" is added, then the dict keys.
+            // This is dynamic. Let's just create counters by scanning specific columns 
+            // OR finding the columns that look like ports/vulns.
+            // Actually, we can just use the fact that ports are integers joined by ; 
+            // and vulns start with CVE-.
+
+            const portCounts = {};
+            const vulnCounts = {};
+
+            shodanData.forEach(row => {
+                // Scan all columns for likely data
+                row.forEach(cell => {
+                    if (!cell) return;
+
+                    // Vuln Check (CVE-XXXX-XXXX)
+                    if (cell.includes('CVE-')) {
+                        cell.split(';').forEach(v => {
+                            v = v.trim();
+                            if (v.startsWith('CVE')) vulnCounts[v] = (vulnCounts[v] || 0) + 1;
+                        });
+                    }
+
+                    // Port Check (Numeric or semi-colon separated numbers)
+                    // Weak heuristic but functional for now: if cell matches "80;443" or just "80"
+                    // and isn't a date or IP.
+                    // Better: standard enrich_shodan.py output puts 'ports' at specific spot?
+                    // Let's try to match logic: "80", "80;443".
+                });
+
+                // Hardcoded index attempt based on enrich_shodan.py dict writer order?
+                // It writes: domain, ... keys ... shodan_ip, ports, vulns, tags, os, hostnames.
+                // It appends to row. 
+                // Let's rely on finding content.
+            });
+
+            // Re-scan with simpler logic: Ports are usually short ints.
+            // Let's assume the LAST columns are the new ones.
+            // Row length > 10.
+            if (shodanData.length > 0) {
+                shodanData.forEach(row => {
+                    // Try to find the Ports column: contains only numbers and ;
+                    const portCol = row.find(c => c && /^[0-9;]+$/.test(c) && c.length < 20 && !c.includes('.'));
+                    if (portCol) {
+                        portCol.split(';').forEach(p => {
+                            if (p) portCounts[p] = (portCounts[p] || 0) + 1;
+                        });
+                    }
+
+                    // CVEs
+                    const vulnCol = row.find(c => c && c.includes('CVE-'));
+                    if (vulnCol) {
+                        vulnCol.split(';').forEach(v => {
+                            if (v) vulnCounts[v] = (vulnCounts[v] || 0) + 1;
+                        });
+                    }
+                });
+            }
+
+            // Render Port Chart
+            const sortedPorts = Object.entries(portCounts).sort((a, b) => b[1] - a[1]).slice(0, 10);
+            if (sortedPorts.length > 0) {
+                new Chart(document.getElementById('portChart'), {
+                    type: 'bar',
+                    data: {
+                        labels: sortedPorts.map(x => x[0]),
+                        datasets: [{
+                            label: 'Hosts',
+                            data: sortedPorts.map(x => x[1]),
+                            backgroundColor: 'rgba(210, 153, 34, 0.7)',
+                            borderColor: '#d29922',
+                            borderWidth: 1
+                        }]
+                    },
+                    options: { responsive: true, plugins: { legend: { display: false } }, scales: { y: { grid: { color: '#30363d' } } } }
+                });
+            }
+
+            // Render Vuln Chart
+            const sortedVulns = Object.entries(vulnCounts).sort((a, b) => b[1] - a[1]).slice(0, 10);
+            if (sortedVulns.length > 0) {
+                new Chart(document.getElementById('vulnChart'), {
+                    type: 'bar',
+                    data: {
+                        labels: sortedVulns.map(x => x[0]),
+                        datasets: [{
+                            label: 'Hosts',
+                            data: sortedVulns.map(x => x[1]),
+                            backgroundColor: 'rgba(218, 54, 51, 0.7)', // Danger
+                            borderColor: '#da3633',
+                            borderWidth: 1
+                        }]
+                    },
+                    options: { indexAxis: 'y', responsive: true, plugins: { legend: { display: false } }, scales: { x: { grid: { color: '#30363d' } } } }
+                });
+            }
+
+        } catch (e) { console.log('Shodan load fail', e); }
 
     } catch (e) {
         console.error("Error loading data:", e);

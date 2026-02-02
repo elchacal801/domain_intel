@@ -198,6 +198,18 @@ jobs:
           # Merges all result_part_*.csv into dea_domains_probed.csv
           python scripts/merge_results.py --pattern "data/result_part_*.csv" --output data/dea_domains_probed.csv
 
+      - name: Shodan Enrichment (Passive)
+        env:
+          SHODAN_API_KEY: ${{ secrets.SHODAN_API_KEY }}
+        run: |
+          # Enrich domains with Shodan data (Ports, Tags, Vulns)
+          # Only runs if SHODAN_API_KEY is present
+          if [ -n "$SHODAN_API_KEY" ]; then
+             python scripts/enrich_shodan.py --input data/dea_domains_probed.csv --output data/shodan_intelligence.csv
+          else
+             echo "Skipping Shodan enrichment (No API Key)"
+          fi
+
       - name: Generate Pivots & Stats
         run: |
           python scripts/generate_pivots.py --input data/dea_domains_probed.csv

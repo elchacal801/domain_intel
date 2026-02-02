@@ -143,6 +143,7 @@ graph TD
         A[Keywords] -->|SEADS| B(Discovered Ads)
         C[Targets] -->|DNSTwist| D(Typosquats)
         E[Open Sources] -->|Merge| F(Raw Lists)
+        Z[Cert Logs] -->|Stream| F
     end
 
     subgraph Enrichment
@@ -150,15 +151,18 @@ graph TD
         G --> H[Async DNS Resolution]
         H -->|MX, A, NS| I[ASN Enrichment]
         H -->|Nameservers| J[Registrar Risk Analysis]
-        I --> K[Reputation Check]
+        I --> K[Reputation (OTX/SafeBrowsing)]
         K --> L[Web Probing]
+        L --> S[Shodan Enrichment]
+        L --> W[Whois (Port 43)]
     end
 
     subgraph Intelligence
-        L --> M{Aggregation}
-        M --> N[Visual Forensics]
-        M --> O[Risk & Threat Tagging]
-        M --> P(Daily Briefing LLM)
+        L & S --> M{Aggregation}
+        L --> N[Visual Forensics]
+        N -.->|Hashes| SP(Shodan Pivoting - Optional)
+        M & SP --> O[Risk & Threat Tagging]
+        O --> P(Daily Briefing LLM)
     end
 
     subgraph Output
@@ -168,6 +172,7 @@ graph TD
 
     style J fill:#bbf,stroke:#333,stroke-width:2px,color:black
     style N fill:#bfb,stroke:#333,stroke-width:2px,color:black
+    style S fill:#f96,stroke:#333,stroke-width:2px,color:black
 ```
 
 ### Detection Logic
@@ -187,6 +192,7 @@ Once we have a list of domains, we enrich them with deep infrastructure data:
 * **DNS & MX**: Who handles their email? (e.g., is it a throwaway provider?)
 * **ASN & IP**: Who hosts the server? (e.g., is it a known "bulletproof" hoster in a high-risk jurisdiction?)
 * **Reputation (OTX)**: We cross-reference domains against **AlienVault OTX** to identify known malware/phishing campaigns.
+* **Shodan Scanning**: We probe the hosting IPs for open ports (e.g., exposed RDP, C2 panels) and unpatched vulnerabilities (CVEs).
 * **Infrastructure Tracking**: By tracking MX records and ASNs, we detect new domains belonging to known abuse families.
 
 * **High-Risk Registrars**: We analyze Name Server (NS) records to identify domains registered through "bulletproof" providers (e.g., **Nicenic**) that ignore abuse reports.

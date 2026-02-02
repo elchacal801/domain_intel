@@ -123,6 +123,7 @@ def main():
     parser.add_argument("--vpn-asns", default="data/vpn_asns.csv")
     parser.add_argument("--tor-nodes", default="data/tor_nodes.csv")
     parser.add_argument("--tor-asns", default="data/tor_asns.csv")
+    parser.add_argument("--shodan", default="data/shodan_intelligence.csv")
     
     args = parser.parse_args()
     
@@ -179,6 +180,35 @@ def main():
         
         # Process Tor Nodes
         process_file(out, args.tor_nodes, "ip", ["anonymization", "tor-exit"], confidence=95)
+
+        # Process Shodan Intelligence (New)
+        if os.path.exists(args.shodan):
+            print(f"[*] Processing Shodan Intel from {args.shodan}...")
+            try:
+                with open(args.shodan, "r", encoding="utf-8") as f:
+                    reader = csv.DictReader(f)
+                    count = 0
+                    for row in reader:
+                        ip = row.get("ip") or row.get("shodan_ip") or row.get("mx_ip")
+                        vulns = row.get("vulns", "")
+                        tags = row.get("tags", "")
+                        
+                        if ip and (vulns or "compromised" in tags):
+                            labels = ["vulnerable-host"]
+                            if "compromised" in tags: labels.append("compromised")
+                            
+                            desc_parts = []
+                            if tags: desc_parts.append(f"Tags: {tags}")
+                            if vulns: desc_parts.append(f"Vulns: {vulns}")
+                            
+                            desc = f"Shodan Host: {ip} | " + ", ".join(desc_parts)
+                            
+                            # Write IP Indicator
+                            write_indicator(out, ip, "ipv4-addr", labels, f"Vulnerable Host: {ip}", desc, confidence=85)
+                            count += 1
+                    print(f"    - Added {count} Shodan indicators.")
+            except Exception as e:
+                print(f"[!] Error processing Shodan: {e}")
 
         # Close Bundle
         out.write('\n  ]\n')

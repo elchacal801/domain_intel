@@ -304,6 +304,52 @@
                         <canvas id="mxChart"></canvas>
                     </div>
                 </div>
+
+                <!-- HTTP Status (New) -->
+                <div class="dashboard-card">
+                    <div class="card-header">
+                        <div class="card-title">HTTP Response Codes</div>
+                    </div>
+                    <div class="chart-container">
+                        <canvas id="httpStatusChart"></canvas>
+                    </div>
+                </div>
+
+                <!-- Title Keywords (New) -->
+                <div class="dashboard-card" style="grid-column: span 2;">
+                    <div class="card-header">
+                        <div class="card-title">Title Keyword Analysis</div>
+                    </div>
+                    <div class="chart-container" style="height: 200px;">
+                        <canvas id="keywordChart"></canvas>
+                    </div>
+                </div>
+
+                <!-- Shodan Ports (New) -->
+                <div class="dashboard-card">
+                    <div class="card-header">
+                        <div class="card-title">
+                            <i class="fa-solid fa-network-wired" style="color:var(--warning); margin-right:5px;"></i>
+                            Top Open Ports
+                        </div>
+                    </div>
+                    <div class="chart-container">
+                        <canvas id="portChart"></canvas>
+                    </div>
+                </div>
+
+                <!-- Shodan Vulns (New) -->
+                <div class="dashboard-card">
+                    <div class="card-header">
+                        <div class="card-title">
+                            <i class="fa-solid fa-bug" style="color:var(--danger); margin-right:5px;"></i>
+                            Top Vulnerabilities
+                        </div>
+                    </div>
+                    <div class="chart-container">
+                        <canvas id="vulnChart"></canvas>
+                    </div>
+                </div>
             </div>
 
             <!-- 4. VISUAL FORENSICS (Old) -->
