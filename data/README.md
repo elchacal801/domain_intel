@@ -28,6 +28,8 @@ The data flow moves from **Inputs** &rarr; **Discovery** &rarr; **Enrichment** &
 | **`discovered_certs.csv`** | `discover_ct.py` | **Certificate Logs**. Subdomains and certificates found via Certificate Transparency (crt.sh/Censys). |
 | **`dea_domains.csv`** | `merge_lists_v3b.py` | **Disposable Email Providers**. Aggregated from multiple open-source feeds (StopForumSpam, burnout, etc.). Why: preventing fraud by blocking registrations from temporary mailboxes. |
 | **`high_abuse_domains.csv`** | `merge_lists_v3b.py` | **Known Bad Domains**. A subset of domains flagged by high-confidence abuse feeds. |
+| **`triage_candidates.csv`** | `triage_domains.py` | **Filtered Suspects**. The subset of total domains (approx 5%) that matched high-risk keywords or targets. This list is sent to the AI for deep analysis. |
+| **`suspicious_keywords.txt`** | *Config* | **Triage Config**. The list of high-signal terms (e.g., "login", "verify") used to filter the haystack. |
 
 ---
 

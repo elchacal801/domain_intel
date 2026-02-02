@@ -146,60 +146,75 @@ graph TD
         Z[Cert Logs] -->|Stream| F
     end
 
+    subgraph "Triage & Filtering"
+        F & B & D --> T{Heuristic Funnel}
+        K2[Suspicious Keywords] --> T
+        T -->|Low Priority| G{Sharding}
+        T -->|High Priority| AI[AI Analysis Queue]
+    end
+
     subgraph Enrichment
-        F & B & D --> G{Sharding}
         G --> H[Async DNS Resolution]
         H -->|MX, A, NS| I[ASN Enrichment]
         H -->|Nameservers| J[Registrar Risk Analysis]
         I --> K["Reputation (OTX/SafeBrowsing)"]
         K --> L[Web Probing]
-        L --> S[Shodan Enrichment]
-        L --> W["Whois (Port 43)"]
     end
 
-    subgraph Intelligence
-        L & S --> M{Aggregation}
+    subgraph "Advanced Intelligence"
+        L --> S[Shodan Enrichment]
+        L --> W["Whois (Port 43)"]
+        L --> AI_CHECK{AI Validation}
+        AI --> AI_CHECK
+        AI_CHECK -->|GPT-5/Gemini-3| CLASS(Classification)
+        AI_CHECK -->|GPT-5/Gemini-3| TYPO(Typosquat Detect)
+    end
+
+    subgraph Output
+        CLASS & TYPO & S --> M{Aggregation}
         L --> N[Visual Forensics]
         N -.->|Hashes| SP(Shodan Pivoting - Optional)
         M & SP --> O[Risk & Threat Tagging]
         O --> P(Daily Briefing LLM)
-    end
-
-    subgraph Output
-        N & O & P --> Q[Live Dashboard]
-        N & O & P --> R[STIX 2.1 Bundle]
+        O --> Q[Live Dashboard]
+        O --> R[STIX 2.1 Bundle]
     end
 
     style J fill:#bbf,stroke:#333,stroke-width:2px,color:black
-    style N fill:#bfb,stroke:#333,stroke-width:2px,color:black
-    style S fill:#f96,stroke:#333,stroke-width:2px,color:black
+    style AI fill:#f96,stroke:#333,stroke-width:2px,color:black
+    style CLASS fill:#f96,stroke:#333,stroke-width:2px,color:black
+    style P fill:#bfb,stroke:#333,stroke-width:2px,color:black
 ```
 
-### Detection Logic
+### Detection Logic & Triage Funnel
 
-### 1. Discovery
+### 1. Discovery & Triage (The Funnel)
 
-We use multiple methods to find specific, targeted threats:
+To efficiently find threats in a sea of millions of domains without burning millions of API credits, we use a **Tiered Funnel**:
 
-* **Permutations (`dnstwist`)**: We generate thousands of "lookalike" domains (e.g., `g0ogle.com`, `goog1e.com`) to catch typosquatters.
-* **Ad Scanning (`seads`)**: We scan search engine ads for keywords (e.g., "crypto login") to find malicious ads leading to phishing sites.
-* **Certificate Transparency (`crt.sh`)**: We monitor SSL certificate logs to detect subdomains and infrastructure *before* it becomes active in DNS.
+1. **Raw Ingestion**: We ingest ~200k+ domains daily from open sources (`merge_lists_v3b.py`) and proactive discovery (`dnstwist`, `seads`).
+2. **Heuristic Triage (`triage_domains.py`)**: A fast, local Python script filters these domains against:
+    * **High-Value Targets**: Is it a fuzzy match for "Google", "Amazon", "Citibank"?
+    * **High-Signal Keywords**: Does it contain "login", "update", "verify", "secure", "wallet"?
+    * **Result**: This reduces the "Haystack" (230k domains) to a "Needle Pile" (~10k candidates).
 
 ### 2. Enrichment
 
-Once we have a list of domains, we enrich them with deep infrastructure data:
+The remaining domains are hydrated with deep infrastructure data:
 
-* **DNS & MX**: Who handles their email? (e.g., is it a throwaway provider?)
-* **ASN & IP**: Who hosts the server? (e.g., is it a known "bulletproof" hoster in a high-risk jurisdiction?)
-* **Reputation (OTX)**: We cross-reference domains against **AlienVault OTX** to identify known malware/phishing campaigns.
-* **Shodan Scanning**: We probe the hosting IPs for open ports (e.g., exposed RDP, C2 panels) and unpatched vulnerabilities (CVEs).
-* **Infrastructure Tracking**: By tracking MX records and ASNs, we detect new domains belonging to known abuse families.
+* **Infrastructure**: Who handles email (MX)? Who hosts the server (ASN/IP)?
+* **Shodan**: Are there open ports (RDP, C2 panels) or vulnerabilities?
+* **Visual Forensics**: Headless browsers capture screenshots and generate perceptual hashes (pHash) to find identical phishing kits.
 
-* **High-Risk Registrars**: We analyze Name Server (NS) records to identify domains registered through "bulletproof" providers (e.g., **Nicenic**) that ignore abuse reports.
-* **Visual Forensics**: Headless browsers capture screenshots and generate perceptual hashes (pHash) to group visually identical phishing pages (e.g., identical crypto scam templates).
-* **AI Analysis**: Lightweight LLMs classify page intent and generate executive summaries.
+### 3. AI Analysis (The Laser)
 
-See [docs/detection_logic.md](docs/detection_logic.md) for details on how I apply this to fraud detection.
+We apply expensive LLM analysis only to the **Triaged Candidates** and **Live Sites**:
+
+* **Typosquatting**: "Is `rnicrosoft.com` malicious?" (GPT-5 Mini).
+* **Web Intent**: "Read the title and headers of `secure-login-update.com`. Is it a bank?" (GPT-5 Nano).
+* **Daily Briefing**: An automated Analyst summarizes the day's threats into an executive report.
+
+See [docs/detection_logic.md](docs/detection_logic.md) for details on fraud patterns.
 
 ## ⚠️ Responsible Use
 
