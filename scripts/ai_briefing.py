@@ -25,7 +25,7 @@ load_dotenv()
 
 # Constants
 # Using OpenAI for high-quality English summarization
-MODEL = "gpt-5.2-chat" 
+MODEL = "gpt-5.2" 
 OUTPUT_FILE = "docs/data/daily_briefing.json"
 TYPOSQUAT_FILE = "data/ai_typosquats.csv"
 CLASSIFICATION_FILE = "data/ai_classifications.csv"
