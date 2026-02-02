@@ -26,7 +26,7 @@ load_dotenv()
 PRIMARY_MODEL = "gpt-5-nano"
 FALLBACK_MODEL = "gpt-4o-mini"
 OUTPUT_FILE = "data/ai_classifications.csv"
-INPUT_FILE = "data/dea_domains_probed.csv"
+INPUT_FILE = "data/triage_candidates.csv" # Default to Triage Output (was data/dea_domains_probed.csv)
 
 # Classification Taxonomy
 CATEGORIES = [

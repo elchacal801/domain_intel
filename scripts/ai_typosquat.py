@@ -22,7 +22,7 @@ load_dotenv()
 PRIMARY_MODEL = "gpt-5-mini" 
 FALLBACK_MODEL = "gpt-4o-mini"
 OUTPUT_FILE = "data/ai_typosquats.csv"
-INPUT_FILE = "data/dea_domains.csv"
+INPUT_FILE = "data/triage_candidates.csv" # Default to using the funnel
 
 # High Value Targets to protect
 TARGETS = [
