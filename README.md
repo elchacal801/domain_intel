@@ -151,7 +151,7 @@ graph TD
         G --> H[Async DNS Resolution]
         H -->|MX, A, NS| I[ASN Enrichment]
         H -->|Nameservers| J[Registrar Risk Analysis]
-        I --> K[Reputation (OTX/SafeBrowsing)]
+        I --> K["Reputation (OTX/SafeBrowsing)"]
         K --> L[Web Probing]
         L --> S[Shodan Enrichment]
         L --> W[Whois (Port 43)]
