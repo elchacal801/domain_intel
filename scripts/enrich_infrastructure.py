@@ -46,6 +46,14 @@ class AsyncResolver:
         except Exception:
             return []
 
+    async def resolve_ns(self, domain: str) -> List[str]:
+        """Returns sorted list of Name Servers."""
+        try:
+            answers = await self.resolver.resolve(domain, 'NS')
+            return sorted([str(r.target).strip('.').lower() for r in answers])
+        except Exception:
+            return []
+
     async def resolve_a(self, hostname: str) -> str:
         """Returns the first A record IP address."""
         if not hostname: return ""
@@ -115,26 +123,40 @@ async def process_domain(sem: asyncio.Semaphore, resolver: AsyncResolver, domain
             "bgp_prefix": "",
             "cc": "",
             "registry": "",
+            "nameservers": "",
+            "risk_tags": "",
             "error": ""
         }
         
         try:
-            # 1. Resolve MX
+            # 1. Resolve NS (New for Nicenic Detection)
+            ns_records = await resolver.resolve_ns(domain)
+            if ns_records:
+                result["nameservers"] = ";".join(ns_records)
+                
+                # Check for High Risk Registrars (Nicenic)
+                # Defined signals: nicendns.com, jpisp.com
+                for ns in ns_records:
+                    if "nicendns.com" in ns or "jpisp.com" in ns:
+                        result["risk_tags"] = "HighRisk:Nicenic"
+                        break
+
+            # 2. Resolve MX
             mxs = await resolver.resolve_mx(domain)
             if mxs:
                 result["mx_records"] = ";".join([f"{p} {h}" for p, h in mxs])
                 result["primary_mx"] = mxs[0][1]
                 
-                # 2. Resolve A Record of Primary MX
+                # 3. Resolve A Record of Primary MX
                 ip = await resolver.resolve_a(result["primary_mx"])
                 result["mx_ip"] = ip
                 
-                # 3. Resolve ASN of IP
+                # 4. Resolve ASN of IP
                 if ip:
                     asn_data = await resolver.resolve_asn(ip)
                     result.update(asn_data)
                     
-                    # 4. Resolve ASN Name (Optional, adds time)
+                    # 5. Resolve ASN Name (Optional, adds time)
                     # To be super fast, we might skip this or do it only if ASN found
                     if result.get("asn"):
                         result["asn_name"] = await resolver.resolve_asn_name(result["asn"])
@@ -188,7 +210,7 @@ async def runner(input_file: str, output_file: str, concurrency: int, limit: int
         
     # Write output
     print(f"[*] Writing results to {output_file}...")
-    headers = ["domain", "primary_mx", "mx_ip", "asn", "asn_name", "bgp_prefix", "cc", "registry", "mx_records", "error"]
+    headers = ["domain", "primary_mx", "mx_ip", "asn", "asn_name", "bgp_prefix", "cc", "registry", "mx_records", "nameservers", "risk_tags", "error"]
     
     with open(output_file, "w", newline="", encoding="utf-8") as f:
         writer = csv.DictWriter(f, fieldnames=headers)
