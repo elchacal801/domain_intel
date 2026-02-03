@@ -42,6 +42,8 @@ The data flow moves from **Inputs** &rarr; **Discovery** &rarr; **Enrichment** &
 | **`dea_domains_enriched.csv`** | `enrich_infrastructure.py` | **Infrastructure Data**. Adds MX Records, Name Servers (NS), and ASN info to the raw domain list. |
 | **`dea_domains_reputation.csv`** | `enrich_reputation.py` | **Reputation Scoring**. Adds Google Safe Browsing and VirusTotal scores to the enriched list. |
 | **`shodan_intelligence.csv`** | `enrich_shodan.py` | **Vulnerability Scan**. Adds open ports, OS info, and CVEs found on the target IPs via Shodan. |
+| **`enriched_candidates.csv`** | `enrich_technical.py` | **Deep Selectors**. Contains high-value attribution data: SOA Emails (RNAME), TLS Subject Organizations, and Favicon Hashes. |
+| **`pivot_discovery.csv`** | `enrich_pivot.py` | **New Discovery**. Domains found by performing Reverse Whois on the bad actors identified in our specific triage list. |
 
 ---
 
@@ -72,6 +74,7 @@ The data flow moves from **Inputs** &rarr; **Discovery** &rarr; **Enrichment** &
 | **`mx_asn_counts.csv`** | `generate_pivots.py` | **Infrastructure Mapping**. Links MX providers to their underlying Hosting ASNs. |
 | **`history.csv`** | `track_history.py` | **Growth Analytics**. Daily tracking of Total Domains vs. Live Domains. Used by the visual dashboard. |
 | **`domain_registrars.csv`** | `drip_whois.py` | **Whois Database**. A slowly accumulated database of Domain Registrars (e.g., GoDaddy, NameCheap) for live domains. Populated via slow-drip to avoid rate limits. |
+| **`history_pivots.json`** | `enrich_pivot.py` | **Pivot Tracking**. A raw list of every email address we have ever queried against the Whoxy API. Used to prevent duplicate charges and respect rate limits. |
 
 ---
 

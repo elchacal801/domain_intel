@@ -178,6 +178,10 @@ graph TD
         O --> P(Daily Briefing LLM)
         O --> Q[Live Dashboard]
         O --> R[STIX 2.1 Bundle]
+        
+        WM[Selectors: SOA/SSL] --> PIVOT[Whoxy Reverse Whois]
+        PIVOT --> DISCOVERY((New Domain Discovery))
+        DISCOVERY -.->|Feed Back| F
     end
 
     style J fill:#bbf,stroke:#333,stroke-width:2px,color:black
@@ -215,6 +219,14 @@ We apply expensive LLM analysis only to the **Triaged Candidates** and **Live Si
 * **Daily Briefing**: An automated Analyst summarizes the day's threats into an executive report.
 
 See [docs/detection_logic.md](docs/detection_logic.md) for details on fraud patterns.
+
+### 4. Infrastructure Pivoting (Whoxy)
+
+We use **Reverse Whois** to turn one bad domain into a map of the actor's entire network:
+
+* **Extraction**: We pull unique "Selectors" (SOA Emails, SSL Orgs) from the triaged domains.
+* **Pivoting**: We query the **Whoxy API** to find *other* active domains registered by the same emails.
+* **Discovery**: This proactively discovers new infrastructure before it is even used in a campaign.
 
 ## ⚠️ Responsible Use
 
