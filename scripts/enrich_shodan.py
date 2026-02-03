@@ -61,47 +61,73 @@ def process_shodan(api_key: str, domains: List[Dict], output_file: str):
             
     log(f"Found {len(unique_ips)} unique IPs to scan.")
 
-    # 2. Query Shodan (Batch if possible, but standard API is usually single IP)
-    # Handling rate limits: Free API is 1 req/sec usually.
+    # 2. Query Shodan (Concurrent)
+    log(f"Scanning {len(unique_ips)} unique IPs with 5 workers...")
     
-    results = []
+    unique_ips_list = list(unique_ips)
+    shodan_results = {}
     
-    count = 0
-    for ip in unique_ips:
-        count += 1
-        shodan_data = {
-            "ip": ip,
-            "ports": "",
-            "vulns": "",
-            "tags": "",
-            "os": "",
-            "hostnames": ""
-        }
-        
+    from concurrent.futures import ThreadPoolExecutor, as_completed
+
+    def scan_ip(ip):
         try:
-            print(f"[*] Scanning {ip} ({count}/{len(unique_ips)})...", end='\r')
-            host = api.host(ip)
-            
-            shodan_data["ports"] = ";".join([str(p) for p in host.get("ports", [])])
-            shodan_data["tags"] = ";".join(host.get("tags", []))
-            shodan_data["os"] = host.get("os", "")
-            shodan_data["hostnames"] = ";".join(host.get("hostnames", []))
-            shodan_data["vulns"] = ";".join(host.get("vulns", [])) # List of CVEs
-            
-        except shodan.APIError as e:
-            # "No information available for that IP" is common
-            pass
-        except Exception as e:
-            log(f"Error scanning {ip}: {e}")
-            
-        # Map back to domains
-        for row in ip_map[ip]:
-            enriched_row = row.copy()
-            enriched_row["shodan_ip"] = ip
-            enriched_row.update(shodan_data)
-            results.append(enriched_row)
-            
-    print("") # Newline
+            host_info = api.host(ip, minify=True) # minify to save bandwidth
+            return ip, host_info
+        except Exception:
+            return ip, None
+
+    with ThreadPoolExecutor(max_workers=5) as executor: # Conservative worker count for rate limits
+        future_map = {executor.submit(scan_ip, ip): ip for ip in unique_ips_list}
+        
+        count = 0
+        total = len(unique_ips_list)
+        
+        for future in as_completed(future_map):
+            count += 1
+            if count % 10 == 0:
+                print(f"[*] Progress: {count}/{total}", end='\r')
+                
+            ip, info = future.result()
+            if info:
+                s_data = {
+                    "ip": ip,
+                    "ports": ";".join([str(p) for p in info.get("ports", [])]),
+                    "tags": ";".join(info.get("tags", [])),
+                    "os": info.get("os", "") or "",
+                    "hostnames": ";".join(info.get("hostnames", [])),
+                    "vulns": ";".join(info.get("vulns", []))
+                }
+                shodan_results[ip] = s_data
+
+    print("\n[*] Shodan scan complete.")
+
+    # Map back to results
+    for row in domains:
+        # Resolve IP again or use what we solved earlier? 
+        # Ideally we use the map we built
+        # But 'domains' is just a list of dicts. We need to match efficiently.
+        # We can re-use the ip_map logic to be safe, but we already have ip_map from step 1
+        pass 
+        
+    results = []
+    # Using ip_map from Step 1 to distribute results
+    for ip, rows in ip_map.items():
+        s_data = shodan_results.get(ip)
+        
+        for r in rows:
+            enriched = r.copy()
+            if s_data:
+                enriched["shodan_ip"] = ip
+                enriched.update(s_data)
+            else:
+                enriched["shodan_ip"] = ip
+                # Add empty fields
+                enriched["ports"] = ""
+                enriched["vulns"] = ""
+                enriched["tags"] = ""
+                enriched["os"] = ""
+                enriched["hostnames"] = ""
+            results.append(enriched)
     
     # 3. Write Output
     if not results:

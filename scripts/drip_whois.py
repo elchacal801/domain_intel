@@ -32,7 +32,7 @@ DEA_FILE = "data/dea_domains_probed.csv"
 SQUAT_FILE = "data/potential_typosquats.csv"
 TARGET_FILE = "data/targets.txt" # Not used for IP check yet, relying on squat file metadata
 
-BATCH_SIZE = 100 # Small batches for testing safety, scale up in prod
+BATCH_SIZE = 500 # Increased from 100 to up the numbers
 SLEEP_MIN = 3
 SLEEP_MAX = 8
 

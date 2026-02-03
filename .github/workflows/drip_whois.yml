@@ -3,7 +3,7 @@ name: Slow Drip Whois
 on:
   schedule:
     # Run at 04:00 UTC (Distinct from main pipeline at 11:00 UTC)
-    - cron: '0 4 * * *'
+    - cron: '0 */6 * * *'
   workflow_dispatch:
 
 permissions:

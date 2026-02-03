@@ -201,10 +201,7 @@ jobs:
           # Shodan enrichment moved to AFTER triage to save time/credits.
           # Was causing 3+ hour runtimes on full dataset.
 
-      - name: Generate Pivots & Stats
-        run: |
-          python scripts/generate_pivots.py --input data/dea_domains_probed.csv
-          python scripts/track_history.py
+          # Was causing 3+ hour runtimes on full dataset.
 
       - name: Infrastructure Intel (ASN/VPN/Tor)
         run: |
@@ -230,23 +227,8 @@ jobs:
           mkdir -p docs/data/screenshots
           cp -r data/screenshots/* docs/data/screenshots/ || true
 
-      - name: AI Analysis (Optional)
-        env:
-          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
-          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
-        run: |
-          if [ -n "$GEMINI_API_KEY" ] || [ -n "$OPENAI_API_KEY" ]; then
-            # Run Triage First
-            python scripts/triage_domains.py
-            # Analysis (Limit covers the ~10k triage candidates)
-            python scripts/ai_typosquat.py --limit 11000 --batch-size 100 --input data/triage_candidates.csv
-            python scripts/ai_classify_web.py --limit 11000 --batch-size 50 --input data/triage_candidates.csv
-            python scripts/ai_briefing.py
-          fi
-          # Sync artifacts
-          cp data/daily_briefing.json docs/data/ || true
-          cp data/ai_typosquats.csv docs/data/ || true
-          cp data/ai_classifications.csv docs/data/ || true
+      - name: Triage Domains
+        run: python scripts/triage_domains.py
 
       - name: Detailed Analysis (Shodan & Pivot)
         env:
@@ -255,21 +237,42 @@ jobs:
         run: |
           # 1. Shodan (Now running on Triage Candidates only ~10k vs 200k)
           if [ -n "$SHODAN_API_KEY" ]; then
-             # Note: We are now enriching the TRIAGE LIST, not the massive Probe List
              python scripts/enrich_shodan.py --input data/triage_candidates.csv --output data/shodan_intelligence.csv
           fi
           
           # 2. Reverse Whois Pivot (Whoxy)
           if [ -n "$WHOXY_API_KEY" ]; then
-             # Extract Selectors first
              python scripts/enrich_technical.py
-             # Pivot
              python scripts/enrich_pivot.py
           fi
+
           # Backup artifacts
           cp data/shodan_intelligence.csv docs/data/ || true
           cp data/pivot_discovery.csv docs/data/ || true
           cp data/enriched_candidates.csv docs/data/ || true
+
+      - name: AI Analysis (Optional)
+        env:
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+        run: |
+          if [ -n "$GEMINI_API_KEY" ] || [ -n "$OPENAI_API_KEY" ]; then
+            # Analysis (Limit covers the ~10k triage candidates)
+            python scripts/ai_typosquat.py --limit 11000 --batch-size 100 --input data/triage_candidates.csv
+            python scripts/ai_classify_web.py --limit 11000 --batch-size 50 --input data/triage_candidates.csv
+            # Briefing runs last to capture Shodan/Infrastructure stats
+            python scripts/ai_briefing.py
+          fi
+          # Sync artifacts
+          cp data/daily_briefing.json docs/data/ || true
+          cp data/ai_typosquats.csv docs/data/ || true
+          cp data/ai_classifications.csv docs/data/ || true
+
+      - name: Generate Pivots & Stats
+        run: |
+          # Now runs AFTER all enrichment to reflect accurate High Risk counts
+          python scripts/generate_pivots.py --input data/dea_domains_probed.csv
+          python scripts/track_history.py
 
       - name: Export STIX
         run: python scripts/export_stix.py --input data/dea_domains_probed.csv
