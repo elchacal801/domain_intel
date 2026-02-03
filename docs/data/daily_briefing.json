@@ -1,16 +1,14 @@
 {
-  "date": "2026-02-02",
-  "headline": "Spike in Google and Gmail Phishing Detected",
-  "summary": "A recent analysis of about 1000 domains from a dataset of over 229,043 new domains reveals significant phishing activity. Google services and Gmail have emerged as the top targets for typosquats, with a notable presence of OneDrive impersonations. The sample also uncovered 31 phishing sites and 4 potential command-and-control (C2) panels.",
+  "date": "2026-02-03",
+  "headline": "High Volume of Typosquatting Detected Targeting Major Brands",
+  "summary": "Our analysis identified 3231 confirmed typosquat domains in a sample of the current dataset, with a considerable focus on impersonating high-value entities such as Google, Bank of America, and Apple. The current sample did not detect active phishing sites or command and control panels, but these findings are based on a fraction of the total data.",
   "key_risks": [
-    "High rate of domain impersonation targeting Google and Gmail.",
-    "Active phishing campaigns posing a threat to user credentials.",
-    "Presence of C2 infrastructure suggesting potential malware activity."
+    "Increased threat of credential theft and brand abuse due to typosquatting.",
+    "Potential exposure of sensitive data from users mistakenly accessing counterfeit sites."
   ],
   "action_items": [
-    "Increase monitoring and defensive measures for Google and Gmail accounts.",
-    "Enhance user awareness on identifying phishing attempts.",
-    "Investigate and mitigate identified C2 panels to prevent malware dissemination."
+    "Expand analysis to a larger portion of the dataset to verify current findings and identify undisclosed threats.",
+    "Alert stakeholders at Google, Bank of America, and Apple to increase vigilance and enhance monitoring for potential brand exploitation."
   ],
   "model_used": "gpt-4o-2024-08-06"
 }
