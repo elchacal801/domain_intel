@@ -248,28 +248,28 @@ jobs:
           cp data/ai_typosquats.csv docs/data/ || true
           cp data/ai_classifications.csv docs/data/ || true
 
-       - name: Detailed Analysis (Shodan & Pivot)
-         env:
-           SHODAN_API_KEY: ${{ secrets.SHODAN_API_KEY }}
-           WHOXY_API_KEY: ${{ secrets.WHOXY_API_KEY }}
-         run: |
-           # 1. Shodan (Now running on Triage Candidates only ~10k vs 200k)
-           if [ -n "$SHODAN_API_KEY" ]; then
-              # Note: We are now enriching the TRIAGE LIST, not the massive Probe List
-              python scripts/enrich_shodan.py --input data/triage_candidates.csv --output data/shodan_intelligence.csv
-           fi
-           
-           # 2. Reverse Whois Pivot (Whoxy)
-           if [ -n "$WHOXY_API_KEY" ]; then
-              # Extract Selectors first
-              python scripts/enrich_technical.py
-              # Pivot
-              python scripts/enrich_pivot.py
-           fi
-           # Backup artifacts
-           cp data/shodan_intelligence.csv docs/data/ || true
-           cp data/pivot_discovery.csv docs/data/ || true
-           cp data/enriched_candidates.csv docs/data/ || true
+      - name: Detailed Analysis (Shodan & Pivot)
+        env:
+          SHODAN_API_KEY: ${{ secrets.SHODAN_API_KEY }}
+          WHOXY_API_KEY: ${{ secrets.WHOXY_API_KEY }}
+        run: |
+          # 1. Shodan (Now running on Triage Candidates only ~10k vs 200k)
+          if [ -n "$SHODAN_API_KEY" ]; then
+             # Note: We are now enriching the TRIAGE LIST, not the massive Probe List
+             python scripts/enrich_shodan.py --input data/triage_candidates.csv --output data/shodan_intelligence.csv
+          fi
+          
+          # 2. Reverse Whois Pivot (Whoxy)
+          if [ -n "$WHOXY_API_KEY" ]; then
+             # Extract Selectors first
+             python scripts/enrich_technical.py
+             # Pivot
+             python scripts/enrich_pivot.py
+          fi
+          # Backup artifacts
+          cp data/shodan_intelligence.csv docs/data/ || true
+          cp data/pivot_discovery.csv docs/data/ || true
+          cp data/enriched_candidates.csv docs/data/ || true
 
       - name: Export STIX
         run: python scripts/export_stix.py --input data/dea_domains_probed.csv
