@@ -26,7 +26,9 @@ load_dotenv()
 # Constants
 # Primary: GPT-5.2 (High Quality), Fallback: GPT-4o (Reliable)
 PRIMARY_MODEL = "gpt-5.2" 
+PRIMARY_MODEL = "gpt-5.2" 
 FALLBACK_MODEL = "gpt-4o"
+GEMINI_MODEL = "gemini/gemini-1.5-pro"
 OUTPUT_FILE = "docs/data/daily_briefing.json"
 TYPOSQUAT_FILE = "data/ai_typosquats.csv"
 CLASSIFICATION_FILE = "data/ai_classifications.csv"
@@ -195,6 +197,18 @@ def get_stats():
 
     return stats
 
+def _mock_failure_briefing(stats):
+    return {
+        "date": datetime.now().strftime('%Y-%m-%d'),
+        "headline": "Full Manual Analysis Required",
+        "executive_summary": f"AI Generation Failed after exhausting all models. Processed {stats['total_domains']} domains.",
+        "strategic_assessment": "Automated analysis unavailable. Review stats manually.",
+        "operational_intelligence": "N/A",
+        "registrar_risk_outlook": "N/A",
+        "key_risks": ["AI Unavailable", "Quota Exceeded"],
+        "action_items": ["Check API Keys", "Check Billing"]
+    }
+
 def generate_briefing(stats):
     # Construct the data prompt
     target_str = ", ".join(stats["top_targets"]) if stats["top_targets"] else "None"
@@ -260,15 +274,25 @@ def generate_briefing(stats):
                 response_format={ "type": "json_object" }
             )
         except Exception as e2:
-            print(f"[!] Fallback failed too: {e2}")
-            # Return Mock/Fallback dict if both fail
-            return {
-                "date": datetime.now().strftime('%Y-%m-%d'),
-                "headline": "Full Manual Analysis Required",
-                "summary": f"AI Generation Failed. Processed {stats['total_domains']} domains.",
-                "key_risks": ["AI Unavailable"],
-                "action_items": ["Check API Keys", "Check Logs"]
-            }
+            print(f"[!] Fallback (GPT-4o) failed: {e2}")
+            
+            # 3. Try Gemini Fallback
+            if os.getenv("GEMINI_API_KEY"):
+                try:
+                    print(f"[*] Attempting generation with {GEMINI_MODEL}...")
+                    response = completion(
+                        model=GEMINI_MODEL,
+                        messages=[
+                            {"role": "system", "content": SYSTEM_PROMPT},
+                            {"role": "user", "content": f"Data for briefing:\n{data_summary}"}
+                        ],
+                        response_format={ "type": "json_object" }
+                    )
+                except Exception as e3:
+                    print(f"[!] Gemini fallback failed: {e3}")
+                    return _mock_failure_briefing(stats)
+            else:
+                return _mock_failure_briefing(stats)
 
     content = response.choices[0].message.content
     
@@ -329,14 +353,12 @@ def save_briefing(briefing):
     print(f"Briefing saved to {latest_path}, {archive_path}, and appended to history.")
 
 def main():
-    if not os.getenv("OPENAI_API_KEY"):
-        print("Error: OPENAI_API_KEY not found in .env. Using fallback/mock if needed, but exiting for now.")
-        # Alternatively, fallback to Gemini if OpenAI missing
-        if os.getenv("GEMINI_API_KEY"):
-            global MODEL
-            MODEL = "gemini/gemini-3-flash"
-        else:
-            sys.exit(1)
+    has_openai = os.getenv("OPENAI_API_KEY") is not None
+    has_gemini = os.getenv("GEMINI_API_KEY") is not None
+    
+    if not has_openai and not has_gemini:
+        print("Error: No AI API keys (OPENAI_API_KEY or GEMINI_API_KEY) found in .env.")
+        sys.exit(1)
 
     stats = get_stats()
     briefing = generate_briefing(stats)
