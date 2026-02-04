@@ -26,9 +26,8 @@ load_dotenv()
 # Constants
 # Primary: GPT-5.2 (High Quality), Fallback: GPT-4o (Reliable)
 PRIMARY_MODEL = "gpt-5.2" 
-PRIMARY_MODEL = "gpt-5.2" 
 FALLBACK_MODEL = "gpt-4o"
-GEMINI_MODEL = "gemini/gemini-1.5-pro"
+GEMINI_MODEL = "gemini/gemini-3-pro"
 OUTPUT_FILE = "docs/data/daily_briefing.json"
 TYPOSQUAT_FILE = "data/ai_typosquats.csv"
 CLASSIFICATION_FILE = "data/ai_classifications.csv"
