@@ -262,35 +262,36 @@ def generate_briefing(stats):
             response_format={ "type": "json_object" }
         )
     except Exception as e:
-        print(f"[!] {PRIMARY_MODEL} failed ({e}). Falling back to {FALLBACK_MODEL}...")
+        print(f"[!] {PRIMARY_MODEL} failed ({e}). Falling back to {GEMINI_MODEL}...")
         try:
-            response = completion(
-                model=FALLBACK_MODEL,
-                messages=[
-                    {"role": "system", "content": SYSTEM_PROMPT},
-                    {"role": "user", "content": f"Data for briefing:\n{data_summary}"}
-                ],
-                response_format={ "type": "json_object" }
-            )
-        except Exception as e2:
-            print(f"[!] Fallback (GPT-4o) failed: {e2}")
-            
-            # 3. Try Gemini Fallback
+            # 2. Try Gemini 3 Pro (Secondary)
             if os.getenv("GEMINI_API_KEY"):
-                try:
-                    print(f"[*] Attempting generation with {GEMINI_MODEL}...")
-                    response = completion(
-                        model=GEMINI_MODEL,
-                        messages=[
-                            {"role": "system", "content": SYSTEM_PROMPT},
-                            {"role": "user", "content": f"Data for briefing:\n{data_summary}"}
-                        ],
-                        response_format={ "type": "json_object" }
-                    )
-                except Exception as e3:
-                    print(f"[!] Gemini fallback failed: {e3}")
-                    return _mock_failure_briefing(stats)
+                response = completion(
+                    model=GEMINI_MODEL,
+                    messages=[
+                        {"role": "system", "content": SYSTEM_PROMPT},
+                        {"role": "user", "content": f"Data for briefing:\n{data_summary}"}
+                    ],
+                    response_format={ "type": "json_object" }
+                )
             else:
+                raise Exception("GEMINI_API_KEY not found")
+
+        except Exception as e2:
+            print(f"[!] Gemini fallback failed ({e2}). Falling back to {FALLBACK_MODEL}...")
+            
+            # 3. Try GPT-4o (Tertiary)
+            try:
+                response = completion(
+                    model=FALLBACK_MODEL,
+                    messages=[
+                        {"role": "system", "content": SYSTEM_PROMPT},
+                        {"role": "user", "content": f"Data for briefing:\n{data_summary}"}
+                    ],
+                    response_format={ "type": "json_object" }
+                )
+            except Exception as e3:
+                print(f"[!] All AI models failed: {e3}")
                 return _mock_failure_briefing(stats)
 
     content = response.choices[0].message.content
