@@ -1,14 +1,12 @@
 {
-  "date": "2026-02-03",
-  "headline": "High Volume of Typosquatting Detected Targeting Major Brands",
-  "summary": "Our analysis identified 3231 confirmed typosquat domains in a sample of the current dataset, with a considerable focus on impersonating high-value entities such as Google, Bank of America, and Apple. The current sample did not detect active phishing sites or command and control panels, but these findings are based on a fraction of the total data.",
+  "date": "2026-02-04",
+  "headline": "Full Manual Analysis Required",
+  "summary": "AI Generation Failed. Processed 242781 domains.",
   "key_risks": [
-    "Increased threat of credential theft and brand abuse due to typosquatting.",
-    "Potential exposure of sensitive data from users mistakenly accessing counterfeit sites."
+    "AI Unavailable"
   ],
   "action_items": [
-    "Expand analysis to a larger portion of the dataset to verify current findings and identify undisclosed threats.",
-    "Alert stakeholders at Google, Bank of America, and Apple to increase vigilance and enhance monitoring for potential brand exploitation."
-  ],
-  "model_used": "gpt-4o-2024-08-06"
+    "Check API Keys",
+    "Check Logs"
+  ]
 }
