@@ -134,9 +134,18 @@ def process_shodan(api_key: str, domains: List[Dict], output_file: str):
         log("No results found.")
         return
 
-    headers = list(results[0].keys())
-    # Ensure consistent headers if some rows missing keys
+    # Collect all unique keys from all rows to ensure coverage
+    all_keys = set()
+    for r in results:
+        all_keys.update(r.keys())
+    headers = sorted(list(all_keys))
     
+    # Optional: prioritize 'domain', 'ip', 'shodan_ip' at the start
+    priority = ['domain', 'ip', 'shodan_ip']
+    for p in reversed(priority):
+        if p in headers:
+            headers.insert(0, headers.pop(headers.index(p)))
+
     with open(output_file, 'w', newline='', encoding='utf-8') as f:
         writer = csv.DictWriter(f, fieldnames=headers)
         writer.writeheader()
