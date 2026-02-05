@@ -24,8 +24,8 @@ from litellm import completion
 load_dotenv()
 
 # Constants
-# Primary: GPT-5.2 (High Quality), Fallback: GPT-4o (Reliable)
-PRIMARY_MODEL = "gpt-5.2" 
+# Primary: Claude 4.5 Sonnet (User Preference), Fallback: Gemini Cascade, Tertiary: GPT-4o
+PRIMARY_MODEL = "anthropic/claude-4.5-sonnet"
 FALLBACK_MODEL = "gpt-4o"
 GEMINI_CANDIDATES = [
     "gemini/gemini-3-pro", 
@@ -255,7 +255,7 @@ def generate_briefing(stats):
     print("Generating briefing with data:")
     print(data_summary)
 
-    # Try Primary AI Model
+    # 1. Try Primary Model (Claude)
     try:
         print(f"[*] Attempting generation with {PRIMARY_MODEL}...")
         response = completion(
@@ -269,6 +269,7 @@ def generate_briefing(stats):
     except Exception as e:
         print(f"[!] {PRIMARY_MODEL} failed ({e}). Falling back to Gemini...")
         
+        # 2. Try Gemini Cascade (Secondary)
         gemini_success = False
         if os.getenv("GEMINI_API_KEY"):
             for model in GEMINI_CANDIDATES:
@@ -364,9 +365,10 @@ def save_briefing(briefing):
 def main():
     has_openai = os.getenv("OPENAI_API_KEY") is not None
     has_gemini = os.getenv("GEMINI_API_KEY") is not None
+    has_claude = os.getenv("CLAUDE_API_KEY") is not None
     
-    if not has_openai and not has_gemini:
-        print("Error: No AI API keys (OPENAI_API_KEY or GEMINI_API_KEY) found in .env.")
+    if not (has_openai or has_gemini or has_claude):
+        print("Error: No AI API keys (OPENAI/GEMINI/CLAUDE) found in .env.")
         sys.exit(1)
 
     stats = get_stats()
