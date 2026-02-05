@@ -27,7 +27,12 @@ load_dotenv()
 # Primary: GPT-5.2 (High Quality), Fallback: GPT-4o (Reliable)
 PRIMARY_MODEL = "gpt-5.2" 
 FALLBACK_MODEL = "gpt-4o"
-GEMINI_MODEL = "gemini/gemini-3-pro"
+GEMINI_CANDIDATES = [
+    "gemini/gemini-3-pro", 
+    "gemini/gemini-3.0-pro",
+    "gemini/gemini-2.0-flash", 
+    "gemini/gemini-1.5-pro"
+]
 OUTPUT_FILE = "docs/data/daily_briefing.json"
 TYPOSQUAT_FILE = "data/ai_typosquats.csv"
 CLASSIFICATION_FILE = "data/ai_classifications.csv"
@@ -262,24 +267,28 @@ def generate_briefing(stats):
             response_format={ "type": "json_object" }
         )
     except Exception as e:
-        print(f"[!] {PRIMARY_MODEL} failed ({e}). Falling back to {GEMINI_MODEL}...")
-        try:
-            # 2. Try Gemini 3 Pro (Secondary)
-            if os.getenv("GEMINI_API_KEY"):
-                response = completion(
-                    model=GEMINI_MODEL,
-                    messages=[
-                        {"role": "system", "content": SYSTEM_PROMPT},
-                        {"role": "user", "content": f"Data for briefing:\n{data_summary}"}
-                    ],
-                    response_format={ "type": "json_object" }
-                )
-            else:
-                raise Exception("GEMINI_API_KEY not found")
-
-        except Exception as e2:
-            print(f"[!] Gemini fallback failed ({e2}). Falling back to {FALLBACK_MODEL}...")
-            
+        print(f"[!] {PRIMARY_MODEL} failed ({e}). Falling back to Gemini...")
+        
+        gemini_success = False
+        if os.getenv("GEMINI_API_KEY"):
+            for model in GEMINI_CANDIDATES:
+                try:
+                    print(f"[*] Attempting generation with {model}...")
+                    response = completion(
+                        model=model,
+                        messages=[
+                            {"role": "system", "content": SYSTEM_PROMPT},
+                            {"role": "user", "content": f"Data for briefing:\n{data_summary}"}
+                        ],
+                        response_format={ "type": "json_object" }
+                    )
+                    gemini_success = True
+                    break # Success!
+                except Exception as g_err:
+                    print(f"[!] {model} failed: {g_err}")
+        
+        if not gemini_success:
+            print(f"[!] All Gemini candidates failed. Falling back to {FALLBACK_MODEL}...")
             # 3. Try GPT-4o (Tertiary)
             try:
                 response = completion(
