@@ -260,6 +260,7 @@ def generate_briefing(stats):
         print(f"[*] Attempting generation with {PRIMARY_MODEL}...")
         response = completion(
             model=PRIMARY_MODEL,
+            api_key=os.getenv("CLAUDE_API_KEY"),
             messages=[
                 {"role": "system", "content": SYSTEM_PROMPT},
                 {"role": "user", "content": f"Data for briefing:\n{data_summary}"}
