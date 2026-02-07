@@ -33,7 +33,7 @@ GEMINI_CANDIDATES = [
     "gemini/gemini-2.0-flash", 
     "gemini/gemini-1.5-pro"
 ]
-OUTPUT_FILE = "docs/data/daily_briefing.json"
+OUTPUT_FILE = "data/daily_briefing.json"
 TYPOSQUAT_FILE = "data/ai_typosquats.csv"
 CLASSIFICATION_FILE = "data/ai_classifications.csv"
 STATS_FILE = "data/dea_domains_probed.csv" # To get total count
@@ -326,7 +326,7 @@ def generate_briefing(stats):
 
 def save_briefing(briefing):
     # 1. Save Latest
-    latest_path = "docs/data/daily_briefing.json"
+    latest_path = "data/daily_briefing.json"
     os.makedirs(os.path.dirname(latest_path), exist_ok=True)
     with open(latest_path, 'w', encoding='utf-8') as f:
         json.dump(briefing, f, indent=2)

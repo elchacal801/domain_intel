@@ -255,8 +255,9 @@ jobs:
         env:
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
           GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+          CLAUDE_API_KEY: ${{ secrets.CLAUDE_API_KEY }}
         run: |
-          if [ -n "$GEMINI_API_KEY" ] || [ -n "$OPENAI_API_KEY" ]; then
+          if [ -n "$GEMINI_API_KEY" ] || [ -n "$OPENAI_API_KEY" ] || [ -n "$CLAUDE_API_KEY" ]; then
             # Analysis (Limit covers the ~10k triage candidates)
             python scripts/ai_typosquat.py --limit 11000 --batch-size 100 --input data/triage_candidates.csv
             python scripts/ai_classify_web.py --limit 11000 --batch-size 50 --input data/triage_candidates.csv
