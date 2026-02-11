@@ -317,6 +317,25 @@ def main() -> None:
         except Exception as e:
             log(f"  [!] Failed to read {ct_file}: {e}")
 
+    # 4. Manual Candidates (manual_candidates.csv)
+    manual_file = "data/manual_candidates.csv"
+    if os.path.exists(manual_file):
+        try:
+             with open(manual_file, 'r', encoding='utf-8') as f:
+                reader = csv.DictReader(f)
+                man_doms = set()
+                # Expect 'domain' column
+                col = "domain"
+                if reader.fieldnames and col in reader.fieldnames:
+                    for row in reader:
+                        d = normalize_domain(row.get(col, ""))
+                        if is_valid_domain(d):
+                            man_doms.add(d)
+                log(f"  [+] {'manual_candidates':28s} {len(man_doms):7d} domains  (local)")
+                dea |= man_doms
+        except Exception as e:
+            log(f"  [!] Failed to read {manual_file}: {e}")
+
     # ---- Execute pulls ----
     # Main source loops
 
