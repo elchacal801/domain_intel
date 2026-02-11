@@ -251,6 +251,21 @@ jobs:
           cp data/pivot_discovery.csv docs/data/ || true
           cp data/enriched_candidates.csv docs/data/ || true
 
+      - name: Shadow AI Analysis (OpenClaw)
+        env:
+          SHODAN_API_KEY: ${{ secrets.SHODAN_API_KEY }}
+        run: |
+          if [ -n "$SHODAN_API_KEY" ]; then
+             python scripts/openclaw_scan.py --budget 500
+             # STIX generation is called internally by scan.py, but we can run it explicitly if needed
+             # python scripts/openclaw_stix.py
+          fi
+          # Backup artifacts
+          cp data/openclaw_exposed.csv docs/data/ || true
+          cp data/openclaw_history.csv docs/data/ || true
+          cp data/openclaw_stix.json docs/data/ || true
+          cp data/openclaw_sigma.yml docs/data/ || true
+
       - name: AI Analysis (Optional)
         env:
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
@@ -290,6 +305,8 @@ jobs:
           cp data/*.csv docs/data/
           gzip -f data/domain_intel_bundle.json
           cp data/*.json.gz docs/data/
+          cp data/openclaw_stix.json docs/data/
+          cp data/openclaw_sigma.yml docs/data/
           
           git add data docs
 

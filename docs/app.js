@@ -1,10 +1,23 @@
 // app.js
 
-async function fetchData(url) {
+async function fetchData(url, returnObjects = false) {
     const response = await fetch(url);
     const data = await response.text();
     const rows = data.split('\n').filter(r => r.trim() !== '');
-    const header = rows.shift(); // Skip header
+    const header = rows.shift(); // Remove header line
+
+    if (returnObjects && header) {
+        const headers = parseCSVRow(header);
+        return rows.map(row => {
+            const values = parseCSVRow(row);
+            const obj = {};
+            headers.forEach((h, i) => {
+                obj[h.trim()] = values[i] || '';
+            });
+            return obj;
+        });
+    }
+
     return rows.map(row => parseCSVRow(row));
 }
 
@@ -143,6 +156,48 @@ async function initDashboard() {
         // Let's sum MX counts for a rough "Total Enriched"
         const totalDomains = mxData.reduce((acc, curr) => acc + parseInt(curr[1] || 0), 0);
         document.getElementById('stat-total-dea').textContent = totalDomains.toLocaleString();
+
+        // --- 3b. OpenClaw Exposure (New) ---
+        try {
+            const openclawData = await fetchData('data/openclaw_exposed.csv', true); // objects
+            const totalExposed = openclawData.length;
+
+            // Add to sidebar? Or just container?
+            // Assuming we added HTML container in index.html (Next step) or injecting it.
+            // Let's create a container dynamically if it doesn't exist or log stats.
+
+            // Risk Stats
+            const riskCounts = { "CRITICAL": 0, "HIGH": 0, "MEDIUM": 0, "LOW": 0 };
+            openclawData.forEach(r => {
+                const lvl = (r.risk_level || "MEDIUM").toUpperCase();
+                riskCounts[lvl] = (riskCounts[lvl] || 0) + 1;
+            });
+
+            console.log("OpenClaw Stats:", riskCounts);
+
+            // If we have an element ID 'openclaw-container', populate it.
+            const ocContainer = document.getElementById('openclaw-container');
+            if (ocContainer) {
+                ocContainer.style.display = 'block';
+                document.getElementById('oc-total').textContent = totalExposed;
+                document.getElementById('oc-critical').textContent = riskCounts["CRITICAL"];
+
+                // Chart
+                new Chart(document.getElementById('openclawChart'), {
+                    type: 'doughnut',
+                    data: {
+                        labels: Object.keys(riskCounts),
+                        datasets: [{
+                            data: Object.values(riskCounts),
+                            backgroundColor: ['#da3633', '#d29922', '#d29922', '#238636'], // Red, Orange, Orange, Green
+                            borderWidth: 0
+                        }]
+                    },
+                    options: { responsive: true, plugins: { legend: { position: 'right' } } }
+                });
+            }
+
+        } catch (e) { console.log('No OpenClaw data', e); }
 
         // --- 4. Web Servers ---
         try {
@@ -450,77 +505,34 @@ async function initDashboard() {
             }
         } catch (e) { console.log('Registrar load fail', e); }
 
-        // --- 0c. Load Shodan Data (New) ---
+        // --- 0c. Load Shodan Data (Fixed) ---
         try {
-            const shodanData = await fetchData('data/shodan_intelligence.csv');
-            // Headers: domain,mx_ip,shodan_ip,ports,vulns,tags,os,hostnames
-            // Indices: ports=3, vulns=4 (assuming standard) - BUT CSV fetch is raw array
-            // Let's use parsing logic properly. We used parseCSVRow which returns array of values.
-            // We need to map headers to indices. FIRST ROW is header in fetchData? 
-            // fetchData removes header. So we assume fixed columns or we should output header mapping in fetchData.
-            // Actually fetchData returns just rows. We need to be careful.
-
-            // To be safe, let's assume columns 3 (ports) and 4 (vulns) based on enrich_shodan.py
-            // "ip": ip, "ports": "", "vulns": "", "tags": "", "os": "", "hostnames": ""
-            // enriched_row adds these to existing columns.
-            // Existing: domain,primary_mx,mx_ip,asn,asn_name,bgp_prefix,cc,registry,mx_records...
-            // "shodan_ip" is added, then the dict keys.
-            // This is dynamic. Let's just create counters by scanning specific columns 
-            // OR finding the columns that look like ports/vulns.
-            // Actually, we can just use the fact that ports are integers joined by ; 
-            // and vulns start with CVE-.
+            const shodanData = await fetchData('data/shodan_intelligence.csv', true); // Use Object Mode
 
             const portCounts = {};
             const vulnCounts = {};
 
             shodanData.forEach(row => {
-                // Scan all columns for likely data
-                row.forEach(cell => {
-                    if (!cell) return;
+                // Now we access by Header Name!
+                const portStr = row['ports'];
+                const vulnStr = row['vulns'];
 
-                    // Vuln Check (CVE-XXXX-XXXX)
-                    if (cell.includes('CVE-')) {
-                        cell.split(';').forEach(v => {
-                            v = v.trim();
-                            if (v.startsWith('CVE')) vulnCounts[v] = (vulnCounts[v] || 0) + 1;
-                        });
-                    }
+                if (portStr) {
+                    portStr.split(';').forEach(p => {
+                        const port = p.trim();
+                        // Filter invalid ports (bug fix 1B)
+                        if (port && !isNaN(port) && parseInt(port) > 0 && parseInt(port) <= 65535) {
+                            portCounts[port] = (portCounts[port] || 0) + 1;
+                        }
+                    });
+                }
 
-                    // Port Check (Numeric or semi-colon separated numbers)
-                    // Weak heuristic but functional for now: if cell matches "80;443" or just "80"
-                    // and isn't a date or IP.
-                    // Better: standard enrich_shodan.py output puts 'ports' at specific spot?
-                    // Let's try to match logic: "80", "80;443".
-                });
-
-                // Hardcoded index attempt based on enrich_shodan.py dict writer order?
-                // It writes: domain, ... keys ... shodan_ip, ports, vulns, tags, os, hostnames.
-                // It appends to row. 
-                // Let's rely on finding content.
+                if (vulnStr) {
+                    vulnStr.split(';').forEach(v => {
+                        if (v.startsWith('CVE')) vulnCounts[v] = (vulnCounts[v] || 0) + 1;
+                    });
+                }
             });
-
-            // Re-scan with simpler logic: Ports are usually short ints.
-            // Let's assume the LAST columns are the new ones.
-            // Row length > 10.
-            if (shodanData.length > 0) {
-                shodanData.forEach(row => {
-                    // Try to find the Ports column: contains only numbers and ;
-                    const portCol = row.find(c => c && /^[0-9;]+$/.test(c) && c.length < 20 && !c.includes('.'));
-                    if (portCol) {
-                        portCol.split(';').forEach(p => {
-                            if (p) portCounts[p] = (portCounts[p] || 0) + 1;
-                        });
-                    }
-
-                    // CVEs
-                    const vulnCol = row.find(c => c && c.includes('CVE-'));
-                    if (vulnCol) {
-                        vulnCol.split(';').forEach(v => {
-                            if (v) vulnCounts[v] = (vulnCounts[v] || 0) + 1;
-                        });
-                    }
-                });
-            }
 
             // Render Port Chart
             const sortedPorts = Object.entries(portCounts).sort((a, b) => b[1] - a[1]).slice(0, 10);

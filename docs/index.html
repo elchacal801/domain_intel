@@ -263,6 +263,36 @@
                 </div>
             </div>
 
+            <!-- 2b. OPENCLAW EXPOSURE (New) -->
+            <div id="openclaw-container" class="dashboard-card" style="display:none; border-left: 4px solid var(--danger);">
+                <div class="card-header">
+                    <div class="card-title">
+                        <i class="fa-solid fa-spider" style="color:var(--danger); margin-right:8px;"></i> 
+                        OpenClaw Shadow AI Exposure
+                    </div>
+                </div>
+                <div style="display:flex; gap:30px; align-items:center;">
+                    <div style="flex:1;">
+                        <div style="display:grid; grid-template-columns: 1fr 1fr; gap:15px; margin-bottom:20px;">
+                            <div class="stat-card" style="padding:15px; background:rgba(22,27,34,0.5);">
+                                <span class="stat-label">Total Exposed</span>
+                                <span id="oc-total" class="stat-value" style="font-size:1.8em;">0</span>
+                            </div>
+                            <div class="stat-card" style="padding:15px; background:rgba(218,54,51,0.1); border-color:var(--danger);">
+                                <span class="stat-label" style="color:var(--danger)">Critical Risk</span>
+                                <span id="oc-critical" class="stat-value" style="color:var(--danger); font-size:1.8em;">0</span>
+                            </div>
+                        </div>
+                        <p style="font-size:0.9em; color:var(--text-muted);">
+                            Detects unauthenticated AI agents (OpenClaw/Moltbot) exposing internal networks or data.
+                        </p>
+                    </div>
+                    <div class="chart-container" style="flex:1; height:200px;">
+                        <canvas id="openclawChart"></canvas>
+                    </div>
+                </div>
+            </div>
+
             <!-- 3. INFRASTRUCTURE PIVOTS (Merged Old + New) -->
             <div class="charts-grid">
                 <!-- Registrars (New) -->

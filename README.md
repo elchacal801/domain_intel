@@ -31,6 +31,7 @@ This repository provides different layers of data for different security roles:
 ### 🤖 For Engineering/DevOps
 
 * **STIX Integration**: Use `data/domain_intel_bundle.json` to feed this intelligence directly into platforms like OpenCTI or MISP.
+* **Shadow AI Detection**: Use `data/openclaw_stix.json` to ingest indicators of compromised AI agents (OpenClaw/Moltbot) into your SIEM.
 
 ## 📂 Project Structure
 
@@ -47,6 +48,10 @@ This repository provides different layers of data for different security roles:
     * `merge_results.py`: **[NEW]** Merges processed shards back into a single dataset.
     * `generate_pivots.py`: Generates intelligence pivot datasets and stats.
     * `export_stix.py`: Exports intelligence to STIX 2.1 JSON.
+  * **Shadow AI Scanner (New)**:
+    * `openclaw_scan.py`: **[NEW]** Scans for exposed OpenClaw/Moltbot/Gateway AI agents on port 18789.
+    * `openclaw_stix.py`: **[NEW]** Converts OpenClaw findings to STIX 2.1 bundles.
+    * `shodan_utils.py`: **[NEW]** Shared utility for safe Shodan scanning (Credit Budgeting + Caching).
   * **Infrastructure Intel**:
     * `asn_intel.py`: Fetches and enriches suspicious ASNs.
     * `vpn_intel.py`: Aggregates VPN/VPS provider ASNs.
@@ -142,6 +147,7 @@ graph TD
     subgraph Discovery
         A[Keywords] -->|SEADS| B(Discovered Ads)
         C[Targets] -->|DNSTwist| D(Typosquats)
+        C -->|Shodan Search| OC[OpenClaw Scanner]
         E[Open Sources] -->|Merge| F(Raw Lists)
         Z[Cert Logs] -->|Stream| F
     end
@@ -162,7 +168,7 @@ graph TD
     end
 
     subgraph "Advanced Intelligence"
-        L --> S[Shodan Enrichment]
+        L --> S["Shodan Enrichment (Cached)"]
         L --> W["Whois (Port 43)"]
         L --> AI_CHECK{AI Validation}
         AI --> AI_CHECK
@@ -173,12 +179,15 @@ graph TD
     subgraph Output
         CLASS & TYPO & S --> M{Aggregation}
         L --> N[Visual Forensics]
-        N -.->|Hashes| SP(Shodan Pivoting - Optional)
+        N -.->|Hashes| SP("Shodan Pivoting (Cached)")
         M & SP --> O[Risk & Threat Tagging]
         O --> P(Daily Briefing LLM)
         O --> Q[Live Dashboard]
         O --> R[STIX 2.1 Bundle]
         
+        OC -->|Shadow AI STIX| OC_STIX[OpenClaw STIX]
+        OC -->|Exposure Stats| Q
+
         WM[Selectors: SOA/SSL] --> PIVOT[Whoxy Reverse Whois]
         PIVOT --> DISCOVERY((New Domain Discovery))
         DISCOVERY -.->|Feed Back| F
@@ -188,6 +197,7 @@ graph TD
     style AI fill:#f96,stroke:#333,stroke-width:2px,color:black
     style CLASS fill:#f96,stroke:#333,stroke-width:2px,color:black
     style P fill:#bfb,stroke:#333,stroke-width:2px,color:black
+    style OC fill:#da3633,stroke:#333,stroke-width:2px,color:white
 ```
 
 ### Detection Logic & Triage Funnel

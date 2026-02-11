@@ -100,3 +100,16 @@ The data flow moves from **Inputs** &rarr; **Discovery** &rarr; **Enrichment** &
 | :--- | :--- | :--- |
 | **`visual_hashes.csv`** | `visual_fingerprint.py` | **Perceptual Hashes**. A `pHash` for every screenshot taken. allow duplicate image detection. |
 | **`visual_clusters.json`** | `visual_fingerprint.py` | **Phishing Kits**. Groups of domains that look visually identical (e.g., 50 different domains all displaying the same blurry bank login page). |
+
+---
+
+## 🕷️ 8. Shadow AI / OpenClaw
+
+*Intelligence on exposed AI agents and unauthenticated bots.*
+
+| File | Generator Script | Description |
+| :--- | :--- | :--- |
+| **`openclaw_exposed.csv`** | `openclaw_scan.py` | **Exposure Snapshot**. Live list of IPs exposing OpenClaw/Moltbot agents on port 18789. Includes Risk Level (Critical/High). |
+| **`openclaw_history.csv`** | `openclaw_scan.py` | **Exposure History**. Tracks when an instance was first seen, last seen, and its status (Active/Closed). |
+| **`openclaw_stix.json`** | `openclaw_stix.py` | **Threat Intel Bundle**. STIX 2.1 format for easy ingestion into Threat Intelligence Platforms (TIPs). |
+| **`openclaw_sigma.yml`** | *Config* | **Detection Rule**. Sigma rule to detect internal traffic destined for the default OpenClaw port. |
