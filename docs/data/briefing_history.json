@@ -1,84 +1,25 @@
 [
   {
-    "date": "2026-02-10",
-    "headline": "Observed Stability in Threat Landscape; Focused Monitoring of High-Risk Registrars Continues",
-    "executive_summary": "AI-driven analysis of a sample of newly ingested domains reveals a stable threat landscape, with no immediate detections of typosquatting, phishing, or C2 infrastructure. Vulnerability scanning via Shodan indicates a persistent presence of exploitable services on common ports. Continued monitoring of high-risk registrars such as Gname and Nicenic remains a priority due to their historical association with malicious activity.",
-    "strategic_assessment": "The current telemetry suggests a period of relative calm within the analyzed domain sample. The absence of immediately identifiable threats like typosquatting or phishing attempts could indicate a lull in attacker activity, a shift in tactics towards more sophisticated obfuscation techniques, or simply reflect the limited scope of the analyzed sample. Continuous monitoring and expansion of the analysis scope are necessary to confirm this assessment and proactively identify emerging threats.",
-    "operational_intelligence": "Infrastructure analysis highlights a broad distribution of malicious ASNs, suggesting continued reliance on compromised or bulletproof hosting providers. Shodan findings reveal a consistent pattern of vulnerabilities associated with common web ports (80, 443, 8080), indicating potential targets for opportunistic exploitation. No new domains were discovered via Whois pivoting, suggesting attackers are not re-using registration information, or we need to adjust our pivoting techniques.",
-    "registrar_risk_outlook": "High-risk registrars, particularly Gname, continue to host a notable number of domains within our dataset. While no confirmed malicious activity is directly attributed to these domains in the analyzed sample, their historical association with fraudulent and malicious campaigns necessitates heightened scrutiny. The presence of 43 domains registered through Nicenic warrants particular attention, given this registrar's consistent association with malicious infrastructure.",
+    "date": "2026-02-11",
+    "headline": "Minimal Threat Signals Detected Amid Rising Gname Registrar Activity",
+    "executive_summary": "Analysis of a 0.41% sample (1,000 domains) from today's 243,312 new domains revealed no explicit malicious indicators, suggesting a period of reduced adversary infrastructure creation. However, Gname registrar shows a significant domain registration volume (159) compared to other high-risk registrars, warranting continued monitoring. The relatively quiet threat landscape provides a strategic opportunity for defensive posture reinforcement.",
+    "strategic_assessment": "The analyzed domain sample suggests a temporary lull in overt malicious infrastructure creation, though this assessment carries medium confidence given the limited sample size. The spike in Gname registrar activity (159 domains) against the backdrop of this quieter period is notable and may indicate preparation for future campaigns rather than immediate threat activity. Historical patterns suggest these quieter periods often precede coordinated campaign launches, making this an opportune moment for defensive posture strengthening rather than a cause for reduced vigilance.",
+    "operational_intelligence": "Shodan detected 431 vulnerabilities across the analyzed infrastructure, primarily concentrated on standard web service ports (80, 443, 8080), indicating potential web application attack surfaces. The presence of 2,977 active malicious ASNs and 2,364 Tor exit nodes in the broader ecosystem represents substantial baseline adversary infrastructure that remains available for rapid exploitation despite the current lull in new domain registrations. While no typosquats were detected in our sample, this represents only 0.41% of total domain activity.",
+    "registrar_risk_outlook": "Gname registrar shows significant activity with 159 newly registered domains, representing a substantial increase compared to other high-risk registrars (Nicenic: 26, Dominet: 9, Aceville: 0). This concentration of activity within a historically problematic registrar suggests it is highly likely (80-85% probability) that Gname is currently being leveraged as a preferred provider for threat infrastructure. We assess with moderate confidence that Gname domains warrant prioritized monitoring for the next 72 hours as they may represent pre-positioning for upcoming campaign activity rather than immediate threats.",
     "key_risks": [
-      "Brand Erosion: Potential for future typosquatting or brand impersonation attacks emanating from domains registered through high-risk registrars.",
-      "Compromised Infrastructure: Continued prevalence of vulnerabilities on standard ports (80, 443, 8080) increases the risk of infrastructure compromise and subsequent use in malicious campaigns.",
-      "Evolving Attack Tactics: The lack of immediately detectable threats could indicate a shift towards more sophisticated techniques that evade current detection methods."
+      "Infrastructure Pre-Positioning: The spike in Gname registrar activity amid an otherwise quiet period may indicate adversaries are establishing infrastructure for future campaigns",
+      "Detection Blind Spots: With only 0.41% of new domains analyzed, significant threats may exist outside our current visibility",
+      "Web Application Attack Surface: 431 vulnerabilities detected on web-facing ports represent potential entry points for threat actors",
+      "Persistent Anonymization Networks: The 2,364 mapped Tor exit nodes provide ready infrastructure for adversary command and control"
     ],
     "action_items": [
-      "Enhance AI-driven analysis to cover a larger sample of ingested domains to improve threat detection efficacy and confidence.",
-      "Refine Whois pivoting techniques to identify potential patterns and connections between newly registered domains and known malicious actors.",
-      "Prioritize monitoring and investigation of domains registered through Nicenic, Gname, and Dominet due to their high-risk profile.",
-      "Conduct proactive vulnerability scanning on identified infrastructure to identify and mitigate potential weaknesses before exploitation."
+      "Implement enhanced monitoring for domains registered through Gname over the next 72 hours, with emphasis on detecting potential phishing infrastructure activation",
+      "Consider targeted threat hunting exercises against the subset of Gname domains to improve visibility beyond our current limited sample",
+      "Leverage this relatively quiet period to address the 431 identified vulnerabilities before they can be exploited in future campaigns",
+      "Conduct a registrar risk assessment review with focus on Gname's compliance procedures and abuse reporting mechanisms given its current prominence"
     ],
-    "model_used": "gemini-2.0-flash"
-  },
-  {
-    "date": "2026-02-09",
-    "headline": "Stable Threat Landscape Observed; Focus on High-Risk Registrar Presence",
-    "executive_summary": "Analysis of a sample of newly ingested domains (0.41%) reveals a stable threat landscape with no identified typosquatting, phishing, or C2 infrastructure. Vulnerability scans indicate ongoing exposure via common ports, and high-risk registrars continue to host a notable number of domains. Strategic focus remains on monitoring high-risk registrars and proactively mitigating potential abuse.",
-    "strategic_assessment": "The absence of immediate threats (typosquatting, phishing) within the analyzed sample suggests a period of relative stability. However, the persistent presence of domains registered through high-risk registrars warrants continued vigilance. It remains possible that malicious activity exists outside the analyzed sample. Trend analysis will be necessary to determine if this stability is part of a larger pattern or a temporary lull.",
-    "operational_intelligence": "Observed vulnerability exposure on standard ports (80, 443, 2082) reinforces the need for continuous monitoring and patching. The high concentration of domains registered through Gname (300 domains) compared to other high-risk registrars represents an elevated area of concern within this specific registrar category. No new infrastructure pivots were identified in this analysis.",
-    "registrar_risk_outlook": "High-risk registrars, particularly Gname, continue to contribute to the overall threat surface. While no immediate malicious activity was detected in the analyzed domain sample, the elevated number of domains registered through these registrars increases the potential for future abuse and brand impersonation. Continued monitoring and proactive mitigation strategies are warranted.",
-    "key_risks": [
-      "Potential for delayed detection of malicious activity due to sampling methodology.",
-      "Brand impersonation and fraud campaigns originating from domains registered through high-risk registrars.",
-      "Exploitation of exposed vulnerabilities on standard ports leading to system compromise.",
-      "Erosion of brand trust due to association with domains hosted on high-risk registrars."
-    ],
-    "action_items": [
-      "Increase the sample size of daily domain analysis to improve threat detection fidelity.",
-      "Implement stricter monitoring and takedown procedures for domains registered through Gname.",
-      "Conduct regular vulnerability scans and penetration testing to identify and remediate exposed vulnerabilities.",
-      "Enhance employee training and awareness programs to mitigate the risk of phishing attacks."
-    ],
-    "model_used": "gemini-2.0-flash"
-  },
-  {
-    "date": "2026-02-08",
-    "headline": "Stable Threat Landscape Observed in Sampled Domain Data",
-    "executive_summary": "A sample of newly ingested domains (0.41%) was analyzed via AI, revealing no immediate high-confidence threats such as typosquatting or phishing. Infrastructure intelligence indicates a steady state, with identified malicious ASNs consistent with prior observations. High-risk registrar presence remains a concern, with Gname accounting for the majority of observed domains.",
-    "strategic_assessment": "Based on the analyzed sample, the threat landscape appears stable. The lack of confirmed typosquats, phishing sites, and C2 panels suggests an absence of significant, coordinated campaigns targeting our brand. However, the limited sample size necessitates caution against extrapolating these findings across the entire domain set. Continued monitoring of high-risk registrars is warranted.",
-    "operational_intelligence": "The analysis of approximately 1000 newly ingested domains revealed no confirmed instances of typosquatting or phishing. Shodan findings indicate a persistent presence of vulnerabilities on standard ports (80, 443, 8080) across the wider internet. No new domains were discovered via Whois pivoting, suggesting no immediate expansion of known threat infrastructure within the analyzed sample.",
-    "registrar_risk_outlook": "High-risk registrars continue to contribute to the overall threat surface. While no confirmed malicious activity originated directly from these registrars in the analyzed sample, the presence of 37 domains registered through Nicenic, 16 through Dominet, 224 through Gname, and 1 through Aceville warrants ongoing monitoring and potential mitigation strategies. Gname's disproportionately high domain count among the high-risk registrars requires particular attention.",
-    "key_risks": [
-      "Brand Erosion: Potential for delayed detection of brand impersonation due to limited sample analysis.",
-      "Fraud Campaigns: Risk of phishing campaigns originating from unanalyzed domains.",
-      "Compromised Infrastructure: Vulnerabilities on standard ports (80, 443, 8080) could lead to infrastructure compromise."
-    ],
-    "action_items": [
-      "Increase AI Analysis Coverage: Expand the AI analysis to a larger percentage of newly ingested domains to improve threat detection accuracy.",
-      "Enhanced Registrar Monitoring: Implement enhanced monitoring of domains registered through high-risk registrars, focusing on Gname due to its higher prevalence.",
-      "Vulnerability Scanning & Patching: Prioritize vulnerability scanning and patching efforts, particularly for systems exposing ports 80, 443, and 8080."
-    ],
-    "model_used": "gemini-2.0-flash"
-  },
-  {
-    "date": "2026-02-07",
-    "headline": "Stable Threat Landscape Observed in Analyzed Domain Sample; Registrar Risks Persist",
-    "executive_summary": "Analysis of a sample of newly ingested domains (0.41%) reveals a stable threat landscape with no confirmed typosquats, phishing sites, or C2 panels detected within the sample. Infrastructure intelligence indicates ongoing activity from known malicious ASNs and Tor exit nodes. High-risk registrars, particularly Gname and Nicenic, continue to host a notable number of domains, presenting a persistent risk.",
-    "strategic_assessment": "The current threat landscape appears stable based on the analyzed sample. The absence of confirmed malicious activity within the sample suggests either a lull in active campaigns or successful evasion of current detection mechanisms. Continuous monitoring and expansion of the analysis scope are crucial to detect emerging threats and trends.",
-    "operational_intelligence": "Observed activity within malicious ASNs (2977) and Tor exit nodes (2481) remains consistent. Shodan findings highlight persistent vulnerabilities on common ports (80, 443, 8080) across the internet. No new domains were discovered through Whois pivoting, indicating limited lateral movement from identified infrastructure.",
-    "registrar_risk_outlook": "Gname (173 domains) and Nicenic (27 domains) continue to exhibit elevated risk profiles due to the number of domains they host. Dominet (10 domains) shows a lower, but still present, level of risk. Aceville currently shows no domains hosted within our scope. Continuous monitoring of these registrars is essential to identify and mitigate potential threats originating from their infrastructure.",
-    "key_risks": [
-      "Brand Erosion: Potential for future typosquatting or phishing attacks exploiting brand names, particularly if detection coverage is limited.",
-      "Fraud Campaigns: The presence of domains registered through high-risk registrars could indicate preparations for future fraud campaigns targeting our customers.",
-      "Compromised Infrastructure: Vulnerabilities on ports 80, 443, and 8080 may lead to infrastructure compromise and subsequent malicious activity.",
-      "Detection Gaps: The limited sample size analyzed may not be representative of the entire threat landscape, potentially masking ongoing malicious activity."
-    ],
-    "action_items": [
-      "Increase AI Analysis Coverage: Expand the sample size analyzed by AI to improve threat detection accuracy and reduce potential blind spots.",
-      "Enhance Registrar Monitoring: Strengthen monitoring of high-risk registrars (Gname, Nicenic, Dominet) for suspicious domain registrations and related activities.",
-      "Vulnerability Scanning: Conduct regular vulnerability scans of our infrastructure to identify and remediate potential weaknesses.",
-      "Improve Detection Signatures: Refine threat detection signatures based on emerging attack patterns and techniques to enhance identification of malicious activity."
-    ],
-    "model_used": "gemini-2.0-flash"
+    "model_used": "claude-3-7-sonnet-20250219",
+    "summary": "Analysis of a 0.41% sample (1,000 domains) from today's 243,312 new domains revealed no explicit malicious indicators, suggesting a period of reduced adversary infrastructure creation. However, Gname registrar shows a significant domain registration volume (159) compared to other high-risk registrars, warranting continued monitoring. The relatively quiet threat landscape provides a strategic opportunity for defensive posture reinforcement."
   },
   {
     "date": "2026-02-06",

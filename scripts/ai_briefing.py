@@ -24,14 +24,14 @@ from litellm import completion
 load_dotenv()
 
 # Constants
-# Primary: Claude 4.5 Sonnet (User Preference), Fallback: Gemini Cascade, Tertiary: GPT-4o
-PRIMARY_MODEL = "anthropic/claude-4.5-sonnet"
-FALLBACK_MODEL = "gpt-4o"
-GEMINI_CANDIDATES = [
-    "gemini/gemini-3-pro", 
-    "gemini/gemini-3.0-pro",
-    "gemini/gemini-2.0-flash", 
-    "gemini/gemini-1.5-pro"
+# Primary: Claude 3.7 Sonnet (New Flagship)
+# Secondary: Gemini 3 Pro Preview
+# Tertiary: GPT-4o
+PRIMARY_MODEL = "anthropic/claude-3-7-sonnet-latest"
+FALLBACK_CHAIN = [
+    "gemini/gemini-3-pro-preview",
+    "gpt-4o",
+    "gemini/gemini-flash-latest"
 ]
 OUTPUT_FILE = "data/daily_briefing.json"
 TYPOSQUAT_FILE = "data/ai_typosquats.csv"
@@ -255,12 +255,15 @@ def generate_briefing(stats):
     print("Generating briefing with data:")
     print(data_summary)
 
-    # 1. Try Primary Model (Claude)
+    # 1. Try Primary Model
     try:
         print(f"[*] Attempting generation with {PRIMARY_MODEL}...")
+        # Pass API key explicitly for Anthropic if needed, though env var usually works
+        api_key_val = os.getenv("CLAUDE_API_KEY") if "anthropic" in PRIMARY_MODEL else None
+        
         response = completion(
             model=PRIMARY_MODEL,
-            api_key=os.getenv("CLAUDE_API_KEY"),
+            api_key=api_key_val,
             messages=[
                 {"role": "system", "content": SYSTEM_PROMPT},
                 {"role": "user", "content": f"Data for briefing:\n{data_summary}"}
@@ -268,42 +271,28 @@ def generate_briefing(stats):
             response_format={ "type": "json_object" }
         )
     except Exception as e:
-        print(f"[!] {PRIMARY_MODEL} failed ({e}). Falling back to Gemini...")
+        print(f"[!] {PRIMARY_MODEL} failed ({e}). Falling back to chain...")
         
-        # 2. Try Gemini Cascade (Secondary)
-        gemini_success = False
-        if os.getenv("GEMINI_API_KEY"):
-            for model in GEMINI_CANDIDATES:
-                try:
-                    print(f"[*] Attempting generation with {model}...")
-                    response = completion(
-                        model=model,
-                        messages=[
-                            {"role": "system", "content": SYSTEM_PROMPT},
-                            {"role": "user", "content": f"Data for briefing:\n{data_summary}"}
-                        ],
-                        response_format={ "type": "json_object" }
-                    )
-                    gemini_success = True
-                    break # Success!
-                except Exception as g_err:
-                    print(f"[!] {model} failed: {g_err}")
-        
-        if not gemini_success:
-            print(f"[!] All Gemini candidates failed. Falling back to {FALLBACK_MODEL}...")
-            # 3. Try GPT-4o (Tertiary)
+        success = False
+        for model in FALLBACK_CHAIN:
             try:
+                print(f"[*] Attempting generation with {model}...")
                 response = completion(
-                    model=FALLBACK_MODEL,
+                    model=model,
                     messages=[
                         {"role": "system", "content": SYSTEM_PROMPT},
                         {"role": "user", "content": f"Data for briefing:\n{data_summary}"}
                     ],
                     response_format={ "type": "json_object" }
                 )
-            except Exception as e3:
-                print(f"[!] All AI models failed: {e3}")
-                return _mock_failure_briefing(stats)
+                success = True
+                break # Success!
+            except Exception as f_err:
+                print(f"[!] {model} failed: {f_err}")
+        
+        if not success:
+            print(f"[!] All AI models failed.")
+            return _mock_failure_briefing(stats)
 
     content = response.choices[0].message.content
     
@@ -318,11 +307,10 @@ def generate_briefing(stats):
     # Ensure date matches today just in case LLM hallucinations
     briefing["date"] = datetime.now().strftime('%Y-%m-%d')
     briefing["model_used"] = response.model # Track which model worked
+    # Frontend expects "summary", LLM generates "executive_summary"
+    briefing["summary"] = briefing.get("executive_summary", "No summary generated.")
     
     return briefing
-        
-    # Fallback/Mock logic is now handled above in the nested try/except
-    pass
 
 def save_briefing(briefing):
     # 1. Save Latest
