@@ -131,7 +131,7 @@ jobs:
           path: data
 
       - name: Process Shard ${{ matrix.shard }}
-        timeout-minutes: 45
+        timeout-minutes: 55
         env:
           ALIENVAULT_OTX_API_KEY: ${{ secrets.ALIENVAULT_OTX_API_KEY }}
         run: |

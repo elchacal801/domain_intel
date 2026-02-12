@@ -69,23 +69,30 @@ async def worker(queue: asyncio.Queue, session: aiohttp.ClientSession, proxy: st
         try:
             domain = row.get("domain")
             if domain:
-                # Parallel fetch of HTTP and HTTPS
-                task_https = fetch(session, f"https://{domain}", proxy)
-                task_http = fetch(session, f"http://{domain}", proxy)
-                
-                res_https, res_http = await asyncio.gather(task_https, task_http)
-                
-                row["https_status"] = res_https["status"]
-                row["https_server"] = res_https["server"]
-                row["https_title"] = res_https["title"]
-                
-                row["http_status"] = res_http["status"]
-                row["http_server"] = res_http["server"]
-                row["http_title"] = res_http["title"]
-        except Exception as e:
+                # Per-domain hard deadline (covers DNS + connect + read)
+                try:
+                    await asyncio.wait_for(
+                        _probe_domain(row, domain, session, proxy),
+                        timeout=15
+                    )
+                except asyncio.TimeoutError:
+                    pass  # Skip this domain, move on
+        except Exception:
             pass
         finally:
             queue.task_done()
+
+async def _probe_domain(row: dict, domain: str, session: aiohttp.ClientSession, proxy: str):
+    """Probe a single domain via HTTP and HTTPS."""
+    task_https = fetch(session, f"https://{domain}", proxy)
+    task_http = fetch(session, f"http://{domain}", proxy)
+    res_https, res_http = await asyncio.gather(task_https, task_http)
+    row["https_status"] = res_https["status"]
+    row["https_server"] = res_https["server"]
+    row["https_title"] = res_https["title"]
+    row["http_status"] = res_http["status"]
+    row["http_server"] = res_http["server"]
+    row["http_title"] = res_http["title"]
 
 async def prober(input_file: str, output_file: str, max_workers: int, proxy: str, limit: int = 0):
     rows = []
@@ -123,6 +130,9 @@ async def prober(input_file: str, output_file: str, max_workers: int, proxy: str
     # Connector tuning
     connector = aiohttp.TCPConnector(limit=0, ttl_dns_cache=300, force_close=False)
     
+    # Global deadline: write partial results instead of hanging in CI
+    global_timeout_secs = 35 * 60  # 35 minutes
+
     async with aiohttp.ClientSession(connector=connector) as session:
         # Create workers
         workers = []
@@ -130,13 +140,19 @@ async def prober(input_file: str, output_file: str, max_workers: int, proxy: str
             task = asyncio.create_task(worker(queue, session, proxy))
             workers.append(task)
             
-        # Wait for queue to process
-        while not queue.empty():
-            done = len(rows) - queue.qsize()
-            print(f"[*] Progress: {done}/{len(rows)}", end='\r')
-            await asyncio.sleep(1)
-            
-        await queue.join()
+        # Wait for queue to process (with hard deadline)
+        try:
+            async def _drain():
+                while not queue.empty():
+                    done = len(rows) - queue.qsize()
+                    print(f"[*] Progress: {done}/{len(rows)}", end='\r')
+                    await asyncio.sleep(1)
+                await queue.join()
+
+            await asyncio.wait_for(_drain(), timeout=global_timeout_secs)
+        except asyncio.TimeoutError:
+            remaining = queue.qsize()
+            print(f"\n[!] Global timeout reached. {remaining} domains skipped. Writing partial results.")
         
         # Cancel workers
         for w in workers:
