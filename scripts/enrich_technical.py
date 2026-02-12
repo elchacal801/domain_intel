@@ -1,5 +1,6 @@
 import csv
 import dns.resolver
+import dns.exception
 import ssl
 import socket
 import requests
@@ -28,7 +29,8 @@ def extract_soa_email(domain):
                 parts = rname.split('.')
                 email = f"{parts[0]}@{'.'.join(parts[1:])}"
                 return email
-    except Exception:
+    except (dns.resolver.NXDOMAIN, dns.resolver.NoAnswer, dns.resolver.NoNameservers,
+            dns.resolver.Timeout, dns.exception.DNSException):
         pass
     return None
 
@@ -51,7 +53,7 @@ def extract_ssl_data(domain):
                 serial = cert.get('serialNumber')
                 
                 return org, serial
-    except Exception:
+    except (socket.timeout, socket.error, ssl.SSLError, OSError):
         return None, None
 
 def get_favicon_hash(domain):
@@ -63,7 +65,7 @@ def get_favicon_hash(domain):
         if response.status_code == 200:
             img = Image.open(BytesIO(response.content))
             return str(imagehash.phash(img))
-    except Exception:
+    except (requests.RequestException, IOError, OSError):
         pass
     return None
 

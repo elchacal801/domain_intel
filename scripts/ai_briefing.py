@@ -18,21 +18,14 @@ import sys
 from datetime import datetime
 from collections import Counter
 from dotenv import load_dotenv
-from litellm import completion
+from shared.llm_client import LLMClient
 
 # Load environment variables
 load_dotenv()
 
-# Constants
-# Primary: Claude 3.7 Sonnet (New Flagship)
-# Secondary: Gemini 3 Pro Preview
-# Tertiary: GPT-4o
-PRIMARY_MODEL = "anthropic/claude-3-7-sonnet-latest"
-FALLBACK_CHAIN = [
-    "gemini/gemini-3-pro-preview",
-    "gpt-4o",
-    "gemini/gemini-flash-latest"
-]
+# LLM Client — uses centralized model chain from shared/llm_client.py
+llm = LLMClient()
+
 OUTPUT_FILE = "data/daily_briefing.json"
 TYPOSQUAT_FILE = "data/ai_typosquats.csv"
 CLASSIFICATION_FILE = "data/ai_classifications.csv"
@@ -255,58 +248,19 @@ def generate_briefing(stats):
     print("Generating briefing with data:")
     print(data_summary)
 
-    # 1. Try Primary Model
-    try:
-        print(f"[*] Attempting generation with {PRIMARY_MODEL}...")
-        # Pass API key explicitly for Anthropic if needed, though env var usually works
-        api_key_val = os.getenv("CLAUDE_API_KEY") if "anthropic" in PRIMARY_MODEL else None
-        
-        response = completion(
-            model=PRIMARY_MODEL,
-            api_key=api_key_val,
-            messages=[
-                {"role": "system", "content": SYSTEM_PROMPT},
-                {"role": "user", "content": f"Data for briefing:\n{data_summary}"}
-            ],
-            response_format={ "type": "json_object" }
-        )
-    except Exception as e:
-        print(f"[!] {PRIMARY_MODEL} failed ({e}). Falling back to chain...")
-        
-        success = False
-        for model in FALLBACK_CHAIN:
-            try:
-                print(f"[*] Attempting generation with {model}...")
-                response = completion(
-                    model=model,
-                    messages=[
-                        {"role": "system", "content": SYSTEM_PROMPT},
-                        {"role": "user", "content": f"Data for briefing:\n{data_summary}"}
-                    ],
-                    response_format={ "type": "json_object" }
-                )
-                success = True
-                break # Success!
-            except Exception as f_err:
-                print(f"[!] {model} failed: {f_err}")
-        
-        if not success:
-            print(f"[!] All AI models failed.")
-            return _mock_failure_briefing(stats)
-
-    content = response.choices[0].message.content
+    # Use shared LLM client with automatic fallback chain
+    briefing = llm.complete_json(
+        prompt=f"Data for briefing:\n{data_summary}",
+        system=SYSTEM_PROMPT
+    )
     
-    # Parse JSON
-    import json
-    if "```json" in content:
-        content = content.replace("```json", "").replace("```", "")
-    elif "```" in content:
-        content = content.replace("```", "")
-        
-    briefing = json.loads(content)
+    if briefing is None:
+        print("[!] All AI models failed.")
+        return _mock_failure_briefing(stats)
+    
     # Ensure date matches today just in case LLM hallucinations
     briefing["date"] = datetime.now().strftime('%Y-%m-%d')
-    briefing["model_used"] = response.model # Track which model worked
+    briefing["model_used"] = "shared_llm_client"  # Track that shared client was used
     # Frontend expects "summary", LLM generates "executive_summary"
     briefing["summary"] = briefing.get("executive_summary", "No summary generated.")
     

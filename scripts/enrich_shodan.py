@@ -30,7 +30,7 @@ def resolve_domain(domain: str) -> str:
     """Resolves A record for a domain."""
     try:
         return socket.gethostbyname(domain)
-    except:
+    except (socket.gaierror, socket.timeout, OSError):
         return ""
 
 def process_shodan(api_key: str, domains: List[Dict], output_file: str, budget: int):

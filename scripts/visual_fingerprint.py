@@ -173,9 +173,8 @@ def cluster_results(results: List[dict], threshold: int = 5) -> List[dict]:
                 "example_url": leader['url']
             })
             
-    # Remove hash objects before jumping to json
-    for c in clusters:
-        c.sort(key=lambda x: x['count'], reverse=True)
+    # Sort clusters by size (largest first) before JSON export
+    clusters.sort(key=lambda c: c['count'], reverse=True)
         
     return clusters
 

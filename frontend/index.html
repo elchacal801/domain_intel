@@ -1,0 +1,341 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Domain Intelligence | Threat Dashboard</title>
+  <meta name="description"
+    content="Real-time threat intelligence dashboard for disposable email domain monitoring, campaign tracking, and infrastructure analysis.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link
+    href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap"
+    rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+</head>
+
+<body>
+  <div id="app">
+    <!-- Top Navigation Bar -->
+    <nav class="topbar">
+      <div class="topbar-left">
+        <div class="logo">
+          <i class="fa-solid fa-shield-halved"></i>
+          <span>Domain Intel</span>
+        </div>
+        <div class="nav-tabs" id="nav-tabs">
+          <button class="nav-tab active" data-view="overview">
+            <i class="fa-solid fa-gauge-high"></i> Overview
+          </button>
+          <button class="nav-tab" data-view="threats">
+            <i class="fa-solid fa-skull-crossbones"></i> Threats
+          </button>
+          <button class="nav-tab" data-view="infrastructure">
+            <i class="fa-solid fa-network-wired"></i> Infrastructure
+          </button>
+          <button class="nav-tab" data-view="campaigns">
+            <i class="fa-solid fa-crosshairs"></i> Campaigns
+          </button>
+        </div>
+      </div>
+      <div class="topbar-right">
+        <div class="pulse-dot" id="status-dot"></div>
+        <span class="status-text" id="status-text">Loading...</span>
+        <a href="https://github.com/elchacal801/domain_intel" target="_blank" class="github-link">
+          <i class="fa-brands fa-github"></i>
+        </a>
+      </div>
+    </nav>
+
+    <!-- Main Content Area -->
+    <div class="dashboard-layout">
+
+      <!-- ===== OVERVIEW VIEW ===== -->
+      <section id="view-overview" class="view active">
+        <!-- KPI Strip -->
+        <div class="kpi-strip" id="kpi-strip">
+          <div class="kpi-card">
+            <div class="kpi-icon" style="background:rgba(88,166,255,0.15); color:var(--accent);">
+              <i class="fa-solid fa-database"></i>
+            </div>
+            <div class="kpi-body">
+              <span class="kpi-value" id="kpi-total">—</span>
+              <span class="kpi-label">Total Domains</span>
+            </div>
+          </div>
+          <div class="kpi-card">
+            <div class="kpi-icon" style="background:rgba(46,160,67,0.15); color:var(--success);">
+              <i class="fa-solid fa-bolt"></i>
+            </div>
+            <div class="kpi-body">
+              <span class="kpi-value" id="kpi-live">—</span>
+              <span class="kpi-label">Live Threats</span>
+            </div>
+          </div>
+          <div class="kpi-card">
+            <div class="kpi-icon" style="background:rgba(218,54,51,0.15); color:var(--danger);">
+              <i class="fa-solid fa-triangle-exclamation"></i>
+            </div>
+            <div class="kpi-body">
+              <span class="kpi-value" id="kpi-risk">—</span>
+              <span class="kpi-label">High Risk</span>
+            </div>
+          </div>
+          <div class="kpi-card">
+            <div class="kpi-icon" style="background:rgba(210,153,34,0.15); color:var(--warning);">
+              <i class="fa-solid fa-arrow-trend-up"></i>
+            </div>
+            <div class="kpi-body">
+              <span class="kpi-value" id="kpi-new">—</span>
+              <span class="kpi-label">New Today</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- AI Briefing -->
+        <div class="card briefing-card" id="briefing-card" style="display:none;">
+          <div class="card-header">
+            <div class="card-title"><i class="fa-solid fa-robot"></i> AI Daily Briefing</div>
+            <span class="badge" id="briefing-date"></span>
+          </div>
+          <h2 class="briefing-headline" id="briefing-headline"></h2>
+          <p class="briefing-summary" id="briefing-summary"></p>
+          <div class="briefing-grid">
+            <div class="briefing-panel danger-panel">
+              <h4><i class="fa-solid fa-exclamation-circle"></i> Key Risks</h4>
+              <ul id="briefing-risks"></ul>
+            </div>
+            <div class="briefing-panel success-panel">
+              <h4><i class="fa-solid fa-shield-check"></i> Recommended Actions</h4>
+              <ul id="briefing-actions"></ul>
+            </div>
+          </div>
+        </div>
+
+        <!-- Growth Chart -->
+        <div class="card">
+          <div class="card-header">
+            <div class="card-title"><i class="fa-solid fa-chart-line"></i> Dataset Growth & Liveness</div>
+          </div>
+          <div class="chart-container" style="height:280px;">
+            <canvas id="growthChart"></canvas>
+          </div>
+        </div>
+
+        <!-- Charts Row: Registrars + Web Servers -->
+        <div class="grid-2">
+          <div class="card">
+            <div class="card-header">
+              <div class="card-title"><i class="fa-solid fa-building-columns"></i> Top Registrars</div>
+            </div>
+            <div class="chart-container"><canvas id="registrarChart"></canvas></div>
+          </div>
+          <div class="card">
+            <div class="card-header">
+              <div class="card-title"><i class="fa-solid fa-server"></i> Web Technologies</div>
+            </div>
+            <div class="chart-container"><canvas id="serverChart"></canvas></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ===== THREATS VIEW ===== -->
+      <section id="view-threats" class="view">
+        <!-- OpenClaw Panel -->
+        <div class="card openclaw-card" id="openclaw-card" style="display:none;">
+          <div class="card-header">
+            <div class="card-title"><i class="fa-solid fa-spider"></i> OpenClaw Shadow AI Exposure</div>
+            <span class="badge badge-danger">CRITICAL</span>
+          </div>
+          <div class="openclaw-grid">
+            <div class="openclaw-stats">
+              <div class="stat-mini">
+                <span class="stat-mini-value" id="oc-total">0</span>
+                <span class="stat-mini-label">Total Exposed</span>
+              </div>
+              <div class="stat-mini danger">
+                <span class="stat-mini-value" id="oc-critical">0</span>
+                <span class="stat-mini-label">Critical Risk</span>
+              </div>
+            </div>
+            <div class="chart-container" style="height:200px;">
+              <canvas id="openclawChart"></canvas>
+            </div>
+          </div>
+        </div>
+
+        <!-- Threat Charts -->
+        <div class="grid-2">
+          <div class="card">
+            <div class="card-header">
+              <div class="card-title"><i class="fa-solid fa-robot"></i> AI Classifications</div>
+            </div>
+            <div class="chart-container"><canvas id="aiChart"></canvas></div>
+          </div>
+          <div class="card">
+            <div class="card-header">
+              <div class="card-title"><i class="fa-solid fa-triangle-exclamation"></i> High Risk Signals</div>
+            </div>
+            <div class="chart-container"><canvas id="riskChart"></canvas></div>
+          </div>
+        </div>
+
+        <!-- Title Keywords -->
+        <div class="card">
+          <div class="card-header">
+            <div class="card-title"><i class="fa-solid fa-magnifying-glass"></i> Title Keyword Analysis</div>
+          </div>
+          <div class="chart-container" style="height:220px;">
+            <canvas id="keywordChart"></canvas>
+          </div>
+        </div>
+
+        <!-- Visual Forensics -->
+        <div class="card" id="visual-card" style="display:none;">
+          <div class="card-header">
+            <div class="card-title"><i class="fa-solid fa-camera"></i> Visual Phishing Clusters</div>
+          </div>
+          <div class="gallery-grid" id="cluster-gallery"></div>
+        </div>
+      </section>
+
+      <!-- ===== INFRASTRUCTURE VIEW ===== -->
+      <section id="view-infrastructure" class="view">
+        <div class="grid-2">
+          <div class="card">
+            <div class="card-header">
+              <div class="card-title"><i class="fa-solid fa-network-wired"></i> Top Hosting ASNs</div>
+            </div>
+            <div class="chart-container"><canvas id="asnChart"></canvas></div>
+          </div>
+          <div class="card">
+            <div class="card-header">
+              <div class="card-title"><i class="fa-solid fa-envelope"></i> Top Mail Providers (MX)</div>
+            </div>
+            <div class="chart-container"><canvas id="mxChart"></canvas></div>
+          </div>
+        </div>
+
+        <div class="grid-2">
+          <div class="card">
+            <div class="card-header">
+              <div class="card-title"><i class="fa-solid fa-door-open"></i> Top Open Ports</div>
+            </div>
+            <div class="chart-container"><canvas id="portChart"></canvas></div>
+          </div>
+          <div class="card">
+            <div class="card-header">
+              <div class="card-title"><i class="fa-solid fa-bug"></i> Top Vulnerabilities</div>
+            </div>
+            <div class="chart-container"><canvas id="vulnChart"></canvas></div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-header">
+            <div class="card-title"><i class="fa-solid fa-signal"></i> HTTP Response Codes</div>
+          </div>
+          <div class="chart-container" style="height:220px;">
+            <canvas id="httpStatusChart"></canvas>
+          </div>
+        </div>
+      </section>
+
+      <!-- ===== CAMPAIGNS VIEW ===== -->
+      <section id="view-campaigns" class="view">
+        <!-- Campaign KPIs -->
+        <div class="kpi-strip" id="campaign-kpis" style="display:none;">
+          <div class="kpi-card">
+            <div class="kpi-icon" style="background:rgba(248,81,73,0.15); color:var(--danger);">
+              <i class="fa-solid fa-crosshairs"></i>
+            </div>
+            <div class="kpi-body">
+              <span class="kpi-value" id="camp-total">0</span>
+              <span class="kpi-label">Total IPs Found</span>
+            </div>
+          </div>
+          <div class="kpi-card">
+            <div class="kpi-icon" style="background:rgba(210,153,34,0.15); color:var(--warning);">
+              <i class="fa-solid fa-plus"></i>
+            </div>
+            <div class="kpi-body">
+              <span class="kpi-value" id="camp-new">0</span>
+              <span class="kpi-label">Last 7 Days</span>
+            </div>
+          </div>
+          <div class="kpi-card">
+            <div class="kpi-icon" style="background:rgba(88,166,255,0.15); color:var(--accent);">
+              <i class="fa-solid fa-globe"></i>
+            </div>
+            <div class="kpi-body">
+              <span class="kpi-value" id="camp-countries">0</span>
+              <span class="kpi-label">Countries</span>
+            </div>
+          </div>
+          <div class="kpi-card">
+            <div class="kpi-icon" style="background:rgba(163,113,247,0.15); color:var(--purple);">
+              <i class="fa-solid fa-satellite-dish"></i>
+            </div>
+            <div class="kpi-body">
+              <span class="kpi-value" id="camp-queries">0</span>
+              <span class="kpi-label">Queries Used</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Timeline Chart -->
+        <div class="card" id="campaign-timeline-card" style="display:none;">
+          <div class="card-header">
+            <div class="card-title"><i class="fa-solid fa-timeline"></i> Discovery Timeline</div>
+          </div>
+          <div class="chart-container" style="height:220px;">
+            <canvas id="campaignChart"></canvas>
+          </div>
+        </div>
+
+        <!-- Campaign Table -->
+        <div class="card" id="campaign-table-card" style="display:none;">
+          <div class="card-header">
+            <div class="card-title"><i class="fa-solid fa-table"></i> Hunt History</div>
+            <span class="badge" id="camp-count-badge">0 hits</span>
+          </div>
+          <div class="table-container">
+            <table class="data-table" id="campaign-table">
+              <thead>
+                <tr>
+                  <th>First Seen</th>
+                  <th>IP Address</th>
+                  <th>Organization</th>
+                  <th>Country</th>
+                  <th>Query</th>
+                </tr>
+              </thead>
+              <tbody id="campaign-tbody"></tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- Empty State (shown when no data) -->
+        <div class="card" id="campaign-empty">
+          <div class="card-header">
+            <div class="card-title"><i class="fa-solid fa-crosshairs"></i> Campaign Tracker</div>
+            <span class="badge">Awaiting Data</span>
+          </div>
+          <div class="empty-state">
+            <i class="fa-solid fa-satellite-dish"></i>
+            <h3>Campaign Intelligence Module</h3>
+            <p>Automated campaign infrastructure hunting powered by Shodan.</p>
+            <p class="text-muted">The overnight workflow will run <code>hunt_campaign.py</code> to detect new campaign
+              infrastructure.</p>
+          </div>
+        </div>
+      </section>
+
+    </div>
+  </div>
+
+  <script type="module" src="/src/main.js"></script>
+</body>
+
+</html>

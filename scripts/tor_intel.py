@@ -22,11 +22,10 @@ import logging
 import os
 import re
 import requests
-import dns.resolver
-import dns.reversename
 from concurrent.futures import ThreadPoolExecutor
 from typing import Set, Dict, List, Optional
 from tqdm import tqdm
+from shared.cymru_resolver import CymruResolver
 
 # Configure Logging
 logging.basicConfig(level=logging.INFO, format='[%(levelname)s] %(message)s')
@@ -36,9 +35,6 @@ logger = logging.getLogger(__name__)
 TOR_EXIT_URL = "https://www.dan.me.uk/torlist/?exit" # Warning: 30min rate limit
 # Fallback if rate limited: https://check.torproject.org/torbulkexitlist
 TOR_ASN_URL = "https://raw.githubusercontent.com/NullifiedCode/ASN-Lists/main/Malicious/Tor/ASN.txt"
-
-CYMRU_ASN_QUERY = "AS{asn}.asn.cymru.com"
-CYMRU_IP_SUFFIX = "origin.asn.cymru.com"
 
 # Regex
 ASN_REGEX = re.compile(r'(?:AS|as)?(\d+)')
@@ -53,10 +49,8 @@ class TorIntel:
         self.session = requests.Session()
         self.session.headers.update({"User-Agent": "DomainIntel-Tor/1.0"})
         
-        self.resolver = dns.resolver.Resolver()
-        self.resolver.nameservers = ['8.8.8.8', '1.1.1.1']
-        self.resolver.timeout = 3.0
-        self.resolver.lifetime = 3.0
+        # Use shared Cymru resolver
+        self.cymru = CymruResolver()
 
     def fetch_exits(self):
         logger.info(f"Fetching Tor Exits from {TOR_EXIT_URL}")
@@ -87,56 +81,24 @@ class TorIntel:
             logger.error(f"Error fetching ASNs: {e}")
 
     def enrich_ip(self, ip: str) -> Dict:
-        """Resolves IP to ASN."""
-        data = {
+        """Resolves IP to ASN using shared Cymru resolver."""
+        cymru_data = self.cymru.enrich_ip(ip)
+        return {
             "IP": ip,
-            "ASN": "",
-            "BGP_Prefix": "",
-            "Country": "",
+            "ASN": cymru_data.get("asn", ""),
+            "BGP_Prefix": cymru_data.get("prefix", ""),
+            "Country": cymru_data.get("country", ""),
             "Registry": ""
         }
-        try:
-            rev_name = dns.reversename.from_address(ip)
-            reversed_ip = str(rev_name).lower().replace('.in-addr.arpa.', '')
-            query = f"{reversed_ip}.{CYMRU_IP_SUFFIX}"
-            
-            answers = self.resolver.resolve(query, 'TXT')
-            for r in answers:
-                # "15169 | 8.8.8.0/24 | US | arin | 2000-03-30"
-                txt = r.to_text().strip('"')
-                parts = [p.strip() for p in txt.split('|')]
-                if len(parts) >= 1:
-                    data["ASN"] = parts[0]
-                if len(parts) >= 2:
-                    data["BGP_Prefix"] = parts[1]
-                if len(parts) >= 3:
-                    data["Country"] = parts[2]
-                if len(parts) >= 4:
-                    data["Registry"] = parts[3]
-        except Exception:
-            pass
-        return data
 
     def enrich_asn(self, asn: str) -> Dict:
-        """Resolves ASN to Name."""
-        data = {
-            "ASN": f"AS{asn}",
-            "Name": "",
-            "Country": ""
+        """Resolves ASN to Name using shared Cymru resolver."""
+        cymru_data = self.cymru.enrich_asn(asn)
+        return {
+            "ASN": cymru_data["asn"],
+            "Name": cymru_data["name"],
+            "Country": cymru_data["country"]
         }
-        try:
-            query = CYMRU_ASN_QUERY.format(asn=asn)
-            answers = self.resolver.resolve(query, 'TXT')
-            for r in answers:
-                txt = r.to_text().strip('"')
-                parts = [p.strip() for p in txt.split('|')]
-                if len(parts) >= 2:
-                    data["Country"] = parts[1]
-                if len(parts) >= 5:
-                    data["Name"] = parts[4]
-        except Exception:
-            pass
-        return data
 
     def run(self):
         # 1. Fetch

@@ -12,15 +12,13 @@ import argparse
 import sys
 from typing import List, Dict
 from dotenv import load_dotenv
-from litellm import completion
+from shared.llm_client import LLMClient
 
 # Load environment variables
 load_dotenv()
 
-# Constants
-# Switching to OpenAI for reliability during test
-PRIMARY_MODEL = "gpt-5-mini" 
-FALLBACK_MODEL = "gpt-4o-mini"
+# LLM Client — uses centralized model chain from shared/llm_client.py
+llm = LLMClient()
 OUTPUT_FILE = "data/ai_typosquats.csv"
 INPUT_FILE = "data/triage_candidates.csv" # Default to using the funnel
 
@@ -77,35 +75,16 @@ def analyze_batch(domains: List[str]) -> List[Dict]:
     try:
         domain_list_str = "\n".join(domains)
         
-        try:
-            response = completion(
-                model=PRIMARY_MODEL,
-                messages=[
-                    {"role": "system", "content": SYSTEM_PROMPT},
-                    {"role": "user", "content": f"Analyze these domains:\n{domain_list_str}"}
-                ],
-                response_format={ "type": "json_object" }
-            )
-        except Exception:
-            response = completion(
-                model=FALLBACK_MODEL,
-                messages=[
-                    {"role": "system", "content": SYSTEM_PROMPT},
-                    {"role": "user", "content": f"Analyze these domains:\n{domain_list_str}"}
-                ],
-                response_format={ "type": "json_object" }
-            )
+        parsed = llm.complete_json(
+            prompt=f"Analyze these domains:\n{domain_list_str}",
+            system=SYSTEM_PROMPT
+        )
         
-        content = response.choices[0].message.content
-        import json
-        # Cleanup potential markdown code blocks
-        if "```json" in content:
-            content = content.replace("```json", "").replace("```", "")
-        elif "```" in content:
-            content = content.replace("```", "")
-            
-        data = json.loads(content)
-        return data.get("matches", [])
+        if parsed is None:
+            print("[!] All models failed for batch")
+            return []
+        
+        return parsed.get("matches", [])
         
     except Exception as e:
         print(f"Error calling LLM: {e}")

@@ -14,7 +14,6 @@ import csv
 import json
 import os
 import datetime
-import pandas as pd
 
 # Files
 INPUT_FILE = "data/dea_domains_probed.csv"

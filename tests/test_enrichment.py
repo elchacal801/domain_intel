@@ -15,7 +15,6 @@ sys.path.append(os.path.join(os.path.dirname(__file__), '..', 'scripts'))
 # Import target function
 from enrich_infrastructure import process_domain
 
-@pytest.mark.asyncio
 def test_high_risk_registrar_detection():
     """
     Verify that 'nicendns.com' in NS records triggers 'HighRisk:Nicenic'
@@ -42,7 +41,6 @@ def test_high_risk_registrar_detection():
     
     asyncio.run(run())
 
-@pytest.mark.asyncio
 def test_benign_domain():
     """
     Verify that a benign domain (Google) does NOT trigger risk tags

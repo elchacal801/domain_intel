@@ -56,9 +56,9 @@ async def fetch(session: aiohttp.ClientSession, url: str, proxy: str = None) -> 
                     # Limit response size read to avoid hanging on large files
                     text = await response.text()
                     result["title"] = get_title(text)
-                except:
+                except (UnicodeDecodeError, ValueError):
                     pass
-    except Exception:
+    except (aiohttp.ClientError, asyncio.TimeoutError, OSError):
         pass
         
     return result

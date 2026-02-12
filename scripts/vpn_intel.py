@@ -22,17 +22,16 @@ import logging
 import os
 import re
 import requests
-import dns.resolver
 from concurrent.futures import ThreadPoolExecutor
 from typing import Set, Dict, List, Optional
 from tqdm import tqdm
+from shared.cymru_resolver import CymruResolver
 
 # Configure Logging
 logging.basicConfig(level=logging.INFO, format='[%(levelname)s] %(message)s')
 logger = logging.getLogger(__name__)
 
 # Constants
-CYMRU_ASN_QUERY = "AS{asn}.asn.cymru.com"
 VPN_ASN_URL = "https://raw.githubusercontent.com/NullifiedCode/ASN-Lists/main/VPN%20Providers/ASN.txt"
 VPS_ASN_URL = "https://raw.githubusercontent.com/NullifiedCode/ASN-Lists/main/VPS%20Providers/ASN.txt"
 
@@ -49,11 +48,8 @@ class VPNIntel:
         self.session = requests.Session()
         self.session.headers.update({"User-Agent": "DomainIntel-VPN/1.0"})
         
-        # DNS Resolver init
-        self.resolver = dns.resolver.Resolver()
-        self.resolver.nameservers = ['8.8.8.8', '1.1.1.1'] 
-        self.resolver.timeout = 3.0
-        self.resolver.lifetime = 3.0
+        # Use shared Cymru resolver
+        self.cymru = CymruResolver()
 
     def fetch_list(self, url: str, source_type: str):
         """Fetches ASN list from URL."""
@@ -82,38 +78,16 @@ class VPNIntel:
         return None
 
     def enrich_asn(self, asn: str) -> Dict:
-        """Queries Team Cymru via DNS for ASN details."""
-        data = {
-            "ASN": f"AS{asn}",
-            "Name": "",
-            "Country": "",
+        """Queries Team Cymru via DNS for ASN details using shared resolver."""
+        cymru_data = self.cymru.enrich_asn(asn)
+        return {
+            "ASN": cymru_data["asn"],
+            "Name": cymru_data["name"],
+            "Country": cymru_data["country"],
             "Source": "VPN/VPS",
-            "Registry": "",
-            "Alloc_Date": ""
+            "Registry": cymru_data.get("registry", ""),
+            "Alloc_Date": cymru_data.get("date", "")
         }
-
-        try:
-            query = CYMRU_ASN_QUERY.format(asn=asn)
-            answers = self.resolver.resolve(query, 'TXT')
-            for r in answers:
-                # Example: "3333 | NL | ripe | 1993-02-23 | RIPE-NCC-AS"
-                txt = r.to_text().strip('"')
-                parts = [p.strip() for p in txt.split('|')]
-                
-                # Format: ASN | CC | Registry | Date | Name
-                if len(parts) >= 2:
-                    data["Country"] = parts[1]
-                if len(parts) >= 3:
-                    data["Registry"] = parts[2]
-                if len(parts) >= 4:
-                    data["Alloc_Date"] = parts[3]
-                if len(parts) >= 5:
-                    data["Name"] = parts[4]
-                    
-        except Exception:
-            pass 
-
-        return data
 
     def run(self):
         # 1. Fetch

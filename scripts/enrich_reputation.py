@@ -15,6 +15,7 @@ import argparse
 import os
 import csv
 import dns.resolver
+import dns.exception
 import requests
 import time
 import datetime
@@ -62,7 +63,7 @@ def check_otx(domain: str) -> str:
             # Rate Limit
             return "OTX_RateLimited"
             
-    except Exception:
+    except requests.RequestException:
         pass
         
     return ""
@@ -76,7 +77,8 @@ def check_rbl(domain: str, resolver) -> List[str]:
         q = f"{domain}.dbl.spamhaus.org"
         resolver.resolve(q, 'A')
         hits.append("spamhaus_dbl")
-    except Exception:
+    except (dns.resolver.NXDOMAIN, dns.resolver.NoAnswer, dns.resolver.NoNameservers,
+            dns.resolver.Timeout, dns.exception.DNSException):
         pass
     return hits
 
@@ -109,7 +111,7 @@ def get_rdap_age(domain: str) -> Dict[str, str]:
                 res["creation_date"] = dt.strftime("%Y-%m-%d")
                 delta = datetime.datetime.now() - dt
                 res["age_days"] = str(delta.days)
-    except Exception:
+    except (requests.RequestException, ValueError, KeyError):
         pass
     
     return res

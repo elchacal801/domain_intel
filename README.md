@@ -1,57 +1,66 @@
 # Disposable & Abuse Domain Intelligence
 
-This repository contains my research and tooling for analyzing disposable email address (DEA) providers and high-abuse domain infrastructure.
+This repository contains research and tooling for analyzing disposable email address (DEA) providers and high-abuse domain infrastructure.
 
-The goal of this project is to move beyond simple static blocklists and provide **infrastructure-level intelligence** (MX records, ASNs, and hosting patterns) to help security teams, researchers, and fraud analysts detect abuse families that rotate domains frequently.
+The goal is to move beyond simple static blocklists and provide **infrastructure-level intelligence** (MX records, ASNs, and hosting patterns) to help security teams, researchers, and fraud analysts detect abuse families that rotate domains frequently.
 
 > [!NOTE]
 > This repository **updates itself automatically** every day via GitHub Actions. The data in `data/` is always current.
 
-## 🛡️ Live Dashboard
+## Live Dashboard
 
-View the real-time threat intelligence visualization, now featuring an **AI-generated Daily Briefing**:
-> **[👉 View Live Dashboard](https://elchacal801.github.io/domain_intel/)**
+View the real-time threat intelligence visualization, featuring an **AI-generated Daily Briefing** and **Campaign Tracker**:
+> **[View Live Dashboard](https://elchacal801.github.io/domain_intel/)**
 
-## 💡 How to Use This Intelligence
+## How to Use This Intelligence
 
 This repository provides different layers of data for different security roles:
 
-### 🛡️ For SOC & Fraud Analysts
+### For SOC & Fraud Analysts
 
 * **Block Disposable Email**: Use `data/dea_domains.csv` to block signups from temporary email services.
 * **Detect Malicious Ads**: Ingest `data/discovered_ads.csv` to block domains actively abusing search ads.
 * **Brand Protection**: Monitor `data/potential_typosquats.csv` for new registrations impersonating your brand.
 
-### 🔬 For Threat Researchers
+### For Threat Researchers
 
 * **Infrastructure Pivoting**: Use `data/dea_domains_probed.csv` to find patterns.
   * *Example*: "Find all domains hosted on AS12345 that have a page title containing 'Login'."
 * **Hosted Scams**: Check `data/risky_asn_list.csv` to identify hosting providers that ignore abuse reports (Bulletproof hosting).
+* **Campaign Tracking**: Review `data/campaign_hunt_history.csv` for new infrastructure discovered by automated Shodan hunts.
 
-### 🤖 For Engineering/DevOps
+### For Engineering/DevOps
 
 * **STIX Integration**: Use `data/domain_intel_bundle.json` to feed this intelligence directly into platforms like OpenCTI or MISP.
 * **Shadow AI Detection**: Use `data/openclaw_stix.json` to ingest indicators of compromised AI agents (OpenClaw/Moltbot) into your SIEM.
+* **Dashboard Summary**: Use `data/dashboard_summary.json` for pre-computed KPIs without parsing large CSVs.
 
-## 📂 Project Structure
+## Project Structure
 
-* **`data/`**: The authoritative source for domain lists and derived intelligence.
-  > 📘 **[View Data Dictionary](data/README.md)** for a detailed explanation of every file.
+* **`frontend/`**: Vite + vanilla JS dashboard application (source).
+  * Built with `npm run build` and output to `docs/` for GitHub Pages deployment.
+  * 4 tabbed views: Overview, Threats, Infrastructure, Campaigns.
 
 * **`scripts/`**: The Python pipeline.
+  * **Shared Utilities** (`scripts/shared/`):
+    * `retry.py`: Exponential backoff decorator with sync/async support.
+    * `cymru_resolver.py`: Centralized Team Cymru DNS enrichment for ASN/IP data.
+    * `llm_client.py`: Unified LLM wrapper (LiteLLM) with model fallback chains and JSON parsing.
   * **Core Pipeline**:
     * `merge_lists_v3b.py`: Aggregates and cleans public sources.
-    * `split_data.py`: **[NEW]** Splits large datasets for parallel processing (Sharding).
+    * `split_data.py`: Splits large datasets for parallel processing (Sharding).
     * `enrich_infrastructure.py`: Performs bulk DNS/ASN resolution.
     * `enrich_reputation.py`: Checks RBLs and queries RDAP.
     * `probe_web.py`: Performs active HTTP/S fingerprinting.
-    * `merge_results.py`: **[NEW]** Merges processed shards back into a single dataset.
+    * `merge_results.py`: Merges processed shards back into a single dataset.
     * `generate_pivots.py`: Generates intelligence pivot datasets and stats.
+    * `build_dashboard_data.py`: Generates pre-computed dashboard summary JSON.
     * `export_stix.py`: Exports intelligence to STIX 2.1 JSON.
-  * **Shadow AI Scanner (New)**:
-    * `openclaw_scan.py`: **[NEW]** Scans for exposed OpenClaw/Moltbot/Gateway AI agents on port 18789.
-    * `openclaw_stix.py`: **[NEW]** Converts OpenClaw findings to STIX 2.1 bundles.
-    * `shodan_utils.py`: **[NEW]** Shared utility for safe Shodan scanning (Credit Budgeting + Caching).
+    * `hunt_campaign.py`: Proactively hunts for specific campaign infrastructure using Shodan.
+  * **Shadow AI Scanner**:
+    * `openclaw_scan.py`: Scans for exposed OpenClaw/Moltbot/Gateway AI agents on port 18789.
+    * `openclaw_stix.py`: Converts OpenClaw findings to STIX 2.1 bundles.
+    * `shodan_utils.py`: Shared utility for safe Shodan scanning (Credit Budgeting + Caching).
   * **Infrastructure Intel**:
     * `asn_intel.py`: Fetches and enriches suspicious ASNs.
     * `vpn_intel.py`: Aggregates VPN/VPS provider ASNs.
@@ -59,22 +68,26 @@ This repository provides different layers of data for different security roles:
     * `clean_data.py`: Automated CSV hygiene and schema correction.
     * `enrich_asns.py`: Fetches missing ASN names from RIPE Stat API.
   * **AI Modules**:
-    * `ai_typosquat.py`: Uses LLM to detect semantic typosquatting (Limit: 50k/day).
-    * `ai_classify_web.py`: Uses LLM to classify web page intent (Limit: 50k/day).
-    * `ai_typosquat.py`: Uses LLM to detect semantic typosquatting (Limit: 50k/day).
-    * `ai_classify_web.py`: Uses LLM to classify web page intent (Limit: 50k/day).
+    * `ai_typosquat.py`: Uses LLM to detect semantic typosquatting.
+    * `ai_classify_web.py`: Uses LLM to classify web page intent.
     * `ai_briefing.py`: Generates the daily dashboard briefing.
-  * **Analytics & Whois (New)**:
+  * **Analytics & Whois**:
     * `track_history.py`: Daily tracker for Domain Growth and Liveness (Stats).
     * `drip_whois.py`: Slow, rate-limited Registrar enumeration (Port 43).
 
-* **`docs/`**: Documentation and dashboard code (`index.html`, `app.js`).
+* **`data/`**: The authoritative source for domain lists and derived intelligence.
+  > **[View Data Dictionary](data/README.md)** for a detailed explanation of every file.
 
-## 🚀 Getting Started
+* **`docs/`**: GitHub Pages deployment directory (built from `frontend/`).
+
+* **`tests/`**: Unit tests for shared utilities and enrichment logic.
+
+## Getting Started
 
 ### Prerequisites
 
 * Python 3.10+
+* Node.js 20+ (for dashboard builds)
 * `dnspython`, `tqdm`, `requests`, `stix2`
 * `litellm`, `python-dotenv` (for AI features)
 
@@ -82,9 +95,10 @@ Install dependencies:
 
 ```bash
 pip install -r requirements.txt
+cd frontend && npm install
 ```
 
-### 🤖 Setting up AI Features
+### Setting up AI Features
 
 To run the AI modules (`scripts/ai_*.py`), you need API keys.
 
@@ -93,15 +107,21 @@ To run the AI modules (`scripts/ai_*.py`), you need API keys.
     ```env
     OPENAI_API_KEY=sk-...
     GEMINI_API_KEY=AIza...
+    CLAUDE_API_KEY=sk-ant-...
     ```
 
-1. For GitHub Actions, add these as **Repository Secrets**.
+2. For GitHub Actions, add these as **Repository Secrets**.
 
-### Proactive Discovery (New)
+The model priority chain is configured centrally in `scripts/shared/llm_client.py`:
+* Primary: `claude-3-7-sonnet-latest`
+* Secondary: `gemini-3-pro-preview`
+* Fallback: `gpt-4o`
+
+### Proactive Discovery
 
 * **Ad Intelligence**: `run_seads.py` scans search engines for malicious ads targeting specific keywords (Config: `config/seads_keywords.txt`).
 * **Typosquat Generation**: `generate_permutations.py` (via `dnstwist`) generates thousands of potential lookalike domains for high-value targets.
-* **Visual Fingerprinting**: `visual_fingerprint.py` uses headless browsers to group domains by visual similarity (pHash), effectively tracking phishing kits.
+* **Visual Fingerprinting**: `visual_fingerprint.py` uses headless browsers to group domains by visual similarity (pHash), tracking phishing kits.
 
 ### Reproducing the Intelligence
 
@@ -130,7 +150,6 @@ To run the AI modules (`scripts/ai_*.py`), you need API keys.
     ```
 
 3. **AI Analysis**: Run the AI tagging and briefing generation.
-    *Note: Configured for 50k domains/day.*
 
     ```bash
     python scripts/ai_typosquat.py --limit 50000 --batch-size 100
@@ -138,7 +157,14 @@ To run the AI modules (`scripts/ai_*.py`), you need API keys.
     python scripts/ai_briefing.py
     ```
 
-## 🧠 Methodology \& Architecture
+4. **Dashboard Build**: Build the frontend and generate the summary manifest.
+
+    ```bash
+    python scripts/build_dashboard_data.py
+    cd frontend && npm run build
+    ```
+
+## Methodology & Architecture
 
 ### Data Pipeline
 
@@ -150,6 +176,7 @@ graph TD
         C -->|Shodan Search| OC[OpenClaw Scanner]
         E[Open Sources] -->|Merge| F(Raw Lists)
         Z[Cert Logs] -->|Stream| F
+        HUNT_CFG[Hunt Config] -->|Daily| HUNT(Proactive Campaign Hunt)
     end
 
     subgraph "Triage & Filtering"
@@ -172,8 +199,14 @@ graph TD
         L --> W["Whois (Port 43)"]
         L --> AI_CHECK{AI Validation}
         AI --> AI_CHECK
-        AI_CHECK -->|GPT-5/Gemini-3| CLASS(Classification)
-        AI_CHECK -->|GPT-5/Gemini-3| TYPO(Typosquat Detect)
+        AI_CHECK -->|Claude/Gemini/GPT| CLASS(Classification)
+        AI_CHECK -->|Claude/Gemini/GPT| TYPO(Typosquat Detect)
+    end
+
+    subgraph "Shared Utilities"
+        RETRY["retry.py (Backoff)"]
+        CYMRU["cymru_resolver.py (ASN)"]
+        LLM["llm_client.py (Model Chain)"]
     end
 
     subgraph Output
@@ -182,15 +215,19 @@ graph TD
         N -.->|Hashes| SP("Shodan Pivoting (Cached)")
         M & SP --> O[Risk & Threat Tagging]
         O --> P(Daily Briefing LLM)
-        O --> Q[Live Dashboard]
+        O --> DASH_BUILD["Dashboard Build (Vite)"]
         O --> R[STIX 2.1 Bundle]
         
         OC -->|Shadow AI STIX| OC_STIX[OpenClaw STIX]
-        OC -->|Exposure Stats| Q
+        OC -->|Exposure Stats| DASH_BUILD
+        HUNT -->|New Hits| HUNT_LOG[Campaign History CSV]
+        HUNT -.->|Alerts| DASH_BUILD
 
         WM[Selectors: SOA/SSL] --> PIVOT[Whoxy Reverse Whois]
         PIVOT --> DISCOVERY((New Domain Discovery))
         DISCOVERY -.->|Feed Back| F
+
+        DASH_BUILD --> Q[GitHub Pages Dashboard]
     end
 
     style J fill:#bbf,stroke:#333,stroke-width:2px,color:black
@@ -198,6 +235,11 @@ graph TD
     style CLASS fill:#f96,stroke:#333,stroke-width:2px,color:black
     style P fill:#bfb,stroke:#333,stroke-width:2px,color:black
     style OC fill:#da3633,stroke:#333,stroke-width:2px,color:white
+    style HUNT fill:#da3633,stroke:#333,stroke-width:2px,color:white
+    style DASH_BUILD fill:#58a6ff,stroke:#333,stroke-width:2px,color:black
+    style RETRY fill:#2d333b,stroke:#555,stroke-width:1px,color:#8b97a8
+    style CYMRU fill:#2d333b,stroke:#555,stroke-width:1px,color:#8b97a8
+    style LLM fill:#2d333b,stroke:#555,stroke-width:1px,color:#8b97a8
 ```
 
 ### Detection Logic & Triage Funnel
@@ -224,9 +266,9 @@ The remaining domains are hydrated with deep infrastructure data:
 
 We apply expensive LLM analysis only to the **Triaged Candidates** and **Live Sites**:
 
-* **Typosquatting**: "Is `rnicrosoft.com` malicious?" (GPT-5 Mini).
-* **Web Intent**: "Read the title and headers of `secure-login-update.com`. Is it a bank?" (GPT-5 Nano).
-* **Daily Briefing**: An automated Analyst summarizes the day's threats into an executive report.
+* **Typosquatting**: "Is `rnicrosoft.com` malicious?" (Claude 3.7 Sonnet with Gemini/GPT fallback).
+* **Web Intent**: "Read the title and headers of `secure-login-update.com`. Is it a bank?" (Model chain via `shared/llm_client.py`).
+* **Daily Briefing**: An automated analyst summarizes the day's threats into an executive report.
 
 See [docs/detection_logic.md](docs/detection_logic.md) for details on fraud patterns.
 
@@ -238,7 +280,7 @@ We use **Reverse Whois** to turn one bad domain into a map of the actor's entire
 * **Pivoting**: We query the **Whoxy API** to find *other* active domains registered by the same emails.
 * **Discovery**: This proactively discovers new infrastructure before it is even used in a campaign.
 
-## ⚠️ Responsible Use
+## Responsible Use
 
 This project performs active reconnaissance (HTTP probing) and aggregates data that may be sensitive.
 
@@ -246,6 +288,6 @@ This project performs active reconnaissance (HTTP probing) and aggregates data t
 * **Intent**: This data is for defensive research, fraud prevention, and detection engineering. Do not use it for offensive targeting.
 * **Opt-Out**: If you own a domain or ASN listed here and believe it is a false positive (or wish to block our probes), please open a GitHub Issue.
 
-## 📜 License
+## License
 
 MIT License. Use this data freely for research or defensive setups. See [LICENSE](LICENSE) for details.

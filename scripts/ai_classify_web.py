@@ -17,14 +17,13 @@ import argparse
 import sys
 from typing import List, Dict
 from dotenv import load_dotenv
-from litellm import completion
+from shared.llm_client import LLMClient
 
 # Load environment variables
 load_dotenv()
 
-# Constants
-PRIMARY_MODEL = "gpt-5-nano"
-FALLBACK_MODEL = "gpt-4o-mini"
+# LLM Client — uses centralized model chain from shared/llm_client.py
+llm = LLMClient()
 OUTPUT_FILE = "data/ai_classifications.csv"
 INPUT_FILE = "data/triage_candidates.csv" # Default to Triage Output (was data/dea_domains_probed.csv)
 
@@ -92,35 +91,16 @@ def classify_batch(items: List[Dict]) -> List[Dict]:
     prompt_str = "\n".join(prompt_lines)
 
     try:
-        try:
-            response = completion(
-                model=PRIMARY_MODEL,
-                messages=[
-                    {"role": "system", "content": SYSTEM_PROMPT},
-                    {"role": "user", "content": f"Classify this batch:\n{prompt_str}"}
-                ],
-                response_format={ "type": "json_object" }
-            )
-        except Exception:
-            # Fallback silently or with minimal log
-            response = completion(
-                model=FALLBACK_MODEL,
-                messages=[
-                    {"role": "system", "content": SYSTEM_PROMPT},
-                    {"role": "user", "content": f"Classify this batch:\n{prompt_str}"}
-                ],
-                response_format={ "type": "json_object" }
-            )
+        parsed = llm.complete_json(
+            prompt=f"Classify this batch:\n{prompt_str}",
+            system=SYSTEM_PROMPT
+        )
         
-        content = response.choices[0].message.content
-        import json
-        if "```json" in content:
-            content = content.replace("```json", "").replace("```", "")
-        elif "```" in content:
-            content = content.replace("```", "")
-            
-        data = json.loads(content)
-        return data.get("classifications", [])
+        if parsed is None:
+            print("[!] All models failed for batch")
+            return []
+        
+        return parsed.get("classifications", [])
         
     except Exception as e:
         print(f"Error calling LLM: {e}")

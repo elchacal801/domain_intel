@@ -28,13 +28,13 @@ import dns.resolver
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from typing import Set, Dict, List, Optional
 from tqdm import tqdm
+from shared.cymru_resolver import CymruResolver
 
 # Configure Logging
 logging.basicConfig(level=logging.INFO, format='[%(levelname)s] %(message)s')
 logger = logging.getLogger(__name__)
 
 # Constants
-CYMRU_ASN_QUERY = "AS{asn}.asn.cymru.com"
 NULLIFIED_LIST_URL = "https://raw.githubusercontent.com/NullifiedCode/ASN-Lists/master/all.txt"
 LORENZO_LIST_URL = "https://raw.githubusercontent.com/LorenzoSapora/bad-asn-list/master/asn.txt"
 BRIANHAMA_LIST_URL = "https://raw.githubusercontent.com/brianhama/bad-asn-list/master/bad-asn-list.csv"
@@ -54,7 +54,7 @@ HVT_MAP = {
     "149457": "BlueAngelHost"
 }
 
-# Regex to extract numeric ASN
+# Regex to extract numeric ASN (kept for source-specific parsing; CymruResolver.clean_asn also available)
 ASN_REGEX = re.compile(r'(?:AS|as)?(\d+)')
 
 class ASNIntel:
@@ -67,12 +67,8 @@ class ASNIntel:
         self.session = requests.Session()
         self.session.headers.update({"User-Agent": "DomainIntel-ASN/1.0"})
         
-        # DNS Resolver init
-        self.resolver = dns.resolver.Resolver()
-        # Use reliable public DNS for reproducibility as local is flaky
-        self.resolver.nameservers = ['8.8.8.8', '1.1.1.1'] 
-        self.resolver.timeout = 3.0
-        self.resolver.lifetime = 3.0
+        # Use shared Cymru resolver
+        self.cymru = CymruResolver()
 
     def fetch_nullified_list(self):
         """Fetches the NullifiedCode all.txt list."""
@@ -139,12 +135,14 @@ class ASNIntel:
         return None
 
     def enrich_asn(self, asn: str) -> Dict:
-        """Queries Team Cymru via DNS for ASN details."""
+        """Queries Team Cymru via DNS for ASN details using shared resolver."""
+        cymru_data = self.cymru.enrich_asn(asn)
+        
         data = {
-            "ASN": f"AS{asn}",
-            "Name": "",
-            "Country": "",
-            "Source_List": "Unknown", # Placeholder
+            "ASN": cymru_data["asn"],
+            "Name": cymru_data["name"],
+            "Country": cymru_data["country"],
+            "Source_List": "Unknown",
             "Is_High_Value_Target": False,
             "Target_Type": ""
         }
@@ -153,25 +151,6 @@ class ASNIntel:
         if asn in HVT_MAP:
             data["Is_High_Value_Target"] = True
             data["Target_Type"] = HVT_MAP[asn]
-
-        # DNS Enrichment
-        # Query: AS{asn}.asn.cymru.com TXT
-        try:
-            query = CYMRU_ASN_QUERY.format(asn=asn)
-            answers = self.resolver.resolve(query, 'TXT')
-            for r in answers:
-                # Example: "3333 | NL | ripe | 1993-02-23 | RIPE-NCC-AS"
-                txt = r.to_text().strip('"')
-                parts = [p.strip() for p in txt.split('|')]
-                
-                # Format: ASN | CC | Registry | Date | Name
-                if len(parts) >= 2:
-                    data["Country"] = parts[1]
-                if len(parts) >= 5:
-                    data["Name"] = parts[4]
-                    
-        except Exception:
-            pass # DNS fail is common for private ASNs or timeouts
 
         return data
 
