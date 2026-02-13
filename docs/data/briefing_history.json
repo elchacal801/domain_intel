@@ -1,5 +1,28 @@
 [
   {
+    "date": "2026-02-13",
+    "headline": "Significant Typosquat Volume Amid Stable Threat Landscape; Gname Registrar Activity Warrants Scrutiny",
+    "executive_summary": "Analysis of a 0.40% sample of new domains reveals a substantial volume of typosquatting activity (3,629 confirmed instances) primarily targeting major technology and financial brands. While no phishing or C2 infrastructure was identified in the analyzed sample, the high concentration of domains registered through watchlisted registrars\u2014particularly Gname (330 domains)\u2014suggests elevated risk. The overall threat posture remains stable but requires continued vigilance given the volume of typosquats and high-risk registrar activity.",
+    "strategic_assessment": "The current threat landscape appears characterized by preparation rather than active campaign execution. The significant volume of typosquats targeting major brands like Google, Microsoft, and Bank of America suggests adversaries are establishing infrastructure that could be operationalized for future campaigns. It is highly likely that the 3,629 confirmed typosquats represent only a fraction of the total malicious infrastructure being established, given our limited 0.40% sample analysis. While no active phishing or C2 panels were detected in our sample, the scale of typosquat registration indicates a moderate to high probability of imminent malicious campaigns targeting our customers and partners.",
+    "operational_intelligence": "Typosquatting remains the dominant technique observed, with a notable concentration targeting financial and technology sectors. The absence of detected phishing sites or C2 panels in our sample suggests adversaries may be in the infrastructure preparation phase rather than active campaign deployment. The substantial number of vulnerabilities (17,507) detected via Shodan, primarily on standard web ports (80, 443, 8080), indicates potential compromise vectors that could be leveraged in the near term. The lack of infrastructure pivots from Whois data suggests adversaries may be employing improved operational security measures to compartmentalize their infrastructure.",
+    "registrar_risk_outlook": "High-risk registrars continue to represent a significant portion of the threat surface, with Gname showing particularly concerning activity levels (330 domains). This represents a substantial increase compared to historical baselines and warrants enhanced monitoring. Nicenic (46 domains) and Dominet (33 domains) maintain consistent activity levels that align with their historical threat profiles. The high number of typosquats with unknown registrars (2,014) represents a critical intelligence gap that limits our ability to fully assess the threat landscape. It is highly likely that these unknown registrar domains include additional high-risk entities that should be identified and monitored.",
+    "key_risks": [
+      "Brand impersonation campaign preparation targeting financial services appears highly likely based on typosquat targeting patterns",
+      "Gname registrar's elevated activity (330 domains) suggests possible abuse by threat actors for upcoming campaigns",
+      "Large number of typosquats with unknown registrars (2,014) creates significant visibility gaps in threat assessment",
+      "Substantial vulnerability footprint (17,507) detected via Shodan indicates expanded attack surface for potential exploitation"
+    ],
+    "action_items": [
+      "Implement enhanced monitoring for the 3,629 confirmed typosquat domains with priority on those targeting financial services",
+      "Conduct deeper investigation into domains registered through Gname to identify patterns and potential campaign indicators",
+      "Deploy targeted brand monitoring for Bank of America assets given its prominence in typosquat targeting",
+      "Develop automated process to resolve unknown registrar data (2,014 instances) to close critical intelligence gap",
+      "Coordinate with Fraud and Security Operations teams to prepare detection rules for potential phishing campaigns leveraging the identified typosquat infrastructure"
+    ],
+    "model_used": "shared_llm_client",
+    "summary": "Analysis of a 0.40% sample of new domains reveals a substantial volume of typosquatting activity (3,629 confirmed instances) primarily targeting major technology and financial brands. While no phishing or C2 infrastructure was identified in the analyzed sample, the high concentration of domains registered through watchlisted registrars\u2014particularly Gname (330 domains)\u2014suggests elevated risk. The overall threat posture remains stable but requires continued vigilance given the volume of typosquats and high-risk registrar activity."
+  },
+  {
     "date": "2026-02-12",
     "headline": "Elevated Gname Registrar Activity Amid Otherwise Stable Threat Landscape",
     "executive_summary": "Analysis of a 0.40% sample (approximately 1,000 domains) from today's 250,415 newly registered domains reveals a stable threat environment with no confirmed typosquats or phishing infrastructure detected. However, notable activity from high-risk registrar Gname (324 domains) represents a potential blind spot warranting targeted scrutiny. The relatively quiet signals in our sample should not be interpreted as absence of threat, particularly given the limited coverage of our analysis.",
