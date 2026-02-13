@@ -49,7 +49,8 @@ def read_csv_column_sum(filepath, col_index=1):
 
 def get_history_latest():
     """Read the latest entry from history.json if it exists."""
-    history_file = DATA_DIR / "history.json"
+    # track_history.py writes to docs/history.json, not data/history.json
+    history_file = Path("docs") / "history.json"
     if not history_file.exists():
         return {}
     try:

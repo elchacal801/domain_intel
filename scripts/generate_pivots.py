@@ -71,12 +71,38 @@ def main():
                     server_simple = server.split('/')[0].split(' ')[0]
                     server_counts[server_simple] += 1
                 
-                # Risk Counts
+                # Risk Counts — compute from probed data if risk_tags column is empty
                 if risks:
                     for tag in risks.split(';'):
                         t = tag.strip()
                         if t:
                             risk_counts[t] += 1
+                else:
+                    # Derive risk signals from probed columns
+                    title = row.get("https_title", "").strip() or row.get("http_title", "").strip()
+                    title_lower = title.lower() if title else ""
+                    status = row.get("https_status", "").strip() or row.get("http_status", "").strip()
+                    ip = row.get("mx_ip", "").strip() or row.get("a_record", "").strip()
+                    mx_raw = row.get("mx_records", "").strip()
+                    
+                    # Phishing keywords in title
+                    PHISH_WORDS = {'login', 'signin', 'sign-in', 'verify', 'account', 'secure', 'update', 'confirm', 'password', 'credential', 'suspended', 'unusual', 'authenticate'}
+                    if title_lower and any(w in title_lower for w in PHISH_WORDS):
+                        risk_counts["HighRisk:SuspiciousTitle"] += 1
+                    
+                    # Parking/for-sale indicators
+                    PARK_WORDS = {'parked', 'for sale', 'buy this domain', 'coming soon', 'under construction', 'domain expired', 'godaddy', 'sedoparking', 'hugedomains'}
+                    if title_lower and any(w in title_lower for w in PARK_WORDS):
+                        risk_counts["HighRisk:ParkingPage"] += 1
+                    
+                    # No MX records (potential shell domain)
+                    if status and status.isdigit() and int(status) == 200 and not mx_raw:
+                        risk_counts["HighRisk:NoMX"] += 1
+                    
+                    # Private/reserved IP
+                    if ip:
+                        if ip.startswith(('10.', '192.168.', '127.')) or ip.startswith('172.') and 16 <= int(ip.split('.')[1]) <= 31:
+                            risk_counts["HighRisk:PrivateIP"] += 1
 
                 # HTTP Status
                 status = row.get("https_status", "").strip() or row.get("http_status", "").strip()

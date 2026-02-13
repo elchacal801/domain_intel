@@ -35,6 +35,10 @@ PIVOT_FILE = "data/pivot_discovery.csv"
 TOR_FILE = "data/tor_nodes.csv"
 ASN_FILE = "data/suspicious_asns.csv"
 REGISTRAR_FILE = "data/domain_registrars.csv"
+CAMPAIGN_FILE = "data/campaign_hunt_history.csv"
+OPENCLAW_FILE = "data/openclaw_exposed.csv"
+RISK_FILE = "data/risk_counts.csv"
+HISTORY_FILE = "docs/history.json"
 
 SYSTEM_PROMPT = """
 You are a Lead Strategic Threat Analyst for a Global Fortune 10 Financial Institution.
@@ -43,28 +47,35 @@ Your audience consists of the CISO, Heads of Fraud, and the Global Threat Intell
 **Objective:**
 Produce a high-fidelity, strategic daily intelligence briefing derived from the provided domain telemetry.
 Do not just list stats; analyze implications, assess confidence, and predict near-term threat landscape shifts.
+Integrate ALL provided data sources — domain intelligence, infrastructure exposure (OpenClaw/Shodan),
+campaign tracking, risk signal analysis, and historical trends — into a cohesive assessment.
 
 **Tone & Style Guidelines:**
 - **Authoritative & Nuanced:** Use precise intelligence language.
 - **Probabilistic Assessments:** Use ICD-203 standard probability language (e.g., "Highly Likely", "Roughly Even Chance", "Unlikely") where appropriate.
 - **Strategic Focus:** Connect low-level signals (new domains, typosquats) to high-level risks (Brand Erosion, Fraud Campaigns, Credential Harvesting).
 - **No Hyperbole:** Avoid sensationalism. If the data is quiet, state that the threat level is stable.
+- **Cross-Domain Correlation:** Look for overlap between domain typosquats, campaign IPs, and exposed infrastructure.
 
 **Required Briefing Structure (JSON):**
-1. **Executive Summary:** A dense 3-4 sentence synthesis of the day's most critical findings.
-2. **Strategic Assessment:** High-level analysis of the threat landscape. Are we seeing a coordinated campaign or sporadic noise? What is the trendline?
-3. **Operational Intelligence:** specific technical observations (e.g., "Shift in TLD usage to .cfd", "Spike in Nginx servers on compromised hosts").
-4. **Registrar Risk Outlook:** Specific assessment of the "High Risk" registrars (Nicenic, etc.) and their current contribution to the threat surface.
-5. **Key Risks & Implications:** Bullet points linking technical findings to business impact.
-6. **Recommended Actions:** Strategic and tactical recommendations.
+1. **Executive Summary:** A dense 3-4 sentence synthesis of the day's most critical findings across all intelligence domains.
+2. **Strategic Assessment:** High-level analysis of the threat landscape. Are we seeing a coordinated campaign or sporadic noise? What is the trendline? Include growth rate analysis.
+3. **Operational Intelligence:** Specific technical observations (e.g., "Shift in TLD usage to .cfd", "Spike in Nginx servers on compromised hosts"). Include infrastructure exposure findings.
+4. **Campaign & Investigation Highlights:** Summary of active campaign tracking, OpenClaw shadow AI exposure, and any notable investigation leads. If no active campaigns, note the absence and recommend targets.
+5. **Risk Signal Analysis:** Breakdown of detected risk signals (phishing indicators, parking domains, shell domains). What do the risk signal proportions tell us about attacker intent?
+6. **Registrar Risk Outlook:** Specific assessment of the "High Risk" registrars and their current contribution to the threat surface.
+7. **Key Risks & Implications:** Bullet points linking technical findings to business impact.
+8. **Recommended Actions:** Strategic AND tactical recommendations, prioritized by impact.
 
 **Return JSON format:**
 {
     "date": "YYYY-MM-DD",
-    "headline": "Professional, Impact-Focused Headline (e.g. 'Coordinated Infrastructure Spike Detected in .CFD Namespace')",
+    "headline": "Professional, Impact-Focused Headline",
     "executive_summary": "Text...",
     "strategic_assessment": "Text...",
     "operational_intelligence": "Text...",
+    "campaign_highlights": "Text...",
+    "risk_signal_analysis": "Text...",
     "registrar_risk_outlook": "Text...",
     "key_risks": ["Risk 1", "Risk 2"],
     "action_items": ["Action 1", "Action 2"]
@@ -84,7 +95,17 @@ def get_stats():
         "shodan_ports": "None",
         "shodan_vulns": 0,
         "top_typosquat_registrars": "None",
-        "high_risk_registrars": {"Nicenic": 0, "Dominet": 0, "Gname": 0, "Aceville": 0}
+        "high_risk_registrars": {"Nicenic": 0, "Dominet": 0, "Gname": 0, "Aceville": 0},
+        "campaign_ips": 0,
+        "campaign_countries": 0,
+        "campaign_queries": 0,
+        "openclaw_instances": 0,
+        "openclaw_risks": [],
+        "risk_signals": {},
+        "trend_total_prev": 0,
+        "trend_live_prev": 0,
+        "trend_total_curr": 0,
+        "trend_live_curr": 0,
     }
     
     # 1. Total Domains scanned
@@ -192,6 +213,70 @@ def get_stats():
         except Exception as e:
             print(f"Registrar stats error: {e}")
 
+    # 7. Campaign Hunt Stats
+    if os.path.exists(CAMPAIGN_FILE):
+        try:
+            ips = set()
+            countries = set()
+            queries = set()
+            with open(CAMPAIGN_FILE, 'r', encoding='utf-8', errors='replace') as f:
+                reader = csv.DictReader(f)
+                for row in reader:
+                    if row.get('ip'): ips.add(row['ip'])
+                    if row.get('country'): countries.add(row['country'])
+                    if row.get('query'): queries.add(row['query'])
+            stats["campaign_ips"] = len(ips)
+            stats["campaign_countries"] = len(countries)
+            stats["campaign_queries"] = len(queries)
+        except Exception as e:
+            print(f"Campaign stats error: {e}")
+
+    # 8. OpenClaw Exposure Stats
+    if os.path.exists(OPENCLAW_FILE):
+        try:
+            risks = []
+            with open(OPENCLAW_FILE, 'r', encoding='utf-8', errors='replace') as f:
+                reader = csv.DictReader(f)
+                rows = list(reader)
+                stats["openclaw_instances"] = len(rows)
+                for row in rows:
+                    rl = row.get('risk_level', '').strip()
+                    if rl:
+                        risks.append(rl)
+            stats["openclaw_risks"] = dict(Counter(risks))
+        except Exception as e:
+            print(f"OpenClaw stats error: {e}")
+
+    # 9. Risk Signal Breakdown
+    if os.path.exists(RISK_FILE):
+        try:
+            with open(RISK_FILE, 'r', encoding='utf-8', errors='replace') as f:
+                reader = csv.reader(f)
+                next(reader, None)  # skip header
+                for row in reader:
+                    if len(row) >= 2:
+                        stats["risk_signals"][row[0]] = int(row[1])
+        except Exception as e:
+            print(f"Risk signal stats error: {e}")
+
+    # 10. Historical Trend (last 2 days for delta)
+    if os.path.exists(HISTORY_FILE):
+        try:
+            with open(HISTORY_FILE, 'r', encoding='utf-8') as f:
+                history = json.load(f)
+            if len(history) >= 2:
+                prev = history[-2]
+                curr = history[-1]
+                stats["trend_total_prev"] = prev.get("total", 0)
+                stats["trend_live_prev"] = prev.get("live", 0)
+                stats["trend_total_curr"] = curr.get("total", 0)
+                stats["trend_live_curr"] = curr.get("live", 0)
+            elif len(history) == 1:
+                stats["trend_total_curr"] = history[0].get("total", 0)
+                stats["trend_live_curr"] = history[0].get("live", 0)
+        except Exception as e:
+            print(f"History trend error: {e}")
+
     return stats
 
 def _mock_failure_briefing(stats):
@@ -214,10 +299,30 @@ def generate_briefing(stats):
     ai_limit = 1000
     coverage_pct = (ai_limit / stats["total_domains"]) * 100 if stats["total_domains"] > 0 else 0
     
+    # Risk signal formatting
+    risk_str = "None detected"
+    if stats["risk_signals"]:
+        risk_str = "\n".join([f"    - {k}: {v}" for k, v in sorted(stats["risk_signals"].items(), key=lambda x: x[1], reverse=True)])
+
+    # OpenClaw risk breakdown
+    oc_risk_str = "N/A"
+    if stats["openclaw_risks"]:
+        oc_risk_str = ", ".join([f"{k}: {v}" for k, v in stats["openclaw_risks"].items()])
+
+    # Trend calculation
+    trend_delta = stats["trend_total_curr"] - stats["trend_total_prev"]
+    trend_dir = "+" if trend_delta >= 0 else ""
+    live_delta = stats["trend_live_curr"] - stats["trend_live_prev"]
+    live_dir = "+" if live_delta >= 0 else ""
+
     data_summary = f"""
     Date: {datetime.now().strftime('%Y-%m-%d')}
-    Total New Domains Ingested: {stats["total_domains"]}
+    Total Domains Monitored: {stats["total_domains"]}
     Domains Analyzed by AI: ~{ai_limit} ({coverage_pct:.2f}% sample)
+    
+    [Historical Trend]
+    Total Domains: {stats['trend_total_curr']:,} ({trend_dir}{trend_delta:,} from previous day)
+    Live Domains: {stats['trend_live_curr']:,} ({live_dir}{live_delta:,} from previous day)
     
     [Threat Detection]
     Confirmed Typosquats: {len(stats["typosquats"])}
@@ -225,11 +330,23 @@ def generate_briefing(stats):
     Phishing Sites Identified: {stats["phishing_count"]}
     Suspected C2 Panels: {stats["c2_count"]}
     
+    [Risk Signal Breakdown]
+{risk_str}
+    
     [Infrastructure Intelligence]
     Malicious ASNs Active: {stats["malicious_asn_count"]}
     Tor Exit Nodes Mapped: {stats["tor_exit_count"]}
     Shodan Findings: {stats["shodan_vulns"]} vulnerabilities detected. Top Ports: {stats["shodan_ports"]}
     Infrastructure Pivots: {stats["pivot_count"]} new domains discovered via Whois pivoting.
+
+    [Campaign & Investigation Tracking]
+    Campaign IPs Tracked: {stats["campaign_ips"]}
+    Countries Observed: {stats["campaign_countries"]}
+    Active Hunt Queries: {stats["campaign_queries"]}
+    
+    [Shadow AI / OpenClaw Exposure]
+    Exposed Instances: {stats["openclaw_instances"]}
+    Risk Level Breakdown: {oc_risk_str}
 
     [Registrar Concentration Risk]
     Top Registrars for Confirmed Typosquats: {stats["top_typosquat_registrars"]}
@@ -243,6 +360,8 @@ def generate_briefing(stats):
     IMPORTANT: The AI analysis was performed on a SAMPLE of the total data. 
     Do NOT claim that "no malicious activity was detected" for the entire dataset if the sample was clean.
     State clearly that findings are based on the analyzed sample.
+    Cross-reference all intelligence domains: correlate typosquat registrars with campaign IPs, 
+    OpenClaw exposure with infrastructure pivots, and risk signals with Shodan findings.
     """
     
     print("Generating briefing with data:")

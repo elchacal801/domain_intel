@@ -236,26 +236,27 @@ jobs:
       - name: Triage Domains
         run: python scripts/triage_domains.py
 
-      - name: Detailed Analysis (Shodan & Pivot)
-        timeout-minutes: 60
+      - name: Shodan Enrichment
+        timeout-minutes: 40
         continue-on-error: true
         env:
           SHODAN_API_KEY: ${{ secrets.SHODAN_API_KEY }}
-          WHOXY_API_KEY: ${{ secrets.WHOXY_API_KEY }}
         run: |
-          # 1. Shodan (Now running on Triage Candidates only ~10k vs 200k)
           if [ -n "$SHODAN_API_KEY" ]; then
              python scripts/enrich_shodan.py --input data/triage_candidates.csv --output data/shodan_intelligence.csv --budget 10000
           fi
-          
-          # 2. Reverse Whois Pivot (Whoxy)
+          cp data/shodan_intelligence.csv docs/data/ || true
+
+      - name: Technical & Pivot Enrichment
+        timeout-minutes: 20
+        continue-on-error: true
+        env:
+          WHOXY_API_KEY: ${{ secrets.WHOXY_API_KEY }}
+        run: |
           if [ -n "$WHOXY_API_KEY" ]; then
              python scripts/enrich_technical.py
              python scripts/enrich_pivot.py
           fi
-
-          # Backup artifacts
-          cp data/shodan_intelligence.csv docs/data/ || true
           cp data/pivot_discovery.csv docs/data/ || true
           cp data/enriched_candidates.csv docs/data/ || true
 
@@ -284,7 +285,7 @@ jobs:
           if [ -n "$GEMINI_API_KEY" ] || [ -n "$OPENAI_API_KEY" ] || [ -n "$CLAUDE_API_KEY" ]; then
             # Analysis (Limit covers the ~10k triage candidates)
             python scripts/ai_typosquat.py --limit 11000 --batch-size 100 --input data/triage_candidates.csv
-            python scripts/ai_classify_web.py --limit 11000 --batch-size 50 --input data/triage_candidates.csv
+            python scripts/ai_classify_web.py --limit 11000 --batch-size 50 --input data/dea_domains_probed.csv
             # Briefing runs last to capture Shodan/Infrastructure stats
             python scripts/ai_briefing.py
           fi

@@ -25,7 +25,7 @@ load_dotenv()
 # LLM Client — uses centralized model chain from shared/llm_client.py
 llm = LLMClient()
 OUTPUT_FILE = "data/ai_classifications.csv"
-INPUT_FILE = "data/triage_candidates.csv" # Default to Triage Output (was data/dea_domains_probed.csv)
+INPUT_FILE = "data/dea_domains_probed.csv" # Must use probed CSV (has title/status/server columns)
 
 # Classification Taxonomy
 CATEGORIES = [

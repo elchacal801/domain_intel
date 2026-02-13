@@ -41,6 +41,15 @@ async function loadBriefing() {
         document.getElementById('briefing-summary').textContent = b.summary || b.executive_summary || 'No summary available.';
         document.getElementById('briefing-risks').innerHTML = (b.key_risks || []).map(r => `<li>${r}</li>`).join('');
         document.getElementById('briefing-actions').innerHTML = (b.action_items || []).map(a => `<li>${a}</li>`).join('');
+        // New panels: Campaign & Risk Signal Analysis
+        const campaignEl = document.getElementById('briefing-campaigns');
+        const riskAnalEl = document.getElementById('briefing-risk-analysis');
+        const extraRow = document.getElementById('briefing-extra');
+        if (b.campaign_highlights || b.risk_signal_analysis) {
+            extraRow.style.display = '';
+            if (campaignEl) campaignEl.textContent = b.campaign_highlights || 'No active campaigns tracked.';
+            if (riskAnalEl) riskAnalEl.textContent = b.risk_signal_analysis || 'No risk signal data available.';
+        }
     } catch (e) { console.log('No briefing data', e); }
 }
 
