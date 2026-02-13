@@ -15,6 +15,7 @@ import sys
 import logging
 import socket
 import time
+from concurrent.futures import ThreadPoolExecutor, as_completed
 from typing import Dict, List, Optional
 from dotenv import load_dotenv
 import shodan
@@ -26,12 +27,16 @@ logging.basicConfig(level=logging.INFO, format='[*] %(message)s')
 log = logging.getLogger("enrich_shodan")
 log.setLevel(logging.INFO)
 
-def resolve_domain(domain: str) -> str:
-    """Resolves A record for a domain."""
+def resolve_domain(domain: str, timeout: float = 3.0) -> str:
+    """Resolves A record for a domain with a hard timeout."""
+    old_timeout = socket.getdefaulttimeout()
     try:
+        socket.setdefaulttimeout(timeout)
         return socket.gethostbyname(domain)
     except (socket.gaierror, socket.timeout, OSError):
         return ""
+    finally:
+        socket.setdefaulttimeout(old_timeout)
 
 def process_shodan(api_key: str, domains: List[Dict], output_file: str, budget: int):
     # Init Utils
@@ -45,27 +50,41 @@ def process_shodan(api_key: str, domains: List[Dict], output_file: str, budget: 
         log.error(f"Failed to init Shodan API: {e}")
         return
 
-    # 1. Gather IPs
+    # 1. Gather IPs (concurrent DNS resolution with timeout)
     log.info(f"Resolving IPs for {len(domains)} domains...")
     ip_map = {} # ip -> [domains]
     unique_ips = set()
-    
+
+    # Separate rows that already have IPs from those needing resolution
+    needs_resolve = []
     for row in domains:
         domain = row.get("domain")
         if not domain: continue
-        
-        # Prefer existing IP if available
-        ip = row.get("mx_ip") or row.get("a_record") 
-        
-        # If no handy IP, resolve it
-        if not ip or ip == "":
-            ip = resolve_domain(domain)
-            
-        if ip:
+        ip = row.get("mx_ip") or row.get("a_record")
+        if ip and ip.strip():
             unique_ips.add(ip)
-            if ip not in ip_map: ip_map[ip] = []
-            ip_map[ip].append(row)
-            
+            ip_map.setdefault(ip, []).append(row)
+        else:
+            needs_resolve.append(row)
+
+    log.info(f"  {len(domains) - len(needs_resolve)} already have IPs, resolving {len(needs_resolve)} via DNS...")
+
+    # Concurrent DNS resolution with 20 threads and 3s timeout per domain
+    def _resolve_row(row):
+        return row, resolve_domain(row["domain"], timeout=3.0)
+
+    resolved_count = 0
+    with ThreadPoolExecutor(max_workers=20) as executor:
+        futures = {executor.submit(_resolve_row, row): row for row in needs_resolve}
+        for future in as_completed(futures):
+            row, ip = future.result()
+            resolved_count += 1
+            if resolved_count % 1000 == 0:
+                log.info(f"  DNS progress: {resolved_count}/{len(needs_resolve)}")
+            if ip:
+                unique_ips.add(ip)
+                ip_map.setdefault(ip, []).append(row)
+
     log.info(f"Found {len(unique_ips)} unique IPs to scan.")
 
     # 2. Query Shodan (Sequential to respect budget safely)

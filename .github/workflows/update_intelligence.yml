@@ -238,6 +238,7 @@ jobs:
 
       - name: Detailed Analysis (Shodan & Pivot)
         timeout-minutes: 60
+        continue-on-error: true
         env:
           SHODAN_API_KEY: ${{ secrets.SHODAN_API_KEY }}
           WHOXY_API_KEY: ${{ secrets.WHOXY_API_KEY }}
