@@ -109,8 +109,8 @@ def process_shodan(api_key: str, domains: List[Dict], output_file: str, budget: 
                     time.sleep(to_wait)
                 self.last_call = time.time()
 
-    # Target ~5 RPS to be safe but faster than sequential
-    rate_limiter = RateLimiter(max_rps=5)
+    # Target 1 RPS to strictly respect API limits (Free/Basic tiers often limit to 1 RPS)
+    rate_limiter = RateLimiter(max_rps=1.0)
     
     def _scan_ip(ip):
         cache_key = f"host:{ip}"

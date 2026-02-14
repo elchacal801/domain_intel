@@ -1,3 +1,4 @@
+import argparse
 import csv
 import dns.resolver
 import dns.exception
@@ -91,6 +92,11 @@ def process_domain(row):
     }
 
 def main():
+    parser = argparse.ArgumentParser(description="Enrich domains with technical details (SOA, SSL, Favicon).")
+    parser.add_argument("--limit", type=int, default=0, help="Limit number of domains to process")
+    parser.add_argument("--workers", type=int, default=50, help="Number of concurrent workers")
+    args = parser.parse_args()
+
     print(f"[*] Starting Enrichment on {INPUT_FILE}...")
     
     if not os.path.exists(INPUT_FILE):
@@ -106,9 +112,13 @@ def main():
         print("[!] No domains to process.")
         return
 
+    if args.limit > 0:
+        print(f"[*] Limiting processing to first {args.limit} domains.")
+        domains = domains[:args.limit]
+
     enriched_results = []
     
-    with concurrent.futures.ThreadPoolExecutor(max_workers=MAX_WORKERS) as executor:
+    with concurrent.futures.ThreadPoolExecutor(max_workers=args.workers) as executor:
         future_to_domain = {executor.submit(process_domain, row): row for row in domains}
         
         for future in concurrent.futures.as_completed(future_to_domain):

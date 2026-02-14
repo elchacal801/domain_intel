@@ -62,12 +62,15 @@ This repository provides different layers of data for different security roles:
     * `openclaw_stix.py`: Converts OpenClaw findings to STIX 2.1 bundles.
     * `shodan_utils.py`: Shared utility for safe Shodan scanning (Credit Budgeting + Caching + Thread Safety).
   * **Infrastructure Intel**:
-  * **Infrastructure Intel**:
     * `asn_intel.py`: Concurrent fetch and enrich suspicious ASNs.
     * `vpn_intel.py`: Aggregates VPN/VPS provider ASNs.
     * `tor_intel.py`: Tracks Tor Exit Nodes and Tor ASNs.
     * `clean_data.py`: Automated CSV hygiene and schema correction.
     * `enrich_asns.py`: Fetches missing ASN names from RIPE Stat API.
+  * **Rate Limiting**:
+    * `enrich_shodan.py`: Strictly enforced **1 Request Per Second (RPS)** to comply with API limits. Uses a `CreditBudget` singleton and thread-safe `RateLimiter`.
+    * `enrich_technical.py`: Uses 50 concurrent workers for DNS/SSL but limits processing volume per run (default 5k) to prevent timeouts.
+    * `ai_*.py`: Limits concurrency (3 workers) and batch sizes (2k items/run) to fit within 40m timeout.
   * **AI Modules**:
     * `ai_typosquat.py`: Uses LLM to detect semantic typosquatting.
     * `ai_classify_web.py`: Uses LLM to concurrently classify web page intent (Batch Processing).
