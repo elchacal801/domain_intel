@@ -60,16 +60,17 @@ This repository provides different layers of data for different security roles:
   * **Shadow AI Scanner**:
     * `openclaw_scan.py`: Scans for exposed OpenClaw/Moltbot/Gateway AI agents on port 18789.
     * `openclaw_stix.py`: Converts OpenClaw findings to STIX 2.1 bundles.
-    * `shodan_utils.py`: Shared utility for safe Shodan scanning (Credit Budgeting + Caching).
+    * `shodan_utils.py`: Shared utility for safe Shodan scanning (Credit Budgeting + Caching + Thread Safety).
   * **Infrastructure Intel**:
-    * `asn_intel.py`: Fetches and enriches suspicious ASNs.
+  * **Infrastructure Intel**:
+    * `asn_intel.py`: Concurrent fetch and enrich suspicious ASNs.
     * `vpn_intel.py`: Aggregates VPN/VPS provider ASNs.
     * `tor_intel.py`: Tracks Tor Exit Nodes and Tor ASNs.
     * `clean_data.py`: Automated CSV hygiene and schema correction.
     * `enrich_asns.py`: Fetches missing ASN names from RIPE Stat API.
   * **AI Modules**:
     * `ai_typosquat.py`: Uses LLM to detect semantic typosquatting.
-    * `ai_classify_web.py`: Uses LLM to classify web page intent.
+    * `ai_classify_web.py`: Uses LLM to concurrently classify web page intent (Batch Processing).
     * `ai_briefing.py`: Generates the daily dashboard briefing.
   * **Analytics & Whois**:
     * `track_history.py`: Daily tracker for Domain Growth and Liveness (Stats).
@@ -113,6 +114,7 @@ To run the AI modules (`scripts/ai_*.py`), you need API keys.
 2. For GitHub Actions, add these as **Repository Secrets**.
 
 The model priority chain is configured centrally in `scripts/shared/llm_client.py`:
+
 * Primary: `claude-3-7-sonnet-latest`
 * Secondary: `gemini-3-pro-preview`
 * Fallback: `gpt-4o`
@@ -188,18 +190,18 @@ graph TD
 
     subgraph Enrichment
         G --> H[Async DNS Resolution]
-        H -->|MX, A, NS| I[ASN Enrichment]
+        H -->|MX, A, NS| I[Concurrent ASN Enrichment]
         H -->|Nameservers| J[Registrar Risk Analysis]
         I --> K["Reputation (OTX/SafeBrowsing)"]
         K --> L[Web Probing]
     end
 
     subgraph "Advanced Intelligence"
-        L --> S["Shodan Enrichment (Cached)"]
+        L --> S["Shodan Enrichment (Concurrent + Rate Limit)"]
         L --> W["Whois (Port 43)"]
         L --> AI_CHECK{AI Validation}
         AI --> AI_CHECK
-        AI_CHECK -->|Claude/Gemini/GPT| CLASS(Classification)
+        AI_CHECK -->|Claude/Gemini/GPT| CLASS(Concurrent Batch Classification)
         AI_CHECK -->|Claude/Gemini/GPT| TYPO(Typosquat Detect)
     end
 
@@ -207,6 +209,7 @@ graph TD
         RETRY["retry.py (Backoff)"]
         CYMRU["cymru_resolver.py (ASN)"]
         LLM["llm_client.py (Model Chain)"]
+        BUDGET["shodan_utils.py (Rate Limit)"]
     end
 
     subgraph Output

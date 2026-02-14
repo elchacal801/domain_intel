@@ -13,6 +13,7 @@ import json
 import sqlite3
 import time
 import logging
+import threading
 from datetime import datetime
 from pathlib import Path
 from typing import Dict, Any, Optional
@@ -26,13 +27,16 @@ class CreditBudget:
     Defaults to FAIL-SAFE (0 credits) if budget file is missing/corrupt.
     """
     _instance = None
+    _lock = threading.Lock()
     
     def __new__(cls):
         if cls._instance is None:
-            cls._instance = super(CreditBudget, cls).__new__(cls)
-            cls._instance.budget_file = Path("data/.shodan_budget.json")
-            cls._instance.credits_used_session = 0
-            cls._instance.budget_limit = 0 # Default to 0 (fail-safe)
+            with cls._lock:
+                if cls._instance is None:
+                    cls._instance = super(CreditBudget, cls).__new__(cls)
+                    cls._instance.budget_file = Path("data/.shodan_budget.json")
+                    cls._instance.credits_used_session = 0
+                    cls._instance.budget_limit = 0 # Default to 0 (fail-safe)
         return cls._instance
 
     def set_budget(self, limit: int):
@@ -42,20 +46,21 @@ class CreditBudget:
 
     def check_can_spend(self, cost: int = 1) -> bool:
         """Raises exception if over budget."""
-        if self.credits_used_session + cost > self.budget_limit:
-            log.error(f"BUDGET EXCEEDED: Attempted to spend {cost}, used {self.credits_used_session}/{self.budget_limit}")
-            return False
-        return True
+        with self._lock:
+            if self.credits_used_session + cost > self.budget_limit:
+                log.error(f"BUDGET EXCEEDED: Attempted to spend {cost}, used {self.credits_used_session}/{self.budget_limit}")
+                return False
+            return True
 
     def spend(self, cost: int = 1):
         """Records credit usage."""
+        # Check first (redundant but safe)
         if not self.check_can_spend(cost):
             raise RuntimeError("Shodan Credit Budget Exceeded. Halting.")
         
-        self.credits_used_session += cost
-        # Optionally, we could persist monthly usage here if needed
-        # but prompt asked for per-run enforced budget first.
-        log.debug(f"Spent {cost} credit(s). Total session: {self.credits_used_session}/{self.budget_limit}")
+        with self._lock:
+            self.credits_used_session += cost
+            log.debug(f"Spent {cost} credit(s). Total session: {self.credits_used_session}/{self.budget_limit}")
 
 
 class ShodanCache:

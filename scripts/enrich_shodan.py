@@ -15,6 +15,7 @@ import sys
 import logging
 import socket
 import time
+import threading
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from typing import Dict, List, Optional
 from dotenv import load_dotenv
@@ -87,42 +88,49 @@ def process_shodan(api_key: str, domains: List[Dict], output_file: str, budget: 
 
     log.info(f"Found {len(unique_ips)} unique IPs to scan.")
 
-    # 2. Query Shodan (Sequential to respect budget safely)
-    # Using concurrent futures with strict shared budget state is tricky; 
-    # simple loop is safer for budget enforcement and avoids race conditions.
+    # 2. Query Shodan (Concurrent with Rate Limiting)
+    log.info(f"Scanning {len(unique_ips)} IPs via Shodan...")
     
     shodan_results = {}
-    count = 0
-    total = len(unique_ips)
     
-    for ip in unique_ips:
-        count += 1
-        if count % 5 == 0:
-            print(f"[*] Progress: {count}/{total}", end='\r')
+    # Simple Rate Limiter to respect API limits (e.g., 5-10 RPS)
+    class RateLimiter:
+        def __init__(self, max_rps):
+            self.delay = 1.0 / max_rps
+            self.lock = threading.Lock()
+            self.last_call = 0
 
+        def wait(self):
+            with self.lock:
+                now = time.time()
+                elapsed = now - self.last_call
+                to_wait = self.delay - elapsed
+                if to_wait > 0:
+                    time.sleep(to_wait)
+                self.last_call = time.time()
+
+    # Target ~5 RPS to be safe but faster than sequential
+    rate_limiter = RateLimiter(max_rps=5)
+    
+    def _scan_ip(ip):
         cache_key = f"host:{ip}"
         
         # Check Cache
         cached_data = cache.get(cache_key)
         if cached_data:
-            shodan_results[ip] = cached_data
-            continue
+            return ip, cached_data
+            
+        rate_limiter.wait()
             
         # Check Budget
         if not budget_tracker.check_can_spend(1):
-            log.warning(f"Budget exhausted at {count}/{total} IPs. Skipping remaining.")
-            break
+            return ip, None
             
         # Query API
         try:
             budget_tracker.spend(1)
-            # minify=True reduces credit cost? No, just bandwidth. 
-            # API Cost: 1 query credit per host lookup? No, standard host lookup is 1 scan credit (or free? check docs).
-            # Actually host lookups deduct from scan credits, not query credits usually.
-            # But we must treat them as "credits" generally.
             host_info = api.host(ip, minify=True)
             
-            # Parse valuable fields
             s_data = {
                 "ip": ip,
                 "ports": ";".join([str(p) for p in host_info.get("ports", [])]),
@@ -132,24 +140,38 @@ def process_shodan(api_key: str, domains: List[Dict], output_file: str, budget: 
                 "vulns": ";".join(host_info.get("vulns", []))
             }
             
-            shodan_results[ip] = s_data
             cache.set(cache_key, s_data)
-            time.sleep(1) # Rate limit
+            return ip, s_data
             
         except shodan.APIError as e:
-            # e.g. "No information available for that IP." -> Cache this as empty to avoid re-asking
             if "No information available" in str(e):
                 empty_data = {"ip": ip, "ports": "", "vulns": "", "tags": "", "os": "", "hostnames": ""}
-                shodan_results[ip] = empty_data
                 cache.set(cache_key, empty_data)
+                return ip, empty_data
             else:
                 log.error(f"  [!] API Error for {ip}: {e}")
-        except RuntimeError:
-            break
+                return ip, None
         except Exception as e:
             log.error(f"  [!] Error scanning {ip}: {e}")
+            return ip, None
 
-    print("\n[*] Shodan scan complete.")
+    # Run Parallel Scans
+    with ThreadPoolExecutor(max_workers=10) as executor:
+        futures = {executor.submit(_scan_ip, ip): ip for ip in unique_ips}
+        
+        completed = 0
+        total = len(unique_ips)
+        
+        for future in as_completed(futures):
+            ip, result = future.result()
+            completed += 1
+            if completed % 10 == 0:
+                print(f"[*] Shodan Scan Progress: {completed}/{total}", end='\r')
+            
+            if result:
+                shodan_results[ip] = result
+
+    print(f"\n[*] Shodan scan complete. Processed {len(shodan_results)} IPs.")
 
     # 3. Map back to results
     results = []

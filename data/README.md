@@ -41,7 +41,7 @@ The data flow moves from **Inputs** &rarr; **Discovery** &rarr; **Enrichment** &
 | :--- | :--- | :--- |
 | **`dea_domains_enriched.csv`** | `enrich_infrastructure.py` | **Infrastructure Data**. Adds MX Records, Name Servers (NS), and ASN info to the raw domain list. |
 | **`dea_domains_reputation.csv`** | `enrich_reputation.py` | **Reputation Scoring**. Adds Google Safe Browsing and VirusTotal scores to the enriched list. |
-| **`shodan_intelligence.csv`** | `enrich_shodan.py` | **Vulnerability Scan**. Adds open ports, OS info, and CVEs found on the target IPs via Shodan. |
+| **`shodan_intelligence.csv`** | `enrich_shodan.py` | **Vulnerability Scan**. Parallelized scan with rate limiting. Adds open ports, OS info, and CVEs found on the target IPs via Shodan. |
 | **`enriched_candidates.csv`** | `enrich_technical.py` | **Deep Selectors**. Contains high-value attribution data: SOA Emails (RNAME), TLS Subject Organizations, and Favicon Hashes. |
 | **`pivot_discovery.csv`** | `enrich_pivot.py` | **New Discovery**. Domains found by performing Reverse Whois on the bad actors identified in our specific triage list. |
 
@@ -55,7 +55,7 @@ The data flow moves from **Inputs** &rarr; **Discovery** &rarr; **Enrichment** &
 | :--- | :--- | :--- |
 | **`dea_domains_probed.csv`** | `probe_web.py` | **The Master Dataset**. Contains *everything*: DNS, ASN, HTTP Fingerprints (Title, Server), and Risk Tags for thousands of domains. Why: This is the source of truth for all dashboards and pivots. It proves which domains are actually *alive* and what they are hosting. |
 | **`domain_intel_bundle.json.gz`** | `update_intelligence.yml` | **Export Bundle**. A compressed JSON version of the probed data. Why: Optimized for programmatic ingestion by other tools/SIEMs. |
-| **`ai_classifications.csv`** | `ai_classify_web.py` | **AI Analysis**. LLM-based categorization of the site content (e.g., "Phishing", "Parked", "Legitimate"). Why: Adds human-like judgment at scale to flag threats regex misses. |
+| **`ai_classifications.csv`** | `ai_classify_web.py` | **AI Analysis (Concurrent)**. LLM-based categorization of the site content (e.g., "Phishing", "Parked", "Legitimate"). Why: Adds human-like judgment at scale to flag threats regex misses. |
 | **`ai_typosquats.csv`** | `ai_typosquat.py` | **Semantic Typosquats**. AI detected lookalikes based on meaning/visuals, not just spelling. |
 
 ---
@@ -87,7 +87,7 @@ The data flow moves from **Inputs** &rarr; **Discovery** &rarr; **Enrichment** &
 
 | File | Generator Script | Description |
 | :--- | :--- | :--- |
-| **`suspicious_asns.csv`** | `asn_intel.py` | **Global Bad ASNs**. Aggregated list of "Bulletproof" hosters known for protecting cybercriminals (e.g., Njalla, FlokiNET). |
+| **`suspicious_asns.csv`** | `asn_intel.py` | **Global Bad ASNs (Concurrent)**. Aggregated list of "Bulletproof" hosters known for protecting cybercriminals (e.g., Njalla, FlokiNET). |
 | **`tor_nodes.csv`** | `tor_intel.py` | **Tor Exit Nodes**. Live list of Tor IPs fetched from `dan.me.uk`. Used to detect traffic coming from known anonymity exit points. |
 | **`tor_asns.csv`** | `tor_intel.py` | **Tor ASNs**. Networks that run a high density of Tor nodes. |
 | **`vpn_asns.csv`** | `vpn_intel.py` | **VPN/Proxy Networks**. ASNs belonging to commercial VPNs (NordVPN, ExpressVPN). Useful for detecting masked traffic. |

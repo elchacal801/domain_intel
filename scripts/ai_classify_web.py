@@ -141,16 +141,27 @@ def main():
         writer.writeheader()
 
     import math
+    from concurrent.futures import ThreadPoolExecutor, as_completed
     from tqdm import tqdm
     
     total_classified = 0
     
-    for i in tqdm(range(0, len(items), args.batch_size), desc="Classifying batches"):
-        batch = items[i : i + args.batch_size]
-        results = classify_batch(batch)
-        if results:
-            save_results(results, args.output)
-            total_classified += len(results)
+    # Process batches concurrently (LIMIT to 3 workers for Tier 1 API limits)
+    # Anthropic/Gemini often have ~50 RPM limits. 3 workers * 1 batch/sec = safe.
+    with ThreadPoolExecutor(max_workers=3) as executor:
+        futures = []
+        for i in range(0, len(items), args.batch_size):
+            batch = items[i : i + args.batch_size]
+            futures.append(executor.submit(classify_batch, batch))
+            
+        for future in tqdm(as_completed(futures), total=len(futures), desc="Classifying batches"):
+            try:
+                results = future.result()
+                if results:
+                    save_results(results, args.output)
+                    total_classified += len(results)
+            except Exception as e:
+                print(f"Batch failed: {e}")
             
     print(f"Done. Classified {total_classified} domains. Saved to {args.output}")
 
