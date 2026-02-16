@@ -140,7 +140,7 @@ class TorIntel:
 
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument("--workers", type=int, default=10)
+    parser.add_argument("--workers", type=int, default=10, help="Number of concurrent workers (default 10)")
     parser.add_argument("--limit", type=int, default=0)
     args = parser.parse_args()
     

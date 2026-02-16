@@ -46,12 +46,13 @@ class CymruResolver:
     def __init__(
         self,
         nameservers: list = None,
-        timeout: float = 10.0,
+        timeout: float = 5.0,
         lifetime: float = 10.0,
-        max_retries: int = 2
+        max_retries: int = 4
     ):
         self.resolver = dns.resolver.Resolver()
-        self.resolver.nameservers = nameservers or ['8.8.8.8', '1.1.1.1']
+        if nameservers:
+            self.resolver.nameservers = nameservers
         self.resolver.timeout = timeout
         self.resolver.lifetime = lifetime
         self._max_retries = max_retries
@@ -85,8 +86,8 @@ class CymruResolver:
         return result
     
     @retry(
-        max_attempts=2,
-        backoff_base=1.0,
+        max_attempts=4,
+        backoff_base=2.0,
         exceptions=(dns.resolver.Timeout, dns.resolver.NoAnswer, dns.resolver.LifetimeTimeout)
     )
     def _dns_lookup(self, query: str) -> Optional[str]:

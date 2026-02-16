@@ -132,7 +132,7 @@ class VPNIntel:
 def main():
     parser = argparse.ArgumentParser(description="VPN Intel: Fetch and Enrich VPN/VPS ASNs")
     parser.add_argument("--output", default="data/vpn_asns.csv", help="Path to output CSV")
-    parser.add_argument("--workers", type=int, default=10, help="Number of concurrent workers")
+    parser.add_argument("--workers", type=int, default=10, help="Number of concurrent workers (default 10)")
     parser.add_argument("--limit", type=int, default=0, help="Test limit (0=all)")
     
     args = parser.parse_args()
