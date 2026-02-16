@@ -46,8 +46,8 @@ class CymruResolver:
     def __init__(
         self,
         nameservers: list = None,
-        timeout: float = 3.0,
-        lifetime: float = 3.0,
+        timeout: float = 10.0,
+        lifetime: float = 10.0,
         max_retries: int = 2
     ):
         self.resolver = dns.resolver.Resolver()

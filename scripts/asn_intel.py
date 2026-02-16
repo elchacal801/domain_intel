@@ -203,7 +203,7 @@ class ASNIntel:
 def main():
     parser = argparse.ArgumentParser(description="ASN Intel: Fetch and Enrich Suspicious ASNs")
     parser.add_argument("--output", default="data/suspicious_asns.csv", help="Path to output CSV")
-    parser.add_argument("--workers", type=int, default=50, help="Number of concurrent workers (default 50 for DNS)")
+    parser.add_argument("--workers", type=int, default=25, help="Number of concurrent workers (default 25 for DNS)")
     parser.add_argument("--limit", type=int, default=0, help="Test limit (0=all)")
     
     args = parser.parse_args()
