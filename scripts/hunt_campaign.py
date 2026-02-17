@@ -16,6 +16,7 @@ import shodan
 from pathlib import Path
 from dotenv import load_dotenv
 from shodan_utils import CreditBudget
+from pivot_otx import query_otx_passive_dns
 
 # Load env vars
 load_dotenv()
@@ -134,6 +135,36 @@ def main():
                     
                     # Log it
                     log_new_hit(ip, query, m)
+
+                    # --- Automated OTX Pivot ---
+                    print(f"::group:: [Auto-Pivot] Pivoting on new IP {ip}...")
+                    try:
+                        pivot_domains = query_otx_passive_dns(ip)
+                        if pivot_domains:
+                            print(f"::notice:: [Pivot] Found {len(pivot_domains)} domains on {ip}!")
+                            
+                            # Append to campaign_pivot_findings.csv
+                            pivot_file = Path("data/campaign_pivot_findings.csv")
+                            file_exists = pivot_file.exists()
+                            
+                            with open(pivot_file, 'a', newline='', encoding='utf-8') as f:
+                                headers = ['pivot_selector', 'pivot_ip', 'discovered_domain', 'source']
+                                writer = csv.DictWriter(f, fieldnames=headers)
+                                if not file_exists:
+                                    writer.writeheader()
+                                
+                                for d in pivot_domains:
+                                    writer.writerow({
+                                        'pivot_selector': f"Hunt:{query}",
+                                        'pivot_ip': ip,
+                                        'discovered_domain': d,
+                                        'source': 'AlienVault_OTX'
+                                    })
+                        else:
+                            print(f"  - No passive DNS records found.")
+                    except Exception as e:
+                        print(f"  [!] Pivot failed: {e}")
+                    print("::endgroup::")
                     
         except Exception as e:
             print(f"Error executing query '{query}': {e}")

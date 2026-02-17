@@ -129,4 +129,5 @@ The data flow moves from **Inputs** &rarr; **Discovery** &rarr; **Enrichment** &
 | :--- | :--- | :--- |
 | **`known_campaign_ips.txt`** | *Manual Config* | **Baseline**. List of IPs known to host generic "Public Email Service" pages (Noise). These are ignored by the automated hunt to prevent false positive alerts. |
 | **`campaign_hunt_history.csv`** | `hunt_campaign.py` | **Hunt Log**. Chronological record of every **new** IP found by the proactive hunt that wasn't in the baseline. Displayed in the Campaign Tracker dashboard tab. |
+| **`campaign_pivot_findings.csv`** | `hunt_campaign.py` | **Auto-Pivot Hits**. Domains hosted on the *new* IPs found by the proactive hunt. Populated by the automated OTX pivot pivot. |
 | **`shodan_disposable_email_hunt.csv`** | `dump_shodan_results.py` | **Ad-Hoc Dump**. Snapshot of all Shodan results for "Disposable Email" queries (used for manual investigations). |

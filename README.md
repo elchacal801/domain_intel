@@ -227,6 +227,7 @@ graph TD
         OC -->|Shadow AI STIX| OC_STIX[OpenClaw STIX]
         OC -->|Exposure Stats| DASH_BUILD
         HUNT -->|New Hits| HUNT_LOG[Campaign History CSV]
+        HUNT --o|Auto-Pivot| PIVOT_OTX
         HUNT -.->|Alerts| DASH_BUILD
 
         WM[Selectors: SOA/SSL] --> PIVOT[Whoxy Reverse Whois]
