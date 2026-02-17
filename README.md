@@ -230,7 +230,8 @@ graph TD
         HUNT -.->|Alerts| DASH_BUILD
 
         WM[Selectors: SOA/SSL] --> PIVOT[Whoxy Reverse Whois]
-        PIVOT --> DISCOVERY((New Domain Discovery))
+        WM --> PIVOT_OTX[AlienVault OTX Passive DNS]
+        PIVOT & PIVOT_OTX --> DISCOVERY((New Domain Discovery))
         DISCOVERY -.->|Feed Back| F
 
         DASH_BUILD --> Q[GitHub Pages Dashboard]

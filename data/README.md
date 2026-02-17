@@ -44,6 +44,7 @@ The data flow moves from **Inputs** &rarr; **Discovery** &rarr; **Enrichment** &
 | **`shodan_intelligence.csv`** | `enrich_shodan.py` | **Vulnerability Scan**. Parallelized scan with rate limiting. Adds open ports, OS info, and CVEs found on the target IPs via Shodan. |
 | **`enriched_candidates.csv`** | `enrich_technical.py` | **Deep Selectors**. Contains high-value attribution data: SOA Emails (RNAME), TLS Subject Organizations, and Favicon Hashes. |
 | **`pivot_discovery.csv`** | `enrich_pivot.py` | **New Discovery**. Domains found by performing Reverse Whois on the bad actors identified in our specific triage list. |
+| **`pivot_otx_results.csv`** | `scripts/pivot_otx.py` | **Passive DNS Findings**. Domains hosted on bad IPs (Reverse DNS/Passive DNS) found via AlienVault OTX. |
 
 ---
 
@@ -53,6 +54,8 @@ The data flow moves from **Inputs** &rarr; **Discovery** &rarr; **Enrichment** &
 
 | File | Generator Script | Description & Importance |
 | :--- | :--- | :--- |
+| **`pivot_otx_results.csv`** | `scripts/pivot_otx.py` | **Passive DNS Findings**. Domains hosted on bad IPs (Reverse DNS/Passive DNS) found via AlienVault OTX. |
+| **`investigation_dea_networks.md`** | *Analyst* | **DeA Investigation**. Consolidated analysis of Cluster 1-3 infrastructure (`51.254.35.55`, `193.108.118.7`, `47.88.24.103`). |
 | **`dea_domains_probed.csv`** | `probe_web.py` | **The Master Dataset**. Contains *everything*: DNS, ASN, HTTP Fingerprints (Title, Server), and Risk Tags for thousands of domains. Why: This is the source of truth for all dashboards and pivots. It proves which domains are actually *alive* and what they are hosting. |
 | **`domain_intel_bundle.json.gz`** | `update_intelligence.yml` | **Export Bundle**. A compressed JSON version of the probed data. Why: Optimized for programmatic ingestion by other tools/SIEMs. |
 | **`ai_classifications.csv`** | `ai_classify_web.py` | **AI Analysis (Concurrent)**. LLM-based categorization of the site content (e.g., "Phishing", "Parked", "Legitimate"). Why: Adds human-like judgment at scale to flag threats regex misses. |
