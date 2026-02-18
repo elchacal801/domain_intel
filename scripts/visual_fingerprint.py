@@ -58,8 +58,12 @@ def get_targets(limit: int) -> List[str]:
         reader = csv.DictReader(f)
         for row in reader:
             domain = row.get('domain')
-            title = row.get('title', '').lower()
-            status = row.get('status_code', '')
+            # Check headers in input file: http_title / https_title
+            title = (row.get('http_title') or row.get('https_title') or '').lower()
+            # Check headers: http_status / https_status
+            s1 = row.get('http_status', '')
+            s2 = row.get('https_status', '')
+            status = s1 if s1 == '200' else s2
             
             # Only alive domains
             if status != '200':

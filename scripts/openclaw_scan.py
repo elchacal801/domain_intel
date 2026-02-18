@@ -87,9 +87,9 @@ def run_scan(api_key: str, targets: List[str], budget_tracker: CreditBudget, cac
 
     # Build Queries
     queries = [
-        'port:18789 "OpenClaw"',
-        'port:18789 "moltbot"',
-        'port:18789 "clawdbot"',
+        'port:18789 title:"OpenClaw"',
+        'port:18789 title:"Moltbot"',
+        'port:18789 title:"Clawdbot"',
         'port:18789 "gateway" "websocket"' # Tier 2
     ]
     
