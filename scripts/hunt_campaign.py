@@ -16,7 +16,8 @@ import shodan
 from pathlib import Path
 from dotenv import load_dotenv
 from shodan_utils import CreditBudget
-from pivot_otx import query_otx_passive_dns
+from shared.otx_client import query_otx_passive_dns
+from shared.sanitize import sanitize_csv_value
 
 # Load env vars
 load_dotenv()
@@ -87,8 +88,8 @@ def log_new_hit(ip, query, match_data):
             datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
             ip,
             query,
-            match_data.get('org', 'n/a'),
-            match_data.get('location', {}).get('country_name', 'n/a')
+            sanitize_csv_value(match_data.get('org', 'n/a')),
+            sanitize_csv_value(match_data.get('location', {}).get('country_name', 'n/a'))
         ])
 
 def main():
@@ -157,7 +158,7 @@ def main():
                                     writer.writerow({
                                         'pivot_selector': f"Hunt:{query}",
                                         'pivot_ip': ip,
-                                        'discovered_domain': d,
+                                        'discovered_domain': sanitize_csv_value(d),
                                         'source': 'AlienVault_OTX'
                                     })
                         else:

@@ -5,11 +5,13 @@
 import './style.css';
 import { fetchCSV, fetchJSON, truncate, countColumn, topEntries } from './data.js';
 import { horizontalBar, verticalBar, verticalBarMulti, doughnut, lineArea, PALETTE } from './charts.js';
+import { loadInvestigate } from './investigate.js';
 
 // ─── Navigation ───────────────────────────────────────────────
 function initNavigation() {
     const tabs = document.querySelectorAll('.nav-tab');
     const views = document.querySelectorAll('.view');
+    let investigateLoaded = false;
 
     tabs.forEach(tab => {
         tab.addEventListener('click', () => {
@@ -18,6 +20,12 @@ function initNavigation() {
             views.forEach(v => v.classList.remove('active'));
             tab.classList.add('active');
             document.getElementById(`view-${target}`).classList.add('active');
+
+            // Lazy-load investigate data on first tab activation
+            if (target === 'investigate' && !investigateLoaded) {
+                investigateLoaded = true;
+                loadInvestigate();
+            }
         });
     });
 }

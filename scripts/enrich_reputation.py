@@ -22,6 +22,7 @@ import datetime
 from concurrent.futures import ThreadPoolExecutor
 from typing import Dict, List, Optional
 from tqdm import tqdm
+from shared.sanitize import sanitize_csv_value
 
 # Generic RBLs to check (careful with rate limits on public resolvers)
 RBLS = [
@@ -139,7 +140,7 @@ def process_one(row: Dict) -> Dict:
     # OTX Check (if key exists)
     otx_tags = check_otx(domain)
     if otx_tags:
-        row["otx_risk"] = otx_tags
+        row["otx_risk"] = sanitize_csv_value(otx_tags)
 
     return row
 

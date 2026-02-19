@@ -1,0 +1,26 @@
+# config/defaults.yaml
+# Centralised defaults for domain_intel scripts.
+# Overridable via environment variables where noted.
+
+flame:
+  index_url: "https://elchacal801.github.io/flame-fraud/flame-index.json"
+  cache_ttl_hours: 24
+
+ai:
+  batch_size: 100
+  max_domains: 2000
+  model_chain:
+    - "anthropic/claude-3-7-sonnet-latest"
+    - "gemini/gemini-3-pro-preview"
+    - "gpt-4o"
+    - "gemini/gemini-flash-latest"
+
+shodan:
+  budget_default: 20
+  rate_limit_rps: 1
+
+paths:
+  classification_file: "data/ai_classifications.csv"
+  briefing_file: "data/daily_briefing.json"
+  probed_file: "data/dea_domains_probed.csv"
+  triage_output: "data/triage_candidates.csv"

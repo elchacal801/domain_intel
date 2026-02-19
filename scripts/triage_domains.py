@@ -18,15 +18,19 @@ Pipeline:
 """
 
 import csv
+import logging
 import os
 import argparse
 import Levenshtein
-from typing import List, Set
+from typing import Dict, List, Set
+
+logger = logging.getLogger(__name__)
 
 INPUT_FILE = "data/dea_domains.csv"
 OUTPUT_FILE = "data/triage_candidates.csv"
 TARGETS_FILE = "data/targets.txt"
 KEYWORDS_FILE = "data/suspicious_keywords.txt"
+CLASSIFICATION_FILE = "data/ai_classifications.csv"
 
 def load_list(filepath: str) -> Set[str]:
     if not os.path.exists(filepath):
@@ -71,6 +75,27 @@ def has_keyword(domain: str, keywords: Set[str]) -> str:
             return f"Keyword: {k}"
     return None
 
+
+def load_flame_tp_ids() -> Dict[str, str]:
+    """Load FLAME TP ID mappings from ai_classifications.csv if available.
+
+    Returns:
+        Dict mapping domain -> comma-separated FLAME TP IDs.
+    """
+    mapping: Dict[str, str] = {}
+    if not os.path.exists(CLASSIFICATION_FILE):
+        return mapping
+    try:
+        with open(CLASSIFICATION_FILE, "r", encoding="utf-8-sig", errors="replace") as f:
+            reader = csv.DictReader(f)
+            for row in reader:
+                tp_ids = row.get("flame_tp_ids", "").strip()
+                if tp_ids:
+                    mapping[row.get("domain", "").strip().lower()] = tp_ids
+    except (IOError, csv.Error) as exc:
+        logger.warning("Could not load FLAME TP IDs: %s", exc)
+    return mapping
+
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--limit", type=int, default=0, help="Limit input domains")
@@ -80,10 +105,13 @@ def main():
     targets = load_list(TARGETS_FILE)
     keywords = load_list(KEYWORDS_FILE)
     domains = load_domains(INPUT_FILE, args.limit)
+    flame_map = load_flame_tp_ids()
     
     print(f"    - Targets: {len(targets)}")
     print(f"    - Keywords: {len(keywords)}")
     print(f"    - Input Domains: {len(domains)}")
+    if flame_map:
+        print(f"    - FLAME TP mappings: {len(flame_map)}")
 
     candidates = []
     
@@ -91,12 +119,19 @@ def main():
     for d in domains:
         reason = None
         priority = 0
+        flame_tp_ids = flame_map.get(d, "")
+        
+        # Priority 0: FLAME TP match (highest)
+        if flame_tp_ids:
+            reason = f"FLAME:{flame_tp_ids}"
+            priority = 0
         
         # Priority 1: Target Match
-        ts_reason = is_typosquat(d, targets)
-        if ts_reason:
-            reason = ts_reason
-            priority = 1
+        if not reason:
+            ts_reason = is_typosquat(d, targets)
+            if ts_reason:
+                reason = ts_reason
+                priority = 1
         
         # Priority 2: Keyword Match (if not already found)
         if not reason:
@@ -109,19 +144,21 @@ def main():
             candidates.append({
                 "domain": d,
                 "priority": priority,
-                "reason": reason
+                "reason": reason,
+                "flame_tp_ids": flame_tp_ids,
             })
 
-    # Sort by priority (1 is highest)
+    # Sort by priority (0 is highest)
     candidates.sort(key=lambda x: x['priority'])
     
     print(f"[*] Triage Complete.")
     print(f"    - Total Candidates found: {len(candidates)}")
-    print(f"    - Reduction: {len(domains)} -> {len(candidates)} ({len(candidates)/len(domains)*100:.2f}%)")
+    if len(domains) > 0:
+        print(f"    - Reduction: {len(domains)} -> {len(candidates)} ({len(candidates)/len(domains)*100:.2f}%)")
     
     # Save
     with open(OUTPUT_FILE, 'w', newline='', encoding='utf-8') as f:
-        writer = csv.DictWriter(f, fieldnames=["domain", "priority", "reason"])
+        writer = csv.DictWriter(f, fieldnames=["domain", "priority", "reason", "flame_tp_ids"])
         writer.writeheader()
         for c in candidates:
             writer.writerow(c)

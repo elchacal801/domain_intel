@@ -128,7 +128,8 @@ class IPTracker:
             try:
                 with open(self.state_file, 'r') as f:
                     return set(json.load(f))
-            except:
+            except (json.JSONDecodeError, OSError) as exc:
+                log.warning("Failed to load IP tracker state: %s", exc)
                 return set()
         return set()
 

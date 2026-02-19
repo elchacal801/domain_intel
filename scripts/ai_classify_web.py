@@ -14,16 +14,19 @@ Classifies probed web content (Titles + Server Headers) into categories like:
 import os
 import csv
 import argparse
+import logging
 import sys
 from typing import List, Dict
 from dotenv import load_dotenv
 from shared.llm_client import LLMClient
+from shared.flame_client import get_tp_summaries_for_prompt
 
 # Load environment variables
 load_dotenv()
 
 # LLM Client — uses centralized model chain from shared/llm_client.py
 llm = LLMClient()
+logger = logging.getLogger(__name__)
 OUTPUT_FILE = "data/ai_classifications.csv"
 INPUT_FILE = "data/dea_domains_probed.csv" # Must use probed CSV (has title/status/server columns)
 
@@ -46,9 +49,12 @@ Your task is to classify each page into exactly one of these categories:
 Return JSON format only:
 {
     "classifications": [
-        { "domain": "login-microsoft.com", "category": "Phishing", "reason": "Login title on non-MS domain", "confidence": "High" }
+        { "domain": "login-microsoft.com", "category": "Phishing", "reason": "Login title on non-MS domain", "confidence": "High", "flame_tp_ids": "TP-0001", "flame_confidence": "high" }
     ]
 }
+
+For flame_tp_ids: map each domain to zero or more FLAME Threat Path IDs from the taxonomy below (comma-separated). Use empty string if no match.
+For flame_confidence: rate your confidence in the FLAME mapping as high, medium, or low. Use empty string if no FLAME match.
 """
 
 def read_probed_domains(filepath: str, limit: int = 0) -> List[Dict]:
@@ -78,7 +84,7 @@ def read_probed_domains(filepath: str, limit: int = 0) -> List[Dict]:
         return data[:limit]
     return data
 
-def classify_batch(items: List[Dict]) -> List[Dict]:
+def classify_batch(items: List[Dict], flame_taxonomy: str = "") -> List[Dict]:
     if not items:
         return []
 
@@ -90,25 +96,30 @@ def classify_batch(items: List[Dict]) -> List[Dict]:
         
     prompt_str = "\n".join(prompt_lines)
 
+    # Inject FLAME taxonomy into system prompt if available
+    system = SYSTEM_PROMPT
+    if flame_taxonomy:
+        system = f"{SYSTEM_PROMPT}\n\n{flame_taxonomy}"
+
     try:
         parsed = llm.complete_json(
             prompt=f"Classify this batch:\n{prompt_str}",
-            system=SYSTEM_PROMPT
+            system=system
         )
         
         if parsed is None:
-            print("[!] All models failed for batch")
+            logger.warning("All models failed for batch")
             return []
         
         return parsed.get("classifications", [])
         
     except Exception as e:
-        print(f"Error calling LLM: {e}")
+        logger.error("Error calling LLM: %s", e)
         return []
 
 def save_results(results: List[Dict], filepath: str):
     file_exists = os.path.exists(filepath)
-    headers = ["domain", "category", "reason", "confidence"]
+    headers = ["domain", "category", "reason", "confidence", "flame_tp_ids", "flame_confidence"]
     
     with open(filepath, 'a', newline='', encoding='utf-8') as f:
         writer = csv.DictWriter(f, fieldnames=headers)
@@ -130,12 +141,23 @@ def main():
         print("Error: OPENAI_API_KEY not found in .env")
         sys.exit(1)
 
+    # Load FLAME threat-path taxonomy for prompt injection
+    flame_taxonomy = ""
+    try:
+        flame_taxonomy = get_tp_summaries_for_prompt()
+        if flame_taxonomy:
+            logger.info("Loaded FLAME taxonomy (%d chars)", len(flame_taxonomy))
+        else:
+            logger.info("FLAME taxonomy unavailable — classifying without TP mapping")
+    except Exception as exc:
+        logger.warning("Failed to load FLAME taxonomy: %s", exc)
+
     print(f"Reading probed data from {args.input}...")
     items = read_probed_domains(args.input, args.limit)
     print(f"Found {len(items)} items with content to classify.")
 
     # Reset/Init output
-    headers = ["domain", "category", "reason", "confidence"]
+    headers = ["domain", "category", "reason", "confidence", "flame_tp_ids", "flame_confidence"]
     with open(args.output, 'w', newline='', encoding='utf-8') as f:
         writer = csv.DictWriter(f, fieldnames=headers)
         writer.writeheader()
@@ -147,12 +169,11 @@ def main():
     total_classified = 0
     
     # Process batches concurrently (LIMIT to 3 workers for Tier 1 API limits)
-    # Anthropic/Gemini often have ~50 RPM limits. 3 workers * 1 batch/sec = safe.
     with ThreadPoolExecutor(max_workers=3) as executor:
         futures = []
         for i in range(0, len(items), args.batch_size):
             batch = items[i : i + args.batch_size]
-            futures.append(executor.submit(classify_batch, batch))
+            futures.append(executor.submit(classify_batch, batch, flame_taxonomy))
             
         for future in tqdm(as_completed(futures), total=len(futures), desc="Classifying batches"):
             try:

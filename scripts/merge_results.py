@@ -24,35 +24,40 @@ def main():
         return
 
     print(f"[*] Found {len(files)} files to merge.")
-    
+
     header = None
     total_rows = 0
 
+    # Columns that should be present in merged output for schema consistency
+    REQUIRED_COLUMNS = ["flame_tp_ids"]
+
     with open(args.output, "w", newline="", encoding="utf-8") as out_f:
-        writer = csv.writer(out_f)
-        
+        writer = None
+
         for file_path in files:
             print(f"  Processing {file_path}...", end="\r")
             try:
                 with open(file_path, "r", encoding="utf-8-sig") as in_f:
-                    reader = csv.reader(in_f)
-                    try:
-                        current_header = next(reader)
-                    except StopIteration:
-                        continue # Empty file
+                    reader = csv.DictReader(in_f)
+                    if not reader.fieldnames:
+                        continue  # Empty file
+
+                    current_header = list(reader.fieldnames)
 
                     if header is None:
-                        header = current_header
-                        writer.writerow(header)
-                    elif current_header != header:
-                        print(f"\n[!] Warning: Header mismatch in {file_path}. Skipping file.")
-                        continue
+                        header = current_header[:]
+                        # Ensure required columns are present
+                        for col in REQUIRED_COLUMNS:
+                            if col not in header:
+                                header.append(col)
+                        writer = csv.DictWriter(out_f, fieldnames=header)
+                        writer.writeheader()
 
-                    # Write remaining rows
-                    rows = list(reader)
-                    if rows:
-                        writer.writerows(rows)
-                        total_rows += len(rows)
+                    # Write remaining rows, filling missing columns with empty string
+                    for row in reader:
+                        out_row = {col: row.get(col, "") for col in header}
+                        writer.writerow(out_row)
+                        total_rows += 1
 
             except Exception as e:
                 print(f"\n[!] Error reading {file_path}: {e}")
