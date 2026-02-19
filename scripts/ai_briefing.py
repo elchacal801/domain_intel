@@ -13,6 +13,7 @@ Outputs: data/docs/daily_briefing.json
 import os
 import csv
 import json
+import logging
 import argparse
 import sys
 from datetime import datetime
@@ -106,6 +107,7 @@ def get_stats():
         "trend_live_prev": 0,
         "trend_total_curr": 0,
         "trend_live_curr": 0,
+        "flame_tp_distribution": {},
     }
     
     # 1. Total Domains scanned
@@ -136,24 +138,35 @@ def get_stats():
                 elif 'c2' in cat:
                     stats["c2_count"] += 1
 
+                # Count FLAME TP IDs
+                tp_ids_str = row.get('flame_tp_ids', '').strip()
+                if tp_ids_str:
+                    for tp_id in tp_ids_str.split(','):
+                        tp_id = tp_id.strip()
+                        if tp_id:
+                            stats["flame_tp_distribution"][tp_id] = stats["flame_tp_distribution"].get(tp_id, 0) + 1
+
     # 4. Infrastructure Stats
     if os.path.exists(ASN_FILE):
         try:
              with open(ASN_FILE, 'r', encoding='utf-8') as f:
                 stats["malicious_asn_count"] = sum(1 for line in f) - 1
-        except: pass
+        except (IOError, OSError) as exc:
+            logging.warning("Failed to read ASN file: %s", exc)
         
     if os.path.exists(TOR_FILE):
         try:
             with open(TOR_FILE, 'r', encoding='utf-8') as f:
                 stats["tor_exit_count"] = sum(1 for line in f) - 1
-        except: pass
+        except (IOError, OSError) as exc:
+            logging.warning("Failed to read Tor file: %s", exc)
         
     if os.path.exists(PIVOT_FILE):
         try:
             with open(PIVOT_FILE, 'r', encoding='utf-8') as f:
                  stats["pivot_count"] = sum(1 for line in f) - 1
-        except: pass
+        except (IOError, OSError) as exc:
+            logging.warning("Failed to read pivot file: %s", exc)
 
     # 5. Shodan Stats
     if os.path.exists(SHODAN_FILE):
@@ -172,7 +185,8 @@ def get_stats():
             top_ports = [p[0] for p in Counter(ports).most_common(3)]
             stats["shodan_ports"] = ", ".join(top_ports)
             stats["shodan_vulns"] = vulns
-        except: pass
+        except (IOError, csv.Error, KeyError) as exc:
+            logging.warning("Failed to read Shodan file: %s", exc)
 
     # 6. Registrar Stats (New)
     if os.path.exists(REGISTRAR_FILE):
@@ -279,6 +293,62 @@ def get_stats():
 
     return stats
 
+
+def get_evidence_candidates(stats):
+    """Identify clusters that qualify as FLAME evidence candidates.
+
+    A cluster qualifies when:
+      - It has >10 classified domains
+      - Domains map to at least one FLAME TP
+      - Infrastructure pattern is confirmed (shared IP or NS)
+
+    Returns a list of candidate dicts for inclusion in the briefing.
+    """
+    candidates = []
+    tp_dist = stats.get("flame_tp_distribution", {})
+
+    if not tp_dist:
+        return candidates
+
+    # Read classifications to build cluster data
+    if not os.path.exists(CLASSIFICATION_FILE):
+        return candidates
+
+    # Group by TP ID with domain counts
+    tp_domains = {}  # tp_id -> list of domains
+    try:
+        with open(CLASSIFICATION_FILE, 'r', encoding='utf-8-sig', errors='replace') as f:
+            reader = csv.DictReader(f)
+            for row in reader:
+                tp_ids_str = row.get('flame_tp_ids', '').strip()
+                domain = row.get('domain', '').strip()
+                if tp_ids_str and domain:
+                    for tp_id in tp_ids_str.split(','):
+                        tp_id = tp_id.strip()
+                        if tp_id:
+                            if tp_id not in tp_domains:
+                                tp_domains[tp_id] = []
+                            tp_domains[tp_id].append(domain)
+    except (IOError, csv.Error) as exc:
+        logging.warning("Failed to read classifications for evidence candidates: %s", exc)
+        return candidates
+
+    # Build candidates from TPs with enough domains
+    for tp_id, domains in tp_domains.items():
+        domain_count = len(domains)
+        if domain_count >= 10:
+            confidence = "High" if domain_count >= 50 else "Medium"
+            candidates.append({
+                "tp_id": tp_id,
+                "domain_count": domain_count,
+                "sample_domains": sorted(domains, key=len)[:5],
+                "confidence": confidence,
+                "recommendation": f"Submit evidence package for {tp_id} ({domain_count} domains)",
+            })
+
+    candidates.sort(key=lambda x: x["domain_count"], reverse=True)
+    return candidates
+
 def _mock_failure_briefing(stats):
     return {
         "date": datetime.now().strftime('%Y-%m-%d'),
@@ -315,6 +385,22 @@ def generate_briefing(stats):
     live_delta = stats["trend_live_curr"] - stats["trend_live_prev"]
     live_dir = "+" if live_delta >= 0 else ""
 
+    # FLAME TP distribution formatting
+    flame_tp_str = "No FLAME data available"
+    if stats["flame_tp_distribution"]:
+        flame_tp_str = "\n".join([f"    - {tp_id}: {count} domains" for tp_id, count in sorted(stats["flame_tp_distribution"].items(), key=lambda x: x[1], reverse=True)])
+
+    # FLAME evidence candidates
+    evidence_candidates = get_evidence_candidates(stats)
+    evidence_str = "No clusters meet evidence threshold"
+    if evidence_candidates:
+        ev_lines = []
+        for ec in evidence_candidates:
+            samples = ", ".join(ec["sample_domains"][:3])
+            ev_lines.append(f"    - {ec['tp_id']}: {ec['domain_count']} domains ({ec['confidence']} confidence) "
+                           f"[samples: {samples}]")
+        evidence_str = "\n".join(ev_lines)
+
     data_summary = f"""
     Date: {datetime.now().strftime('%Y-%m-%d')}
     Total Domains Monitored: {stats["total_domains"]}
@@ -329,6 +415,12 @@ def generate_briefing(stats):
     Top Impersonated Brands: {target_str}
     Phishing Sites Identified: {stats["phishing_count"]}
     Suspected C2 Panels: {stats["c2_count"]}
+    
+    [FLAME Threat Path Distribution]
+{flame_tp_str}
+
+    [FLAME Evidence Candidates]
+{evidence_str}
     
     [Risk Signal Breakdown]
 {risk_str}
@@ -362,6 +454,9 @@ def generate_briefing(stats):
     State clearly that findings are based on the analyzed sample.
     Cross-reference all intelligence domains: correlate typosquat registrars with campaign IPs, 
     OpenClaw exposure with infrastructure pivots, and risk signals with Shodan findings.
+    If FLAME Threat Path data is present, reference the threat path titles and IDs in your narrative.
+    If FLAME Evidence Candidates are listed, include an "Evidence Pipeline" section recommending
+    which clusters should be submitted as operational evidence to the FLAME framework.
     """
     
     print("Generating briefing with data:")
@@ -382,6 +477,11 @@ def generate_briefing(stats):
     briefing["model_used"] = "shared_llm_client"  # Track that shared client was used
     # Frontend expects "summary", LLM generates "executive_summary"
     briefing["summary"] = briefing.get("executive_summary", "No summary generated.")
+
+    # Attach evidence candidates if present
+    evidence_candidates = get_evidence_candidates(stats)
+    if evidence_candidates:
+        briefing["evidence_candidates"] = evidence_candidates
     
     return briefing
 
@@ -417,7 +517,8 @@ def save_briefing(briefing):
     # Sort descending by date
     try:
         history.sort(key=lambda x: x.get("date", ""), reverse=True)
-    except: pass
+    except (TypeError, KeyError) as exc:
+        logging.warning("Failed to sort briefing history: %s", exc)
     
     with open(history_path, 'w', encoding='utf-8') as f:
         json.dump(history, f, indent=2)

@@ -74,7 +74,9 @@ This repository provides different layers of data for different security roles:
   * **AI Modules**:
     * `ai_typosquat.py`: Uses LLM to detect semantic typosquatting.
     * `ai_classify_web.py`: Uses LLM to concurrently classify web page intent (Batch Processing).
-    * `ai_briefing.py`: Generates the daily dashboard briefing.
+    * `ai_briefing.py`: Generates the daily dashboard briefing (includes FLAME evidence candidates).
+  * **FLAME Integration**:
+    * `generate_evidence.py`: Generates [FLAME](https://github.com/elchacal801/flame-fraud)-formatted evidence packages from investigation clusters. Supports dry-run, duplicate checking, and configurable thresholds.
   * **Analytics & Whois**:
     * `track_history.py`: Daily tracker for Domain Growth and Liveness (Stats).
     * `drip_whois.py`: Slow, rate-limited Registrar enumeration (Port 43).
@@ -162,7 +164,14 @@ The model priority chain is configured centrally in `scripts/shared/llm_client.p
     python scripts/ai_briefing.py
     ```
 
-4. **Dashboard Build**: Build the frontend and generate the summary manifest.
+4. **FLAME Evidence**: Generate evidence packages for the FLAME framework.
+
+    ```bash
+    python scripts/generate_evidence.py --dry-run    # Preview
+    python scripts/generate_evidence.py               # Generate packages
+    ```
+
+5. **Dashboard Build**: Build the frontend and generate the summary manifest.
 
     ```bash
     python scripts/build_dashboard_data.py

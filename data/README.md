@@ -131,3 +131,16 @@ The data flow moves from **Inputs** &rarr; **Discovery** &rarr; **Enrichment** &
 | **`campaign_hunt_history.csv`** | `hunt_campaign.py` | **Hunt Log**. Chronological record of every **new** IP found by the proactive hunt that wasn't in the baseline. Displayed in the Campaign Tracker dashboard tab. |
 | **`campaign_pivot_findings.csv`** | `hunt_campaign.py` | **Auto-Pivot Hits**. Domains hosted on the *new* IPs found by the proactive hunt. Populated by the automated OTX pivot pivot. |
 | **`shodan_disposable_email_hunt.csv`** | `dump_shodan_results.py` | **Ad-Hoc Dump**. Snapshot of all Shodan results for "Disposable Email" queries (used for manual investigations). |
+
+---
+
+## 10. FLAME Evidence Packages
+
+*Structured evidence for submission to the [FLAME](https://github.com/elchacal801/flame-fraud) threat path framework.*
+
+| File / Dir | Generator Script | Description |
+| :--- | :--- | :--- |
+| **`evidence_packages/`** | `generate_evidence.py` | **Evidence Packages**. FLAME-formatted evidence entries (one `.md` per entry) ready for analyst review and insertion into FLAME threat paths. Format: `EV-TPXXXX-YYYY-NNN.md`. |
+| **`evidence_packages/README.md`** | *Documentation* | **Workflow Docs**. Evidence ID format, generation commands, review checklist, and OPSEC guidance. |
+
+See `evidence_packages/README.md` for detailed usage.
