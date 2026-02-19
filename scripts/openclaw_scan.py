@@ -53,8 +53,8 @@ def get_risk_level(banner: Dict, is_corp: bool) -> str:
     - Medium: Auth but exposed
     - Low: Behind tunnel/VPN (hard to detect via Shodan usually, but maybe header clues)
     """
-    data = banner.get('data', '')
-    title = banner.get('title', '')
+    data = banner.get('data', '') or ''
+    title = banner.get('title', '') or ''
     
     # 1. Check Auth
     # OpenClaw returns 401 or "authentication required" if secured.
@@ -185,8 +185,8 @@ def run_scan(api_key: str, targets: List[str], budget_tracker: CreditBudget, cac
             if not ip: continue
             
             # Determine if corporate match
-            org = m.get('org', '')
-            asn = m.get('asn', '')
+            org = m.get('org', '') or ''
+            asn = m.get('asn', '') or ''
             is_corp = False
             matched_target = ""
             
