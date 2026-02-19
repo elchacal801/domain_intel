@@ -221,6 +221,12 @@ jobs:
            python scripts/clean_data.py
            python scripts/enrich_asns.py
 
+      - name: Build Investigate Index
+        run: |
+          python scripts/build_investigate_index.py
+          cp data/investigate_index.json docs/data/ || true
+          cp data/investigate_meta.json docs/data/ || true
+
       - name: Visual Fingerprinting (Optional)
         timeout-minutes: 30
         run: |
