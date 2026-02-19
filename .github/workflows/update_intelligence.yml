@@ -233,7 +233,7 @@ jobs:
           # Install browser dependencies
           python -m playwright install chromium
           # Run visual analysis on top 200 interesting domains
-          python scripts/visual_fingerprint.py --limit 200
+          python scripts/visual_fingerprint.py --limit 1000
           # Sync artifacts
           cp data/visual_clusters.json docs/data/ || true
           cp data/visual_hashes.csv docs/data/ || true

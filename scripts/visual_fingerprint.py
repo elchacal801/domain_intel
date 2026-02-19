@@ -38,7 +38,7 @@ OUTPUT_CLUSTERS = "data/visual_clusters.json"
 OUTPUT_HASHES = "data/visual_hashes.csv"
 
 # Configuration
-MAX_DOMAINS_TO_SCAN = 200 # Limit for prototype/production safety
+MAX_DOMAINS_TO_SCAN = 1000 # Limit for production runs
 CONCURRENCY = 5
 
 def get_targets(limit: int) -> List[str]:
