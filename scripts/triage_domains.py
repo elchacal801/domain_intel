@@ -22,7 +22,8 @@ import logging
 import os
 import argparse
 import Levenshtein
-from typing import Dict, List, Set
+import yaml
+from typing import Any, Dict, List, Set
 
 logger = logging.getLogger(__name__)
 
@@ -31,6 +32,7 @@ OUTPUT_FILE = "data/triage_candidates.csv"
 TARGETS_FILE = "data/targets.txt"
 KEYWORDS_FILE = "data/suspicious_keywords.txt"
 CLASSIFICATION_FILE = "data/ai_classifications.csv"
+FLAME_RULES_FILE = "config/flame_detection_rules.yaml"
 
 def load_list(filepath: str) -> Set[str]:
     if not os.path.exists(filepath):
@@ -96,6 +98,71 @@ def load_flame_tp_ids() -> Dict[str, str]:
         logger.warning("Could not load FLAME TP IDs: %s", exc)
     return mapping
 
+def load_flame_detection_rules() -> List[Dict[str, Any]]:
+    """Load FLAME-derived detection rules from config if available.
+
+    Returns:
+        List of enabled rule dicts with patterns to match against domains.
+    """
+    if not os.path.exists(FLAME_RULES_FILE):
+        return []
+    try:
+        with open(FLAME_RULES_FILE, "r", encoding="utf-8") as f:
+            data = yaml.safe_load(f)
+        if not data or "rules" not in data:
+            return []
+        enabled = [r for r in data["rules"] if r.get("enabled", False)]
+        if enabled:
+            logger.info("Loaded %d enabled FLAME detection rules", len(enabled))
+        return enabled
+    except (IOError, yaml.YAMLError) as exc:
+        logger.warning("Could not load FLAME detection rules: %s", exc)
+        return []
+
+
+def apply_flame_rules(domain: str, domain_data: Dict[str, str],
+                      rules: List[Dict[str, Any]]) -> str:
+    """Check if a domain matches any FLAME detection rule.
+
+    Args:
+        domain: The domain name to check.
+        domain_data: Dict of domain metadata (e.g. from CSV row).
+        rules: List of enabled FLAME detection rule dicts.
+
+    Returns:
+        Match reason string or empty string if no match.
+    """
+    for rule in rules:
+        for pattern in rule.get("patterns", []):
+            field = pattern.get("field", "")
+            op = pattern.get("operator", "")
+            value = pattern.get("value", "")
+
+            # Get the field value to check
+            check_value = ""
+            if field == "domain":
+                check_value = domain
+            elif field in domain_data:
+                check_value = domain_data.get(field, "")
+            else:
+                continue
+
+            matched = False
+            if op == "contains" and value.lower() in check_value.lower():
+                matched = True
+            elif op == "equals" and check_value.lower() == value.lower():
+                matched = True
+
+            if matched:
+                rule_id = rule.get("rule_id", "unknown")
+                tp_id = rule.get("source_tp", "unknown")
+                logger.info("FLAME rule triggered: %s (from %s) on %s [%s=%s]",
+                            rule_id, tp_id, domain, field, value)
+                return f"FLAME-RULE:{rule_id}:{tp_id}"
+
+    return ""
+
+
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--limit", type=int, default=0, help="Limit input domains")
@@ -106,12 +173,15 @@ def main():
     keywords = load_list(KEYWORDS_FILE)
     domains = load_domains(INPUT_FILE, args.limit)
     flame_map = load_flame_tp_ids()
+    flame_rules = load_flame_detection_rules()
     
     print(f"    - Targets: {len(targets)}")
     print(f"    - Keywords: {len(keywords)}")
     print(f"    - Input Domains: {len(domains)}")
     if flame_map:
         print(f"    - FLAME TP mappings: {len(flame_map)}")
+    if flame_rules:
+        print(f"    - FLAME detection rules: {len(flame_rules)}")
 
     candidates = []
     
@@ -125,6 +195,13 @@ def main():
         if flame_tp_ids:
             reason = f"FLAME:{flame_tp_ids}"
             priority = 0
+        
+        # Priority 0: FLAME detection rule match
+        if not reason and flame_rules:
+            rule_reason = apply_flame_rules(d, {}, flame_rules)
+            if rule_reason:
+                reason = rule_reason
+                priority = 0
         
         # Priority 1: Target Match
         if not reason:
