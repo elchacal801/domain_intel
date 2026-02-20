@@ -381,12 +381,9 @@ def write_bundle(objects: List, output_path: str, label: str) -> None:
         allow_custom=True,
     )
 
-    # Validate
-    try:
-        stix2.parse(bundle.serialize(), allow_custom=True)
-        print(f"[+] {label} bundle STIX validation passed.")
-    except Exception as e:
-        print(f"[!] {label} STIX validation warning: {e}")
+    # Objects are already validated individually.
+    # Skipping stix2.parse(bundle.serialize()) because it has O(N^2)
+    # duplicate ID checks that hang for hours on large bundles.
 
     with open(output_path, "w", encoding="utf-8") as f:
         f.write(bundle.serialize(pretty=True))
