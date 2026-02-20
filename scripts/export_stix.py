@@ -113,26 +113,32 @@ def build_indicator(value: str, indicator_type: str, labels: List[str],
 
     ind_id = det_id("indicator", pattern)
 
-    return stix2.Indicator(
-        id=ind_id,
-        created_by_ref=IDENTITY_ID,
-        name=name,
-        description=description or name,
-        pattern=pattern,
-        pattern_type="stix",
-        valid_from=stix2.utils.get_timestamp(),
-        labels=labels,
-        indicator_types=["malicious-activity" if "malicious" in str(labels)
-                         else "anomalous-activity"],
-        confidence=confidence,
-        object_marking_refs=[TLP_CLEAR_ID],
-        external_references=[{
-            "source_name": "Domain Intel Repo",
-            "description": "Automated threat intelligence pipeline",
-            "url": "https://github.com/elchacal801/domain_intel",
-        }],
-        allow_custom=True,
-    )
+    try:
+        return stix2.Indicator(
+            id=ind_id,
+            created_by_ref=IDENTITY_ID,
+            name=name,
+            description=description or name,
+            pattern=pattern,
+            pattern_type="stix",
+            valid_from=stix2.utils.get_timestamp(),
+            labels=labels,
+            indicator_types=["malicious-activity" if "malicious" in str(labels)
+                             else "anomalous-activity"],
+            confidence=confidence,
+            object_marking_refs=[TLP_CLEAR_ID],
+            external_references=[{
+                "source_name": "Domain Intel Repo",
+                "description": "Automated threat intelligence pipeline",
+                "url": "https://github.com/elchacal801/domain_intel",
+            }],
+            allow_custom=True,
+        )
+    except (stix2.exceptions.InvalidValueError, Exception) as exc:
+        # stix2-patterns ANTLR grammar can reject valid patterns
+        # (e.g. large AS numbers). Log and skip gracefully.
+        logger.debug("Skipping indicator %s: %s", value, exc)
+        return None
 
 
 def build_relationship(source_ref: str, target_ref: str,
