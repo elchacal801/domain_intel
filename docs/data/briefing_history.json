@@ -1,5 +1,122 @@
 [
   {
+    "date": "2026-02-21",
+    "headline": "Surge in Live Infrastructure and High-Volume Typosquatting Campaigns Targeting Tier-1 Financials",
+    "executive_summary": "Telemetry from 2026-02-21 indicates a significant expansion in the threat surface, with a net increase of 11,870 monitored domains and a sharp 11.7% rise in live infrastructure (+11,174 domains). Analysis confirms 1,158 typosquats, heavily concentrating on Bank of America and peer institutions, with a distinct pivot toward short-string, high-entropy domains (e.g., '0kx.com', '0sp.me') indicative of automated generation algorithms (DGA). While Shadow AI exposure remains moderate with 320 medium-risk instances, the correlation between 132 suspected C2 panels and the high volume of 'NoMX' signals (4,491) suggests a staging phase for a large-scale credential harvesting or fraud campaign. Immediate attention is required for the Gname registrar ecosystem, which accounts for a disproportionate share of high-risk registrations.",
+    "strategic_assessment": "The threat landscape has shifted from dormant registration to active infrastructure provisioning. The near-perfect correlation between the increase in total domains (+11,870) and live domains (+11,174) is highly likely indicative of a coordinated bulk activation event rather than organic growth. The prevalence of FLAME Threat Path TP-0001 (382 domains) and TP-0002 (129 domains) suggests actors are prioritizing deceptive visual similarity and homoglyph attacks over sophisticated infrastructure concealment. We assess with moderate confidence that this activity represents the 'pre-attack' staging phase of a coordinated smishing or phishing campaign targeting Q1 financial reporting cycles.",
+    "operational_intelligence": "Infrastructure analysis reveals a heavy reliance on 'HighRisk:NoMX' records (4,491), a classic indicator of shell domains intended for web-only redirection or C2 hosting rather than email-based BEC. Shodan telemetry identifies 3,144 vulnerabilities across the monitored set, primarily on ports 80/443/8080, suggesting attackers are deploying commodity web servers (Nginx/Apache) on compromised or cheap VPS infrastructure. Notably, the presence of 132 suspected C2 panels correlates with the 2,946 malicious ASNs active in the dataset, implying a distributed botnet command structure is being established. The sample analysis highlights a trend toward 3-4 character alphanumeric domains (e.g., '8t.com', '25u.com'), likely used as URL shorteners in SMS vectors.",
+    "campaign_highlights": "Active tracking is monitoring 19 campaign IPs across 7 countries. While no new infrastructure pivots were discovered via Whois, the FLAME pipeline has identified significant clustering. TP-0001 (Visual Similarity) remains the dominant vector with 382 high-confidence candidates including 'cexc.io' (crypto-exchange mimicry) and '8t.com'. OpenClaw telemetry shows 320 exposed AI/LLM instances, all classified as Medium risk; while not critical immediately, these represent a growing attack surface for data exfiltration or prompt injection if left unpatched. Evidence pipeline recommendation: Prioritize TP-0001 and TP-0004 clusters for immediate takedown due to high-fidelity brand impersonation markers.",
+    "risk_signal_analysis": "The risk signal distribution is heavily skewed toward 'HighRisk:NoMX' (69% of signals) and 'HighRisk:ParkingPage' (17%). This ratio indicates that the majority of the 11,000+ newly live domains are currently in a holding pattern or are being used for traffic redirection chains rather than direct content hosting. The 134 'SuspiciousTitle' signals, while lower in volume, represent the highest immediate threat as they likely host active phishing kits mimicking login portals. The low volume of 'PrivateIP' signals (607) suggests attackers are favoring public cloud infrastructure over internal network pivoting at this stage.",
+    "registrar_risk_outlook": "Gname remains the primary registrar of concern, hosting 474 high-risk domains, significantly outpacing other watchlist entities like Nicenic (63) and Dominet (48). The high volume of 'Unknown' registrars (390) associated with confirmed typosquats presents an attribution challenge, likely due to GDPR redaction or the use of obscure offshore resellers. Dynadot's presence (383 domains) in the typosquat dataset warrants a review of our reputation scoring for their IP blocks, as legitimate usage may be intermixed with abuse.",
+    "key_risks": [
+      "Brand Erosion: High-volume typosquatting (1,158 confirmed) targeting Bank of America and peers creates immediate confusion and trust degradation.",
+      "Smishing Preparation: The surge in short, alphanumeric domains (TP-0001/TP-0002) is highly characteristic of URL shorteners used in SMS fraud.",
+      "C2 Infrastructure Build-up: 132 suspected panels and nearly 3,000 malicious ASNs indicate a robust backend is ready for operation.",
+      "Registrar Complicity/Negligence: Gname's continued dominance in high-risk registrations suggests systemic abuse tolerance."
+    ],
+    "action_items": [
+      "Strategic: Initiate bulk takedown requests for the 474 high-risk domains registered via Gname, citing pattern of abuse.",
+      "Tactical: Ingest the 132 suspected C2 panel IPs and 428 identified phishing URLs into the perimeter firewall and SIEM blocklists immediately.",
+      "Investigation: Deploy active scanning against the 134 domains with 'SuspiciousTitle' signals to capture phishing kits before they are cloaked.",
+      "FLAME Pipeline: Submit the TP-0001 (382 domains) and TP-0004 (54 domains) clusters as confirmed evidence for automated enforcement."
+    ],
+    "model_used": "shared_llm_client",
+    "summary": "Telemetry from 2026-02-21 indicates a significant expansion in the threat surface, with a net increase of 11,870 monitored domains and a sharp 11.7% rise in live infrastructure (+11,174 domains). Analysis confirms 1,158 typosquats, heavily concentrating on Bank of America and peer institutions, with a distinct pivot toward short-string, high-entropy domains (e.g., '0kx.com', '0sp.me') indicative of automated generation algorithms (DGA). While Shadow AI exposure remains moderate with 320 medium-risk instances, the correlation between 132 suspected C2 panels and the high volume of 'NoMX' signals (4,491) suggests a staging phase for a large-scale credential harvesting or fraud campaign. Immediate attention is required for the Gname registrar ecosystem, which accounts for a disproportionate share of high-risk registrations.",
+    "evidence_candidates": [
+      {
+        "tp_id": "TP-0001",
+        "domain_count": 382,
+        "sample_domains": [
+          "8t.com",
+          "0kx.com",
+          "cexc.io",
+          "cexo.io",
+          "7go.info"
+        ],
+        "confidence": "High",
+        "recommendation": "Submit evidence package for TP-0001 (382 domains)"
+      },
+      {
+        "tp_id": "TP-0002",
+        "domain_count": 129,
+        "sample_domains": [
+          "0sp.me",
+          "a-ge.ru",
+          "0nrg.com",
+          "38sy.bet",
+          "3drc.com"
+        ],
+        "confidence": "High",
+        "recommendation": "Submit evidence package for TP-0002 (129 domains)"
+      },
+      {
+        "tp_id": "TP-0004",
+        "domain_count": 54,
+        "sample_domains": [
+          "25u.com",
+          "cexc.io",
+          "airg.app",
+          "2avz.net",
+          "cexio.com"
+        ],
+        "confidence": "High",
+        "recommendation": "Submit evidence package for TP-0004 (54 domains)"
+      },
+      {
+        "tp_id": "TP-0003",
+        "domain_count": 47,
+        "sample_domains": [
+          "2027.cam",
+          "33hg.bet",
+          "207am.com",
+          "242tt.net",
+          "24cafe.ru"
+        ],
+        "confidence": "Medium",
+        "recommendation": "Submit evidence package for TP-0003 (47 domains)"
+      },
+      {
+        "tp_id": "TP-0006",
+        "domain_count": 25,
+        "sample_domains": [
+          "08b.me",
+          "ahbz.xyz",
+          "06daz.com",
+          "aaewr.com",
+          "aasso.com"
+        ],
+        "confidence": "Medium",
+        "recommendation": "Submit evidence package for TP-0006 (25 domains)"
+      },
+      {
+        "tp_id": "TP-0005",
+        "domain_count": 16,
+        "sample_domains": [
+          "alica.it",
+          "078qs.com",
+          "082qs.com",
+          "alic.info",
+          "333359.xyz"
+        ],
+        "confidence": "Medium",
+        "recommendation": "Submit evidence package for TP-0005 (16 domains)"
+      },
+      {
+        "tp_id": "TP-0015",
+        "domain_count": 11,
+        "sample_domains": [
+          "almstate.com",
+          "alnstate.com",
+          "alonetry.com",
+          "almlstate.com",
+          "alolstate.com"
+        ],
+        "confidence": "Medium",
+        "recommendation": "Submit evidence package for TP-0015 (11 domains)"
+      }
+    ]
+  },
+  {
     "date": "2026-02-19",
     "headline": "Significant Spike in Domain Activity with Concentrated Typosquat Campaign Targeting Major Tech Brands",
     "executive_summary": "Analysis reveals an 11,870 domain surge (4.2% increase) with 11,174 newly activated domains in the past 24 hours, representing a substantial escalation from baseline activity. Threat intelligence indicates a coordinated typosquat campaign primarily targeting Google, Amazon, and Apple, with 1,069 confirmed impersonation attempts. Infrastructure analysis shows concerning concentration in high-risk registrars, particularly Gname (458 domains), alongside 317 exposed OpenClaw AI instances that present potential attack vectors for credential harvesting and brand impersonation.",
