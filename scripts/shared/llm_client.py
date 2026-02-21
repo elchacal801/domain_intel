@@ -28,9 +28,9 @@ load_dotenv()
 logger = logging.getLogger(__name__)
 
 # Central model configuration — single source of truth
-# Updated 2026-02-12 per user config in conversation 901aea99
+# Updated 2026-02-21 per Anthropic API deprecation
 DEFAULT_MODEL_CHAIN = [
-    "anthropic/claude-3-7-sonnet-latest",   # Primary
+    "anthropic/claude-4-6-sonnet-latest",    # Primary
     "gemini/gemini-3-pro-preview",           # Secondary
     "gpt-4o",                                # Tertiary
     "gemini/gemini-flash-latest",            # Emergency fallback

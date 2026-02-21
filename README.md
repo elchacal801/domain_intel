@@ -120,7 +120,7 @@ To run the AI modules (`scripts/ai_*.py`), you need API keys.
 
 The model priority chain is configured centrally in `scripts/shared/llm_client.py`:
 
-* Primary: `claude-3-7-sonnet-latest`
+* Primary: `claude-4-6-sonnet-latest`
 * Secondary: `gemini-3-pro-preview`
 * Fallback: `gpt-4o`
 
@@ -283,7 +283,7 @@ The remaining domains are hydrated with deep infrastructure data:
 
 We apply expensive LLM analysis only to the **Triaged Candidates** and **Live Sites**:
 
-* **Typosquatting**: "Is `rnicrosoft.com` malicious?" (Claude 3.7 Sonnet with Gemini/GPT fallback).
+* **Typosquatting**: "Is `rnicrosoft.com` malicious?" (Claude 4.6 Sonnet with Gemini/GPT fallback).
 * **Web Intent**: "Read the title and headers of `secure-login-update.com`. Is it a bank?" (Model chain via `shared/llm_client.py`).
 * **Daily Briefing**: An automated analyst summarizes the day's threats into an executive report.
 

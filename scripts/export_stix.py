@@ -375,18 +375,18 @@ def extract_flame_attack_patterns(
 
 def write_bundle(objects: List, output_path: str, label: str) -> None:
     """Write a STIX bundle and validate."""
-    bundle = stix2.Bundle(
-        objects=objects,
-        id=det_id("bundle", f"domain-intel-{label}"),
-        allow_custom=True,
-    )
-
-    # Objects are already validated individually.
-    # Skipping stix2.parse(bundle.serialize()) because it has O(N^2)
-    # duplicate ID checks that hang for hours on large bundles.
+    bundle_id = det_id("bundle", f"domain-intel-{label}")
+    
+    # Bypass stix2.Bundle.serialize() due to O(N^2) duplicate ID checks 
+    # that cause the script to hang for hours on large datasets.
+    bundle_data = {
+        "type": "bundle",
+        "id": bundle_id,
+        "objects": [json.loads(obj.serialize()) if hasattr(obj, "serialize") else obj for obj in objects]
+    }
 
     with open(output_path, "w", encoding="utf-8") as f:
-        f.write(bundle.serialize(pretty=True))
+        json.dump(bundle_data, f, indent=4)
     print(f"[+] {label} bundle -> {output_path} ({len(objects)} objects)")
 
 

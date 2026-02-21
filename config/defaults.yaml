@@ -12,7 +12,7 @@ ai:
   batch_size: 100
   max_domains: 2000
   model_chain:
-    - "anthropic/claude-3-7-sonnet-latest"
+    - "anthropic/claude-4-6-sonnet-latest"
     - "gemini/gemini-3-pro-preview"
     - "gpt-4o"
     - "gemini/gemini-flash-latest"
