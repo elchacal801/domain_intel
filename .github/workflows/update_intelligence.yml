@@ -81,7 +81,7 @@ jobs:
       - name: 2. Split Data (Sharding)
         run: |
           # Split into 10 chunks
-          python scripts/split_data.py --input data/dea_domains.csv --chunks 10 --output-prefix data/dea_part
+          python scripts/split_data.py --input data/pipeline_input.csv --chunks 10 --output-prefix data/dea_part
 
       - name: Upload Shards
         uses: actions/upload-artifact@v4
@@ -100,6 +100,8 @@ jobs:
             data/dea_allowlist.csv
             data/discovered_ads.csv
             data/potential_typosquats.csv
+            data/discovery_domains.csv
+            data/pipeline_input.csv
           retention-days: 1
 
   process_shard:
