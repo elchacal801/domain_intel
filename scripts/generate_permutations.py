@@ -45,13 +45,13 @@ def run_dnstwist(domain):
         # -r: registered only (resolve)
         # -f json: json format
         # -o file: output to file
-        # -t 50: threads
+        # -t 20: threads (lowered to balance with ThreadPoolExecutor)
         cmd = [
             sys.executable, "-m", "dnstwist", 
             "--registered", 
             "--format", "json", 
             "--output", temp_json,
-            "--threads", "50",
+            "--threads", "20",
             domain
         ]
         
@@ -77,27 +77,31 @@ def run_dnstwist(domain):
         logging.error(f"Error fuzzing {domain}: {e}")
         return []
 
+import concurrent.futures
+
 def main():
     targets = load_targets()
     logging.info(f"Generating permutations for {len(targets)} targets...")
     
     all_results = []
     
-    for i, target in enumerate(targets):
-        logging.info(f"[{i+1}/{len(targets)}] Fuzzing {target}...")
-        results = run_dnstwist(target)
-        # enrich with source
-        for r in results:
-            r['source_target'] = target
-            # dnstwist json keys: 'domain', 'fuzzer', ...
-            # Normalize to 'domain-name' for CSV consistency if needed, but strict 'domain' is fine
-            
-        all_results.extend(results)
+    with concurrent.futures.ThreadPoolExecutor(max_workers=5) as executor:
+        future_to_target = {executor.submit(run_dnstwist, target): target for target in targets}
+        for i, future in enumerate(concurrent.futures.as_completed(future_to_target)):
+            target = future_to_target[future]
+            try:
+                results = future.result()
+                # enrich with source
+                for r in results:
+                    r['source_target'] = target
+                all_results.extend(results)
+                logging.info(f"[{i+1}/{len(targets)}] Finished {target}, found {len(results)} permutations.")
+            except Exception as e:
+                logging.error(f"Target {target} generated an exception: {e}")
         
     logging.info(f"Generated {len(all_results)} permutations.")
     
     # Save to CSV
-    # Collect all possible keys
     if not all_results:
         logging.warning("No results found.")
         return
