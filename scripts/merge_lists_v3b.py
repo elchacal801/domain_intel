@@ -39,7 +39,7 @@ from urllib.error import URLError, HTTPError
 DEFAULT_TIMEOUT = 25
 
 DOMAIN_RE = re.compile(
-    r"^(?=.{1,253}$)(?!-)[a-z0-9-]{1,63}(?<!-)(\\.(?!-)[a-z0-9-]{1,63}(?<!-))*\\.[a-z]{2,63}$"
+    r"^(?=.{1,253}$)(?!-)[a-z0-9-]{1,63}(?<!-)(\.(?!-)[a-z0-9-]{1,63}(?<!-))*\.[a-z]{2,63}$"
 )
 
 UA = {"User-Agent": "unum-dea-merge/3b"}
