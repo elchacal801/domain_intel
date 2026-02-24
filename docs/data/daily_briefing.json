@@ -1,104 +1,117 @@
 {
-  "date": "2026-02-22",
-  "headline": "Strategic Intelligence Brief: Elevated Typosquatting Activity Correlated with Gname Registrar Infrastructure",
-  "executive_summary": "Telemetry from 2026-02-22 indicates a highly likely coordinated typosquatting campaign targeting Tier-1 financial and technology brands, evidenced by 1,272 confirmed typosquats and a notable spike in live domain activation (+707). Analysis reveals a significant concentration of high-risk infrastructure within the Gname registrar ecosystem (477 domains), suggesting it is currently the primary staging ground for near-term fraud operations. While Shadow AI exposure remains static at medium risk, the detection of 107 suspected C2 panels necessitates immediate defensive tuning against identified threat paths, specifically TP-0001 and TP-0002.",
-  "strategic_assessment": "The threat landscape is shifting from dormant staging to active operationalization. The discrepancy between the modest total domain growth (+122) and the surge in live domains (+707) indicates that previously parked infrastructure is being activated, highly likely for credential harvesting or redirection attacks. The dominance of FLAME Threat Paths TP-0001 (224 domains) and TP-0002 (70 domains) suggests a consolidation of tactics around specific evasion or delivery mechanisms. We assess with moderate confidence that this activation wave is a precursor to a month-end fraud campaign targeting consumer banking portals.",
-  "operational_intelligence": "Infrastructure analysis highlights a distinct pivot in adversary TLD usage. The sample data shows a prevalence of short, alphanumeric domains (e.g., '4nmv.ru', '5se.mobi') often associated with SMS-based phishing (smishing) redirection chains. Shodan telemetry correlates 2,495 vulnerabilities across the monitored estate, primarily on ports 80/443/8080, confirming that adversaries are leveraging compromised legitimate infrastructure to host these redirectors. The high volume of 'HighRisk:NoMX' signals (5,025) strongly implies these domains are intended for web-based fraud rather than BEC (Business Email Compromise).",
-  "campaign_highlights": "Active tracking is currently monitoring 19 unique Campaign IPs across 7 countries. No new domains were discovered via Whois pivoting, suggesting adversaries are utilizing privacy protection or distinct registrant profiles to compartmentalize infrastructure. OpenClaw surveillance detected 321 exposed Shadow AI instances, all classified as MEDIUM risk; while not critical today, these represent a growing attack surface for data exfiltration. The 'Evidence Pipeline' recommends immediate submission of the TP-0001 cluster (224 domains) to the FLAME framework for automated takedown processing.",
-  "risk_signal_analysis": "The risk signal distribution is heavily skewed towards 'HighRisk:NoMX' (5,025) and 'HighRisk:ParkingPage' (1,274). This ratio (approx. 4:1) indicates that while a significant portion of the infrastructure is still in a holding pattern, the 'NoMX' subset represents actionable web infrastructure likely bypassing email filtering defenses. The presence of 192 'SuspiciousTitle' signals warrants manual review, as these often correlate with high-fidelity phishing kits that have successfully rendered a page title matching a targeted brand.",
-  "registrar_risk_outlook": "Gname (477 domains) has emerged as the primary 'High Risk' registrar of concern, surpassing Dynadot in this dataset. The volume of domains associated with Gname, combined with the high incidence of TP-0001/TP-0002 threat paths, suggests this registrar is the current preferred provider for this threat actor group. Nicenic (64) and Dominet (48) remain on the watchlist but show stable volume. The 409 domains with 'Unknown' registrars represent a significant intelligence gap, likely due to aggressive privacy proxy usage.",
+  "date": "2026-02-24",
+  "headline": "Strategic Threat Brief: Elevated Typosquatting Activity Correlated with High-Volume Registrar Abuse",
+  "executive_summary": "Analysis of daily telemetry indicates a highly likely coordinated typosquatting campaign targeting major technology and financial brands, evidenced by 1,224 confirmed typosquats and significant activity within the 'Gname' registrar ecosystem. While the total live domain count contracted slightly (-1,131), the density of malicious indicators within the active sample remains high, particularly concerning FLAME Threat Paths TP-0001 and TP-0002. Infrastructure scanning reveals persistent exposure of shadow AI assets (336 instances) and over 700 vulnerable endpoints, suggesting a permissive environment for attacker infrastructure staging.",
+  "strategic_assessment": "The threat landscape is currently characterized by high-volume, low-sophistication asset generation rather than targeted, bespoke exploitation. The slight contraction in live domains (-1.06%) alongside a stable total monitored count suggests a 'churn and burn' operational tempo, where adversaries rapidly cycle infrastructure to evade blocklists. The concentration of activity in TP-0001 and TP-0002 (accounting for 76% of categorized threat paths) strongly indicates a specific actor group or toolkit is currently dominant. We assess with moderate confidence that the 4,118 domains flagged with 'HighRisk:NoMX' represent pre-staged infrastructure likely to be weaponized for credential harvesting or redirect chains in the next 48-72 hours.",
+  "operational_intelligence": "Operational indicators highlight a distinct shift toward registrar evasion and infrastructure obfuscation. A significant portion of confirmed typosquats (762) utilize obscured or 'Unknown' registrars, complicating attribution. However, the Dynadot (365 domains) and Gname (496 domains) clusters provide actionable pivot points. Infrastructure analysis via Shodan reveals 737 vulnerabilities, with a notable presence of Port 2083 (cPanel), suggesting adversaries are compromising legitimate but poorly managed hosting environments to host phishing kits. The detection of 148 suspected C2 panels warrants immediate network blocklisting.",
+  "campaign_highlights": "Active tracking is focused on the 'Amazon/Amagon' cluster (T1.001.001) and the 'CEX' crypto-exchange impersonation cluster (TP-0001/TP-0002). The latter shows high-confidence evidence of a targeted campaign against digital asset platforms, utilizing variations like 'cexc.io' and 'cexa.io'. OpenClaw telemetry identified 336 exposed Shadow AI instances; while currently rated MEDIUM risk, these represent a growing attack surface for data exfiltration or model poisoning. No new domains were discovered via Whois pivoting, reinforcing the assessment that actors are utilizing privacy protection services effectively.",
+  "risk_signal_analysis": "The risk signal distribution is heavily skewed towards 'HighRisk:NoMX' (4,118) and 'HighRisk:ParkingPage' (1,041). This ratio suggests that the majority of newly detected infrastructure is currently dormant or in a 'holding' pattern. However, the 138 domains flagged with 'HighRisk:SuspiciousTitle' are almost certainly active phishing pages requiring immediate takedown. The presence of 602 'HighRisk:PrivateIP' signals indicates potential internal mapping or misconfigured attacker infrastructure attempting to resolve to non-routable space.",
+  "registrar_risk_outlook": "Gname (496 domains) has emerged as the primary high-risk registrar of concern for this reporting period, significantly outpacing other watchlist entities like Nicenic and Dominet. The high volume of abuse associated with Gname, combined with the 365 confirmed typosquats at Dynadot, suggests these registrars are the current preferred providers for bulk automated registration. The 762 domains with 'Unknown' registrars likely represent a failure in Whois parsing due to aggressive privacy shielding or non-standard TLD usage.",
   "key_risks": [
-    "Brand Erosion: High volume of confirmed typosquats (1,272) targeting Bank of America and Amazon creates immediate customer trust risks.",
-    "Smishing Campaigns: The prevalence of short, random-string domains (TP-0001/TP-0002) is highly indicative of SMS-based delivery vectors.",
-    "Infrastructure Activation: The +707 spike in live domains signals an imminent launch of staged campaigns.",
-    "Registrar Complicity/Negligence: Concentration of risk in Gname suggests systemic abuse tolerance."
+    "Brand Erosion: High-volume typosquatting targeting Tier-1 brands (Google, Apple, Facebook) creates significant consumer trust degradation.",
+    "Credential Theft: The 401 identified phishing sites and 148 C2 panels represent an immediate threat to customer credentials.",
+    "Shadow IT Exposure: 336 exposed AI instances create a vector for intellectual property leakage or unauthorized compute usage.",
+    "Infrastructure Staging: The 4,000+ 'NoMX' domains represent a latent threat capacity likely to activate within the week."
   ],
   "action_items": [
-    "Strategic: Initiate a takedown request block for the identified Gname cluster, citing trademark infringement and fraud indicators.",
-    "Tactical: Ingest the 107 suspected C2 panel IPs into the perimeter blocklist immediately.",
-    "Tactical: Tune SIEM detection rules to flag traffic to TLDs .ru, .mobi, and .mk originating from corporate endpoints, given the sample evidence.",
-    "Intelligence: Conduct deep-dive analysis on the 192 domains with 'SuspiciousTitle' to extract new phishing kit signatures."
+    "Strategic: Initiate a bulk takedown request with Dynadot and Gname compliance teams citing the specific FLAME TP-0001/0002 evidence clusters.",
+    "Tactical: Ingest the 148 suspected C2 panel IPs and 401 phishing URLs into the perimeter firewall and email security gateway blocklists immediately.",
+    "Investigative: Task the threat hunting team to analyze the 'Amazon' typosquat cluster (T1.001.001) for specific targeting of our customer base.",
+    "Defensive: Patch or isolate the 737 vulnerable endpoints identified via Shodan, prioritizing those exposing cPanel (Port 2083)."
   ],
   "model_used": "shared_llm_client",
-  "summary": "Telemetry from 2026-02-22 indicates a highly likely coordinated typosquatting campaign targeting Tier-1 financial and technology brands, evidenced by 1,272 confirmed typosquats and a notable spike in live domain activation (+707). Analysis reveals a significant concentration of high-risk infrastructure within the Gname registrar ecosystem (477 domains), suggesting it is currently the primary staging ground for near-term fraud operations. While Shadow AI exposure remains static at medium risk, the detection of 107 suspected C2 panels necessitates immediate defensive tuning against identified threat paths, specifically TP-0001 and TP-0002.",
+  "summary": "Analysis of daily telemetry indicates a highly likely coordinated typosquatting campaign targeting major technology and financial brands, evidenced by 1,224 confirmed typosquats and significant activity within the 'Gname' registrar ecosystem. While the total live domain count contracted slightly (-1,131), the density of malicious indicators within the active sample remains high, particularly concerning FLAME Threat Paths TP-0001 and TP-0002. Infrastructure scanning reveals persistent exposure of shadow AI assets (336 instances) and over 700 vulnerable endpoints, suggesting a permissive environment for attacker infrastructure staging.",
   "evidence_candidates": [
     {
       "tp_id": "TP-0001",
-      "domain_count": 224,
+      "domain_count": 322,
       "sample_domains": [
-        "4nmv.ru",
-        "0kx.com",
-        "5se.mobi",
-        "5se.life",
-        "7go.info"
+        "a1.ax",
+        "3158.cd",
+        "cexc.io",
+        "cexs.io",
+        "a-dp.com"
       ],
       "confidence": "High",
-      "recommendation": "Submit evidence package for TP-0001 (224 domains)"
+      "recommendation": "Submit evidence package for TP-0001 (322 domains)"
     },
     {
       "tp_id": "TP-0002",
-      "domain_count": 70,
+      "domain_count": 135,
       "sample_domains": [
-        "54.mk",
-        "5cbc.com",
-        "5se.mobi",
-        "5se.life",
-        "0nce.net"
+        "cexa.io",
+        "cexo.io",
+        "cexc.io",
+        "3202.com",
+        "7go.info"
       ],
       "confidence": "High",
-      "recommendation": "Submit evidence package for TP-0002 (70 domains)"
+      "recommendation": "Submit evidence package for TP-0002 (135 domains)"
     },
     {
       "tp_id": "TP-0004",
-      "domain_count": 43,
+      "domain_count": 47,
       "sample_domains": [
-        "0sp.me",
-        "60950.cn",
-        "69a8.com",
-        "6dx.info",
-        "6dz.info"
+        "0cd.cn",
+        "aleh.de",
+        "3126.com",
+        "0eml.com",
+        "0mail.be"
       ],
       "confidence": "Medium",
-      "recommendation": "Submit evidence package for TP-0004 (43 domains)"
+      "recommendation": "Submit evidence package for TP-0004 (47 domains)"
     },
     {
-      "tp_id": "TP-0008",
-      "domain_count": 16,
+      "tp_id": "TP-0003",
+      "domain_count": 46,
       "sample_domains": [
-        "dgdf.cc",
-        "dgrt.be",
-        "696hh.net",
-        "dfuae.com",
-        "dewpl.com"
+        "bcvm.de",
+        "bcle.de",
+        "bb-a.top",
+        "bcbw.com",
+        "bcbd.com"
       ],
       "confidence": "Medium",
-      "recommendation": "Submit evidence package for TP-0008 (16 domains)"
+      "recommendation": "Submit evidence package for TP-0003 (46 domains)"
+    },
+    {
+      "tp_id": "TP-0005",
+      "domain_count": 15,
+      "sample_domains": [
+        "2xd.ru",
+        "2rus.ru",
+        "alcha.ru",
+        "30rd.com",
+        "0box.net"
+      ],
+      "confidence": "Medium",
+      "recommendation": "Submit evidence package for TP-0005 (15 domains)"
+    },
+    {
+      "tp_id": "T1.001.001",
+      "domain_count": 13,
+      "sample_domains": [
+        "amagon.com",
+        "amaqon.com",
+        "amazonr.com",
+        "amazonq.com",
+        "amazonp.com"
+      ],
+      "confidence": "Medium",
+      "recommendation": "Submit evidence package for T1.001.001 (13 domains)"
     },
     {
       "tp_id": "TP-0009",
-      "domain_count": 15,
+      "domain_count": 10,
       "sample_domains": [
-        "66zzll.com",
-        "66vvmm.com",
-        "66uuff.com",
-        "66uuaa.com",
-        "66vvrr.com"
+        "0kx.com",
+        "aimail.com",
+        "aipuma.com",
+        "airbhb.com",
+        "airbjb.com"
       ],
       "confidence": "Medium",
-      "recommendation": "Submit evidence package for TP-0009 (15 domains)"
-    },
-    {
-      "tp_id": "TP-0006",
-      "domain_count": 13,
-      "sample_domains": [
-        "67z8.com",
-        "6789v.com",
-        "buybm.one",
-        "66br88.com",
-        "698054.com"
-      ],
-      "confidence": "Medium",
-      "recommendation": "Submit evidence package for TP-0006 (13 domains)"
+      "recommendation": "Submit evidence package for TP-0009 (10 domains)"
     }
   ]
 }
