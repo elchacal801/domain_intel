@@ -1,0 +1,29 @@
+id: "FP-0005"
+name: "GoDaddy Bulk Registration Pattern"
+description: >
+  Domains registered through GoDaddy with bulk registration indicators,
+  pattern associated with mass domain registration for fraud campaigns.
+version: 1
+
+indicators:
+  - field: registrar
+    match_type: contains
+    value: "GoDaddy"
+    required: true
+
+confidence_base: 55
+
+confidence_modifiers:
+  - field: risk_tags
+    match_type: contains
+    value: "bulk"
+    delta: 15
+  - field: risk_tags
+    match_type: contains
+    value: "HighRisk"
+    delta: 10
+
+flame_tp_ids:
+  - "TP-0019"
+
+ttl_days: 14
