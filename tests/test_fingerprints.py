@@ -86,6 +86,20 @@ class TestSchemaValidation:
         with pytest.raises(ValueError, match="match_type"):
             validate_fingerprint(fp, source="test")
 
+    def test_invalid_regex_raises(self):
+        fp = _make_fp(indicators=[
+            {"field": "http_title", "match_type": "regex", "value": "[invalid(", "required": True},
+        ])
+        with pytest.raises(ValueError, match="regex"):
+            validate_fingerprint(fp, source="test")
+
+    def test_regex_exceeding_max_length_raises(self):
+        fp = _make_fp(indicators=[
+            {"field": "http_title", "match_type": "regex", "value": "a" * 201, "required": True},
+        ])
+        with pytest.raises(ValueError, match="exceeding"):
+            validate_fingerprint(fp, source="test")
+
 
 # ---------------------------------------------------------------------------
 # TestFieldAlias

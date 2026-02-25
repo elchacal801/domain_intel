@@ -107,8 +107,15 @@ def validate_fingerprint(fp: dict, source: str = "<unknown>") -> dict:
         # Default 'required' to True if not specified
         ind.setdefault("required", True)
 
-        # Pre-compile regex patterns
+        # Pre-compile regex patterns (guard against excessively long patterns
+        # that could cause catastrophic backtracking / ReDoS)
+        MAX_REGEX_LEN = 200
         if ind["match_type"] == "regex":
+            if len(ind["value"]) > MAX_REGEX_LEN:
+                raise ValueError(
+                    f"Indicator {idx} in {fp['id']} from {source} has regex "
+                    f"exceeding {MAX_REGEX_LEN} chars (length {len(ind['value'])})"
+                )
             try:
                 ind["_compiled"] = re.compile(ind["value"], re.IGNORECASE)
             except re.error as exc:
