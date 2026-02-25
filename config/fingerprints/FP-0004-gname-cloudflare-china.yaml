@@ -1,0 +1,33 @@
+id: "FP-0004"
+name: "Gname Registrar + Cloudflare China Hosting"
+description: >
+  Domains registered through Gname using Cloudflare NS with Chinese
+  hosting ASN, pattern seen in bulk fraud domain registration campaigns.
+version: 1
+
+indicators:
+  - field: registrar
+    match_type: contains
+    value: "Gname"
+    required: true
+  - field: ns
+    match_type: contains
+    value: "cloudflare"
+    required: true
+
+confidence_base: 65
+
+confidence_modifiers:
+  - field: cc
+    match_type: exact
+    value: "CN"
+    delta: 15
+  - field: asn
+    match_type: range
+    value: "45000-45999"
+    delta: 10
+
+flame_tp_ids:
+  - "TP-0017"
+
+ttl_days: 30

@@ -1,0 +1,30 @@
+id: "FP-0007"
+name: "Typosquat Evasion Infrastructure"
+description: >
+  Domains flagged as typosquats that redirect (301/302) and maintain
+  active MX, indicating operational evasion infrastructure rather than
+  parked domains.
+version: 1
+
+indicators:
+  - field: risk_tags
+    match_type: contains
+    value: "typosquat"
+    required: true
+  - field: http_status
+    match_type: regex
+    value: "^3\\d\\d$"
+    required: true
+  - field: mx
+    match_type: contains
+    value: "."
+    required: true
+
+confidence_base: 75
+
+confidence_modifiers: []
+
+flame_tp_ids:
+  - "TP-0012"
+
+ttl_days: 30

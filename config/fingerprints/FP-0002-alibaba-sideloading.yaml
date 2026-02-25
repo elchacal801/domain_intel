@@ -1,0 +1,29 @@
+id: "FP-0002"
+name: "Alibaba App Sideloading Infrastructure"
+description: >
+  Domains on Alibaba Cloud (ASN 45102) with app sideloading/download
+  keywords, common for malicious APK distribution.
+version: 1
+
+indicators:
+  - field: asn
+    match_type: exact
+    value: "45102"
+    required: true
+  - field: title
+    match_type: regex
+    value: "(download|install|apk|sideload)"
+    required: true
+
+confidence_base: 65
+
+confidence_modifiers:
+  - field: mx
+    match_type: contains
+    value: "mail"
+    delta: 10
+
+flame_tp_ids:
+  - "TP-0012"
+
+ttl_days: 30
