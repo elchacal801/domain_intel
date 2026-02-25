@@ -207,6 +207,9 @@ class TestEvaluateFingerprint:
         result = evaluate_fingerprint(fp, row)
         assert result is not None
         assert result["fp_id"] == "FP-TEST"
+        # Verify evidence format: exact uses "=", contains uses "~"
+        assert "asn=16276" in result["evidence"]
+        assert "nameservers~cprapid.com" in result["evidence"]
 
     def test_required_indicator_fails_returns_none(self):
         fp = _make_fp(indicators=[

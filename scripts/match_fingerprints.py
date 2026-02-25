@@ -213,7 +213,8 @@ def evaluate_fingerprint(fp: dict, row: dict) -> Optional[dict]:
         matched = check_indicator(field_data, match_type, value, compiled_re)
 
         if matched:
-            evidence_parts.append(f"{field}={field_data}")
+            sep = "~" if match_type == "contains" else "="
+            evidence_parts.append(f"{field}{sep}{value}")
 
         if required and not matched:
             all_required_pass = False
