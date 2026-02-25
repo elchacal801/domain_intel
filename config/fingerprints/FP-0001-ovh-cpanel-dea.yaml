@@ -1,0 +1,37 @@
+id: "FP-0001"
+name: "OVH cPanel DEA Infrastructure"
+description: >
+  Bulk DEA domains on OVH (ASN 16276) using cprapid.com nameservers
+  and temp-mail-pro.com MX.
+version: 1
+
+indicators:
+  - field: asn
+    match_type: exact
+    value: "16276"
+    required: true
+  - field: ns
+    match_type: contains
+    value: "cprapid.com"
+    required: true
+  - field: mx
+    match_type: contains
+    value: "temp-mail-pro.com"
+    required: false
+
+confidence_base: 70
+
+confidence_modifiers:
+  - field: mx
+    match_type: contains
+    value: "temp-mail-pro.com"
+    delta: 15
+  - field: cc
+    match_type: exact
+    value: "FR"
+    delta: 10
+
+flame_tp_ids:
+  - "TP-0003"
+
+ttl_days: 30
