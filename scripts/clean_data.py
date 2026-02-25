@@ -1,7 +1,11 @@
 import csv
 import os
 import glob
+import logging
 import re
+
+logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
+logger = logging.getLogger(__name__)
 
 DATA_DIR = "data"
 
@@ -124,7 +128,8 @@ def process_files(files, asn_map):
                     try:
                         idx = headers.index(asn_col)
                         headers.insert(idx + 1, name_col)
-                    except:
+                    except ValueError:
+                        logger.warning("Could not find '%s' in headers to insert after; appending '%s' to end", asn_col, name_col)
                         headers.append(name_col)
                         
                     added_columns.append(name_col)

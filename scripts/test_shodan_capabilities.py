@@ -1,4 +1,5 @@
 import os
+import requests
 import shodan
 from dotenv import load_dotenv
 
@@ -23,8 +24,8 @@ def main():
         info = api.info()
         print(f"Plan Type: {info.get('plan', 'Unknown')}")
         print(f"HTTPS/Telnet Access: {info.get('https')}/{info.get('telnet')}")
-    except:
-        print("Could not fetch plan info.")
+    except (shodan.APIError, requests.RequestException) as e:
+        print(f"Could not fetch plan info: {e}")
 
     # 2. Standard Search
     test_feature("Standard Search (port:80)", lambda: api.search("port:80", limit=1))

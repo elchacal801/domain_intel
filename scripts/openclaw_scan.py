@@ -272,8 +272,8 @@ def update_history(current_results: List[Dict], history_file: str):
             last = datetime.fromisoformat(row['last_seen'])
             delta = (last - first).days
             row['days_exposed'] = delta
-        except:
-            pass
+        except (ValueError, KeyError, TypeError) as e:
+            log.warning("Could not calculate days_exposed for IP %s: %s", row.get('ip', 'unknown'), e)
         final_rows.append(row)
         
     if final_rows:

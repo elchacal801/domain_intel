@@ -1,9 +1,13 @@
 import csv
+import json
+import logging
 import os
 import requests
 import time
-import json
 from dotenv import load_dotenv
+
+logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
+logger = logging.getLogger(__name__)
 
 load_dotenv()
 
@@ -34,7 +38,8 @@ def load_history():
         try:
             with open(HISTORY_FILE, 'r') as f:
                 return set(json.load(f))
-        except:
+        except (json.JSONDecodeError, TypeError, OSError) as e:
+            logger.warning("Failed to load history file %s: %s", HISTORY_FILE, e)
             return set()
     return set()
 

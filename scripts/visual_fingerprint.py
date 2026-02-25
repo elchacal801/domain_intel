@@ -23,7 +23,7 @@ from datetime import datetime
 
 # Dependencies
 try:
-    from playwright.async_api import async_playwright
+    from playwright.async_api import async_playwright, Error as PlaywrightError
     import imagehash
     from PIL import Image
 except ImportError:
@@ -101,13 +101,15 @@ async def capture_and_hash(domains: List[str], concurrency: int) -> List[dict]:
                     try:
                         await page.goto(url, timeout=10000, wait_until="domcontentloaded")
                         await asyncio.sleep(1) # Render
-                    except:
+                    except PlaywrightError as e:
+                        logging.debug("HTTP failed for %s, trying HTTPS: %s", domain, e)
                         # Try HTTPS
                         try:
                             url = f"https://{domain}"
                             await page.goto(url, timeout=10000, wait_until="domcontentloaded")
                             await asyncio.sleep(1)
-                        except:
+                        except PlaywrightError as e:
+                            logging.warning("Both HTTP and HTTPS failed for %s: %s", domain, e)
                             return None
 
                     # Screenshot (JPEG for smaller size)
