@@ -33,6 +33,7 @@ TARGETS_FILE = "data/targets.txt"
 KEYWORDS_FILE = "data/suspicious_keywords.txt"
 CLASSIFICATION_FILE = "data/ai_classifications.csv"
 FLAME_RULES_FILE = "config/flame_detection_rules.yaml"
+FINGERPRINT_MATCHES_FILE = "data/fingerprint_matches.csv"
 
 def load_list(filepath: str) -> Set[str]:
     if not os.path.exists(filepath):
@@ -97,6 +98,32 @@ def load_flame_tp_ids() -> Dict[str, str]:
     except (IOError, csv.Error) as exc:
         logger.warning("Could not load FLAME TP IDs: %s", exc)
     return mapping
+
+
+def load_fingerprint_matches() -> Dict[str, Dict[str, str]]:
+    """Load fingerprint match results keyed by domain.
+
+    If a domain has multiple matches, keeps the highest-confidence one.
+
+    Returns:
+        Dict mapping domain -> {fp_id, fp_name, confidence, flame_tp_ids, evidence}.
+    """
+    matches: Dict[str, Dict[str, str]] = {}
+    if not os.path.exists(FINGERPRINT_MATCHES_FILE):
+        return matches
+    try:
+        with open(FINGERPRINT_MATCHES_FILE, "r", encoding="utf-8-sig", errors="replace") as f:
+            reader = csv.DictReader(f)
+            for row in reader:
+                domain = row.get("domain", "").strip().lower()
+                confidence = int(row.get("confidence", "0"))
+                existing = matches.get(domain)
+                if not existing or confidence > int(existing.get("confidence", "0")):
+                    matches[domain] = row
+    except (IOError, csv.Error, ValueError) as exc:
+        logger.warning("Could not load fingerprint matches: %s", exc)
+    return matches
+
 
 def load_flame_detection_rules() -> List[Dict[str, Any]]:
     """Load FLAME-derived detection rules from config if available.
@@ -174,7 +201,8 @@ def main():
     domains = load_domains(INPUT_FILE, args.limit)
     flame_map = load_flame_tp_ids()
     flame_rules = load_flame_detection_rules()
-    
+    fp_matches = load_fingerprint_matches()
+
     print(f"    - Targets: {len(targets)}")
     print(f"    - Keywords: {len(keywords)}")
     print(f"    - Input Domains: {len(domains)}")
@@ -182,6 +210,8 @@ def main():
         print(f"    - FLAME TP mappings: {len(flame_map)}")
     if flame_rules:
         print(f"    - FLAME detection rules: {len(flame_rules)}")
+    if fp_matches:
+        print(f"    - Fingerprint matches: {len(fp_matches)}")
 
     candidates = []
     
@@ -190,9 +220,20 @@ def main():
         reason = None
         priority = 0
         flame_tp_ids = flame_map.get(d, "")
-        
-        # Priority 0: FLAME TP match (highest)
-        if flame_tp_ids:
+
+        # Priority 0: Infrastructure Fingerprint match (highest specificity)
+        if d in fp_matches:
+            m = fp_matches[d]
+            fp_id = m.get("fp_id", "")
+            fp_name = m.get("fp_name", "")
+            conf = m.get("confidence", "0")
+            reason = f"{fp_id}: {fp_name} (conf: {conf})"
+            priority = 0
+            if not flame_tp_ids:
+                flame_tp_ids = m.get("flame_tp_ids", "")
+
+        # Priority 0: FLAME TP match
+        if not reason and flame_tp_ids:
             reason = f"FLAME:{flame_tp_ids}"
             priority = 0
         

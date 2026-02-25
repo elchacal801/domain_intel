@@ -221,6 +221,9 @@ jobs:
            python scripts/clean_data.py
            python scripts/enrich_asns.py
 
+      - name: Infrastructure Fingerprinting
+        run: python scripts/match_fingerprints.py
+
       - name: Build Investigate Index
         run: |
           python scripts/build_investigate_index.py
@@ -343,7 +346,8 @@ jobs:
           cp data/*.json.gz docs/data/
           cp data/openclaw_stix.json docs/data/
           cp data/openclaw_sigma.yml docs/data/
-          
+          cp data/fingerprint_matches.csv docs/data/ || true
+
           git add data docs
 
           if git diff --staged --quiet; then
