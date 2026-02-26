@@ -36,7 +36,7 @@ logger = logging.getLogger(__name__)
 
 # Constants
 NULLIFIED_LIST_URL = "https://raw.githubusercontent.com/NullifiedCode/ASN-Lists/master/all.txt"
-LORENZO_LIST_URL = "https://raw.githubusercontent.com/LorenzoSapora/bad-asn-list/master/asn.txt"
+LORENZO_LIST_URL = "https://raw.githubusercontent.com/LorenzoSapora/bad-asn-list/master/raw.txt"
 BRIANHAMA_LIST_URL = "https://raw.githubusercontent.com/brianhama/bad-asn-list/master/bad-asn-list.csv"
 NULLIFIED_MALICIOUS_URL = "https://raw.githubusercontent.com/NullifiedCode/ASN-Lists/main/Malicious/ASN.txt"
 

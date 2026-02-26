@@ -109,8 +109,8 @@ def process_shodan(api_key: str, domains: List[Dict], output_file: str, budget: 
                     time.sleep(to_wait)
                 self.last_call = time.time()
 
-    # Target 1 RPS to strictly respect API limits (Free/Basic tiers often limit to 1 RPS)
-    rate_limiter = RateLimiter(max_rps=1.0)
+    # Target 0.9 RPS (~1.1s between calls) to stay safely under API limits
+    rate_limiter = RateLimiter(max_rps=0.9)
     
     def _scan_ip(ip):
         cache_key = f"host:{ip}"
@@ -144,7 +144,30 @@ def process_shodan(api_key: str, domains: List[Dict], output_file: str, budget: 
             return ip, s_data
             
         except shodan.APIError as e:
-            if "No information available" in str(e):
+            err_msg = str(e).lower()
+            if "rate" in err_msg or "limit" in err_msg:
+                # Exponential backoff for 429 rate-limit errors
+                for attempt, backoff in enumerate([2, 4, 8], start=1):
+                    log.warning(f"  [!] Rate limited on {ip}, retry {attempt}/3 after {backoff}s")
+                    time.sleep(backoff)
+                    rate_limiter.wait()
+                    try:
+                        host_info = api.host(ip, minify=True)
+                        s_data = {
+                            "ip": ip,
+                            "ports": ";".join([str(p) for p in host_info.get("ports", [])]),
+                            "tags": ";".join(host_info.get("tags", [])),
+                            "os": host_info.get("os", "") or "",
+                            "hostnames": ";".join(host_info.get("hostnames", [])),
+                            "vulns": ";".join(host_info.get("vulns", []))
+                        }
+                        cache.set(cache_key, s_data)
+                        return ip, s_data
+                    except shodan.APIError:
+                        continue
+                log.error(f"  [!] Rate limit retries exhausted for {ip}")
+                return ip, None
+            elif "No information available" in str(e):
                 empty_data = {"ip": ip, "ports": "", "vulns": "", "tags": "", "os": "", "hostnames": ""}
                 cache.set(cache_key, empty_data)
                 return ip, empty_data

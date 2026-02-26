@@ -45,7 +45,7 @@ else:
 # Env-var validation (warn-only so optional integrations don't block startup)
 # ---------------------------------------------------------------------------
 _REQUIRED_ENV_VARS = {
-    "ANTHROPIC_API_KEY": "Required for Claude models (primary LLM). Also accepted as CLAUDE_API_KEY.",
+    "ANTHROPIC_API_KEY": "Required for Claude models (primary LLM).",
     "ALIENVAULT_OTX_API_KEY": "Required for OTX passive DNS pivots.",
     "SHODAN_API_KEY": "Required for Shodan campaign hunting.",
 }
@@ -54,11 +54,7 @@ _REQUIRED_ENV_VARS = {
 def _validate_env_vars() -> None:
     """Log warnings for missing environment variables."""
     for var, description in _REQUIRED_ENV_VARS.items():
-        if var == "ANTHROPIC_API_KEY":
-            # Accept either name
-            if not (os.getenv("ANTHROPIC_API_KEY") or os.getenv("CLAUDE_API_KEY")):
-                logger.warning("Missing env var %s — %s", var, description)
-        elif not os.getenv(var):
+        if not os.getenv(var):
             logger.warning("Missing env var %s — %s", var, description)
 
 

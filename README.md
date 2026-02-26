@@ -113,14 +113,14 @@ To run the AI modules (`scripts/ai_*.py`), you need API keys.
     ```env
     OPENAI_API_KEY=sk-...
     GEMINI_API_KEY=AIza...
-    CLAUDE_API_KEY=sk-ant-...
+    ANTHROPIC_API_KEY=sk-ant-...
     ```
 
 2. For GitHub Actions, add these as **Repository Secrets**.
 
 The model priority chain is configured centrally in `scripts/shared/llm_client.py`:
 
-* Primary: `claude-4-6-sonnet-latest`
+* Primary: `claude-sonnet-4-5-20250929`
 * Secondary: `gemini-3-pro-preview`
 * Fallback: `gpt-4o`
 

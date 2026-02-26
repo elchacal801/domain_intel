@@ -101,7 +101,7 @@ class TestLLMClient:
     def test_default_model_chain(self):
         client = LLMClient()
         assert len(client.models) >= 3
-        assert "anthropic/claude-4-6-sonnet-latest" in client.models[0]
+        assert "anthropic/claude-sonnet-4-5-20250929" in client.models[0]
     
     def test_custom_model_chain(self):
         client = LLMClient(models=["model-a", "model-b"])

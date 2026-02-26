@@ -133,48 +133,67 @@ def run_scan(api_key: str, targets: List[str], budget_tracker: CreditBudget, cac
                 count_res = api.count(q)
                 total = count_res.get('total', 0)
                 log.info(f"  -> Count: {total}")
-                
+
                 if total > 0:
                     fetched = 0
                     page = 1
-                    
+
                     # Determine how many to fetch based on global LIMIT arg?
                     # For now, let's keep fetching until we hit budget or run out of results.
                     # Assuming the 'matches' list grows.
-                    
+
                     while True:
                         if not budget_tracker.check_can_spend(1):
                             log.warning("Budget exhausted during pagination.")
                             break
-                            
+
                         # Safety break if we have enough for this query?
                         # Let's limit per-query to 1000 to prevent one query eating everything?
-                        if fetched >= 1000: 
+                        if fetched >= 1000:
                              log.info("  -> Per-query safety limit (1000) reached.")
                              break
 
                         budget_tracker.spend(1)
                         log.info(f"    Fetching page {page}...")
-                        
-                        search_res = api.search(q, page=page, limit=100) # limit=100 is just page size
+
+                        search_res = None
+                        for _attempt, _backoff in enumerate([0, 2, 4, 8], start=0):
+                            if _backoff > 0:
+                                log.warning(f"    Rate limited on query page {page}, retry {_attempt}/3 after {_backoff}s")
+                                time.sleep(_backoff)
+                            try:
+                                search_res = api.search(q, page=page, limit=100)
+                                break
+                            except shodan.APIError as e:
+                                err_msg = str(e).lower()
+                                if ("rate" in err_msg or "limit" in err_msg) and _attempt < 3:
+                                    continue
+                                raise
                         batch = search_res.get('matches', [])
                         if not batch:
                             break
-                            
+
                         matches.extend(batch)
                         fetched += len(batch)
                         page += 1
-                        time.sleep(1) # Rate limit
-                        
+                        time.sleep(1.1) # Rate limit
+
                         if fetched >= total:
                             break
 
                     # Cache the massive result? Might be too big.
-                    # Let's cache the summary or just last page? 
+                    # Let's cache the summary or just last page?
                     # For deep pagination, caching the whole list in one blob is dangerous for SQLite size.
                     # We skip full-list caching for deep scans to be safe or cache truncated.
                     if fetched < 500:
                          cache.set(cache_key, {'matches': matches})
+            except shodan.APIError as e:
+                err_msg = str(e).lower()
+                if "rate" in err_msg or "limit" in err_msg:
+                    log.warning(f"  [!] Rate limited on query: {q}, skipping")
+                else:
+                    log.error(f"  [!] API Error: {e}")
+                continue
             except Exception as e:
                 log.error(f"  [!] Error: {e}")
                 continue

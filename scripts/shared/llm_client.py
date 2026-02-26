@@ -30,7 +30,7 @@ logger = logging.getLogger(__name__)
 # Central model configuration — single source of truth
 # Updated 2026-02-21 per Anthropic API deprecation
 DEFAULT_MODEL_CHAIN = [
-    "anthropic/claude-4-6-sonnet-latest",    # Primary
+    "anthropic/claude-sonnet-4-5-20250929",  # Primary (pinned snapshot)
     "gemini/gemini-3-pro-preview",           # Secondary
     "gpt-4o",                                # Tertiary
     "gemini/gemini-flash-latest",            # Emergency fallback
@@ -59,7 +59,7 @@ class LLMClient:
     def _get_api_key(self, model: str) -> Optional[str]:
         """Returns the appropriate API key for models that need explicit passthrough."""
         if "anthropic" in model:
-            return os.getenv("CLAUDE_API_KEY")
+            return os.getenv("ANTHROPIC_API_KEY")
         return None
     
     def complete(

@@ -94,12 +94,25 @@ def process_pivots(api_key: str, input_file: str, output_file: str, budget: int)
                 
                 log.info(f"Searching Shodan for {query}...")
                 budget_tracker.spend(1)
-                search_res = api.search(query)
-                
+
+                search_res = None
+                for _attempt, _backoff in enumerate([0, 2, 4, 8], start=0):
+                    if _backoff > 0:
+                        log.warning(f"  [!] Rate limited on {query}, retry {_attempt}/3 after {_backoff}s")
+                        time.sleep(_backoff)
+                    try:
+                        search_res = api.search(query)
+                        break
+                    except shodan.APIError as e:
+                        err_msg = str(e).lower()
+                        if ("rate" in err_msg or "limit" in err_msg) and _attempt < 3:
+                            continue
+                        raise
+
                 # Cache the result
                 cache.set(cache_key, search_res)
-                time.sleep(1) # Rate limit
-                
+                time.sleep(1.1) # Rate limit
+
             except shodan.APIError as e:
                 log.error(f"  [!] API Error: {e}")
                 continue
