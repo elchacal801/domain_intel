@@ -69,7 +69,7 @@ def check_anthropic():
     print("\n--- Anthropic Claude (Probe) ---")
     # Anthropic doesn't have a public List Models endpoint. We must probe.
     models_to_test = [
-        "claude-4-6-sonnet-latest",
+        "claude-sonnet-4-5-20250929",
         "claude-3-7-sonnet-latest",
         "claude-3-7-sonnet-20250219",
         "claude-3-5-haiku-latest",

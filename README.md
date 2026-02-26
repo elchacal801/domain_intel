@@ -120,7 +120,7 @@ To run the AI modules (`scripts/ai_*.py`), you need API keys.
 
 The model priority chain is configured centrally in `scripts/shared/llm_client.py`:
 
-* Primary: `claude-4-6-sonnet-latest`
+* Primary: `claude-sonnet-4-5-20250929`
 * Secondary: `gemini-3-pro-preview`
 * Fallback: `gpt-4o`
 

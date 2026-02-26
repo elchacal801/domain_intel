@@ -30,7 +30,7 @@ logger = logging.getLogger(__name__)
 # Central model configuration — single source of truth
 # Updated 2026-02-21 per Anthropic API deprecation
 DEFAULT_MODEL_CHAIN = [
-    "anthropic/claude-4-6-sonnet-latest",    # Primary
+    "anthropic/claude-sonnet-4-5-20250929",  # Primary (pinned snapshot)
     "gemini/gemini-3-pro-preview",           # Secondary
     "gpt-4o",                                # Tertiary
     "gemini/gemini-flash-latest",            # Emergency fallback

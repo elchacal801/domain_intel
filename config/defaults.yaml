@@ -3,7 +3,7 @@
 # Overridable via environment variables where noted.
 
 flame:
-  index_url: "https://elchacal801.github.io/flame-fraud/flame-index.json"
+  index_url: "https://elchacal801.github.io/flame-fraud/database/flame-index.json"
   stix_bundle_url: "https://elchacal801.github.io/flame-fraud/database/flame_stix_bundle.json"
   detection_rules_url: "https://elchacal801.github.io/flame-fraud/database/flame_detection_rules.json"
   cache_ttl_hours: 24
@@ -12,7 +12,7 @@ ai:
   batch_size: 100
   max_domains: 2000
   model_chain:
-    - "anthropic/claude-4-6-sonnet-latest"
+    - "anthropic/claude-sonnet-4-5-20250929"
     - "gemini/gemini-3-pro-preview"
     - "gpt-4o"
     - "gemini/gemini-flash-latest"
