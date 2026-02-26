@@ -143,10 +143,11 @@ def check_indicator(field_data: str, match_type: str, value: str,
     """Check whether *field_data* satisfies the indicator condition.
 
     Supports match types: exact, contains, regex, range.
-    Returns ``False`` for empty *field_data*.
+    Returns ``False`` for empty *field_data* unless match_type is
+    ``"exact"`` and *value* is also empty (empty-to-empty match).
     """
     if not field_data:
-        return False
+        return match_type == "exact" and value.strip() == ""
 
     if match_type == "exact":
         return field_data.strip().lower() == value.strip().lower()

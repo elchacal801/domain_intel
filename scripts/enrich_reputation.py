@@ -83,12 +83,12 @@ def check_rbl(domain: str, resolver) -> List[str]:
         pass
     return hits
 
-def get_rdap_age(domain: str) -> Dict[str, str]:
+def get_rdap_data(domain: str) -> Dict[str, str]:
     """
-    Queries RDAP for creation date.
-    Returns {'creation_date': 'YYYY-MM-DD', 'age_days': '123'}
+    Queries RDAP for creation date and registrant organization.
+    Returns {'creation_date': 'YYYY-MM-DD', 'age_days': '123', 'registrant_org': '...'}
     """
-    res = {"creation_date": "", "age_days": ""}
+    res = {"creation_date": "", "age_days": "", "registrant_org": ""}
     try:
         # RDAP.org is a handy redirector, or use direct registrar if known.
         # We'll use a public RDAP bootstrap or rdap.org for simplicity.
@@ -112,9 +112,22 @@ def get_rdap_age(domain: str) -> Dict[str, str]:
                 res["creation_date"] = dt.strftime("%Y-%m-%d")
                 delta = datetime.datetime.now() - dt
                 res["age_days"] = str(delta.days)
+
+            # Extract registrant organization
+            for entity in data.get("entities", []):
+                if "registrant" in entity.get("roles", []):
+                    vcard_array = entity.get("vcardArray", [[], []])
+                    if len(vcard_array) > 1:
+                        for vcard in vcard_array[1]:
+                            if isinstance(vcard, list) and len(vcard) > 3 and vcard[0] in ("fn", "org"):
+                                org_val = vcard[3]
+                                if isinstance(org_val, str) and org_val.strip():
+                                    res["registrant_org"] = sanitize_csv_value(org_val.strip())
+                                break
+                    break
     except (requests.RequestException, ValueError, KeyError):
         pass
-    
+
     return res
 
 def process_one(row: Dict) -> Dict:
@@ -133,9 +146,10 @@ def process_one(row: Dict) -> Dict:
     # RDAP
     # We might want to limit RDAP to only 'suspicious' ones to save API calls
     # or just do all if list is small. 
-    rdap = get_rdap_age(domain)
+    rdap = get_rdap_data(domain)
     row["creation_date"] = rdap["creation_date"]
     row["age_days"] = rdap["age_days"]
+    row["registrant_org"] = rdap.get("registrant_org", "")
     
     # OTX Check (if key exists)
     otx_tags = check_otx(domain)
@@ -163,7 +177,7 @@ def main():
         return
             
     # Add new headers
-    new_cols = ["rbl_hits", "creation_date", "age_days", "otx_risk"]
+    new_cols = ["rbl_hits", "creation_date", "age_days", "otx_risk", "registrant_org"]
     for c in new_cols:
         if c not in fieldnames:
             fieldnames.append(c)
