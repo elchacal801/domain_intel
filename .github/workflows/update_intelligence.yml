@@ -221,6 +221,11 @@ jobs:
            python scripts/clean_data.py
            python scripts/enrich_asns.py
 
+      - name: GLEIF Entity Verification
+        timeout-minutes: 30
+        continue-on-error: true
+        run: python scripts/enrich_gleif.py
+
       - name: Infrastructure Fingerprinting
         run: python scripts/match_fingerprints.py
 
