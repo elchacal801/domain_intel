@@ -16,7 +16,7 @@ import io
 import logging
 import os
 import sys
-import tempfile
+
 from typing import Dict, List, Optional, Tuple
 from urllib.parse import urlparse
 
@@ -31,7 +31,7 @@ logger = logging.getLogger(__name__)
 
 # --- Configuration ---
 
-PHISHTANK_URL = "http://data.phishtank.com/data/online-valid.csv.gz"
+PHISHTANK_URL = "https://data.phishtank.com/data/online-valid.csv.gz"
 URLHAUS_URL = "https://urlhaus.abuse.ch/downloads/csv/"
 DEFAULT_INPUT = "data/dea_domains.csv"
 DEFAULT_OUTPUT = "data/phishtank_matches.csv"
@@ -178,7 +178,9 @@ def cross_reference_domains(
 @retry(max_attempts=3, backoff_base=2.0, exceptions=(requests.RequestException,))
 def _download(url: str, timeout: int = 120) -> requests.Response:
     """Download a URL with retry and exponential backoff."""
-    return requests.get(url, timeout=timeout)
+    resp = requests.get(url, timeout=timeout)
+    resp.raise_for_status()
+    return resp
 
 
 def _load_cached_feeds(cache) -> Optional[Tuple[Dict, Dict]]:
