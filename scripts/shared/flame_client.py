@@ -25,7 +25,7 @@ from shared import config as cfg
 logger = logging.getLogger(__name__)
 
 # Defaults (overridden by config/defaults.yaml when present)
-_DEFAULT_INDEX_URL = "https://elchacal801.github.io/flame-fraud/flame-index.json"
+_DEFAULT_INDEX_URL = "https://elchacal801.github.io/flame-fraud/database/flame-index.json"
 _DEFAULT_CACHE_TTL_HOURS = 24
 
 # Cache location (relative to CWD which is normally the repo root)

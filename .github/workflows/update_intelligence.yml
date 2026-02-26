@@ -247,8 +247,6 @@ jobs:
       - name: Build Investigate Index
         run: |
           python scripts/build_investigate_index.py
-          cp data/investigate_index.json docs/data/ || true
-          cp data/investigate_meta.json docs/data/ || true
 
       - name: Visual Fingerprinting (Optional)
         timeout-minutes: 30
@@ -307,7 +305,6 @@ jobs:
              python scripts/enrich_technical.py --limit 5000 --workers 50
              python scripts/enrich_pivot.py
           fi
-          cp data/pivot_discovery.csv docs/data/ || true
           cp data/enriched_candidates.csv docs/data/ || true
 
       - name: Shadow AI Analysis (OpenClaw)
