@@ -226,6 +226,16 @@ jobs:
         continue-on-error: true
         run: python scripts/enrich_gleif.py
 
+      - name: OpenSanctions Entity Screening
+        timeout-minutes: 30
+        continue-on-error: true
+        run: python scripts/enrich_opensanctions.py
+
+      - name: ICIJ OffshoreLeaks Screening
+        timeout-minutes: 30
+        continue-on-error: true
+        run: python scripts/enrich_icij.py
+
       - name: Infrastructure Fingerprinting
         run: python scripts/match_fingerprints.py
 
