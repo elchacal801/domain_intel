@@ -30,6 +30,14 @@ confidence_modifiers:
     match_type: exact
     value: ""
     delta: 10
+  - field: os_match_score
+    match_type: range
+    value: "70-100"
+    delta: 20
+  - field: icij_entity_match
+    match_type: exact
+    value: "True"
+    delta: 15
 
 flame_tp_ids:
   - "TP-0012"
