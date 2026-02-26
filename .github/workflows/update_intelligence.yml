@@ -237,6 +237,8 @@ jobs:
         run: python scripts/enrich_icij.py
 
       - name: dnstwist Cross-Reference Enrichment
+        timeout-minutes: 10
+        continue-on-error: true
         run: python scripts/enrich_dnstwist.py
 
       - name: Infrastructure Fingerprinting
