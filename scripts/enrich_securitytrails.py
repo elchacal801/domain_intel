@@ -303,55 +303,52 @@ def main():
     parser.add_argument("--budget-check", action="store_true", help="Print remaining quota and exit")
     args = parser.parse_args()
 
-    tracker = PersistentQuotaTracker(
+    with PersistentQuotaTracker(
         db_path=BUDGET_DB_PATH, max_queries=MAX_QUERIES_30D, window_days=30
-    )
+    ) as tracker:
+        if args.budget_check:
+            remaining = tracker.get_remaining()
+            used = tracker.get_usage()
+            print(f"SecurityTrails budget: {remaining}/{MAX_QUERIES_30D} remaining ({used} used in last 30 days)")
+            return
 
-    if args.budget_check:
+        if not args.domain:
+            parser.error("--domain is required (unless using --budget-check)")
+
+        if not api_key:
+            logger.error("ST_API_KEY not set in environment or .env")
+            sys.exit(1)
+
+        # Pre-flight: ensure we have budget for 4 API calls
+        tracker.abort_if_exceeded(4)
+
+        cache = ShodanCache(db_path=CACHE_DB_PATH)
+
+        # Query all endpoints
+        results = query_domain(args.domain, api_key, tracker, cache)
+
+        # Parse responses
+        dns_a_key = f"history/{args.domain}/dns/a"
+        dns_mx_key = f"history/{args.domain}/dns/mx"
+        dns_ns_key = f"history/{args.domain}/dns/ns"
+        whois_key = f"history/{args.domain}/whois"
+
+        dns_a = parse_dns_history(results.get(dns_a_key), "a")
+        dns_mx = parse_dns_history(results.get(dns_mx_key), "mx")
+        dns_ns = parse_dns_history(results.get(dns_ns_key), "ns")
+        whois = parse_whois_history(results.get(whois_key))
+
+        # Display
         remaining = tracker.get_remaining()
-        used = tracker.get_usage()
-        print(f"SecurityTrails budget: {remaining}/{MAX_QUERIES_30D} remaining ({used} used in last 30 days)")
-        tracker.close()
-        return
+        output = format_console_output(args.domain, dns_a, dns_mx, dns_ns, whois, remaining)
+        print(output)
 
-    if not args.domain:
-        parser.error("--domain is required (unless using --budget-check)")
+        # Build row and optionally save
+        row = build_result_row(args.domain, dns_a, dns_mx, dns_ns, whois)
+        if args.save:
+            save_to_csv(row)
 
-    if not api_key:
-        logger.error("ST_API_KEY not set in environment or .env")
-        sys.exit(1)
-
-    # Pre-flight: ensure we have budget for 4 API calls
-    tracker.abort_if_exceeded(4)
-
-    cache = ShodanCache(db_path=CACHE_DB_PATH)
-
-    # Query all endpoints
-    results = query_domain(args.domain, api_key, tracker, cache)
-
-    # Parse responses
-    dns_a_key = f"history/{args.domain}/dns/a"
-    dns_mx_key = f"history/{args.domain}/dns/mx"
-    dns_ns_key = f"history/{args.domain}/dns/ns"
-    whois_key = f"history/{args.domain}/whois"
-
-    dns_a = parse_dns_history(results.get(dns_a_key), "a")
-    dns_mx = parse_dns_history(results.get(dns_mx_key), "mx")
-    dns_ns = parse_dns_history(results.get(dns_ns_key), "ns")
-    whois = parse_whois_history(results.get(whois_key))
-
-    # Display
-    remaining = tracker.get_remaining()
-    output = format_console_output(args.domain, dns_a, dns_mx, dns_ns, whois, remaining)
-    print(output)
-
-    # Build row and optionally save
-    row = build_result_row(args.domain, dns_a, dns_mx, dns_ns, whois)
-    if args.save:
-        save_to_csv(row)
-
-    cache.close()
-    tracker.close()
+        cache.close()
 
 
 if __name__ == "__main__":
