@@ -59,7 +59,7 @@ class LLMClient:
     def _get_api_key(self, model: str) -> Optional[str]:
         """Returns the appropriate API key for models that need explicit passthrough."""
         if "anthropic" in model:
-            return os.getenv("CLAUDE_API_KEY")
+            return os.getenv("ANTHROPIC_API_KEY")
         return None
     
     def complete(

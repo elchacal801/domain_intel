@@ -528,10 +528,10 @@ def save_briefing(briefing):
 def main():
     has_openai = os.getenv("OPENAI_API_KEY") is not None
     has_gemini = os.getenv("GEMINI_API_KEY") is not None
-    has_claude = os.getenv("CLAUDE_API_KEY") is not None
-    
+    has_claude = os.getenv("ANTHROPIC_API_KEY") is not None
+
     if not (has_openai or has_gemini or has_claude):
-        print("Error: No AI API keys (OPENAI/GEMINI/CLAUDE) found in .env.")
+        print("Error: No AI API keys (OPENAI/GEMINI/ANTHROPIC) found in .env.")
         sys.exit(1)
 
     stats = get_stats()

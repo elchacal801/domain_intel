@@ -61,9 +61,9 @@ def check_openai():
         print(f"  [Exception] {e}")
 
 def check_anthropic():
-    api_key = os.getenv("CLAUDE_API_KEY") or os.getenv("ANTHROPIC_API_KEY")
+    api_key = os.getenv("ANTHROPIC_API_KEY")
     if not api_key:
-        print("[!] CLAUDE_API_KEY / ANTHROPIC_API_KEY not found.")
+        print("[!] ANTHROPIC_API_KEY not found.")
         return
 
     print("\n--- Anthropic Claude (Probe) ---")
