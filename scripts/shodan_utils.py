@@ -42,6 +42,7 @@ class CreditBudget:
     def set_budget(self, limit: int):
         """Sets the ephemeral budget for this script execution."""
         self.budget_limit = limit
+        self.credits_used_session = 0
         log.info(f"CreditBudget initialized with limit: {limit}")
 
     def check_can_spend(self, cost: int = 1) -> bool:
