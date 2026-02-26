@@ -26,6 +26,10 @@ class PersistentQuotaTracker:
     """
 
     def __init__(self, db_path: str, max_queries: int, window_days: int):
+        if max_queries <= 0:
+            raise ValueError(f"max_queries must be positive, got {max_queries}")
+        if window_days <= 0:
+            raise ValueError(f"window_days must be positive, got {window_days}")
         self.db_path = Path(db_path)
         self.db_path.parent.mkdir(exist_ok=True, parents=True)
         self.max_queries = max_queries
@@ -67,30 +71,41 @@ class PersistentQuotaTracker:
 
     def record_usage(self, api_name: str, domain: str, cost: int = 1):
         """Record API usage. Each call inserts one row."""
+        if cost < 1:
+            raise ValueError(f"cost must be >= 1, got {cost}")
         self._conn.execute(
             "INSERT INTO api_usage (api_name, domain, cost, timestamp) VALUES (?, ?, ?, ?)",
             (api_name, domain, cost, time.time()),
         )
         self._conn.commit()
-        logger.debug(
-            "Recorded %d query(s) for %s/%s. Remaining: %d/%d",
-            cost, api_name, domain, self.get_remaining(), self.max_queries,
-        )
+        if logger.isEnabledFor(logging.DEBUG):
+            remaining = max(0, self.max_queries - self.get_usage())
+            logger.debug(
+                "Recorded %d query(s) for %s/%s. Remaining: %d/%d",
+                cost, api_name, domain, remaining, self.max_queries,
+            )
 
     def abort_if_exceeded(self, cost: int):
         """Hard-abort (SystemExit) if budget cannot cover `cost` more queries.
 
         Call this BEFORE making any network request.
         """
-        if not self.can_spend(cost):
-            remaining = self.get_remaining()
-            used = self.get_usage()
+        used = self.get_usage()
+        if used + cost > self.max_queries:
+            remaining = max(0, self.max_queries - used)
             logger.error(
                 "QUOTA EXCEEDED: Need %d queries but only %d remaining "
                 "(%d/%d used in last %d days). Aborting.",
                 cost, remaining, used, self.max_queries, self.window_days,
             )
             sys.exit(1)
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        self.close()
+        return False
 
     def close(self):
         """Close the SQLite connection."""
