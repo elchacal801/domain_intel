@@ -30,7 +30,9 @@ async def fetch(session: aiohttp.ClientSession, url: str, proxy: str = None) -> 
     result = {
         "status": "",
         "server": "",
-        "title": ""
+        "title": "",
+        "redirect_status": "",
+        "redirect_target": ""
     }
     try:
         headers = {"User-Agent": USER_AGENT}
@@ -51,6 +53,10 @@ async def fetch(session: aiohttp.ClientSession, url: str, proxy: str = None) -> 
         ) as response:
             result["status"] = str(response.status)
             result["server"] = response.headers.get("Server", "")
+            # Capture redirect info from history
+            if response.history:
+                result["redirect_status"] = str(response.history[0].status)
+                result["redirect_target"] = str(response.history[0].headers.get("Location", ""))
             if response.status < 500:
                 try:
                     # Limit response size read to avoid hanging on large files
@@ -93,6 +99,8 @@ async def _probe_domain(row: dict, domain: str, session: aiohttp.ClientSession, 
     row["http_status"] = res_http["status"]
     row["http_server"] = res_http["server"]
     row["http_title"] = res_http["title"]
+    row["http_redirect_status"] = res_http["redirect_status"]
+    row["http_redirect_target"] = res_http["redirect_target"]
 
 async def prober(input_file: str, output_file: str, max_workers: int, proxy: str, limit: int = 0):
     rows = []
@@ -114,7 +122,8 @@ async def prober(input_file: str, output_file: str, max_workers: int, proxy: str
         rows = rows[:limit]
 
     # Add new output columns
-    new_cols = ["http_status", "http_title", "http_server", "https_status", "https_title", "https_server"]
+    new_cols = ["http_status", "http_title", "http_server", "https_status", "https_title", "https_server",
+                "http_redirect_status", "http_redirect_target"]
     for c in new_cols:
         if c not in fieldnames:
             fieldnames.append(c)
