@@ -17,6 +17,7 @@ import csv
 import logging
 import os
 from typing import Dict
+from urllib.parse import urlparse
 
 logging.basicConfig(
     level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s"
@@ -99,7 +100,7 @@ def extract_brand_name(domain: str) -> str:
     if not domain or not domain.strip():
         return ""
 
-    domain = domain.strip().lower()
+    domain = domain.strip().lower().rstrip(".")
     parts = domain.split(".")
 
     if len(parts) < 2:
@@ -122,21 +123,31 @@ def extract_brand_name(domain: str) -> str:
 
 
 def check_redirects_to_brand(redirect_target: str, brand_domain: str) -> bool:
-    """Check if the redirect target contains the brand domain (case-insensitive).
+    """Check if the redirect target's hostname matches the brand domain.
+
+    Uses urlparse to extract the hostname, then checks for an exact match
+    or a subdomain match (hostname ends with '.brand_domain').
 
     Args:
         redirect_target: The URL the domain redirects to.
         brand_domain: The brand domain to look for (e.g., "amazon.com").
 
     Returns:
-        True if brand_domain appears in redirect_target.
+        True if the redirect target's hostname is or is a subdomain of brand_domain.
     """
     if not redirect_target or not redirect_target.strip():
         return False
     if not brand_domain or not brand_domain.strip():
         return False
 
-    return brand_domain.strip().lower() in redirect_target.strip().lower()
+    brand = brand_domain.strip().lower()
+    try:
+        hostname = urlparse(redirect_target.strip()).hostname or ""
+    except Exception:
+        return False
+    hostname = hostname.lower()
+    # Exact match or subdomain match (e.g., www.amazon.com matches amazon.com)
+    return hostname == brand or hostname.endswith("." + brand)
 
 
 def check_registrant_mismatch(registrant_org: str, brand_domain: str) -> bool:

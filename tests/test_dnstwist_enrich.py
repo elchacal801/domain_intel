@@ -4,7 +4,6 @@
 import csv
 import os
 import sys
-import tempfile
 
 import pytest
 
@@ -98,6 +97,14 @@ class TestCheckRedirectsToBrand:
 
     def test_empty_redirect(self):
         assert check_redirects_to_brand("", "amazon.com") is False
+
+    def test_redirect_to_evil_subdomain(self):
+        """amazon.com.evil.com should NOT match amazon.com."""
+        assert check_redirects_to_brand("https://amazon.com.evil.com/", "amazon.com") is False
+
+    def test_redirect_to_prefixed_domain(self):
+        """notamazon.com should NOT match amazon.com."""
+        assert check_redirects_to_brand("https://notamazon.com/", "amazon.com") is False
 
 
 # ---------------------------------------------------------------------------
