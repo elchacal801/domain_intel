@@ -144,3 +144,36 @@ The data flow moves from **Inputs** &rarr; **Discovery** &rarr; **Enrichment** &
 | **`evidence_packages/README.md`** | *Documentation* | **Workflow Docs**. Evidence ID format, generation commands, review checklist, and OPSEC guidance. |
 
 See `evidence_packages/README.md` for detailed usage.
+
+---
+
+## 11. Manual Investigation Tools
+
+These tools are NOT part of the automated pipeline. They query external APIs with strict quotas and must be run manually.
+
+### SecurityTrails (`scripts/enrich_securitytrails.py`)
+
+**Quota:** 50 API queries per 30-day rolling window (free tier). Each domain investigation costs 4 queries.
+
+```bash
+# Check remaining budget
+python scripts/enrich_securitytrails.py --budget-check
+
+# Investigate a domain (prints to console)
+python scripts/enrich_securitytrails.py --domain evil-example.com
+
+# Investigate and save to CSV
+python scripts/enrich_securitytrails.py --domain evil-example.com --save
+```
+
+**Output file:** `data/manual_investigations.csv`
+**Cache:** `data/.securitytrails_cache/` (30-day TTL, cached queries don't consume quota)
+**Budget DB:** `data/.securitytrails_cache/budget.db` (persistent, tracks all queries)
+
+| Column | Description |
+| :--- | :--- |
+| `st_dns_history_count` | Number of unique historical A record IPs |
+| `st_registrar_changes` | Number of distinct WHOIS registrars |
+| `st_mx_history` | Semicolon-separated historical MX providers |
+| `st_first_seen` | Earliest DNS record date |
+| `st_mx_change_date` | Most recent MX record change date |
