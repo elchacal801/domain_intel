@@ -236,6 +236,9 @@ jobs:
         continue-on-error: true
         run: python scripts/enrich_icij.py
 
+      - name: dnstwist Cross-Reference Enrichment
+        run: python scripts/enrich_dnstwist.py
+
       - name: Infrastructure Fingerprinting
         run: python scripts/match_fingerprints.py
 
