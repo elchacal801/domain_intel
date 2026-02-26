@@ -1,44 +1,44 @@
 id: "FP-0007"
 name: "Typosquat Evasion Infrastructure"
 description: >
-  Domains flagged as typosquats that redirect (301/302) and maintain
-  active MX, indicating operational evasion infrastructure rather than
-  parked domains.
-version: 1
+  Domains confirmed as typosquats (via dnstwist) exhibiting evasion
+  behaviors: strategic redirects to brand, active MX, registrant
+  mismatch, or sanctions matches.
+version: 2
 
 indicators:
-  - field: risk_tags
-    match_type: contains
-    value: "typosquat"
-    required: true
-  - field: http_status
-    match_type: regex
-    value: "^3\\d\\d$"
-    required: true
-  - field: mx
-    match_type: contains
-    value: "."
+  - field: dnstwist_match
+    match_type: exact
+    value: "True"
     required: true
 
-confidence_base: 75
+confidence_base: 45
 
 confidence_modifiers:
-  - field: gleif_status
+  - field: redirects_to_brand
     match_type: exact
-    value: "ACTIVE"
-    delta: -15
-  - field: gleif_lei
+    value: "True"
+    delta: 30
+  - field: primary_mx
+    match_type: contains
+    value: "."
+    delta: 20
+  - field: registrant_mismatch
     match_type: exact
-    value: ""
+    value: "True"
+    delta: 15
+  - field: http_title
+    match_type: regex
+    value: "(?i)(parked|for sale|buy this|domain for sale)"
     delta: 10
   - field: os_match_score
     match_type: range
     value: "70-100"
     delta: 20
-  - field: icij_entity_match
+  - field: ssl_present
     match_type: exact
     value: "True"
-    delta: 15
+    delta: 5
   - field: vt_malicious_count
     match_type: range
     value: "3-100"

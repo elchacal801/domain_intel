@@ -300,3 +300,88 @@ class TestMatchDomain:
         row = _make_row(asn="99999")
         matches = match_domain(row, fps)
         assert len(matches) == 0
+
+
+# ---------------------------------------------------------------------------
+# TestFP0007Typosquat
+# ---------------------------------------------------------------------------
+
+class TestFP0007Typosquat:
+    """Validate the rewritten FP-0007 fires correctly with dnstwist data."""
+
+    def test_fires_on_dnstwist_match(self):
+        """FP-0007 should fire when dnstwist_match is True with full evidence."""
+        fp = _make_fp(
+            id="FP-0007",
+            name="Typosquat Evasion Infrastructure",
+            indicators=[
+                {"field": "dnstwist_match", "match_type": "exact", "value": "True", "required": True},
+            ],
+            confidence_base=45,
+            confidence_modifiers=[
+                {"field": "redirects_to_brand", "match_type": "exact", "value": "True", "delta": 30},
+                {"field": "primary_mx", "match_type": "contains", "value": ".", "delta": 20},
+                {"field": "registrant_mismatch", "match_type": "exact", "value": "True", "delta": 15},
+            ],
+            flame_tp_ids=["TP-0012"],
+        )
+        fp = validate_fingerprint(fp, source="test")
+        row = _make_row(
+            domain="amaz0n.com",
+            dnstwist_match="True",
+            redirects_to_brand="True",
+            primary_mx="mx.evilhost.com",
+            registrant_mismatch="True",
+        )
+        result = evaluate_fingerprint(fp, row)
+        assert result is not None
+        assert result["fp_id"] == "FP-0007"
+        assert result["confidence"] == 100  # 45 + 30 + 20 + 15 = 110, clamped to 100
+
+    def test_does_not_fire_without_dnstwist_match(self):
+        """FP-0007 should NOT fire when dnstwist_match is False."""
+        fp = _make_fp(
+            id="FP-0007",
+            indicators=[
+                {"field": "dnstwist_match", "match_type": "exact", "value": "True", "required": True},
+            ],
+            confidence_base=45,
+        )
+        fp = validate_fingerprint(fp, source="test")
+        row = _make_row(dnstwist_match="False")
+        assert evaluate_fingerprint(fp, row) is None
+
+    def test_base_score_with_no_modifiers_matching(self):
+        """With only dnstwist_match, score should be base 45."""
+        fp = _make_fp(
+            id="FP-0007",
+            indicators=[
+                {"field": "dnstwist_match", "match_type": "exact", "value": "True", "required": True},
+            ],
+            confidence_base=45,
+            confidence_modifiers=[
+                {"field": "redirects_to_brand", "match_type": "exact", "value": "True", "delta": 30},
+            ],
+        )
+        fp = validate_fingerprint(fp, source="test")
+        row = _make_row(dnstwist_match="True", redirects_to_brand="False")
+        result = evaluate_fingerprint(fp, row)
+        assert result is not None
+        assert result["confidence"] == 45
+
+    def test_yaml_loads_successfully(self):
+        """The actual FP-0007 YAML file should load and validate."""
+        import yaml
+        yaml_path = os.path.join(
+            os.path.dirname(__file__), '..', 'config', 'fingerprints',
+            'FP-0007-typosquat-evasion-infra.yaml'
+        )
+        with open(yaml_path, 'r') as f:
+            fp = yaml.safe_load(f)
+        result = validate_fingerprint(fp, source=yaml_path)
+        assert result["id"] == "FP-0007"
+        assert result["confidence_base"] == 45
+        # Verify the required gate
+        required_indicators = [i for i in result["indicators"] if i.get("required")]
+        assert len(required_indicators) == 1
+        assert required_indicators[0]["field"] == "dnstwist_match"
