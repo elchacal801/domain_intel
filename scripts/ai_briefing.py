@@ -20,6 +20,7 @@ from datetime import datetime
 from collections import Counter
 from dotenv import load_dotenv
 from shared.llm_client import LLMClient
+from shared.flame_client import get_regulatory_alerts
 
 # Load environment variables
 load_dotenv()
@@ -401,6 +402,38 @@ def generate_briefing(stats):
                            f"[samples: {samples}]")
         evidence_str = "\n".join(ev_lines)
 
+    # Regulatory Pulse
+    reg_alerts = get_regulatory_alerts()
+    reg_str = "No regulatory data available"
+    if reg_alerts:
+        by_severity = {"high": 0, "medium": 0, "low": 0}
+        by_source = {}
+        tp_alert_counts = {}
+        for ra in reg_alerts:
+            sev = ra.get("severity", "medium")
+            by_severity[sev] = by_severity.get(sev, 0) + 1
+            src = ra.get("source", "unknown")
+            by_source[src] = by_source.get(src, 0) + 1
+            for tp_id in ra.get("mapped_tp_ids", []):
+                if tp_id not in tp_alert_counts:
+                    tp_alert_counts[tp_id] = {"total": 0, "high": 0}
+                tp_alert_counts[tp_id]["total"] += 1
+                if sev == "high":
+                    tp_alert_counts[tp_id]["high"] += 1
+
+        source_parts = ", ".join([f"{s.upper()} ({c})" for s, c in sorted(by_source.items(), key=lambda x: x[1], reverse=True)])
+        tp_parts = "\n".join([
+            f"    - {tp}: {counts['total']} alerts ({counts['high']} high severity)"
+            for tp, counts in sorted(tp_alert_counts.items(), key=lambda x: x[1]['total'], reverse=True)[:10]
+        ])
+
+        reg_str = (
+            f"Active Regulatory Alerts: {len(reg_alerts)} total "
+            f"({by_severity.get('high', 0)} high, {by_severity.get('medium', 0)} medium, {by_severity.get('low', 0)} low)\n"
+            f"    By Source: {source_parts}\n"
+            f"    TP-Linked Alerts:\n{tp_parts}"
+        )
+
     data_summary = f"""
     Date: {datetime.now().strftime('%Y-%m-%d')}
     Total Domains Monitored: {stats["total_domains"]}
@@ -421,7 +454,10 @@ def generate_briefing(stats):
 
     [FLAME Evidence Candidates]
 {evidence_str}
-    
+
+    [Regulatory Pulse]
+{reg_str}
+
     [Risk Signal Breakdown]
 {risk_str}
     
@@ -457,6 +493,8 @@ def generate_briefing(stats):
     If FLAME Threat Path data is present, reference the threat path titles and IDs in your narrative.
     If FLAME Evidence Candidates are listed, include an "Evidence Pipeline" section recommending
     which clusters should be submitted as operational evidence to the FLAME framework.
+    If Regulatory Pulse data is present, include a "Regulatory Landscape" section assessing
+    how regulatory enforcement trends align with observed threat activity in the domain telemetry.
     """
     
     print("Generating briefing with data:")
