@@ -95,6 +95,21 @@ class TestParseIcijNodesCsv:
 
 
 # ============================================================
+# Org Name Extraction (2 tests)
+# ============================================================
+
+class TestGetOrgName:
+
+    def test_prefers_registrant_org(self):
+        row = {"registrant_org": "Acme Corp", "ssl_org": "Cloudflare"}
+        assert get_org_name(row) == "Acme Corp"
+
+    def test_falls_back_to_ssl_org(self):
+        row = {"registrant_org": "", "ssl_org": "Google LLC"}
+        assert get_org_name(row) == "Google LLC"
+
+
+# ============================================================
 # Fuzzy Matching (3 tests)
 # ============================================================
 
