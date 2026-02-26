@@ -98,7 +98,8 @@ def query_domain(domain: str, api_key: str, tracker: PersistentQuotaTracker,
 
     results = {}
     for ep in endpoints:
-        cache_key = f"st:{domain}:{ep.split('/', 1)[1]}"
+        suffix = ep.split(f"{domain}/", 1)[1]  # "dns/a", "dns/mx", "dns/ns", "whois"
+        cache_key = f"st:{domain}:{suffix}"
         cached = cache.get(cache_key, max_age_days=CACHE_TTL_DAYS)
         if cached is not None:
             logger.info("Cache hit: %s", cache_key)
