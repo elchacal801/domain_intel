@@ -22,7 +22,15 @@ indicators:
 
 confidence_base: 75
 
-confidence_modifiers: []
+confidence_modifiers:
+  - field: gleif_status
+    match_type: exact
+    value: "ACTIVE"
+    delta: -15
+  - field: gleif_lei
+    match_type: exact
+    value: ""
+    delta: 10
 
 flame_tp_ids:
   - "TP-0012"
