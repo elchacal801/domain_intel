@@ -117,8 +117,13 @@ def parse_vt_response(data: dict) -> Dict[str, str]:
 
 @retry(max_attempts=3, backoff_base=5.0, exceptions=(requests.RequestException,))
 def _vt_api_get(url: str, headers: dict) -> requests.Response:
-    """GET a VT API endpoint with automatic retry on transient errors."""
-    return requests.get(url, headers=headers, timeout=30)
+    """GET request to VT API with retry on transient errors."""
+    resp = requests.get(url, headers=headers, timeout=30)
+    if resp.status_code == 429:
+        raise requests.RequestException(
+            f"Rate limited (429), Retry-After: {resp.headers.get('Retry-After', 'unknown')}"
+        )
+    return resp
 
 
 # ---------------------------------------------------------------------------
@@ -163,7 +168,11 @@ def query_virustotal(
     rate_limiter.wait()
 
     # 4. Spend budget and call API
-    budget.spend(1)
+    try:
+        budget.spend(1)
+    except RuntimeError:
+        logger.warning("Budget exhausted during spend — skipping %s", domain)
+        return dict(EMPTY_RESULT)
     url = f"{VT_API_BASE}/{domain}"
     headers = {"x-apikey": api_key}
 
