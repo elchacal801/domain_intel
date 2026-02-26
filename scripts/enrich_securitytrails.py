@@ -17,7 +17,7 @@ import csv
 import logging
 import os
 import sys
-from typing import Dict, List, Optional
+from typing import Dict, Optional
 
 import requests
 from dotenv import load_dotenv
@@ -114,6 +114,8 @@ def query_domain(domain: str, api_key: str, tracker: PersistentQuotaTracker,
 
         data = _st_api_get(ep, api_key)
         tracker.record_usage("securitytrails", domain, cost=1)
+        # Conservative accounting: record usage even on 403/404 since the
+        # SecurityTrails API counts any request against the free-tier quota.
 
         if data is not None:
             cache.set(cache_key, data)
@@ -236,7 +238,7 @@ def format_console_output(domain: str, dns_a: dict, dns_mx: dict,
     lines.append(sep)
     lines.append(f" SecurityTrails Investigation: {domain}")
     lines.append(sep)
-    lines.append(f" Budget: {remaining}/50 remaining")
+    lines.append(f" Budget: {remaining}/{MAX_QUERIES_30D} remaining")
     lines.append("")
 
     # A Records
@@ -308,7 +310,7 @@ def main():
     if args.budget_check:
         remaining = tracker.get_remaining()
         used = tracker.get_usage()
-        print(f"SecurityTrails budget: {remaining}/50 remaining ({used} used in last 30 days)")
+        print(f"SecurityTrails budget: {remaining}/{MAX_QUERIES_30D} remaining ({used} used in last 30 days)")
         tracker.close()
         return
 

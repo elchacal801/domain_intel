@@ -4,7 +4,6 @@
 import sys
 import os
 import csv
-import json
 from unittest.mock import patch, MagicMock
 
 import pytest
