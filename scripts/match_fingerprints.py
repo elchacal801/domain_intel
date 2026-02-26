@@ -146,7 +146,7 @@ def check_indicator(field_data: str, match_type: str, value: str,
     Returns ``False`` for empty *field_data*.
     """
     if not field_data:
-        return False
+        return match_type == "exact" and value.strip() == ""
 
     if match_type == "exact":
         return field_data.strip().lower() == value.strip().lower()
