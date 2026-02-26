@@ -46,6 +46,14 @@ confidence_modifiers:
     match_type: exact
     value: "True"
     delta: 15
+  - field: vt_malicious_count
+    match_type: range
+    value: "3-100"
+    delta: 20
+  - field: phishtank_match
+    match_type: exact
+    value: "True"
+    delta: 15
 
 flame_tp_ids:
   - "TP-0003"

@@ -272,6 +272,26 @@ jobs:
           fi
           cp data/shodan_intelligence.csv docs/data/ || true
 
+      - name: VirusTotal Enrichment
+        timeout-minutes: 30
+        continue-on-error: true
+        env:
+          VT_API_KEY: ${{ secrets.VT_API_Key }}
+        run: |
+          if [ -n "$VT_API_KEY" ]; then
+             python scripts/enrich_virustotal.py --input data/triage_candidates.csv \
+               --output data/virustotal_intelligence.csv --budget 500 --limit 500
+          fi
+          cp data/virustotal_intelligence.csv docs/data/ || true
+
+      - name: PhishTank & URLhaus Feed Matching
+        timeout-minutes: 30
+        continue-on-error: true
+        run: |
+          python scripts/enrich_phishtank.py --input data/dea_domains.csv \
+            --output data/phishtank_matches.csv
+          cp data/phishtank_matches.csv docs/data/ || true
+
       - name: Technical & Pivot Enrichment
         timeout-minutes: 20
         continue-on-error: true
