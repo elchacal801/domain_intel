@@ -21,6 +21,11 @@ shodan:
   budget_default: 20
   rate_limit_rps: 1
 
+virustotal:
+  budget_default: 500
+  rate_limit_rpm: 4
+  cache_ttl_days: 7
+
 paths:
   classification_file: "data/ai_classifications.csv"
   briefing_file: "data/daily_briefing.json"
