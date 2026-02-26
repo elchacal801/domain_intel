@@ -158,3 +158,23 @@ class TestDatasetDownload:
         assert len(entries) > 0
         names = [e["name"] for e in entries]
         assert "apple inc." in names
+
+
+class TestFingerprintModifiers:
+
+    def test_opensanctions_score_applies_delta(self):
+        """os_match_score in range 70-100 should apply +20 delta."""
+        from match_fingerprints import calculate_confidence, validate_fingerprint
+
+        fp = {
+            "id": "FP-TEST", "name": "Test", "description": "", "version": 1,
+            "indicators": [{"field": "asn", "match_type": "exact", "value": "16276", "required": True}],
+            "confidence_base": 60,
+            "confidence_modifiers": [
+                {"field": "os_match_score", "match_type": "range", "value": "70-100", "delta": 20},
+            ],
+            "flame_tp_ids": [], "ttl_days": 30,
+        }
+        fp = validate_fingerprint(fp, source="test")
+        row = {"asn": "16276", "os_match_score": "85"}
+        assert calculate_confidence(fp, row) == 80

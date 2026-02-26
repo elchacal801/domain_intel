@@ -171,3 +171,23 @@ class TestCacheBehavior:
         lookup = build_org_lookup(rows, [], cache=mock_cache, use_cache=True)
 
         assert lookup["Cached Corp"]["icij_jurisdiction"] == "BVI"
+
+
+class TestFingerprintModifiers:
+
+    def test_icij_match_applies_delta(self):
+        """icij_entity_match == 'True' should apply +15 delta."""
+        from match_fingerprints import calculate_confidence, validate_fingerprint
+
+        fp = {
+            "id": "FP-TEST", "name": "Test", "description": "", "version": 1,
+            "indicators": [{"field": "asn", "match_type": "exact", "value": "16276", "required": True}],
+            "confidence_base": 60,
+            "confidence_modifiers": [
+                {"field": "icij_entity_match", "match_type": "exact", "value": "True", "delta": 15},
+            ],
+            "flame_tp_ids": [], "ttl_days": 30,
+        }
+        fp = validate_fingerprint(fp, source="test")
+        row = {"asn": "16276", "icij_entity_match": "True"}
+        assert calculate_confidence(fp, row) == 75
