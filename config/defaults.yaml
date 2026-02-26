@@ -31,3 +31,7 @@ paths:
   briefing_file: "data/daily_briefing.json"
   probed_file: "data/dea_domains_probed.csv"
   triage_output: "data/triage_candidates.csv"
+
+securitytrails:
+  max_queries_30d: 50
+  cache_ttl_days: 30
