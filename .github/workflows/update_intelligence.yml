@@ -244,9 +244,8 @@ jobs:
       - name: Infrastructure Fingerprinting
         run: python scripts/match_fingerprints.py
 
-      - name: Build Investigate Index
-        run: |
-          python scripts/build_investigate_index.py
+      - name: Build Frontend Data
+        run: python scripts/build_frontend_data.py
 
       - name: Visual Fingerprinting (Optional)
         timeout-minutes: 30
@@ -348,7 +347,6 @@ jobs:
           # Now runs AFTER all enrichment to reflect accurate High Risk counts
           python scripts/generate_pivots.py --input data/dea_domains_probed.csv
           python scripts/track_history.py
-          python scripts/build_dashboard_data.py
 
       - name: Export STIX
         run: python scripts/export_stix.py --input data/dea_domains_probed.csv
@@ -369,10 +367,6 @@ jobs:
           cd frontend
           npm ci
           npm run build
-          # Sync built assets into docs/ (replaces old monolithic index.html + app.js)
-          cp ../docs_new/index.html ../docs/
-          cp -r ../docs_new/assets ../docs/
-          rm -rf ../docs_new
 
       - name: Commit and Push changes
         run: |
