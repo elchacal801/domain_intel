@@ -1,4 +1,5 @@
 import { NavLink, Outlet } from 'react-router-dom';
+import { Shield } from 'lucide-react';
 import GlobalSearch from './GlobalSearch';
 import { useData } from '@/context/DataContext';
 
@@ -12,21 +13,38 @@ export default function Layout() {
   const { loading } = useData();
 
   return (
-    <div className="min-h-screen bg-gray-950">
-      <nav className="border-b border-border-subtle bg-surface">
-        <div className="mx-auto flex max-w-screen-2xl items-center justify-between px-4 py-3">
-          <div className="flex items-center gap-6">
-            <span className="text-lg font-bold text-gray-100">Domain Intel</span>
+    <div className="min-h-screen" style={{ background: '#060a14' }}>
+      {/* --- Top Nav --- */}
+      <nav className="sticky top-0 z-50 border-b border-border-subtle"
+        style={{
+          background: 'linear-gradient(180deg, rgba(11, 17, 32, 0.98), rgba(11, 17, 32, 0.92))',
+          backdropFilter: 'blur(16px)',
+        }}
+      >
+        <div className="mx-auto flex max-w-screen-2xl items-center justify-between px-5 py-3">
+          <div className="flex items-center gap-8">
+            {/* Logo */}
+            <div className="flex items-center gap-2.5">
+              <div className="flex h-8 w-8 items-center justify-center rounded-lg"
+                style={{ background: 'linear-gradient(135deg, #2563eb, #1d4ed8)' }}
+              >
+                <Shield className="h-4.5 w-4.5 text-white" strokeWidth={2.5} />
+              </div>
+              <span className="text-lg font-bold tracking-tight text-gray-100">
+                Domain Intel
+              </span>
+            </div>
+
+            {/* Nav Links */}
             <div className="flex gap-1">
               {NAV_ITEMS.map(item => (
                 <NavLink
                   key={item.to}
                   to={item.to}
                   className={({ isActive }) =>
-                    `rounded-md px-3 py-1.5 text-sm font-medium transition-colors ${
-                      isActive
-                        ? 'bg-blue-600 text-white'
-                        : 'text-gray-400 hover:bg-gray-800 hover:text-gray-200'
+                    `rounded-lg px-3.5 py-1.5 text-sm font-medium transition-all duration-200 ${isActive
+                      ? 'nav-link-active'
+                      : 'nav-link-inactive'
                     }`
                   }
                 >
@@ -35,16 +53,24 @@ export default function Layout() {
               ))}
             </div>
           </div>
+
           <GlobalSearch />
         </div>
       </nav>
-      <main className="mx-auto max-w-screen-2xl p-4">
+
+      {/* --- Main Content --- */}
+      <main className="mx-auto max-w-screen-2xl px-5 py-5">
         {loading ? (
-          <div className="flex h-64 items-center justify-center">
-            <div className="text-gray-400">Loading data...</div>
+          <div className="flex h-80 items-center justify-center">
+            <div className="flex flex-col items-center gap-4">
+              <div className="h-10 w-10 animate-spin rounded-full border-2 border-blue-500/30 border-t-blue-500" />
+              <span className="text-sm font-medium text-gray-500">Loading intelligence data…</span>
+            </div>
           </div>
         ) : (
-          <Outlet />
+          <div className="animate-fade-in">
+            <Outlet />
+          </div>
         )}
       </main>
     </div>

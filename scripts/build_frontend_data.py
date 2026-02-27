@@ -315,11 +315,27 @@ def compute_stats(domains, fp_matches, clusters):
 # Output building
 # ---------------------------------------------------------------------------
 
+def _shard_key(domain):
+    """Derive the shard key from a domain name (first character, lowered)."""
+    if not domain:
+        return "misc"
+    first = domain[0].lower()
+    if first.isalpha():
+        return first
+    if first.isdigit():
+        return first
+    return "misc"
+
+
 def build_outputs(probed_path, fingerprints_path, output_dir,
                   min_cluster_size=DEFAULT_MIN_CLUSTER_SIZE,
                   optional_files=None):
     """
     Main orchestrator: load data, compute derived structures, write JSON files.
+
+    Domains are written as sharded files (domains_{key}.json) to stay under
+    GitHub's 100 MB file size limit. A domain_shards.json manifest lists all
+    available shard keys.
 
     Parameters:
         probed_path: path to dea_domains_probed.csv
@@ -365,11 +381,31 @@ def build_outputs(probed_path, fingerprints_path, output_dir,
     # Write output files
     os.makedirs(output_dir, exist_ok=True)
 
-    # domains.json — compact separators
-    domains_path = os.path.join(output_dir, "domains.json")
-    with open(domains_path, "w", encoding="utf-8") as f:
-        json.dump(domains, f, separators=(",", ":"), ensure_ascii=False)
-    log.info("Wrote %s (%d domains)", domains_path, len(domains))
+    # --- Sharded domains ---
+    # Group domains by first character for shard files
+    shards = defaultdict(dict)
+    for domain, data in domains.items():
+        key = _shard_key(domain)
+        shards[key][domain] = data
+
+    shard_manifest = {}
+    for key, shard_domains in sorted(shards.items()):
+        shard_filename = f"domains_{key}.json"
+        shard_path = os.path.join(output_dir, shard_filename)
+        with open(shard_path, "w", encoding="utf-8") as f:
+            json.dump(shard_domains, f, separators=(",", ":"), ensure_ascii=False)
+        shard_manifest[key] = {
+            "file": shard_filename,
+            "count": len(shard_domains),
+        }
+        log.info("Wrote %s (%d domains)", shard_path, len(shard_domains))
+
+    # domain_shards.json — manifest of all shard files
+    manifest_path = os.path.join(output_dir, "domain_shards.json")
+    with open(manifest_path, "w", encoding="utf-8") as f:
+        json.dump(shard_manifest, f, indent=2, ensure_ascii=False)
+    log.info("Wrote %s (%d shards, %d total domains)",
+             manifest_path, len(shard_manifest), len(domains))
 
     # fingerprint_matches.json — compact separators
     fp_path = os.path.join(output_dir, "fingerprint_matches.json")

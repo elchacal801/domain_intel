@@ -8,19 +8,23 @@ import {
   createColumnHelper,
   flexRender,
 } from '@tanstack/react-table';
+import { Globe, Fingerprint, Network, Hash, Filter, X, ChevronLeft, ChevronRight } from 'lucide-react';
 import { useData } from '@/context/DataContext';
 import ConfidenceBadge from '@/components/ConfidenceBadge';
 import FlameBadge from '@/components/FlameBadge';
 
 /* ---------- KPI card ---------- */
 
-function KpiCard({ label, value }) {
+function KpiCard({ icon: Icon, label, value, color }) {
   return (
-    <div className="rounded-lg border border-border-subtle bg-surface-raised p-4">
-      <div className="text-2xl font-bold text-gray-100">
-        {value ?? '--'}
+    <div className="kpi-card group">
+      <div className="flex items-center justify-between">
+        <div>
+          <div className="text-2xl font-bold text-gray-100">{value ?? '—'}</div>
+          <div className="mt-0.5 text-xs text-gray-500">{label}</div>
+        </div>
+        <Icon className="h-8 w-8 opacity-20 transition-opacity group-hover:opacity-40" style={{ color }} />
       </div>
-      <div className="text-xs text-gray-500">{label}</div>
     </div>
   );
 }
@@ -31,12 +35,9 @@ function MultiSelectFilter({ label, options, selected, onChange }) {
   const [open, setOpen] = useState(false);
   const ref = useRef(null);
 
-  // Close on outside click
   useEffect(() => {
     function handleClick(e) {
-      if (ref.current && !ref.current.contains(e.target)) {
-        setOpen(false);
-      }
+      if (ref.current && !ref.current.contains(e.target)) setOpen(false);
     }
     if (open) {
       document.addEventListener('mousedown', handleClick);
@@ -47,50 +48,49 @@ function MultiSelectFilter({ label, options, selected, onChange }) {
   const toggleItem = useCallback(
     (item) => {
       onChange((prev) =>
-        prev.includes(item)
-          ? prev.filter((x) => x !== item)
-          : [...prev, item],
+        prev.includes(item) ? prev.filter((x) => x !== item) : [...prev, item],
       );
     },
     [onChange],
   );
-
-  const buttonLabel =
-    selected.length === 0
-      ? label
-      : `${label} (${selected.length})`;
 
   return (
     <div className="relative" ref={ref}>
       <button
         type="button"
         onClick={() => setOpen((v) => !v)}
-        className={`rounded-md border px-3 py-1.5 text-sm transition-colors ${
-          selected.length > 0
-            ? 'border-blue-500 bg-blue-950/40 text-blue-300'
-            : 'border-border-subtle bg-surface-raised text-gray-300 hover:bg-gray-800'
-        }`}
+        className={`flex items-center gap-1.5 rounded-lg border px-3 py-1.5 text-sm font-medium transition-all duration-200 ${selected.length > 0
+            ? 'border-blue-500/40 bg-blue-950/30 text-blue-300'
+            : 'border-border-subtle bg-surface-raised text-gray-400 hover:border-gray-600 hover:text-gray-300'
+          }`}
       >
-        {buttonLabel}
-        <span className="ml-1.5 text-xs text-gray-500">{open ? '\u25B2' : '\u25BC'}</span>
+        <Filter className="h-3.5 w-3.5" />
+        {label}
+        {selected.length > 0 && (
+          <span className="ml-0.5 rounded-full bg-blue-500/20 px-1.5 text-xs font-semibold text-blue-300">
+            {selected.length}
+          </span>
+        )}
       </button>
       {open && (
-        <div className="absolute left-0 z-50 mt-1 max-h-60 w-56 overflow-y-auto rounded-md border border-border-subtle bg-surface-raised shadow-lg">
+        <div className="absolute left-0 z-50 mt-2 max-h-60 w-60 overflow-y-auto rounded-xl border border-border-subtle shadow-2xl animate-slide-down"
+          style={{ background: 'rgba(19, 27, 46, 0.98)', backdropFilter: 'blur(16px)' }}
+        >
           {options.length === 0 ? (
-            <div className="px-3 py-2 text-xs text-gray-500">No options</div>
+            <div className="px-3 py-3 text-xs text-gray-500">No options</div>
           ) : (
             options.map((opt) => (
               <label
                 key={opt}
-                className="flex cursor-pointer items-center gap-2 px-3 py-1.5 text-sm text-gray-300 hover:bg-gray-800"
+                className="flex cursor-pointer items-center gap-2.5 px-3 py-2 text-sm text-gray-300 transition-colors hover:bg-white/5"
               >
                 <input
                   type="checkbox"
                   checked={selected.includes(opt)}
                   onChange={() => toggleItem(opt)}
-                  className="rounded border-gray-600"
+                  className="rounded border-gray-600 bg-transparent text-blue-500 focus:ring-blue-500/30"
                 />
-                <span className="truncate">{opt}</span>
+                <span className="truncate font-mono text-xs">{opt}</span>
               </label>
             ))
           )}
@@ -109,13 +109,15 @@ function buildColumns() {
     columnHelper.accessor('domain', {
       header: 'Domain',
       cell: (info) => (
-        <span className="font-mono text-blue-400">{info.getValue()}</span>
+        <span className="font-mono text-sm text-blue-400">{info.getValue()}</span>
       ),
     }),
     columnHelper.accessor('fp_id', {
       header: 'Fingerprint',
       cell: (info) => (
-        <span className="font-mono text-xs text-gray-300">{info.getValue()}</span>
+        <span className="rounded-md bg-gray-800/60 px-2 py-0.5 font-mono text-xs text-gray-300">
+          {info.getValue()}
+        </span>
       ),
     }),
     columnHelper.accessor('confidence', {
@@ -132,10 +134,7 @@ function buildColumns() {
       cell: (info) => {
         const raw = info.getValue();
         if (!raw) return null;
-        const ids = String(raw)
-          .split(/[,;]+/)
-          .map((s) => s.trim())
-          .filter(Boolean);
+        const ids = String(raw).split(/[,;]+/).map((s) => s.trim()).filter(Boolean);
         return (
           <div className="flex flex-wrap gap-1">
             {ids.map((tp) => (
@@ -149,13 +148,13 @@ function buildColumns() {
     columnHelper.accessor('tld', {
       header: 'TLD',
       cell: (info) => (
-        <span className="text-sm text-gray-300">{info.getValue()}</span>
+        <span className="text-sm text-gray-400">{info.getValue()}</span>
       ),
     }),
     columnHelper.accessor('registrar', {
       header: 'Registrar',
       cell: (info) => (
-        <span className="max-w-[150px] truncate text-xs text-gray-400" title={info.getValue()}>
+        <span className="max-w-[150px] truncate text-xs text-gray-500" title={info.getValue()}>
           {info.getValue()}
         </span>
       ),
@@ -171,16 +170,12 @@ export default function MatchDashboard() {
   const { fpMatches, stats } = useData();
   const navigate = useNavigate();
 
-  // Filter state
   const [domainFilter, setDomainFilter] = useState('');
   const [selectedFpIds, setSelectedFpIds] = useState([]);
   const [selectedTlds, setSelectedTlds] = useState([]);
   const [selectedRegistrars, setSelectedRegistrars] = useState([]);
-
-  // Sorting state
   const [sorting, setSorting] = useState([]);
 
-  // Derive unique filter options
   const fpIdOptions = useMemo(() => {
     if (!fpMatches) return [];
     return [...new Set(fpMatches.map((r) => r.fp_id).filter(Boolean))].sort();
@@ -196,32 +191,21 @@ export default function MatchDashboard() {
     return [...new Set(fpMatches.map((r) => r.registrar).filter(Boolean))].sort();
   }, [fpMatches]);
 
-  // Filtered data
   const filteredData = useMemo(() => {
     if (!fpMatches) return [];
     let data = fpMatches;
-
     if (domainFilter) {
       const lower = domainFilter.toLowerCase();
       data = data.filter((r) => r.domain?.toLowerCase().includes(lower));
     }
-    if (selectedFpIds.length > 0) {
-      data = data.filter((r) => selectedFpIds.includes(r.fp_id));
-    }
-    if (selectedTlds.length > 0) {
-      data = data.filter((r) => selectedTlds.includes(r.tld));
-    }
-    if (selectedRegistrars.length > 0) {
-      data = data.filter((r) => selectedRegistrars.includes(r.registrar));
-    }
+    if (selectedFpIds.length > 0) data = data.filter((r) => selectedFpIds.includes(r.fp_id));
+    if (selectedTlds.length > 0) data = data.filter((r) => selectedTlds.includes(r.tld));
+    if (selectedRegistrars.length > 0) data = data.filter((r) => selectedRegistrars.includes(r.registrar));
     return data;
   }, [fpMatches, domainFilter, selectedFpIds, selectedTlds, selectedRegistrars]);
 
   const hasActiveFilters =
-    domainFilter !== '' ||
-    selectedFpIds.length > 0 ||
-    selectedTlds.length > 0 ||
-    selectedRegistrars.length > 0;
+    domainFilter !== '' || selectedFpIds.length > 0 || selectedTlds.length > 0 || selectedRegistrars.length > 0;
 
   function clearFilters() {
     setDomainFilter('');
@@ -230,10 +214,8 @@ export default function MatchDashboard() {
     setSelectedRegistrars([]);
   }
 
-  // Columns (stable reference)
   const columns = useMemo(() => buildColumns(), []);
 
-  // Table instance
   const table = useReactTable({
     data: filteredData,
     columns,
@@ -242,89 +224,68 @@ export default function MatchDashboard() {
     getCoreRowModel: getCoreRowModel(),
     getSortedRowModel: getSortedRowModel(),
     getPaginationRowModel: getPaginationRowModel(),
-    initialState: {
-      pagination: { pageSize: PAGE_SIZE },
-    },
+    initialState: { pagination: { pageSize: PAGE_SIZE } },
   });
 
   const pageIndex = table.getState().pagination.pageIndex;
   const pageCount = table.getPageCount();
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-5">
       {/* ---------- Stats Bar ---------- */}
-      <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-        <KpiCard label="Total Domains" value={stats?.total_domains} />
-        <KpiCard label="FP Matches" value={stats?.matched_domains} />
-        <KpiCard label="Unique FPs" value={stats?.unique_fingerprints} />
-        <KpiCard label="Clusters" value={stats?.total_clusters} />
+      <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
+        <KpiCard icon={Globe} label="Total Domains" value={stats?.total_domains?.toLocaleString()} color="#3b82f6" />
+        <KpiCard icon={Fingerprint} label="FP Matches" value={stats?.matched_domains?.toLocaleString()} color="#f97316" />
+        <KpiCard icon={Hash} label="Unique FPs" value={stats?.unique_fingerprints?.toLocaleString()} color="#a855f7" />
+        <KpiCard icon={Network} label="Clusters" value={stats?.total_clusters?.toLocaleString()} color="#22c55e" />
       </div>
 
       {/* ---------- Filter Bar ---------- */}
-      <div className="flex flex-wrap items-center gap-3">
-        <input
-          type="text"
-          placeholder="Filter by domain..."
-          value={domainFilter}
-          onChange={(e) => setDomainFilter(e.target.value)}
-          className="rounded-md border border-border-subtle bg-surface-raised px-3 py-1.5 text-sm text-gray-200 placeholder-gray-500 outline-none focus:border-blue-500"
-        />
-        <MultiSelectFilter
-          label="Fingerprint"
-          options={fpIdOptions}
-          selected={selectedFpIds}
-          onChange={setSelectedFpIds}
-        />
-        <MultiSelectFilter
-          label="TLD"
-          options={tldOptions}
-          selected={selectedTlds}
-          onChange={setSelectedTlds}
-        />
-        <MultiSelectFilter
-          label="Registrar"
-          options={registrarOptions}
-          selected={selectedRegistrars}
-          onChange={setSelectedRegistrars}
-        />
+      <div className="glass-card flex flex-wrap items-center gap-3 p-3">
+        <div className="relative">
+          <Filter className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-500" />
+          <input
+            type="text"
+            placeholder="Filter by domain…"
+            value={domainFilter}
+            onChange={(e) => setDomainFilter(e.target.value)}
+            className="rounded-lg border border-border-subtle bg-surface py-1.5 pl-9 pr-3 text-sm text-gray-200 placeholder-gray-500 outline-none transition-colors focus:border-blue-500/50"
+          />
+        </div>
+        <MultiSelectFilter label="Fingerprint" options={fpIdOptions} selected={selectedFpIds} onChange={setSelectedFpIds} />
+        <MultiSelectFilter label="TLD" options={tldOptions} selected={selectedTlds} onChange={setSelectedTlds} />
+        <MultiSelectFilter label="Registrar" options={registrarOptions} selected={selectedRegistrars} onChange={setSelectedRegistrars} />
         {hasActiveFilters && (
           <button
             onClick={clearFilters}
-            className="rounded-md border border-border-subtle px-3 py-1.5 text-sm text-gray-400 transition-colors hover:bg-gray-800 hover:text-gray-200"
+            className="flex items-center gap-1 rounded-lg border border-border-subtle px-3 py-1.5 text-sm text-gray-400 transition-colors hover:bg-red-500/10 hover:border-red-500/30 hover:text-red-400"
           >
-            Clear filters
+            <X className="h-3.5 w-3.5" />
+            Clear
           </button>
         )}
-        <span className="ml-auto text-xs text-gray-500">
-          {filteredData.length} result{filteredData.length !== 1 ? 's' : ''}
+        <span className="ml-auto font-mono text-xs text-gray-600">
+          {filteredData.length.toLocaleString()} result{filteredData.length !== 1 ? 's' : ''}
         </span>
       </div>
 
       {/* ---------- Table ---------- */}
-      <div className="overflow-x-auto rounded-lg border border-border-subtle">
-        <table className="w-full text-left text-sm">
-          <thead className="bg-surface text-xs uppercase text-gray-500">
+      <div className="overflow-x-auto rounded-xl border border-border-subtle"
+        style={{ background: 'rgba(11, 17, 32, 0.6)' }}
+      >
+        <table className="intel-table w-full text-left">
+          <thead>
             {table.getHeaderGroups().map((hg) => (
               <tr key={hg.id}>
                 {hg.headers.map((header) => (
                   <th
                     key={header.id}
-                    className={`px-4 py-3 font-medium ${
-                      header.column.getCanSort()
-                        ? 'cursor-pointer select-none hover:text-gray-300'
-                        : ''
-                    }`}
+                    className={header.column.getCanSort() ? 'cursor-pointer select-none' : ''}
                     onClick={header.column.getToggleSortingHandler()}
                   >
-                    <div className="flex items-center gap-1">
-                      {flexRender(
-                        header.column.columnDef.header,
-                        header.getContext(),
-                      )}
-                      {{
-                        asc: ' \u2191',
-                        desc: ' \u2193',
-                      }[header.column.getIsSorted()] ?? ''}
+                    <div className="flex items-center gap-1.5">
+                      {flexRender(header.column.columnDef.header, header.getContext())}
+                      {{ asc: ' ↑', desc: ' ↓' }[header.column.getIsSorted()] ?? ''}
                     </div>
                   </th>
                 ))}
@@ -334,10 +295,7 @@ export default function MatchDashboard() {
           <tbody>
             {table.getRowModel().rows.length === 0 ? (
               <tr>
-                <td
-                  colSpan={columns.length}
-                  className="px-4 py-8 text-center text-gray-500"
-                >
+                <td colSpan={columns.length} className="px-4 py-12 text-center text-gray-500">
                   No matches found
                 </td>
               </tr>
@@ -345,17 +303,11 @@ export default function MatchDashboard() {
               table.getRowModel().rows.map((row) => (
                 <tr
                   key={row.id}
-                  className="cursor-pointer border-t border-border-subtle hover:bg-gray-800/50"
-                  onClick={() =>
-                    navigate(`/investigate/${row.original.domain}`)
-                  }
+                  onClick={() => navigate(`/investigate/${row.original.domain}`)}
                 >
                   {row.getVisibleCells().map((cell) => (
-                    <td key={cell.id} className="px-4 py-2.5">
-                      {flexRender(
-                        cell.column.columnDef.cell,
-                        cell.getContext(),
-                      )}
+                    <td key={cell.id}>
+                      {flexRender(cell.column.columnDef.cell, cell.getContext())}
                     </td>
                   ))}
                 </tr>
@@ -367,24 +319,24 @@ export default function MatchDashboard() {
 
       {/* ---------- Pagination ---------- */}
       {pageCount > 1 && (
-        <div className="flex items-center justify-between text-sm text-gray-400">
-          <span>
+        <div className="flex items-center justify-between text-sm">
+          <span className="font-mono text-xs text-gray-600">
             Page {pageIndex + 1} of {pageCount}
           </span>
           <div className="flex gap-2">
             <button
               onClick={() => table.previousPage()}
               disabled={!table.getCanPreviousPage()}
-              className="rounded-md border border-border-subtle px-3 py-1 text-sm transition-colors hover:bg-gray-800 disabled:cursor-not-allowed disabled:opacity-40"
+              className="flex items-center gap-1 rounded-lg border border-border-subtle px-3 py-1.5 text-sm text-gray-400 transition-all hover:border-blue-500/30 hover:bg-blue-500/5 hover:text-blue-400 disabled:cursor-not-allowed disabled:opacity-30"
             >
-              Previous
+              <ChevronLeft className="h-4 w-4" /> Prev
             </button>
             <button
               onClick={() => table.nextPage()}
               disabled={!table.getCanNextPage()}
-              className="rounded-md border border-border-subtle px-3 py-1 text-sm transition-colors hover:bg-gray-800 disabled:cursor-not-allowed disabled:opacity-40"
+              className="flex items-center gap-1 rounded-lg border border-border-subtle px-3 py-1.5 text-sm text-gray-400 transition-all hover:border-blue-500/30 hover:bg-blue-500/5 hover:text-blue-400 disabled:cursor-not-allowed disabled:opacity-30"
             >
-              Next
+              Next <ChevronRight className="h-4 w-4" />
             </button>
           </div>
         </div>

@@ -381,6 +381,8 @@ jobs:
           cp data/openclaw_stix.json docs/data/
           cp data/openclaw_sigma.yml docs/data/
           cp data/fingerprint_matches.csv docs/data/ || true
+          # Remove stale monolithic domains.json (now sharded by build_frontend_data.py)
+          rm -f docs/data/domains.json
 
           git add data docs
 
