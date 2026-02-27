@@ -374,6 +374,7 @@ jobs:
           git config --global user.email 'github-actions[bot]@users.noreply.github.com'
           
           mkdir -p docs/data
+          touch docs/.nojekyll
           cp data/*.csv docs/data/
           gzip -f data/domain_intel_bundle.json
           cp data/*.json.gz docs/data/
