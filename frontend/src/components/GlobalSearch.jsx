@@ -12,101 +12,90 @@ export default function GlobalSearch() {
   const [open, setOpen] = useState(false);
   const [selectedIndex, setSelectedIndex] = useState(-1);
   const ref = useRef(null);
+  const inputRef = useRef(null);
   const fuseRef = useRef(null);
 
   useEffect(() => {
-    if (fpMatches && fpMatches.length > 0) {
+    if (fpMatches?.length > 0) {
       const seen = new Set();
       const items = fpMatches.filter(m => {
         if (seen.has(m.domain)) return false;
         seen.add(m.domain);
         return true;
       });
-      fuseRef.current = new Fuse(items, {
-        keys: ['domain', 'fp_name'],
-        threshold: 0.3,
-      });
+      fuseRef.current = new Fuse(items, { keys: ['domain', 'fp_name'], threshold: 0.3 });
     }
   }, [fpMatches]);
 
   useEffect(() => {
-    function handleClickOutside(e) {
-      if (ref.current && !ref.current.contains(e.target)) setOpen(false);
+    const handle = (e) => { if (ref.current && !ref.current.contains(e.target)) setOpen(false); };
+    document.addEventListener('mousedown', handle);
+    return () => document.removeEventListener('mousedown', handle);
+  }, []);
+
+  // "/" keyboard shortcut to focus search
+  useEffect(() => {
+    function handleGlobalKey(e) {
+      if (e.key === '/' && !['INPUT', 'TEXTAREA'].includes(document.activeElement?.tagName)) {
+        e.preventDefault();
+        inputRef.current?.focus();
+      }
     }
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
+    document.addEventListener('keydown', handleGlobalKey);
+    return () => document.removeEventListener('keydown', handleGlobalKey);
   }, []);
 
   function handleSearch(value) {
     setQuery(value);
     setSelectedIndex(-1);
-    if (!value.trim() || !fuseRef.current) {
-      setResults([]);
-      setOpen(false);
-      return;
-    }
+    if (!value.trim() || !fuseRef.current) { setResults([]); setOpen(false); return; }
     const hits = fuseRef.current.search(value).slice(0, 10);
     setResults(hits.map(h => h.item));
     setOpen(true);
   }
 
   function handleSelect(domain) {
-    setQuery('');
-    setOpen(false);
-    setSelectedIndex(-1);
+    setQuery(''); setOpen(false); setSelectedIndex(-1);
     navigate(`/investigate/${domain}`);
   }
 
   function handleKeyDown(e) {
-    if (e.key === 'ArrowDown') {
-      e.preventDefault();
-      setSelectedIndex(prev => Math.min(prev + 1, results.length - 1));
-    } else if (e.key === 'ArrowUp') {
-      e.preventDefault();
-      setSelectedIndex(prev => Math.max(prev - 1, -1));
-    } else if (e.key === 'Enter') {
-      if (selectedIndex >= 0 && results[selectedIndex]) {
-        handleSelect(results[selectedIndex].domain);
-      } else if (query.trim()) {
-        setOpen(false);
-        navigate(`/investigate/${query.trim()}`);
-      }
-    } else if (e.key === 'Escape') {
-      setOpen(false);
-    }
+    if (e.key === 'ArrowDown') { e.preventDefault(); setSelectedIndex(p => Math.min(p + 1, results.length - 1)); }
+    else if (e.key === 'ArrowUp') { e.preventDefault(); setSelectedIndex(p => Math.max(p - 1, -1)); }
+    else if (e.key === 'Enter') {
+      if (selectedIndex >= 0 && results[selectedIndex]) handleSelect(results[selectedIndex].domain);
+      else if (query.trim()) { setOpen(false); navigate(`/investigate/${query.trim()}`); }
+    } else if (e.key === 'Escape') setOpen(false);
   }
 
   return (
     <div ref={ref} className="relative">
       <div className="relative">
-        <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-500" />
-        <input
-          type="text"
-          value={query}
-          onChange={e => handleSearch(e.target.value)}
-          onKeyDown={handleKeyDown}
+        <Search className="absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-text-muted" />
+        <input ref={inputRef} type="text" value={query}
+          onChange={e => handleSearch(e.target.value)} onKeyDown={handleKeyDown}
           onFocus={() => { if (results.length > 0) setOpen(true); }}
-          placeholder="Search domains…"
-          className="w-72 rounded-lg border border-border-subtle bg-surface py-2 pl-9 pr-3 text-sm text-gray-100 placeholder-gray-500 transition-all duration-200 focus:border-blue-500/50 focus:outline-none focus:ring-1 focus:ring-blue-500/20"
+          placeholder="Search…"
+          className="w-52 rounded-md border border-border-subtle bg-[#0a0a0a] py-1.5 pl-8 pr-8 text-xs text-text-primary placeholder-text-muted outline-none focus:border-white/15 transition-colors"
         />
+        <span className="absolute right-2.5 top-1/2 -translate-y-1/2 rounded border border-border-subtle px-1 py-0.5 text-[8px] text-text-muted font-mono">/</span>
       </div>
       {open && results.length > 0 && (
-        <div className="absolute right-0 top-full z-50 mt-2 w-96 overflow-hidden rounded-xl border border-border-subtle shadow-2xl animate-slide-down"
-          style={{ background: 'rgba(19, 27, 46, 0.98)', backdropFilter: 'blur(16px)' }}
-        >
+        <div className="absolute right-0 top-full z-50 mt-1.5 w-80 overflow-hidden rounded-lg border border-border-subtle bg-[#111] shadow-2xl animate-slide-down">
           {results.map((r, i) => (
-            <button
-              key={r.domain}
-              onClick={() => handleSelect(r.domain)}
-              className={`flex w-full items-center gap-3 px-4 py-2.5 text-left transition-colors ${i === selectedIndex
-                  ? 'bg-blue-500/10 text-blue-300'
-                  : 'text-gray-300 hover:bg-white/5'
+            <button key={r.domain} onClick={() => handleSelect(r.domain)}
+              className={`flex w-full items-center gap-2 px-3 py-2 text-left transition-colors ${i === selectedIndex ? 'bg-white/5 text-text-primary' : 'text-text-secondary hover:bg-white/[0.03]'
                 }`}
             >
-              <span className="font-mono text-sm">{r.domain}</span>
-              <span className="ml-auto truncate text-xs text-gray-500">{r.fp_name}</span>
+              <span className="font-mono text-xs">{r.domain}</span>
+              <span className="ml-auto truncate text-[10px] text-text-muted">{r.fp_name}</span>
             </button>
           ))}
+        </div>
+      )}
+      {open && query.trim() && results.length === 0 && (
+        <div className="absolute right-0 top-full z-50 mt-1.5 w-80 rounded-lg border border-border-subtle bg-[#111] p-3 text-xs text-text-muted animate-slide-down">
+          No matches — press Enter to investigate "{query.trim()}"
         </div>
       )}
     </div>

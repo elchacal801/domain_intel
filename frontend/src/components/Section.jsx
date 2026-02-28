@@ -14,17 +14,17 @@ export default function Section({ title, icon, accentColor, children, defaultOpe
           <div className="h-4 w-1 rounded-full" style={{ background: accentColor }} />
         )}
         {icon}
-        <h3 className="flex-1 text-left text-xs font-semibold uppercase tracking-wider text-gray-400">
+        <h3 className="flex-1 text-left text-xs font-semibold uppercase tracking-wider text-text-muted">
           {title}
         </h3>
         {isOpen ? (
-          <ChevronUp className="h-4 w-4 text-gray-500" />
+          <ChevronUp className="h-3.5 w-3.5 text-text-muted" />
         ) : (
-          <ChevronDown className="h-4 w-4 text-gray-500" />
+          <ChevronDown className="h-3.5 w-3.5 text-text-muted" />
         )}
       </button>
       {isOpen && (
-        <div className="p-5 animate-fade-in">{children}</div>
+        <div className="p-4 animate-fade-in">{children}</div>
       )}
     </div>
   );

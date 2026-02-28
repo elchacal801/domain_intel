@@ -7,44 +7,33 @@ const NAV_ITEMS = [
   { to: '/matches', label: 'Matches' },
   { to: '/investigate', label: 'Investigate' },
   { to: '/clusters', label: 'Clusters' },
+  { to: '/briefing', label: 'Intel Briefing' },
 ];
 
 export default function Layout() {
-  const { loading } = useData();
+  const { loading, stats } = useData();
 
   return (
-    <div className="min-h-screen" style={{ background: '#060a14' }}>
-      {/* --- Top Nav --- */}
+    <div className="min-h-screen flex flex-col" style={{ background: '#050505' }}>
+      {/* Nav */}
       <nav className="sticky top-0 z-50 border-b border-border-subtle"
-        style={{
-          background: 'linear-gradient(180deg, rgba(11, 17, 32, 0.98), rgba(11, 17, 32, 0.92))',
-          backdropFilter: 'blur(16px)',
-        }}
+        style={{ background: 'rgba(5, 5, 5, 0.95)', backdropFilter: 'blur(12px)' }}
       >
-        <div className="mx-auto flex max-w-screen-2xl items-center justify-between px-5 py-3">
-          <div className="flex items-center gap-8">
-            {/* Logo */}
+        <div className="mx-auto flex max-w-screen-2xl items-center justify-between px-5 py-2.5">
+          <div className="flex items-center gap-7">
             <div className="flex items-center gap-2.5">
-              <div className="flex h-8 w-8 items-center justify-center rounded-lg"
-                style={{ background: 'linear-gradient(135deg, #2563eb, #1d4ed8)' }}
-              >
-                <Shield className="h-4.5 w-4.5 text-white" strokeWidth={2.5} />
-              </div>
-              <span className="text-lg font-bold tracking-tight text-gray-100">
+              <Shield className="h-5 w-5 text-white/60" strokeWidth={2} />
+              <span className="text-base font-bold tracking-tight text-white/90">
                 Domain Intel
               </span>
             </div>
-
-            {/* Nav Links */}
             <div className="flex gap-1">
               {NAV_ITEMS.map(item => (
                 <NavLink
                   key={item.to}
                   to={item.to}
                   className={({ isActive }) =>
-                    `rounded-lg px-3.5 py-1.5 text-sm font-medium transition-all duration-200 ${isActive
-                      ? 'nav-link-active'
-                      : 'nav-link-inactive'
+                    `rounded-md px-3 py-1.5 text-xs font-medium transition-all duration-200 ${isActive ? 'nav-link-active' : 'nav-link-inactive'
                     }`
                   }
                 >
@@ -53,18 +42,17 @@ export default function Layout() {
               ))}
             </div>
           </div>
-
           <GlobalSearch />
         </div>
       </nav>
 
-      {/* --- Main Content --- */}
-      <main className="mx-auto max-w-screen-2xl px-5 py-5">
+      {/* Main */}
+      <main className="mx-auto w-full max-w-screen-2xl flex-1 px-5 py-5">
         {loading ? (
           <div className="flex h-80 items-center justify-center">
             <div className="flex flex-col items-center gap-4">
-              <div className="h-10 w-10 animate-spin rounded-full border-2 border-blue-500/30 border-t-blue-500" />
-              <span className="text-sm font-medium text-gray-500">Loading intelligence data…</span>
+              <div className="h-8 w-8 animate-spin rounded-full border-2 border-white/10 border-t-white/50" />
+              <span className="text-xs text-text-muted">Loading intelligence…</span>
             </div>
           </div>
         ) : (
@@ -73,6 +61,22 @@ export default function Layout() {
           </div>
         )}
       </main>
+
+      {/* Footer */}
+      <footer className="border-t border-border-subtle px-5 py-3">
+        <div className="mx-auto flex max-w-screen-2xl items-center justify-between">
+          <span className="text-[10px] text-text-muted">
+            Domain Intelligence Platform
+          </span>
+          {stats?.last_updated && (
+            <span className="text-[10px] text-text-muted">
+              Data: {new Date(stats.last_updated).toLocaleDateString('en-US', {
+                year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit'
+              })}
+            </span>
+          )}
+        </div>
+      </footer>
     </div>
   );
 }

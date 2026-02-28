@@ -1,185 +1,264 @@
-import { useState, useCallback, useMemo } from 'react';
+import { useState, useMemo, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useData } from '@/context/DataContext';
 import SigmaGraph from '@/components/SigmaGraph';
-import { Network, Sliders, ExternalLink } from 'lucide-react';
+import { Network, Sliders, ExternalLink, BarChart3, ChevronLeft, ChevronRight, X } from 'lucide-react';
 
-const INFRA_TYPES = [
-  { key: 'mx_host', label: 'MX Host', color: '#3b82f6' },
-  { key: 'ip', label: 'IP Address', color: '#f97316' },
-  { key: 'registrar_ns', label: 'Registrar+NS', color: '#22c55e' },
-];
+const TYPE_META = {
+  mx_host: { label: 'MX Host', color: '#3b82f6' },
+  ip: { label: 'IP Address', color: '#f97316' },
+  registrar_ns: { label: 'Registrar+NS', color: '#22c55e' },
+};
+
+const PAGE_SIZE = 30;
+
+/** Extract top infrastructure nodes ranked by connected domain count. */
+function buildClusterTable(data) {
+  if (!data?.nodes?.length) return [];
+  const nodeMap = new Map();
+  for (const n of data.nodes) nodeMap.set(n.id, n);
+
+  // Count domain neighbors per infra node
+  const infraDomains = new Map();
+  for (const edge of data.edges || []) {
+    const src = nodeMap.get(edge.source);
+    const tgt = nodeMap.get(edge.target);
+    if (!src || !tgt) continue;
+    if (src.type !== 'domain' && tgt.type === 'domain') {
+      if (!infraDomains.has(edge.source)) infraDomains.set(edge.source, new Set());
+      infraDomains.get(edge.source).add(tgt.label);
+    }
+    if (tgt.type !== 'domain' && src.type === 'domain') {
+      if (!infraDomains.has(edge.target)) infraDomains.set(edge.target, new Set());
+      infraDomains.get(edge.target).add(src.label);
+    }
+  }
+
+  const rows = [];
+  for (const [id, domains] of infraDomains) {
+    const node = nodeMap.get(id);
+    if (!node || domains.size < 3) continue;
+    rows.push({
+      id,
+      label: node.label,
+      type: node.type,
+      domainCount: domains.size,
+      domains: [...domains].sort(),
+    });
+  }
+  rows.sort((a, b) => b.domainCount - a.domainCount);
+  return rows;
+}
+
+/** Build a subgraph for a single infra node + its neighbors. */
+function buildSubgraph(data, infraId) {
+  if (!data?.nodes?.length) return { nodes: [], edges: [] };
+  const nodeMap = new Map();
+  for (const n of data.nodes) nodeMap.set(n.id, n);
+
+  const neighborIds = new Set();
+  neighborIds.add(infraId);
+  const subEdges = [];
+  for (const edge of data.edges || []) {
+    if (edge.source === infraId || edge.target === infraId) {
+      neighborIds.add(edge.source);
+      neighborIds.add(edge.target);
+      subEdges.push(edge);
+    }
+  }
+
+  const subNodes = [];
+  for (const id of neighborIds) {
+    const node = nodeMap.get(id);
+    if (node) subNodes.push(node);
+  }
+
+  return { nodes: subNodes, edges: subEdges };
+}
 
 export default function ClusterView() {
   const { clusters, loading } = useData();
   const navigate = useNavigate();
 
-  const [selectedNode, setSelectedNode] = useState(null);
-  const [typeFilters, setTypeFilters] = useState(['mx_host', 'ip', 'registrar_ns']);
-  const [minSize, setMinSize] = useState(3);
+  const [view, setView] = useState('table'); // 'table' | 'graph'
+  const [selectedCluster, setSelectedCluster] = useState(null);
+  const [page, setPage] = useState(0);
+  const [search, setSearch] = useState('');
 
-  const filters = useMemo(
-    () => ({ types: typeFilters, minSize }),
-    [typeFilters, minSize],
-  );
+  const clusterTable = useMemo(() => buildClusterTable(clusters), [clusters]);
 
-  const toggleType = useCallback((key) => {
-    setTypeFilters((prev) =>
-      prev.includes(key) ? prev.filter((t) => t !== key) : [...prev, key],
-    );
-  }, []);
+  const filtered = useMemo(() => {
+    if (!search) return clusterTable;
+    const l = search.toLowerCase();
+    return clusterTable.filter(r => r.label.toLowerCase().includes(l));
+  }, [clusterTable, search]);
 
-  const handleNodeClick = useCallback(
-    (nodeInfo) => {
-      if (!nodeInfo) { setSelectedNode(null); return; }
-      if (nodeInfo.type === 'domain') { navigate(`/investigate/${nodeInfo.label}`); return; }
-      setSelectedNode(nodeInfo);
-    },
-    [navigate],
-  );
+  const pageCount = Math.ceil(filtered.length / PAGE_SIZE);
+  const pageRows = filtered.slice(page * PAGE_SIZE, (page + 1) * PAGE_SIZE);
 
-  const counts = useMemo(() => {
-    if (!clusters) return { nodes: 0, edges: 0 };
-    const typeSet = new Set(typeFilters);
-    const infraIds = new Set();
-    for (const node of clusters.nodes || []) {
-      if (node.type !== 'domain' && typeSet.has(node.type)) infraIds.add(node.id);
-    }
-    const domainIds = new Set();
-    let edgeCount = 0;
-    for (const edge of clusters.edges || []) {
-      const srcIsInfra = infraIds.has(edge.source);
-      const tgtIsInfra = infraIds.has(edge.target);
-      if (srcIsInfra || tgtIsInfra) {
-        edgeCount++;
-        if (!srcIsInfra) domainIds.add(edge.source);
-        if (!tgtIsInfra) domainIds.add(edge.target);
-      }
-    }
-    return { nodes: infraIds.size + domainIds.size, edges: edgeCount };
-  }, [clusters, typeFilters]);
+  const subgraph = useMemo(() => {
+    if (!selectedCluster || !clusters) return null;
+    return buildSubgraph(clusters, selectedCluster.id);
+  }, [selectedCluster, clusters]);
+
+  const handleNodeClick = useCallback((info) => {
+    if (!info) return;
+    if (info.type === 'domain') navigate(`/investigate/${info.label}`);
+  }, [navigate]);
+
+  const graphFilters = useMemo(() => ({
+    types: ['mx_host', 'ip', 'registrar_ns'],
+    minSize: 0,
+  }), []);
 
   if (loading) {
     return (
-      <div className="flex h-96 items-center justify-center">
-        <div className="flex flex-col items-center gap-4">
-          <div className="h-10 w-10 animate-spin rounded-full border-2 border-blue-500/30 border-t-blue-500" />
-          <span className="text-sm text-gray-500">Loading cluster data…</span>
+      <div className="flex h-80 items-center justify-center">
+        <div className="flex flex-col items-center gap-3">
+          <div className="h-7 w-7 animate-spin rounded-full border-2 border-white/10 border-t-white/50" />
+          <span className="text-xs text-text-muted">Loading clusters…</span>
         </div>
       </div>
     );
   }
 
-  if (!clusters || (clusters.nodes?.length ?? 0) === 0) {
+  if (clusterTable.length === 0) {
     return (
-      <div className="flex h-96 flex-col items-center justify-center gap-4">
-        <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-gray-800/50">
-          <Network className="h-8 w-8 text-gray-600" />
-        </div>
-        <p className="text-gray-500">No cluster data available.</p>
+      <div className="flex h-80 flex-col items-center justify-center gap-3">
+        <Network className="h-8 w-8 text-white/10" />
+        <p className="text-sm text-text-muted">No cluster data available.</p>
       </div>
     );
   }
 
   return (
-    <div className="flex h-[calc(100vh-5rem)] gap-4">
-      {/* Graph area */}
-      <div className="relative flex-1 overflow-hidden rounded-xl border border-border-subtle"
-        style={{ background: 'rgba(6, 10, 20, 0.8)' }}
-      >
-        {/* Controls overlay */}
-        <div className="absolute left-4 top-4 z-10 rounded-xl border border-border-subtle p-4"
-          style={{ background: 'rgba(19, 27, 46, 0.92)', backdropFilter: 'blur(16px)' }}
-        >
-          {/* Header */}
-          <div className="mb-4 flex items-center gap-2">
-            <Sliders className="h-4 w-4 text-gray-500" />
-            <span className="text-xs font-semibold uppercase tracking-wider text-gray-400">Controls</span>
-          </div>
-
-          {/* Node Types */}
-          <div className="mb-4">
-            <div className="mb-2 text-[10px] font-semibold uppercase tracking-widest text-gray-500">Node Types</div>
-            <div className="space-y-1.5">
-              {INFRA_TYPES.map(({ key, label, color }) => (
-                <label key={key} className="flex cursor-pointer items-center gap-2.5 text-sm text-gray-300">
-                  <input
-                    type="checkbox"
-                    checked={typeFilters.includes(key)}
-                    onChange={() => toggleType(key)}
-                    className="rounded border-gray-600 bg-transparent text-blue-500 focus:ring-blue-500/30"
-                  />
-                  <span className="inline-block h-2.5 w-2.5 rounded-full" style={{ backgroundColor: color }} />
-                  {label}
-                </label>
-              ))}
-            </div>
-          </div>
-
-          {/* Min Cluster Size */}
-          <div className="mb-4">
-            <div className="mb-2 text-[10px] font-semibold uppercase tracking-widest text-gray-500">Min Cluster Size</div>
-            <div className="flex items-center gap-3">
-              <input
-                type="range" min={3} max={20} value={minSize}
-                onChange={(e) => setMinSize(Number(e.target.value))}
-                className="w-28 accent-blue-500"
-              />
-              <span className="font-mono text-sm text-gray-300">{minSize}</span>
-            </div>
-          </div>
-
-          {/* Counts */}
-          <div className="rounded-lg border border-border-subtle bg-surface p-2 text-center">
-            <span className="font-mono text-xs text-gray-500">
-              {counts.nodes.toLocaleString()} nodes · {counts.edges.toLocaleString()} edges
-            </span>
-          </div>
+    <div className="space-y-4">
+      {/* Header */}
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-lg font-bold text-text-primary">Infrastructure Clusters</h1>
+          <p className="text-xs text-text-muted">
+            {clusterTable.length.toLocaleString()} clusters linking {clusters?.nodes?.length?.toLocaleString() || 0} nodes
+          </p>
         </div>
-
-        {/* Sigma graph */}
-        <SigmaGraph data={clusters} onClickNode={handleNodeClick} filters={filters} />
+        <div className="flex gap-1">
+          <button onClick={() => { setView('table'); setSelectedCluster(null); }}
+            className={`rounded-md px-3 py-1.5 text-xs font-medium transition-all ${view === 'table' ? 'bg-white/8 text-white border border-white/10' : 'text-text-muted hover:text-text-secondary border border-transparent'}`}
+          ><BarChart3 className="inline h-3 w-3 mr-1" />Table</button>
+          <button onClick={() => setView('graph')}
+            className={`rounded-md px-3 py-1.5 text-xs font-medium transition-all ${view === 'graph' ? 'bg-white/8 text-white border border-white/10' : 'text-text-muted hover:text-text-secondary border border-transparent'}`}
+          ><Network className="inline h-3 w-3 mr-1" />Graph</button>
+        </div>
       </div>
 
-      {/* Detail sidebar */}
-      {selectedNode && selectedNode.type !== 'domain' && (
-        <div className="w-80 shrink-0 overflow-y-auto rounded-xl border border-border-subtle p-5 animate-fade-in"
-          style={{ background: 'linear-gradient(180deg, rgba(19, 27, 46, 0.95), rgba(11, 17, 32, 0.98))' }}
-        >
-          {/* Node info */}
-          <div className="mb-5">
-            <div className="mb-1 text-[10px] font-semibold uppercase tracking-widest text-gray-500">
-              {INFRA_TYPES.find((t) => t.key === selectedNode.type)?.label || selectedNode.type}
-            </div>
-            <div className="mt-2 break-all font-mono text-lg font-bold text-gray-100">
-              {selectedNode.label}
-            </div>
+      {view === 'table' && (
+        <>
+          {/* Search */}
+          <div className="glass-card p-2.5">
+            <input type="text" placeholder="Search clusters by MX, IP, or registrar…" value={search}
+              onChange={e => { setSearch(e.target.value); setPage(0); }}
+              className="w-full rounded-md border border-border-subtle bg-[#0a0a0a] py-1.5 px-3 text-xs text-text-primary placeholder-text-muted outline-none focus:border-white/15 transition-colors"
+            />
           </div>
 
-          {/* Divider */}
-          <div className="mb-4 h-px bg-border-subtle" />
-
-          {/* Connected domains */}
-          <div>
-            <div className="mb-3 text-[10px] font-semibold uppercase tracking-widest text-gray-500">
-              Connected Domains ({selectedNode.domains?.length || 0})
-            </div>
-            <div className="space-y-1">
-              {(selectedNode.domains || []).map((domain) => (
-                <button
-                  key={domain}
-                  onClick={() => navigate(`/investigate/${domain}`)}
-                  className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-left font-mono text-sm text-blue-400 transition-colors hover:bg-blue-500/10"
-                >
-                  <ExternalLink className="h-3.5 w-3.5 shrink-0 text-gray-600" />
-                  {domain}
-                </button>
-              ))}
-              {(!selectedNode.domains || selectedNode.domains.length === 0) && (
-                <div className="text-sm text-gray-600">No connected domains</div>
-              )}
-            </div>
+          {/* Table */}
+          <div className="overflow-x-auto rounded-lg border border-border-subtle bg-[#080808]">
+            <table className="intel-table w-full text-left">
+              <thead>
+                <tr>
+                  <th>Infrastructure Node</th>
+                  <th>Type</th>
+                  <th className="text-right">Connected Domains</th>
+                  <th>Top Connected</th>
+                </tr>
+              </thead>
+              <tbody>
+                {pageRows.map(row => (
+                  <tr key={row.id} onClick={() => { setSelectedCluster(row); setView('graph'); }}>
+                    <td><span className="font-mono text-sm text-text-primary">{row.label}</span></td>
+                    <td>
+                      <span className="inline-flex items-center gap-1.5 text-xs text-text-muted">
+                        <span className="h-2 w-2 rounded-full" style={{ backgroundColor: TYPE_META[row.type]?.color || '#888' }} />
+                        {TYPE_META[row.type]?.label || row.type}
+                      </span>
+                    </td>
+                    <td className="text-right font-mono text-sm text-text-primary">{row.domainCount.toLocaleString()}</td>
+                    <td>
+                      <span className="text-xs text-text-muted">
+                        {row.domains.slice(0, 3).join(', ')}
+                        {row.domains.length > 3 && ` +${row.domains.length - 3}`}
+                      </span>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
           </div>
+
+          {/* Pagination */}
+          {pageCount > 1 && (
+            <div className="flex items-center justify-between text-xs">
+              <span className="font-mono text-text-muted">
+                {filtered.length.toLocaleString()} clusters
+              </span>
+              <div className="flex gap-1.5">
+                <button onClick={() => setPage(p => Math.max(0, p - 1))} disabled={page === 0}
+                  className="flex items-center gap-1 rounded-md border border-border-subtle px-2.5 py-1 text-text-muted hover:text-text-primary disabled:opacity-20 transition-colors"
+                ><ChevronLeft className="h-3 w-3" /> Prev</button>
+                <button onClick={() => setPage(p => Math.min(pageCount - 1, p + 1))} disabled={page >= pageCount - 1}
+                  className="flex items-center gap-1 rounded-md border border-border-subtle px-2.5 py-1 text-text-muted hover:text-text-primary disabled:opacity-20 transition-colors"
+                >Next <ChevronRight className="h-3 w-3" /></button>
+              </div>
+            </div>
+          )}
+        </>
+      )}
+
+      {view === 'graph' && (
+        <div className="flex h-[calc(100vh-10rem)] gap-4 animate-fade-in">
+          <div className="relative flex-1 overflow-hidden rounded-lg border border-border-subtle bg-[#050505]">
+            {/* Back to table */}
+            <button onClick={() => { setView('table'); setSelectedCluster(null); }}
+              className="absolute left-3 top-3 z-10 flex items-center gap-1 rounded-md border border-border-subtle bg-[#111] px-2.5 py-1 text-xs text-text-secondary hover:text-text-primary transition-colors"
+            ><ChevronLeft className="h-3 w-3" /> Back to table</button>
+
+            {selectedCluster && (
+              <div className="absolute right-3 top-3 z-10 rounded-md border border-border-subtle bg-[#111] px-3 py-1.5 text-xs text-text-secondary">
+                <span className="font-mono text-text-primary">{selectedCluster.label}</span>
+                <span className="text-text-muted ml-2">{selectedCluster.domainCount} domains</span>
+              </div>
+            )}
+
+            {subgraph ? (
+              <SigmaGraph data={subgraph} onClickNode={handleNodeClick} filters={graphFilters} />
+            ) : (
+              <div className="flex h-full items-center justify-center text-xs text-text-muted">
+                Select a cluster from the table to visualize
+              </div>
+            )}
+          </div>
+
+          {/* Sidebar */}
+          {selectedCluster && (
+            <div className="w-72 shrink-0 overflow-y-auto rounded-lg border border-border-subtle bg-[#0a0a0a] p-4">
+              <div className="mb-4">
+                <div className="text-[10px] font-semibold uppercase tracking-widest text-text-muted">
+                  {TYPE_META[selectedCluster.type]?.label}
+                </div>
+                <div className="mt-1 break-all font-mono text-base font-bold text-text-primary">{selectedCluster.label}</div>
+                <div className="mt-1 text-xs text-text-muted">{selectedCluster.domainCount} connected domains</div>
+              </div>
+              <div className="h-px bg-border-subtle mb-3" />
+              <div className="text-[10px] font-semibold uppercase tracking-widest text-text-muted mb-2">Connected Domains</div>
+              <div className="space-y-0.5">
+                {selectedCluster.domains.map(d => (
+                  <button key={d} onClick={() => navigate(`/investigate/${d}`)}
+                    className="flex w-full items-center gap-1.5 rounded px-2 py-1.5 text-left font-mono text-xs text-text-secondary hover:bg-white/[0.03] hover:text-text-primary transition-colors"
+                  ><ExternalLink className="h-3 w-3 shrink-0 text-text-muted" />{d}</button>
+                ))}
+              </div>
+            </div>
+          )}
         </div>
       )}
     </div>

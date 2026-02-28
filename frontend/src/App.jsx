@@ -5,6 +5,7 @@ import MatchDashboard from '@/pages/MatchDashboard';
 import InvestigateLanding from '@/pages/InvestigateLanding';
 import DomainDetail from '@/pages/DomainDetail';
 import ClusterView from '@/pages/ClusterView';
+import BriefingView from '@/pages/BriefingView';
 
 export default function App() {
   return (
@@ -17,9 +18,11 @@ export default function App() {
             <Route path="investigate" element={<InvestigateLanding />} />
             <Route path="investigate/:domain" element={<DomainDetail />} />
             <Route path="clusters" element={<ClusterView />} />
+            <Route path="briefing" element={<BriefingView />} />
           </Route>
         </Routes>
       </DataProvider>
     </HashRouter>
   );
 }
+

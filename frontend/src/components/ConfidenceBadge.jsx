@@ -1,24 +1,24 @@
-import { cn } from '@/lib/utils';
+import Tooltip from './Tooltip';
+import { fpRegistry } from '@/data/fpRegistry';
 
-export default function ConfidenceBadge({ score }) {
+export default function ConfidenceBadge({ score, fpId }) {
   if (score == null) return null;
 
   const num = Number(score);
-  const style =
-    num > 75
-      ? 'bg-gradient-to-r from-red-600 to-red-500 shadow-red-500/20'
-      : num >= 50
-        ? 'bg-gradient-to-r from-amber-600 to-yellow-500 shadow-yellow-500/20'
-        : 'bg-gradient-to-r from-emerald-600 to-green-500 shadow-green-500/20';
+  const bg =
+    num > 75 ? 'bg-red-500/20 text-red-400 ring-red-500/20'
+      : num >= 50 ? 'bg-yellow-500/15 text-yellow-400 ring-yellow-500/20'
+        : 'bg-emerald-500/15 text-emerald-400 ring-emerald-500/20';
+
+  const tip = fpId && fpRegistry[fpId]
+    ? `${num}% confidence — ${fpRegistry[fpId].description}`
+    : `${num}% match confidence score`;
 
   return (
-    <span
-      className={cn(
-        'inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-semibold text-white shadow-sm',
-        style,
-      )}
-    >
-      {num}%
-    </span>
+    <Tooltip text={tip}>
+      <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-semibold ring-1 ${bg}`}>
+        {num}%
+      </span>
+    </Tooltip>
   );
 }
