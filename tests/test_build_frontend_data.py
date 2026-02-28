@@ -18,6 +18,9 @@ from build_frontend_data import (
     compute_clusters,
     compute_stats,
     build_outputs,
+    compute_risk_score,
+    build_infra_index,
+    _safe_float,
 )
 
 
@@ -405,10 +408,11 @@ class TestBuildOutputs:
             min_cluster_size=3,
             optional_files={},
         )
-        assert os.path.exists(os.path.join(output_dir, "domains.json"))
+        assert os.path.exists(os.path.join(output_dir, "domain_shards.json"))
         assert os.path.exists(os.path.join(output_dir, "fingerprint_matches.json"))
         assert os.path.exists(os.path.join(output_dir, "clusters.json"))
         assert os.path.exists(os.path.join(output_dir, "stats.json"))
+        assert os.path.exists(os.path.join(output_dir, "infra_index.json"))
 
     def test_domains_json_structure(self, tmp_path):
         probed_path, fp_path, output_dir = self._setup_test_data(tmp_path)
@@ -419,13 +423,16 @@ class TestBuildOutputs:
             min_cluster_size=3,
             optional_files={},
         )
-        with open(os.path.join(output_dir, "domains.json"), "r") as f:
-            data = json.load(f)
-        assert "evil.com" in data
-        assert "bad.net" in data
-        assert "matches" in data["evil.com"]
-        assert len(data["evil.com"]["matches"]) == 1
-        assert data["evil.com"]["matches"][0]["fp_id"] == "FP-001"
+        # Load from shard files (evil.com starts with 'e', bad.net with 'b')
+        with open(os.path.join(output_dir, "domains_e.json"), "r") as f:
+            e_data = json.load(f)
+        with open(os.path.join(output_dir, "domains_b.json"), "r") as f:
+            b_data = json.load(f)
+        assert "evil.com" in e_data
+        assert "bad.net" in b_data
+        assert "matches" in e_data["evil.com"]
+        assert len(e_data["evil.com"]["matches"]) == 1
+        assert e_data["evil.com"]["matches"][0]["fp_id"] == "FP-001"
 
     def test_fingerprint_matches_json_structure(self, tmp_path):
         probed_path, fp_path, output_dir = self._setup_test_data(tmp_path)
@@ -498,9 +505,133 @@ class TestBuildOutputs:
                 },
             },
         )
-        with open(os.path.join(output_dir, "domains.json"), "r") as f:
-            data = json.load(f)
-        assert data["evil.com"]["ai_category"] == "Phishing"
-        assert data["evil.com"]["ai_confidence"] == "High"
+        # Load from shard files
+        with open(os.path.join(output_dir, "domains_e.json"), "r") as f:
+            e_data = json.load(f)
+        with open(os.path.join(output_dir, "domains_b.json"), "r") as f:
+            b_data = json.load(f)
+        assert e_data["evil.com"]["ai_category"] == "Phishing"
+        assert e_data["evil.com"]["ai_confidence"] == "High"
         # Domain without AI classification should not have these keys
-        assert "ai_category" not in data["bad.net"]
+        assert "ai_category" not in b_data["bad.net"]
+
+
+# ---------------------------------------------------------------------------
+# TestComputeRiskScore
+# ---------------------------------------------------------------------------
+
+class TestComputeRiskScore:
+    """Test composite risk score computation."""
+
+    def test_all_zeros(self):
+        """Domain with no risk signals should score 0."""
+        score, level, signals = compute_risk_score({})
+        assert score == 0
+        assert level == "Low"
+
+    def test_high_fingerprint_confidence(self):
+        """High FP confidence alone should contribute 25% of max."""
+        data = {"matches": [{"confidence": "100"}]}
+        score, level, signals = compute_risk_score(data)
+        assert signals["fingerprint"] == 100.0
+        assert score == 25  # 100 * 0.25
+
+    def test_critical_score(self):
+        """Multiple high signals should produce Critical level."""
+        data = {
+            "matches": [{"confidence": "95"}],
+            "vt_malicious_count": "15",
+            "os_match_score": "90",
+            "rbl_hits": "4",
+            "phishtank_match": "True",
+            "typosquat_target": "google.com",
+            "age_days": "5",
+        }
+        score, level, signals = compute_risk_score(data)
+        assert score >= 75
+        assert level == "Critical"
+
+    def test_medium_score(self):
+        """Moderate signals should produce Medium level."""
+        data = {
+            "matches": [{"confidence": "50"}],
+            "vt_malicious_count": "2",
+        }
+        score, level, signals = compute_risk_score(data)
+        assert 10 <= score <= 50
+
+    def test_safe_float_edge_cases(self):
+        assert _safe_float(None) == 0.0
+        assert _safe_float("") == 0.0
+        assert _safe_float("abc") == 0.0
+        assert _safe_float("42.5") == 42.5
+        assert _safe_float(10) == 10.0
+
+    def test_score_capped_at_100(self):
+        """Score should never exceed 100."""
+        data = {
+            "matches": [{"confidence": "200"}],
+            "vt_malicious_count": "100",
+            "os_match_score": "200",
+            "rbl_hits": "50",
+            "phishtank_match": "True",
+            "typosquat_target": "x.com",
+            "age_days": "1",
+        }
+        score, level, signals = compute_risk_score(data)
+        assert score <= 100
+
+
+# ---------------------------------------------------------------------------
+# TestBuildInfraIndex
+# ---------------------------------------------------------------------------
+
+class TestBuildInfraIndex:
+    """Test infrastructure pivot index generation."""
+
+    def test_asn_index(self):
+        """Domains sharing an ASN should be grouped."""
+        domains = {
+            "a.com": {"asn": "16276", "primary_mx": "", "registrant_org": ""},
+            "b.com": {"asn": "16276", "primary_mx": "", "registrant_org": ""},
+            "c.com": {"asn": "99999", "primary_mx": "", "registrant_org": ""},
+        }
+        index = build_infra_index(domains, {})
+        assert "16276" in index["asn"]
+        assert len(index["asn"]["16276"]) == 2
+        # Single-domain ASN should not appear
+        assert "99999" not in index["asn"]
+
+    def test_mx_index(self):
+        domains = {
+            "a.com": {"asn": "", "primary_mx": "mx.shared.com", "registrant_org": ""},
+            "b.com": {"asn": "", "primary_mx": "mx.shared.com", "registrant_org": ""},
+        }
+        index = build_infra_index(domains, {})
+        assert "mx.shared.com" in index["mx"]
+        assert len(index["mx"]["mx.shared.com"]) == 2
+
+    def test_fp_index(self):
+        fp_matches = {
+            "a.com": [{"fp_id": "FP-001"}],
+            "b.com": [{"fp_id": "FP-001"}],
+            "c.com": [{"fp_id": "FP-002"}],
+        }
+        index = build_infra_index({}, fp_matches)
+        assert "FP-001" in index["fp"]
+        assert len(index["fp"]["FP-001"]) == 2
+        # Single-domain FP should not appear
+        assert "FP-002" not in index["fp"]
+
+    def test_empty_inputs(self):
+        index = build_infra_index({}, {})
+        assert index == {"asn": {}, "mx": {}, "registrar": {}, "fp": {}}
+
+    def test_deduplication(self):
+        """Domains should be deduplicated in index entries."""
+        fp_matches = {
+            "a.com": [{"fp_id": "FP-001"}, {"fp_id": "FP-001"}],
+            "b.com": [{"fp_id": "FP-001"}],
+        }
+        index = build_infra_index({}, fp_matches)
+        assert len(index["fp"]["FP-001"]) == 2  # a.com appears only once

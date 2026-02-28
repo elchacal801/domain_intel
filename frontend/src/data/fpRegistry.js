@@ -1,38 +1,61 @@
 /**
- * Static registry of fingerprint and FLAME Threat Path definitions.
- * Sourced from config/fingerprints/*.yaml and AI briefing evidence data.
+ * Auto-generated from config/fingerprints/*.yaml
+ * Do not edit manually — run: python scripts/generate_fp_registry.py
  */
 
 export const fpRegistry = {
-    'FP-0001': {
-        name: 'OVH cPanel DEA Infrastructure',
-        description: 'Bulk DEA domains hosted on OVH (ASN 16276) using cprapid.com nameservers and temp-mail-pro.com MX servers.',
+    "FP-0001": {
+        "name": "OVH cPanel DEA Infrastructure",
+        "description": "Bulk DEA domains on OVH (ASN 16276) using cprapid.com nameservers and temp-mail-pro.com MX.",
+        "flame_tp_ids": [
+            "TP-0003"
+        ]
     },
-    'FP-0002': {
-        name: 'Alibaba App Sideloading Infrastructure',
-        description: 'Domains hosting non-standard MX infrastructure with app sideloading indicators (download, install, APK keywords).',
+    "FP-0002": {
+        "name": "Alibaba App Sideloading Infrastructure",
+        "description": "Domains on Alibaba Cloud (ASN 45102) with app sideloading/download keywords, common for malicious APK distribution.",
+        "flame_tp_ids": [
+            "TP-0012"
+        ]
     },
-    'FP-0003': {
-        name: 'Crypto/Finance Fraud Co-hosting',
-        description: 'Domains co-hosted on shared infrastructure exhibiting cryptocurrency or finance fraud patterns.',
+    "FP-0003": {
+        "name": "Crypto/Finance Fraud Co-hosting",
+        "description": "Domains with financial/crypto keywords in titles hosted alongside DEA-pattern MX, common for investment scam infrastructure.",
+        "flame_tp_ids": [
+            "TP-0017"
+        ]
     },
-    'FP-0004': {
-        name: 'GName Cloudflare China Hosting',
-        description: 'Domains registered via GName registrar using Cloudflare infrastructure with China nexus indicators.',
+    "FP-0004": {
+        "name": "Gname Registrar + Cloudflare China Hosting",
+        "description": "Domains registered through Gname using Cloudflare NS with Chinese hosting ASN, pattern seen in bulk fraud domain registration campaigns.",
+        "flame_tp_ids": [
+            "TP-0017"
+        ]
     },
-    'FP-0005': {
-        name: 'GoDaddy Bulk Registration Pattern',
-        description: 'Domains exhibiting bulk registration patterns via GoDaddy, often associated with domain warehousing or typosquat campaigns.',
+    "FP-0005": {
+        "name": "GoDaddy Bulk Registration Pattern",
+        "description": "Domains registered through GoDaddy with bulk registration indicators, pattern associated with mass domain registration for fraud campaigns.",
+        "flame_tp_ids": [
+            "TP-0019"
+        ]
     },
-    'FP-0006': {
-        name: 'Shell Domain MX Cluster',
-        description: 'Domains sharing MX infrastructure in shell domain clusters — no web presence, configured only for mail reception.',
+    "FP-0006": {
+        "name": "Coordinated Shell Domain Network (MX Clustering)",
+        "description": "Domains sharing non-standard MX infrastructure with no web content and short registration age, indicating coordinated shell domain networks.",
+        "flame_tp_ids": [
+            "TP-0003"
+        ]
     },
-    'FP-0007': {
-        name: 'Typosquat Evasion Infrastructure',
-        description: 'Confirmed typosquats (via dnstwist) exhibiting evasion: strategic redirects to brand, active MX, registrant mismatch, or sanctions matches.',
-    },
+    "FP-0007": {
+        "name": "Typosquat Evasion Infrastructure",
+        "description": "Domains confirmed as typosquats (via dnstwist) exhibiting evasion behaviors: strategic redirects to brand, active MX, registrant mismatch, or sanctions matches.",
+        "flame_tp_ids": [
+            "TP-0012"
+        ]
+    }
 };
+
+// --- Static registries (maintained manually) ---
 
 export const tpRegistry = {
     'TP-0001': 'Brand impersonation typosquat — single-character deviation from major brands',

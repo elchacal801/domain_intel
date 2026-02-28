@@ -1,8 +1,9 @@
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import { Search, Globe, Fingerprint, Network, TrendingUp, ChevronLeft, ChevronRight } from 'lucide-react';
 import { useState, useMemo } from 'react';
 import { useData } from '@/context/DataContext';
 import Tooltip from '@/components/Tooltip';
+import Sparkline from '@/components/Sparkline';
 import { kpiTooltips } from '@/data/fpRegistry';
 
 const LETTERS = 'abcdefghijklmnopqrstuvwxyz'.split('');
@@ -11,8 +12,10 @@ const PAGE_SIZE = 50;
 
 export default function InvestigateLanding() {
   const navigate = useNavigate();
-  const { stats, shardManifest, loadShard } = useData();
+  const { stats, shardManifest, loadShard, infraIndex, history } = useData();
   const [query, setQuery] = useState('');
+  const [pivotResults, setPivotResults] = useState(null);
+  const [pivotLabel, setPivotLabel] = useState('');
 
   // Browse state
   const [activeShard, setActiveShard] = useState(null);
@@ -24,7 +27,45 @@ export default function InvestigateLanding() {
 
   function handleSubmit(e) {
     e.preventDefault();
-    if (query.trim()) navigate(`/investigate/${query.trim()}`);
+    const q = query.trim();
+    if (!q) return;
+
+    // Pivot search: ASN:, MX:, REG:, FP:
+    const pivotMatch = q.match(/^(ASN|MX|REG|FP):\s*(.+)$/i);
+    if (pivotMatch && infraIndex) {
+      const type = pivotMatch[1].toUpperCase();
+      const val = pivotMatch[2].trim();
+      let results = [];
+      let label = '';
+
+      if (type === 'ASN' && infraIndex.asn) {
+        results = infraIndex.asn[val] || [];
+        label = `ASN ${val}`;
+      } else if (type === 'MX' && infraIndex.mx) {
+        // Partial match for MX
+        const lower = val.toLowerCase();
+        for (const [k, v] of Object.entries(infraIndex.mx)) {
+          if (k.toLowerCase().includes(lower)) { results = [...results, ...v]; label = `MX matching "${val}"`; }
+        }
+      } else if (type === 'REG' && infraIndex.registrar) {
+        const lower = val.toLowerCase();
+        for (const [k, v] of Object.entries(infraIndex.registrar)) {
+          if (k.toLowerCase().includes(lower)) { results = [...results, ...v]; label = `Registrar matching "${val}"`; }
+        }
+      } else if (type === 'FP' && infraIndex.fp) {
+        results = infraIndex.fp[val] || infraIndex.fp[val.toUpperCase()] || [];
+        label = `Fingerprint ${val}`;
+      }
+
+      results = [...new Set(results)];
+      setPivotResults(results);
+      setPivotLabel(label || `${type}:${val}`);
+      return;
+    }
+
+    // Default: navigate to domain
+    setPivotResults(null);
+    navigate(`/investigate/${q}`);
   }
 
   async function selectShard(key) {
@@ -65,8 +106,17 @@ export default function InvestigateLanding() {
     { key: 'risk_tags', label: 'Risk' },
   ];
 
+  const sparkData = useMemo(() => {
+    if (!history || history.length < 2) return {};
+    const last14 = history.slice(-14);
+    return {
+      total: last14.map(h => h.total || 0),
+      live: last14.map(h => h.live || 0),
+    };
+  }, [history]);
+
   const statCards = [
-    { icon: Globe, label: 'Domains Tracked', value: stats?.total_domains?.toLocaleString() ?? '—', tooltip: kpiTooltips.total_domains },
+    { icon: Globe, label: 'Domains Tracked', value: stats?.total_domains?.toLocaleString() ?? '—', tooltip: kpiTooltips.total_domains, spark: sparkData.total, sparkColor: '#888' },
     { icon: Fingerprint, label: 'FP Matches', value: stats?.matched_domains?.toLocaleString() ?? '—', tooltip: kpiTooltips.matched_domains },
     { icon: Network, label: 'Infra Clusters', value: stats?.total_clusters?.toLocaleString() ?? '—', tooltip: kpiTooltips.total_clusters },
     { icon: TrendingUp, label: 'Unique FPs', value: stats?.unique_fingerprints?.toLocaleString() ?? '—', tooltip: kpiTooltips.unique_fingerprints },
@@ -76,18 +126,19 @@ export default function InvestigateLanding() {
     <div className="space-y-8">
       {/* Hero */}
       <div className="flex flex-col items-center pt-10 pb-4">
-        <div className="mb-3 flex h-12 w-12 items-center justify-center rounded-xl bg-white/5">
-          <Search className="h-6 w-6 text-white/50" strokeWidth={1.5} />
+        <div className="mb-3 flex h-12 w-12 items-center justify-center rounded-xl" style={{ background: 'var(--nav-inactive-hover-bg)' }}>
+          <Search className="h-6 w-6" style={{ color: 'var(--text-muted)' }} strokeWidth={1.5} />
         </div>
-        <h1 className="mb-1 text-2xl font-bold tracking-tight text-text-primary">Domain Investigation</h1>
+        <h1 className="mb-1 text-2xl font-bold tracking-tight" style={{ color: 'var(--text-primary)' }}>Domain Investigation</h1>
         <p className="mb-6 max-w-md text-center text-xs text-text-muted">
-          Search any domain for its full intel profile, or browse by letter below.
+          Search any domain, or use <span className="font-mono text-text-secondary">ASN:</span> <span className="font-mono text-text-secondary">MX:</span> <span className="font-mono text-text-secondary">REG:</span> <span className="font-mono text-text-secondary">FP:</span> for infrastructure pivot search.
         </p>
         <form onSubmit={handleSubmit} className="relative w-full max-w-lg">
           <Search className="absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-text-muted" />
           <input type="text" value={query} onChange={e => setQuery(e.target.value)}
             placeholder="Enter a domain to investigate…" autoFocus
-            className="w-full rounded-lg border border-border-subtle bg-surface py-3 pl-10 pr-4 text-sm text-text-primary placeholder-text-muted outline-none focus:border-white/15 transition-colors"
+            className="w-full rounded-lg border py-3 pl-10 pr-4 text-sm outline-none transition-colors"
+            style={{ background: 'var(--bg-surface)', borderColor: 'var(--border-subtle)', color: 'var(--text-primary)' }}
           />
           <span className="absolute right-3.5 top-1/2 -translate-y-1/2 rounded border border-border-subtle px-1.5 py-0.5 text-[9px] text-text-muted">
             ↵
@@ -97,16 +148,51 @@ export default function InvestigateLanding() {
 
       {/* Stats */}
       <div className="grid w-full grid-cols-2 gap-3 sm:grid-cols-4">
-        {statCards.map(({ icon: Icon, label, value, tooltip }) => (
+        {statCards.map(({ icon: Icon, label, value, tooltip, spark, sparkColor }) => (
           <Tooltip key={label} text={tooltip}>
             <div className="kpi-card w-full">
-              <Icon className="mb-1.5 h-4 w-4 text-white/20" />
-              <div className="text-lg font-bold text-text-primary">{value}</div>
-              <div className="text-[10px] text-text-muted">{label}</div>
+              <div className="flex items-center justify-between">
+                <div>
+                  <Icon className="mb-1.5 h-4 w-4 text-white/20" />
+                  <div className="text-lg font-bold text-text-primary">{value}</div>
+                  <div className="text-[10px] text-text-muted">{label}</div>
+                </div>
+                {spark && spark.length >= 2 && (
+                  <Sparkline data={spark} color={sparkColor || '#888'} width={72} height={28} />
+                )}
+              </div>
             </div>
           </Tooltip>
         ))}
       </div>
+
+      {/* Pivot Search Results */}
+      {pivotResults && (
+        <div className="animate-fade-in">
+          <div className="mb-2 flex items-center justify-between">
+            <span className="text-xs text-text-muted">
+              <span className="font-mono font-semibold text-text-secondary">{pivotResults.length.toLocaleString()}</span> domains for {pivotLabel}
+            </span>
+            <button onClick={() => setPivotResults(null)} className="text-[10px] text-text-muted hover:text-text-primary transition-colors">Clear ✕</button>
+          </div>
+          {pivotResults.length === 0 ? (
+            <div className="glass-card p-6 text-center text-xs text-text-muted">No domains found</div>
+          ) : (
+            <div className="overflow-x-auto rounded-lg border border-border-subtle bg-[#080808]">
+              <table className="intel-table w-full text-left">
+                <thead><tr><th>Domain</th></tr></thead>
+                <tbody>
+                  {pivotResults.slice(0, 200).map(d => (
+                    <tr key={d} onClick={() => navigate(`/investigate/${d}`)}>
+                      <td><span className="font-mono text-sm text-text-primary">{d}</span></td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </div>
+      )}
 
       {/* Browse Section */}
       <div>

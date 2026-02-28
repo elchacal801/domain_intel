@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { Shield, FileText, AlertTriangle, Target, Radio, ChevronDown, ChevronRight, Calendar, BarChart3 } from 'lucide-react';
 import Section from '@/components/Section';
 import ConfidenceBadge from '@/components/ConfidenceBadge';
+import MarkdownText from '@/components/MarkdownText';
 
 /* ---- Priority tag styling ---- */
 function PriorityTag({ text }) {
@@ -30,29 +31,42 @@ function parseAction(text) {
     return { priority: match[1], body: text.slice(match[0].length) };
 }
 
+/* ---- Sanitize em-dashes and smart quotes ---- */
+function sanitize(text) {
+    if (!text) return '';
+    return text
+        .replace(/\u2014/g, '-')    // em-dash
+        .replace(/\u2013/g, '-')    // en-dash
+        .replace(/\u2018/g, "'")    // left single quote
+        .replace(/\u2019/g, "'")    // right single quote
+        .replace(/\u201C/g, '"')    // left double quote
+        .replace(/\u201D/g, '"');   // right double quote
+}
+
 /* ---- Highlight intelligence confidence language ---- */
-function highlightConfidence(text) {
-    if (!text) return text;
+function ConfidenceHighlightedMarkdown({ text }) {
+    if (!text) return null;
+    const sanitized = sanitize(text);
     const patterns = [
         'Highly Likely', 'Likely', 'Roughly Even Chance', 'Unlikely', 'Highly Unlikely',
         'High confidence', 'Medium-High confidence', 'Medium confidence', 'Low confidence',
         'High Confidence', 'Medium Confidence',
     ];
-    let result = text;
-    for (const p of patterns) {
-        result = result.replaceAll(p, `«${p}»`);
+    // Build regex that matches any of the patterns
+    const regex = new RegExp(`(${patterns.map(p => p.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')).join('|')})`, 'g');
+    const parts = sanitized.split(regex);
+
+    if (parts.length === 1) {
+        return <MarkdownText>{sanitized}</MarkdownText>;
     }
-    // Split on markers and render
-    const parts = result.split(/«|»/);
-    return parts.map((part, i) => {
-        if (patterns.includes(part)) {
-            const isHigh = /high/i.test(part);
-            const isMed = /medium|even/i.test(part);
-            const color = isHigh ? 'text-green-400' : isMed ? 'text-yellow-400' : 'text-red-400';
-            return <span key={i} className={`font-semibold ${color}`}>{part}</span>;
-        }
-        return part;
-    });
+
+    // For sections with confidence language, render markdown but also highlight the tags inline
+    // We wrap each confidence phrase in **bold** markers so MarkdownText renders them prominently
+    let enhanced = sanitized;
+    for (const p of patterns) {
+        enhanced = enhanced.replaceAll(p, `**${p}**`);
+    }
+    return <MarkdownText>{enhanced}</MarkdownText>;
 }
 
 export default function BriefingView() {
@@ -164,44 +178,34 @@ export default function BriefingView() {
                         Bottom Line Up Front
                     </h2>
                 </div>
-                <p className="text-sm leading-relaxed text-text-secondary">
-                    {highlightConfidence(briefing.executive_summary || briefing.summary)}
-                </p>
+                <ConfidenceHighlightedMarkdown text={briefing.executive_summary || briefing.summary} />
             </div>
 
             {/* Strategic Assessment */}
             {briefing.strategic_assessment && (
                 <Section title="Strategic Assessment" icon={<BarChart3 className="h-3.5 w-3.5 text-white/30" />} accentColor="rgba(255,255,255,0.08)" defaultOpen={false}>
-                    <p className="text-xs leading-relaxed text-text-secondary">
-                        {highlightConfidence(briefing.strategic_assessment)}
-                    </p>
+                    <ConfidenceHighlightedMarkdown text={briefing.strategic_assessment} />
                 </Section>
             )}
 
             {/* Operational Intelligence */}
             {briefing.operational_intelligence && (
                 <Section title="Operational Intelligence" icon={<Radio className="h-3.5 w-3.5 text-white/30" />} accentColor="rgba(255,255,255,0.08)" defaultOpen={false}>
-                    <p className="text-xs leading-relaxed text-text-secondary">
-                        {highlightConfidence(briefing.operational_intelligence)}
-                    </p>
+                    <ConfidenceHighlightedMarkdown text={briefing.operational_intelligence} />
                 </Section>
             )}
 
             {/* Campaign Highlights */}
             {briefing.campaign_highlights && (
                 <Section title="Campaign Highlights" icon={<Target className="h-3.5 w-3.5 text-white/30" />} accentColor="rgba(255,255,255,0.08)" defaultOpen={false}>
-                    <p className="text-xs leading-relaxed text-text-secondary">
-                        {highlightConfidence(briefing.campaign_highlights)}
-                    </p>
+                    <ConfidenceHighlightedMarkdown text={briefing.campaign_highlights} />
                 </Section>
             )}
 
             {/* Risk Signal Analysis */}
             {briefing.risk_signal_analysis && (
                 <Section title="Risk Signal Analysis" icon={<BarChart3 className="h-3.5 w-3.5 text-white/30" />} accentColor="rgba(255,255,255,0.08)" defaultOpen={false}>
-                    <p className="text-xs leading-relaxed text-text-secondary">
-                        {highlightConfidence(briefing.risk_signal_analysis)}
-                    </p>
+                    <ConfidenceHighlightedMarkdown text={briefing.risk_signal_analysis} />
                 </Section>
             )}
 
@@ -214,7 +218,7 @@ export default function BriefingView() {
                                 <span className="shrink-0 flex h-5 w-5 items-center justify-center rounded-full bg-red-500/10 text-[10px] font-bold text-red-400">
                                     {i + 1}
                                 </span>
-                                <p className="text-xs leading-relaxed text-text-secondary">{risk}</p>
+                                <p className="text-xs leading-relaxed text-text-secondary">{sanitize(risk)}</p>
                             </div>
                         ))}
                     </div>
@@ -228,7 +232,7 @@ export default function BriefingView() {
                         {actions.map((item, i) => (
                             <div key={i} className="flex gap-3 rounded-lg bg-[#0a0a0a] border border-border-subtle p-3">
                                 {item.priority && <PriorityTag text={item.priority} />}
-                                <p className="text-xs leading-relaxed text-text-secondary flex-1">{item.body}</p>
+                                <p className="text-xs leading-relaxed text-text-secondary flex-1">{sanitize(item.body)}</p>
                             </div>
                         ))}
                     </div>
@@ -261,8 +265,8 @@ export default function BriefingView() {
                                         <td className="text-right font-mono text-sm text-text-primary">{ec.domain_count}</td>
                                         <td>
                                             <span className={`rounded-full px-2 py-0.5 text-xs font-medium ${ec.confidence === 'High'
-                                                    ? 'bg-green-500/10 text-green-400 ring-1 ring-green-500/20'
-                                                    : 'bg-yellow-500/10 text-yellow-400 ring-1 ring-yellow-500/20'
+                                                ? 'bg-green-500/10 text-green-400 ring-1 ring-green-500/20'
+                                                : 'bg-yellow-500/10 text-yellow-400 ring-1 ring-yellow-500/20'
                                                 }`}>{ec.confidence}</span>
                                         </td>
                                         <td>
@@ -288,9 +292,7 @@ export default function BriefingView() {
             {/* Registrar Risk Outlook */}
             {briefing.registrar_risk_outlook && (
                 <Section title="Registrar Risk Outlook" icon={<BarChart3 className="h-3.5 w-3.5 text-white/30" />} accentColor="rgba(255,255,255,0.08)" defaultOpen={false}>
-                    <p className="text-xs leading-relaxed text-text-secondary">
-                        {highlightConfidence(briefing.registrar_risk_outlook)}
-                    </p>
+                    <ConfidenceHighlightedMarkdown text={briefing.registrar_risk_outlook} />
                 </Section>
             )}
 

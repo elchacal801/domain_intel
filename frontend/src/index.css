@@ -1,6 +1,76 @@
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap');
 @import "tailwindcss";
 
+/* ---- Dark Theme (default) ---- */
+[data-theme="dark"] {
+  --bg-body: #050505;
+  --bg-surface: #0a0a0a;
+  --bg-surface-raised: #111111;
+  --bg-surface-hover: #181818;
+  --bg-surface-input: #0a0a0a;
+  --bg-nav: rgba(5, 5, 5, 0.95);
+  --border-subtle: rgba(255, 255, 255, 0.06);
+  --border-hover: rgba(255, 255, 255, 0.12);
+  --text-primary: #f0f0f0;
+  --text-secondary: #888888;
+  --text-muted: #555555;
+  --text-body: #e0e0e0;
+  --scrollbar-thumb: rgba(255, 255, 255, 0.08);
+  --scrollbar-thumb-hover: rgba(255, 255, 255, 0.15);
+  --nav-active-bg: rgba(255, 255, 255, 0.08);
+  --nav-active-border: rgba(255, 255, 255, 0.1);
+  --nav-active-text: #fff;
+  --nav-inactive-text: #666;
+  --nav-inactive-hover-text: #bbb;
+  --nav-inactive-hover-bg: rgba(255, 255, 255, 0.03);
+  --table-header-bg: #080808;
+  --table-header-text: #666;
+  --table-header-hover: #999;
+  --table-row-hover: rgba(255, 255, 255, 0.025);
+  --table-border: rgba(255, 255, 255, 0.03);
+  --card-shimmer: rgba(255, 255, 255, 0.08);
+  --tooltip-bg: #1a1a1a;
+  --tooltip-border: rgba(255, 255, 255, 0.1);
+  --tooltip-text: #ccc;
+  --section-header-bg: #0a0a0a;
+  --kpi-top-line: rgba(255, 255, 255, 0.08);
+}
+
+/* ---- Light Theme ---- */
+[data-theme="light"] {
+  --bg-body: #f5f5f5;
+  --bg-surface: #ffffff;
+  --bg-surface-raised: #f8f8f8;
+  --bg-surface-hover: #f0f0f0;
+  --bg-surface-input: #ffffff;
+  --bg-nav: rgba(255, 255, 255, 0.95);
+  --border-subtle: rgba(0, 0, 0, 0.08);
+  --border-hover: rgba(0, 0, 0, 0.15);
+  --text-primary: #111111;
+  --text-secondary: #555555;
+  --text-muted: #999999;
+  --text-body: #222222;
+  --scrollbar-thumb: rgba(0, 0, 0, 0.1);
+  --scrollbar-thumb-hover: rgba(0, 0, 0, 0.2);
+  --nav-active-bg: rgba(0, 0, 0, 0.06);
+  --nav-active-border: rgba(0, 0, 0, 0.12);
+  --nav-active-text: #111;
+  --nav-inactive-text: #888;
+  --nav-inactive-hover-text: #333;
+  --nav-inactive-hover-bg: rgba(0, 0, 0, 0.04);
+  --table-header-bg: #f2f2f2;
+  --table-header-text: #777;
+  --table-header-hover: #444;
+  --table-row-hover: rgba(0, 0, 0, 0.025);
+  --table-border: rgba(0, 0, 0, 0.06);
+  --card-shimmer: rgba(0, 0, 0, 0.04);
+  --tooltip-bg: #ffffff;
+  --tooltip-border: rgba(0, 0, 0, 0.12);
+  --tooltip-text: #444;
+  --section-header-bg: #f5f5f5;
+  --kpi-top-line: rgba(0, 0, 0, 0.06);
+}
+
 @theme {
   --color-surface: #0a0a0a;
   --color-surface-raised: #111111;
@@ -32,9 +102,10 @@ pre,
 }
 
 body {
-  background: #050505;
-  color: #e0e0e0;
+  background: var(--bg-body);
+  color: var(--text-body);
   -webkit-font-smoothing: antialiased;
+  transition: background 0.3s ease, color 0.3s ease;
 }
 
 /* Scrollbar */
@@ -48,12 +119,12 @@ body {
 }
 
 ::-webkit-scrollbar-thumb {
-  background: rgba(255, 255, 255, 0.08);
+  background: var(--scrollbar-thumb);
   border-radius: 3px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: rgba(255, 255, 255, 0.15);
+  background: var(--scrollbar-thumb-hover);
 }
 
 /* Animations */
@@ -101,18 +172,19 @@ body {
 
 /* Cards */
 .glass-card {
-  background: #111111;
-  border: 1px solid rgba(255, 255, 255, 0.06);
+  background: var(--bg-surface-raised);
+  border: 1px solid var(--border-subtle);
   border-radius: 10px;
+  transition: background 0.3s ease, border-color 0.3s ease;
 }
 
 .glass-card:hover {
-  border-color: rgba(255, 255, 255, 0.1);
+  border-color: var(--border-hover);
 }
 
 .kpi-card {
-  background: #0e0e0e;
-  border: 1px solid rgba(255, 255, 255, 0.05);
+  background: var(--bg-surface);
+  border: 1px solid var(--border-subtle);
   border-radius: 10px;
   padding: 1.25rem;
   position: relative;
@@ -127,11 +199,11 @@ body {
   left: 0;
   right: 0;
   height: 1px;
-  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.08), transparent);
+  background: linear-gradient(90deg, transparent, var(--kpi-top-line), transparent);
 }
 
 .kpi-card:hover {
-  border-color: rgba(255, 255, 255, 0.1);
+  border-color: var(--border-hover);
   transform: translateY(-1px);
 }
 
@@ -142,7 +214,7 @@ body {
 }
 
 .intel-table thead th {
-  background: #080808;
+  background: var(--table-header-bg);
   position: sticky;
   top: 0;
   z-index: 10;
@@ -151,12 +223,12 @@ body {
   font-weight: 600;
   letter-spacing: 0.1em;
   text-transform: uppercase;
-  color: #666;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  color: var(--table-header-text);
+  border-bottom: 1px solid var(--border-subtle);
 }
 
 .intel-table thead th:hover {
-  color: #999;
+  color: var(--table-header-hover);
 }
 
 .intel-table tbody tr {
@@ -165,21 +237,22 @@ body {
 }
 
 .intel-table tbody tr:hover {
-  background: rgba(255, 255, 255, 0.025);
+  background: var(--table-row-hover);
 }
 
 .intel-table tbody td {
   padding: 0.6rem 1rem;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.03);
+  border-bottom: 1px solid var(--table-border);
   font-size: 0.835rem;
 }
 
 /* Section cards */
 .section-card {
-  background: #0e0e0e;
-  border: 1px solid rgba(255, 255, 255, 0.05);
+  background: var(--bg-surface);
+  border: 1px solid var(--border-subtle);
   border-radius: 10px;
   overflow: hidden;
+  transition: background 0.3s ease, border-color 0.3s ease;
 }
 
 .section-card-header {
@@ -187,26 +260,27 @@ body {
   align-items: center;
   gap: 0.5rem;
   padding: 0.7rem 1.25rem;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.04);
-  background: #0a0a0a;
+  border-bottom: 1px solid var(--table-border);
+  background: var(--section-header-bg);
+  transition: background 0.3s ease;
 }
 
 /* Nav */
 .nav-link-active {
-  color: #fff;
-  background: rgba(255, 255, 255, 0.08);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: var(--nav-active-text);
+  background: var(--nav-active-bg);
+  border: 1px solid var(--nav-active-border);
 }
 
 .nav-link-inactive {
-  color: #666;
+  color: var(--nav-inactive-text);
   border: 1px solid transparent;
   transition: all 0.2s ease;
 }
 
 .nav-link-inactive:hover {
-  color: #bbb;
-  background: rgba(255, 255, 255, 0.03);
+  color: var(--nav-inactive-hover-text);
+  background: var(--nav-inactive-hover-bg);
 }
 
 /* Tooltip */
@@ -221,11 +295,11 @@ body {
   left: 50%;
   transform: translateX(-50%);
   padding: 0.5rem 0.75rem;
-  background: #1a1a1a;
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: var(--tooltip-bg);
+  border: 1px solid var(--tooltip-border);
   border-radius: 8px;
   font-size: 0.75rem;
-  color: #ccc;
+  color: var(--tooltip-text);
   white-space: normal;
   max-width: 280px;
   min-width: 160px;
@@ -242,7 +316,7 @@ body {
   left: 50%;
   transform: translateX(-50%);
   border: 5px solid transparent;
-  border-top-color: #1a1a1a;
+  border-top-color: var(--tooltip-bg);
 }
 
 /* Briefing */
@@ -281,4 +355,40 @@ body {
 
 .priority-strategic {
   color: #06b6d4;
+}
+
+/* Comparison diff highlights */
+.compare-diff td {
+  position: relative;
+}
+
+.compare-cell-a {
+  background: rgba(239, 68, 68, 0.06) !important;
+  border-left: 2px solid rgba(239, 68, 68, 0.3);
+}
+
+.compare-cell-b {
+  background: rgba(34, 197, 94, 0.06) !important;
+  border-left: 2px solid rgba(34, 197, 94, 0.3);
+}
+
+/* Theme toggle button */
+.theme-toggle {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  border: 1px solid var(--border-subtle);
+  background: transparent;
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.theme-toggle:hover {
+  color: var(--text-primary);
+  border-color: var(--border-hover);
+  background: var(--nav-inactive-hover-bg);
 }

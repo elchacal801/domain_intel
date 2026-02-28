@@ -76,25 +76,31 @@ export default function GlobalSearch() {
           onChange={e => handleSearch(e.target.value)} onKeyDown={handleKeyDown}
           onFocus={() => { if (results.length > 0) setOpen(true); }}
           placeholder="Search…"
-          className="w-52 rounded-md border border-border-subtle bg-[#0a0a0a] py-1.5 pl-8 pr-8 text-xs text-text-primary placeholder-text-muted outline-none focus:border-white/15 transition-colors"
+          className="w-52 rounded-md border py-1.5 pl-8 pr-8 text-xs outline-none transition-colors"
+          style={{ background: 'var(--bg-surface)', borderColor: 'var(--border-subtle)', color: 'var(--text-primary)' }}
         />
         <span className="absolute right-2.5 top-1/2 -translate-y-1/2 rounded border border-border-subtle px-1 py-0.5 text-[8px] text-text-muted font-mono">/</span>
       </div>
       {open && results.length > 0 && (
-        <div className="absolute right-0 top-full z-50 mt-1.5 w-80 overflow-hidden rounded-lg border border-border-subtle bg-[#111] shadow-2xl animate-slide-down">
+        <div className="absolute right-0 top-full z-50 mt-1.5 w-80 overflow-hidden rounded-lg border shadow-2xl animate-slide-down"
+          style={{ background: 'var(--bg-nav)', borderColor: 'var(--border-subtle)' }}>
           {results.map((r, i) => (
             <button key={r.domain} onClick={() => handleSelect(r.domain)}
-              className={`flex w-full items-center gap-2 px-3 py-2 text-left transition-colors ${i === selectedIndex ? 'bg-white/5 text-text-primary' : 'text-text-secondary hover:bg-white/[0.03]'
-                }`}
+              className="flex w-full items-center gap-2 px-3 py-2 text-left transition-colors hover:bg-[var(--nav-inactive-hover-bg)]"
+              style={{
+                background: i === selectedIndex ? 'var(--nav-inactive-hover-bg)' : 'transparent',
+                color: i === selectedIndex ? 'var(--text-primary)' : 'var(--text-secondary)'
+              }}
             >
               <span className="font-mono text-xs">{r.domain}</span>
-              <span className="ml-auto truncate text-[10px] text-text-muted">{r.fp_name}</span>
+              <span className="ml-auto truncate text-[10px]" style={{ color: 'var(--text-muted)' }}>{r.fp_name}</span>
             </button>
           ))}
         </div>
       )}
       {open && query.trim() && results.length === 0 && (
-        <div className="absolute right-0 top-full z-50 mt-1.5 w-80 rounded-lg border border-border-subtle bg-[#111] p-3 text-xs text-text-muted animate-slide-down">
+        <div className="absolute right-0 top-full z-50 mt-1.5 w-80 rounded-lg border p-3 text-xs animate-slide-down"
+          style={{ background: 'var(--bg-nav)', borderColor: 'var(--border-subtle)', color: 'var(--text-muted)' }}>
           No matches — press Enter to investigate "{query.trim()}"
         </div>
       )}

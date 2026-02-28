@@ -4,7 +4,7 @@ import {
   useReactTable, getCoreRowModel, getSortedRowModel,
   getPaginationRowModel, createColumnHelper, flexRender,
 } from '@tanstack/react-table';
-import { Globe, Fingerprint, Network, Hash, Filter, X, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Globe, Fingerprint, Network, Hash, Filter, X, ChevronLeft, ChevronRight, Download } from 'lucide-react';
 import { useData } from '@/context/DataContext';
 import ConfidenceBadge from '@/components/ConfidenceBadge';
 import FlameBadge from '@/components/FlameBadge';
@@ -46,8 +46,8 @@ function MultiSelectFilter({ label, options, selected, onChange }) {
     <div className="relative" ref={ref}>
       <button type="button" onClick={() => setOpen(v => !v)}
         className={`flex items-center gap-1.5 rounded-md border px-2.5 py-1.5 text-xs font-medium transition-all ${selected.length > 0
-            ? 'border-white/15 bg-white/5 text-white/80'
-            : 'border-border-subtle text-text-muted hover:text-text-secondary hover:border-border-hover'
+          ? 'border-white/15 bg-white/5 text-white/80'
+          : 'border-border-subtle text-text-muted hover:text-text-secondary hover:border-border-hover'
           }`}
       >
         <Filter className="h-3 w-3" />
@@ -154,6 +154,21 @@ export default function MatchDashboard() {
   const hasActive = domainFilter || selectedFpIds.length || selectedTlds.length || selectedRegistrars.length;
   function clearFilters() { setDomainFilter(''); setSelectedFpIds([]); setSelectedTlds([]); setSelectedRegistrars([]); }
 
+  function exportCSV() {
+    if (!filteredData.length) return;
+    const cols = ['domain', 'fp_id', 'fp_name', 'confidence', 'flame_tp_ids', 'tld', 'registrar'];
+    const header = cols.join(',');
+    const rows = filteredData.map(r => cols.map(c => {
+      const v = String(r[c] ?? '').replace(/"/g, '""');
+      return v.includes(',') || v.includes('"') ? `"${v}"` : v;
+    }).join(','));
+    const csv = [header, ...rows].join('\n');
+    const blob = new Blob([csv], { type: 'text/csv' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a'); a.href = url; a.download = 'fingerprint_matches.csv'; a.click();
+    URL.revokeObjectURL(url);
+  }
+
   const columns = useMemo(() => buildColumns(), []);
   const table = useReactTable({
     data: filteredData, columns, state: { sorting }, onSortingChange: setSorting,
@@ -190,6 +205,9 @@ export default function MatchDashboard() {
             className="flex items-center gap-1 rounded-md border border-border-subtle px-2.5 py-1.5 text-xs text-text-muted hover:text-red-400 hover:border-red-500/20 transition-colors"
           ><X className="h-3 w-3" /> Clear</button>
         )}
+        <button onClick={exportCSV} title="Download filtered matches as CSV"
+          className="flex items-center gap-1 rounded-md border border-border-subtle px-2.5 py-1.5 text-xs text-text-muted hover:text-text-primary hover:border-border-hover transition-colors"
+        ><Download className="h-3 w-3" /> CSV</button>
         <span className="ml-auto font-mono text-[11px] text-text-muted">
           {filteredData.length.toLocaleString()} result{filteredData.length !== 1 ? 's' : ''}
         </span>

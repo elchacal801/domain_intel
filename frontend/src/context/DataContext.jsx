@@ -15,6 +15,8 @@ export function DataProvider({ children }) {
   const [fpMatches, setFpMatches] = useState(null);
   const [clusters, setClusters] = useState(null);
   const [shardManifest, setShardManifest] = useState(null);
+  const [infraIndex, setInfraIndex] = useState(null);
+  const [history, setHistory] = useState([]);
   const [loading, setLoading] = useState(true);
 
   const shardCacheRef = useRef(new Map());
@@ -22,16 +24,20 @@ export function DataProvider({ children }) {
   useEffect(() => {
     async function loadInitialData() {
       try {
-        const [statsRes, fpRes, clustersRes, manifestRes] = await Promise.all([
+        const [statsRes, fpRes, clustersRes, manifestRes, infraRes, histRes] = await Promise.all([
           fetch('./data/stats.json').then(r => r.ok ? r.json() : null),
           fetch('./data/fingerprint_matches.json').then(r => r.ok ? r.json() : null),
           fetch('./data/clusters.json').then(r => r.ok ? r.json() : null),
           fetch('./data/domain_shards.json').then(r => r.ok ? r.json() : null),
+          fetch('./data/infra_index.json').then(r => r.ok ? r.json() : null),
+          fetch('./data/history.json').then(r => r.ok ? r.json() : []),
         ]);
         setStats(statsRes);
         setFpMatches(fpRes || []);
         setClusters(clustersRes || { nodes: [], edges: [] });
         setShardManifest(manifestRes || {});
+        setInfraIndex(infraRes || { asn: {}, mx: {}, registrar: {}, fp: {} });
+        setHistory(histRes || []);
       } catch (err) {
         console.error('Failed to load data:', err);
       } finally {
@@ -71,7 +77,7 @@ export function DataProvider({ children }) {
   }, []);
 
   return (
-    <DataContext.Provider value={{ stats, fpMatches, clusters, shardManifest, loadDomain, loadShard, loading }}>
+    <DataContext.Provider value={{ stats, fpMatches, clusters, shardManifest, infraIndex, history, loadDomain, loadShard, loading }}>
       {children}
     </DataContext.Provider>
   );

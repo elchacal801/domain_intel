@@ -1,13 +1,15 @@
-import { useParams, Link } from 'react-router-dom';
-import { useState, useEffect } from 'react';
+import { useParams, Link, useNavigate } from 'react-router-dom';
+import { useState, useEffect, useMemo } from 'react';
 import { useData } from '@/context/DataContext';
 import ConfidenceBadge from '@/components/ConfidenceBadge';
 import FlameBadge from '@/components/FlameBadge';
 import Section from '@/components/Section';
 import Tooltip from '@/components/Tooltip';
+import DomainTimeline from '@/components/DomainTimeline';
 import {
   ArrowLeft, Fingerprint, ShieldAlert, Globe, Brain, FileKey, Activity,
   AlertTriangle, Server, Network, ExternalLink, Copy, Check,
+  Radar, Eye, Bug, Shield, Download, Users, Image, ArrowLeftRight, Clock,
 } from 'lucide-react';
 
 /* ---- helper ---- */
@@ -27,7 +29,8 @@ function hasAny(obj, keys) {
 
 export default function DomainDetail() {
   const { domain } = useParams();
-  const { loadDomain } = useData();
+  const navigate = useNavigate();
+  const { loadDomain, clusters } = useData();
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [notFound, setNotFound] = useState(false);
@@ -82,7 +85,60 @@ export default function DomainDetail() {
 
   const showEntity = hasAny(d, ['os_match_score', 'os_entity_type', 'os_dataset', 'icij_match_score', 'icij_entity_match', 'gleif_lei', 'gleif_status']);
   const showAI = hasAny(d, ['ai_category', 'ai_confidence_score', 'dnstwist_match', 'dnstwist_fuzzer', 'dnstwist_target', 'redirects_to_brand']);
-  const showRisk = hasAny(d, ['risk_tags', 'rbl_hits', 'otx_risk']);
+  const showRisk = hasAny(d, ['risk_tags', 'rbl_hits', 'otx_risk', 'risk_score']);
+  const showShodan = hasAny(d, ['shodan_ports', 'shodan_vulns', 'shodan_os', 'shodan_tags', 'shodan_hostnames']);
+  const showVT = hasAny(d, ['vt_malicious_count', 'vt_undetected_count', 'vt_last_analysis']);
+  const showPhishTank = hasAny(d, ['phishtank_phishtank_url', 'phishtank_urlhaus_threat', 'phishtank_phishtank_match']);
+  const showOpenClaw = hasAny(d, ['openclaw_agent_type', 'openclaw_exposure_level', 'openclaw_model_id']);
+
+  // Related domains from cluster data
+  const relatedDomains = useMemo(() => {
+    if (!clusters?.edges || !clusters?.nodes) return [];
+    const domId = `dom:${domain}`;
+    const infraIds = new Set();
+    for (const e of clusters.edges) {
+      if (e.source === domId) infraIds.add(e.target);
+      if (e.target === domId) infraIds.add(e.source);
+    }
+    if (infraIds.size === 0) return [];
+    const related = new Map();
+    for (const e of clusters.edges) {
+      if (infraIds.has(e.target) && e.source !== domId && e.source.startsWith('dom:')) {
+        const d = e.source.slice(4);
+        const infraNode = clusters.nodes.find(n => n.id === e.target);
+        if (!related.has(d)) related.set(d, []);
+        related.get(d).push(infraNode?.type || 'unknown');
+      }
+      if (infraIds.has(e.source) && e.target !== domId && e.target.startsWith('dom:')) {
+        const d = e.target.slice(4);
+        const infraNode = clusters.nodes.find(n => n.id === e.source);
+        if (!related.has(d)) related.set(d, []);
+        related.get(d).push(infraNode?.type || 'unknown');
+      }
+    }
+    return [...related.entries()].slice(0, 20).map(([dom, types]) => ({ domain: dom, linkTypes: [...new Set(types)] }));
+  }, [clusters, domain]);
+
+  // STIX export
+  function exportStix() {
+    const now = new Date().toISOString();
+    const indicator = {
+      type: 'indicator', spec_version: '2.1',
+      id: `indicator--${crypto.randomUUID()}`,
+      created: now, modified: now,
+      name: `Suspicious domain: ${domain}`,
+      pattern: `[domain-name:value = '${domain}']`,
+      pattern_type: 'stix', valid_from: now,
+      confidence: d.risk_score ? Number(d.risk_score) : 50,
+    };
+    const bundle = { type: 'bundle', id: `bundle--${crypto.randomUUID()}`, objects: [indicator] };
+    const blob = new Blob([JSON.stringify(bundle, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a'); a.href = url; a.download = `${domain}_stix.json`; a.click();
+    URL.revokeObjectURL(url);
+  }
+
+  const riskColor = d.risk_level === 'Critical' ? '#ef4444' : d.risk_level === 'High' ? '#f97316' : d.risk_level === 'Medium' ? '#eab308' : '#22c55e';
 
   return (
     <div className="space-y-4 animate-fade-in">
@@ -99,9 +155,30 @@ export default function DomainDetail() {
             {copied ? <Check className="h-3.5 w-3.5 text-green-400" /> : <Copy className="h-3.5 w-3.5" />}
           </button>
           {highestScore != null && <ConfidenceBadge score={highestScore} />}
+          {d.risk_score != null && (
+            <Tooltip text={`Composite risk: ${d.risk_score}/100 (${d.risk_level})`}>
+              <span className="rounded-full px-2.5 py-0.5 text-xs font-bold" style={{ background: `${riskColor}15`, color: riskColor, boxShadow: `inset 0 0 0 1px ${riskColor}30` }}>
+                {d.risk_level} ({d.risk_score})
+              </span>
+            </Tooltip>
+          )}
           {flameTpIds.map(tp => <FlameBadge key={tp} tpId={tp} />)}
+          <button onClick={exportStix} className="flex items-center gap-1 rounded border border-border-subtle px-2 py-1 text-[10px] text-text-muted hover:text-text-primary transition-colors" title="Export STIX 2.1 bundle">
+            <Download className="h-3 w-3" /> STIX
+          </button>
+          <button onClick={() => {
+            const other = prompt('Enter domain to compare with:');
+            if (other?.trim()) navigate(`/compare/${domain}/${other.trim()}`);
+          }} className="flex items-center gap-1 rounded border border-border-subtle px-2 py-1 text-[10px] text-text-muted hover:text-text-primary transition-colors" title="Compare with another domain">
+            <ArrowLeftRight className="h-3 w-3" /> Compare
+          </button>
         </div>
       </div>
+
+      {/* Timeline */}
+      <Section title="Timeline" icon={<Clock className="h-3.5 w-3.5 text-white/30" />} defaultOpen={false}>
+        <DomainTimeline data={d} />
+      </Section>
 
       {/* Fingerprint Matches */}
       {matches.length > 0 && (
@@ -172,12 +249,123 @@ export default function DomainDetail() {
         </dl>
       </Section>
 
-      {/* Risk */}
+      {/* Risk & Reputation */}
       {showRisk && (
         <Section title="Risk & Reputation" icon={<AlertTriangle className="h-3.5 w-3.5 text-amber-400/50" />} accentColor="rgba(245,158,11,0.12)">
           <dl className="grid gap-x-6 gap-y-3 sm:grid-cols-3">
+            <Field label="Risk Score" value={d.risk_score != null ? `${d.risk_score} (${d.risk_level})` : null} />
             <Field label="Risk Tags" value={d.risk_tags} /><Field label="RBL Hits" value={d.rbl_hits} /><Field label="OTX Risk" value={d.otx_risk} />
           </dl>
+          {d.risk_signals && (
+            <div className="mt-4 space-y-1.5">
+              <div className="text-[10px] font-semibold uppercase tracking-widest text-text-muted mb-2">Signal Breakdown</div>
+              {Object.entries(d.risk_signals).map(([key, val]) => (
+                <div key={key} className="flex items-center gap-2">
+                  <span className="w-24 text-[10px] text-text-muted truncate">{key}</span>
+                  <div className="flex-1 h-1.5 rounded-full bg-white/5 overflow-hidden">
+                    <div className="h-full rounded-full transition-all" style={{ width: `${Math.min(val, 100)}%`, background: val >= 75 ? '#ef4444' : val >= 50 ? '#f97316' : val >= 25 ? '#eab308' : '#22c55e' }} />
+                  </div>
+                  <span className="w-8 text-right font-mono text-[10px] text-text-muted">{Math.round(val)}</span>
+                </div>
+              ))}
+            </div>
+          )}
+        </Section>
+      )}
+
+      {/* Shodan Intelligence */}
+      {showShodan && (
+        <Section title="Shodan Intelligence" icon={<Radar className="h-3.5 w-3.5 text-blue-400/50" />} accentColor="rgba(59,130,246,0.12)">
+          <dl className="grid gap-x-6 gap-y-3 sm:grid-cols-2 lg:grid-cols-3">
+            <Field label="Open Ports" value={d.shodan_ports} mono />
+            <Field label="Vulnerabilities" value={d.shodan_vulns} />
+            <Field label="Operating System" value={d.shodan_os} />
+            <Field label="Tags" value={d.shodan_tags} />
+            <Field label="Hostnames" value={d.shodan_hostnames} mono />
+          </dl>
+        </Section>
+      )}
+
+      {/* VirusTotal */}
+      {showVT && (
+        <Section title="VirusTotal" icon={<Bug className="h-3.5 w-3.5 text-red-400/50" />} accentColor="rgba(239,68,68,0.12)">
+          <div className="flex flex-wrap items-center gap-4">
+            {d.vt_malicious_count != null && (
+              <div className="flex flex-col items-center rounded-lg bg-red-500/8 border border-red-500/15 px-4 py-2">
+                <span className="font-mono text-2xl font-bold text-red-400">{d.vt_malicious_count}</span>
+                <span className="text-[10px] text-text-muted">Malicious</span>
+              </div>
+            )}
+            {d.vt_undetected_count != null && (
+              <div className="flex flex-col items-center rounded-lg bg-green-500/8 border border-green-500/15 px-4 py-2">
+                <span className="font-mono text-2xl font-bold text-green-400">{d.vt_undetected_count}</span>
+                <span className="text-[10px] text-text-muted">Undetected</span>
+              </div>
+            )}
+          </div>
+          <dl className="mt-3 grid gap-x-6 gap-y-3 sm:grid-cols-2">
+            <Field label="Last Analysis" value={d.vt_last_analysis} />
+          </dl>
+        </Section>
+      )}
+
+      {/* PhishTank / URLhaus */}
+      {showPhishTank && (
+        <Section title="PhishTank / URLhaus" icon={<Shield className="h-3.5 w-3.5 text-orange-400/50" />} accentColor="rgba(249,115,22,0.12)">
+          <dl className="grid gap-x-6 gap-y-3 sm:grid-cols-2">
+            <Field label="PhishTank URL" value={d.phishtank_phishtank_url} mono />
+            <Field label="URLhaus Threat" value={d.phishtank_urlhaus_threat} />
+            <Field label="Matched" value={d.phishtank_phishtank_match} />
+          </dl>
+        </Section>
+      )}
+
+      {/* OpenClaw Shadow AI */}
+      {showOpenClaw && (
+        <Section title="OpenClaw — Shadow AI" icon={<Eye className="h-3.5 w-3.5 text-purple-400/50" />} accentColor="rgba(168,85,247,0.12)">
+          <dl className="grid gap-x-6 gap-y-3 sm:grid-cols-3">
+            <Field label="Agent Type" value={d.openclaw_agent_type} />
+            <Field label="Exposure Level" value={d.openclaw_exposure_level} />
+            <Field label="Model ID" value={d.openclaw_model_id} mono />
+          </dl>
+        </Section>
+      )}
+
+      {/* Related Domains */}
+      {relatedDomains.length > 0 && (
+        <Section title={`Related Domains (${relatedDomains.length})`} icon={<Users className="h-3.5 w-3.5 text-cyan-400/50" />} accentColor="rgba(6,182,212,0.12)" defaultOpen={false}>
+          <div className="space-y-1">
+            {relatedDomains.map(rd => (
+              <Link key={rd.domain} to={`/investigate/${rd.domain}`}
+                className="flex items-center gap-2 rounded px-2 py-1.5 text-xs hover:bg-white/[0.03] transition-colors"
+              >
+                <ExternalLink className="h-3 w-3 text-text-muted shrink-0" />
+                <span className="font-mono text-text-secondary">{rd.domain}</span>
+                <span className="ml-auto flex gap-1">
+                  {rd.linkTypes.map(t => (
+                    <span key={t} className="rounded bg-white/5 px-1.5 py-0.5 text-[9px] text-text-muted">{t.replace('_', ' ')}</span>
+                  ))}
+                </span>
+              </Link>
+            ))}
+          </div>
+        </Section>
+      )}
+
+      {/* Visual Fingerprint */}
+      {d.visual_cluster_id && (
+        <Section title="Visual Fingerprint" icon={<Image className="h-3.5 w-3.5 text-indigo-400/50" />} accentColor="rgba(99,102,241,0.12)" defaultOpen={false}>
+          <div className="flex gap-4">
+            <img
+              src={`./data/screenshots/${domain}.png`}
+              alt={`Screenshot of ${domain}`}
+              className="max-w-xs rounded-lg border border-border-subtle"
+              onError={e => { e.target.style.display = 'none'; }}
+            />
+            <dl className="space-y-2">
+              <Field label="Visual Cluster" value={d.visual_cluster_id} mono />
+            </dl>
+          </div>
         </Section>
       )}
     </div>

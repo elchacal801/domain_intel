@@ -58,6 +58,8 @@ campaign tracking, risk signal analysis, and historical trends — into a cohesi
 - **Strategic Focus:** Connect low-level signals (new domains, typosquats) to high-level risks (Brand Erosion, Fraud Campaigns, Credential Harvesting).
 - **No Hyperbole:** Avoid sensationalism. If the data is quiet, state that the threat level is stable.
 - **Cross-Domain Correlation:** Look for overlap between domain typosquats, campaign IPs, and exposed infrastructure.
+- **Formatting:** NEVER use em-dashes (\u2014) or en-dashes (\u2013). Use regular hyphens (-) or commas instead. NEVER use smart/curly quotes; use straight quotes only.
+- **Markdown:** Use markdown formatting (bold, bullet lists, headers) within text fields for readability.
 
 **Required Briefing Structure (JSON):**
 1. **Executive Summary:** A dense 3-4 sentence synthesis of the day's most critical findings across all intelligence domains.
@@ -83,6 +85,29 @@ campaign tracking, risk signal analysis, and historical trends — into a cohesi
     "action_items": ["Action 1", "Action 2"]
 }
 """
+
+def _sanitize_briefing(briefing):
+    """Strip em-dashes, en-dashes, and smart quotes from all string fields."""
+    replacements = {
+        "\u2014": "-",   # em-dash
+        "\u2013": "-",   # en-dash
+        "\u2018": "'",   # left single quote
+        "\u2019": "'",   # right single quote
+        "\u201C": '"',   # left double quote
+        "\u201D": '"',   # right double quote
+    }
+    def _clean(val):
+        if isinstance(val, str):
+            for old, new in replacements.items():
+                val = val.replace(old, new)
+            return val
+        elif isinstance(val, list):
+            return [_clean(v) for v in val]
+        elif isinstance(val, dict):
+            return {k: _clean(v) for k, v in val.items()}
+        return val
+    return _clean(briefing)
+
 
 def get_stats():
     stats = {
@@ -520,6 +545,9 @@ def generate_briefing(stats):
     evidence_candidates = get_evidence_candidates(stats)
     if evidence_candidates:
         briefing["evidence_candidates"] = evidence_candidates
+
+    # Sanitize em-dashes, en-dashes, smart quotes
+    briefing = _sanitize_briefing(briefing)
     
     return briefing
 

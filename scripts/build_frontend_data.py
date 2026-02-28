@@ -55,13 +55,33 @@ OPTIONAL_FILES = {
     },
     "shodan_intelligence": {
         "path": "data/shodan_intelligence.csv",
-        "fields": ["ports", "vulns"],
+        "fields": ["ports", "vulns", "os", "tags", "hostnames"],
         "prefix": "shodan_",
     },
     "phishtank_matches": {
         "path": "data/phishtank_matches.csv",
-        "fields": ["phishtank_url", "urlhaus_threat"],
+        "fields": ["phishtank_url", "urlhaus_threat", "phishtank_match"],
         "prefix": "phishtank_",
+    },
+    "virustotal_intelligence": {
+        "path": "data/virustotal_intelligence.csv",
+        "fields": ["vt_malicious_count", "vt_undetected_count", "vt_last_analysis"],
+        "prefix": "",
+    },
+    "openclaw_exposed": {
+        "path": "data/openclaw_exposed.csv",
+        "fields": ["agent_type", "exposure_level", "model_id"],
+        "prefix": "openclaw_",
+    },
+    "domain_registrars": {
+        "path": "data/domain_registrars.csv",
+        "fields": ["registrar", "creation_date", "expiration_date"],
+        "prefix": "whois_",
+    },
+    "enriched_candidates": {
+        "path": "data/enriched_candidates.csv",
+        "fields": ["st_registrar_changes", "st_dns_history_count"],
+        "prefix": "",
     },
 }
 
@@ -171,6 +191,153 @@ def merge_optional_data(domains, optional_data, prefix):
             merged_count += 1
     if merged_count:
         log.info("Merged %d domains with prefix '%s'", merged_count, prefix)
+
+
+# ---------------------------------------------------------------------------
+# Risk score computation
+# ---------------------------------------------------------------------------
+
+def _safe_float(val, default=0.0):
+    """Safely parse a value to float."""
+    if val is None or val == "":
+        return default
+    try:
+        return float(val)
+    except (ValueError, TypeError):
+        return default
+
+
+def compute_risk_score(domain_data):
+    """
+    Compute a composite risk score (0-100) from multiple signal axes.
+
+    Signal weights:
+      - Fingerprint confidence (max across matches): 25%
+      - VT malicious count (normalized 0-100):       20%
+      - OpenSanctions match score:                   15%
+      - RBL hits count:                              10%
+      - PhishTank/URLhaus match:                     10%
+      - AI typosquat presence:                       10%
+      - Domain age < 30 days:                        10%
+
+    Returns (score: int 0-100, level: str).
+    """
+    signals = {}
+
+    # 1. Fingerprint confidence (already 0-100)
+    matches = domain_data.get("matches", [])
+    if matches:
+        max_conf = max(_safe_float(m.get("confidence", 0)) for m in matches)
+        signals["fingerprint"] = min(max_conf, 100.0)
+    else:
+        signals["fingerprint"] = 0.0
+
+    # 2. VT malicious count (cap at 20 engines = 100%)
+    vt_count = _safe_float(domain_data.get("vt_malicious_count", 0))
+    signals["virustotal"] = min(vt_count / 20.0 * 100.0, 100.0)
+
+    # 3. OpenSanctions match score (already 0-100 range)
+    os_score = _safe_float(domain_data.get("os_match_score", 0))
+    signals["opensanctions"] = min(os_score, 100.0)
+
+    # 4. RBL hits (cap at 5 hits = 100%)
+    rbl = _safe_float(domain_data.get("rbl_hits", 0))
+    signals["rbl"] = min(rbl / 5.0 * 100.0, 100.0)
+
+    # 5. PhishTank match (binary)
+    pt = domain_data.get("phishtank_match", domain_data.get("phishtank_phishtank_match", ""))
+    signals["phishtank"] = 100.0 if str(pt).strip().lower() in ("true", "1", "yes") else 0.0
+
+    # 6. AI typosquat (binary — has a target)
+    typo_target = domain_data.get("typosquat_target", "")
+    signals["typosquat"] = 100.0 if typo_target else 0.0
+
+    # 7. Domain age < 30 days
+    age = _safe_float(domain_data.get("age_days", 365))
+    if age <= 0:
+        signals["young_domain"] = 0.0
+    elif age < 30:
+        signals["young_domain"] = (1.0 - age / 30.0) * 100.0
+    else:
+        signals["young_domain"] = 0.0
+
+    # Weighted composite
+    weights = {
+        "fingerprint": 0.25,
+        "virustotal": 0.20,
+        "opensanctions": 0.15,
+        "rbl": 0.10,
+        "phishtank": 0.10,
+        "typosquat": 0.10,
+        "young_domain": 0.10,
+    }
+    score = sum(signals[k] * weights[k] for k in weights)
+    score = int(round(min(max(score, 0), 100)))
+
+    if score >= 75:
+        level = "Critical"
+    elif score >= 50:
+        level = "High"
+    elif score >= 25:
+        level = "Medium"
+    else:
+        level = "Low"
+
+    return score, level, signals
+
+
+# ---------------------------------------------------------------------------
+# Infrastructure pivot index
+# ---------------------------------------------------------------------------
+
+MAX_INDEX_ENTRIES = 200  # cap domain list per key
+
+
+def build_infra_index(domains, fp_matches):
+    """
+    Build a reverse-lookup index for infrastructure pivot search.
+
+    Returns dict with keys: asn, mx, registrar, fp.
+    Each maps a value to a list of domains (capped at MAX_INDEX_ENTRIES).
+    Only buckets with >= 2 domains are included.
+    """
+    asn_idx = defaultdict(list)
+    mx_idx = defaultdict(list)
+    reg_idx = defaultdict(list)
+    fp_idx = defaultdict(list)
+
+    for domain, data in domains.items():
+        asn = str(data.get("asn", "")).strip()
+        if asn:
+            asn_idx[asn].append(domain)
+
+        mx = str(data.get("primary_mx", "")).strip()
+        if mx:
+            mx_idx[mx].append(domain)
+
+        reg = str(data.get("registrant_org", "")).strip()
+        if reg:
+            reg_idx[reg].append(domain)
+
+    for domain, match_list in fp_matches.items():
+        for m in match_list:
+            fp_id = m.get("fp_id", "")
+            if fp_id:
+                fp_idx[fp_id].append(domain)
+
+    def _trim(index):
+        return {
+            k: sorted(set(v))[:MAX_INDEX_ENTRIES]
+            for k, v in index.items()
+            if len(set(v)) >= 2
+        }
+
+    return {
+        "asn": _trim(asn_idx),
+        "mx": _trim(mx_idx),
+        "registrar": _trim(reg_idx),
+        "fp": _trim(fp_idx),
+    }
 
 
 # ---------------------------------------------------------------------------
@@ -361,9 +528,19 @@ def build_outputs(probed_path, fingerprints_path, output_dir,
     for domain, data in domains.items():
         data["matches"] = fp_matches.get(domain, [])
 
+    # Compute risk scores
+    for domain, data in domains.items():
+        score, level, signals = compute_risk_score(data)
+        data["risk_score"] = score
+        data["risk_level"] = level
+        data["risk_signals"] = signals
+
     # Compute derived structures
     clusters = compute_clusters(domains, min_cluster_size=min_cluster_size)
     stats = compute_stats(domains, fp_matches, clusters)
+
+    # Build infrastructure pivot index
+    infra_index = build_infra_index(domains, fp_matches)
 
     # Build flat fingerprint matches list with enrichment from probed data
     flat_matches = []
@@ -425,6 +602,13 @@ def build_outputs(probed_path, fingerprints_path, output_dir,
     with open(stats_path, "w", encoding="utf-8") as f:
         json.dump(stats, f, indent=2, ensure_ascii=False)
     log.info("Wrote %s", stats_path)
+
+    # infra_index.json — pivot search index
+    infra_path = os.path.join(output_dir, "infra_index.json")
+    with open(infra_path, "w", encoding="utf-8") as f:
+        json.dump(infra_index, f, separators=(",", ":"), ensure_ascii=False)
+    idx_size = sum(len(v) for cat in infra_index.values() for v in cat.values())
+    log.info("Wrote %s (%d index entries)", infra_path, idx_size)
 
     return domains, flat_matches, clusters, stats
 
