@@ -108,9 +108,13 @@ def parse_urlhaus_csv(file_obj) -> Dict[str, Dict[str, str]]:
         # Handle both bytes and str
         if isinstance(line, bytes):
             line = line.decode("utf-8", errors="replace")
+        
         if line.startswith("#"):
-            # Extract column names from "# Columns: ..." comment line
-            if line.lower().startswith("# columns:"):
+            # Extract column names from "# id,dateadded,url..." comment line
+            clean_line = line.lstrip("#").strip()
+            if clean_line.lower().startswith("id,dateadded,url"):
+                fieldnames = [c.strip() for c in clean_line.split(",")]
+            elif line.lower().startswith("# columns:"):
                 cols_str = line.split(":", 1)[1].strip()
                 fieldnames = [c.strip() for c in cols_str.split(",")]
         else:
@@ -123,9 +127,9 @@ def parse_urlhaus_csv(file_obj) -> Dict[str, Dict[str, str]]:
     csv_text = "".join(data_lines)
     if fieldnames is None:
         # Fallback: assume first data line is a header
-        reader = csv.DictReader(io.StringIO(csv_text))
+        reader = csv.DictReader(io.StringIO(csv_text, newline=""))
     else:
-        reader = csv.DictReader(io.StringIO(csv_text), fieldnames=fieldnames)
+        reader = csv.DictReader(io.StringIO(csv_text, newline=""), fieldnames=fieldnames)
 
     for row in reader:
         url = row.get("url", "").strip()
@@ -240,11 +244,14 @@ def build_bad_domain_set(cache=None) -> Tuple[Dict, Dict]:
     except Exception as e:
         logger.error("Failed to download/parse PhishTank feed: %s", e)
 
-    # Download URLhaus (plain CSV with comment lines)
+    # Download URLhaus (ZIP with csv.txt)
     try:
         logger.info("Downloading URLhaus feed from %s", URLHAUS_URL)
         resp = _download(URLHAUS_URL)
-        urlhaus_map = parse_urlhaus_csv(io.StringIO(resp.text))
+        import zipfile
+        with zipfile.ZipFile(io.BytesIO(resp.content)) as z:
+            csv_data = z.read("csv.txt").decode("utf-8", errors="replace")
+        urlhaus_map = parse_urlhaus_csv(io.StringIO(csv_data))
     except Exception as e:
         logger.error("Failed to download/parse URLhaus feed: %s", e)
 

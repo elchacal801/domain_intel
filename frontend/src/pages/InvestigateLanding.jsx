@@ -178,7 +178,7 @@ export default function InvestigateLanding() {
           {pivotResults.length === 0 ? (
             <div className="glass-card p-6 text-center text-xs text-text-muted">No domains found</div>
           ) : (
-            <div className="overflow-x-auto rounded-lg border border-border-subtle bg-[#080808]">
+            <div className="overflow-x-auto rounded-lg border border-border-subtle" style={{ background: 'var(--bg-surface)' }}>
               <table className="intel-table w-full text-left">
                 <thead><tr><th>Domain</th></tr></thead>
                 <tbody>
@@ -250,7 +250,7 @@ export default function InvestigateLanding() {
                   )}
                 </div>
 
-                <div className="overflow-x-auto rounded-lg border border-border-subtle bg-[#080808]">
+                <div className="overflow-x-auto rounded-lg border border-border-subtle" style={{ background: 'var(--bg-surface)' }}>
                   <table className="intel-table w-full text-left">
                     <thead>
                       <tr>

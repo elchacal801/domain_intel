@@ -57,7 +57,7 @@ function MultiSelectFilter({ label, options, selected, onChange }) {
         )}
       </button>
       {open && (
-        <div className="absolute left-0 z-50 mt-1.5 max-h-52 w-56 overflow-y-auto rounded-lg border border-border-subtle bg-[#111] shadow-2xl animate-slide-down">
+        <div className="absolute left-0 z-50 mt-1.5 max-h-52 w-56 overflow-y-auto rounded-lg border border-border-subtle shadow-2xl animate-slide-down" style={{ background: 'var(--bg-surface-raised)' }}>
           {options.length === 0 ? (
             <div className="px-3 py-3 text-xs text-text-muted">No options</div>
           ) : options.map(opt => (
@@ -194,7 +194,8 @@ export default function MatchDashboard() {
         <div className="relative">
           <Filter className="absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-text-muted" />
           <input type="text" placeholder="Domain…" value={domainFilter} onChange={e => setDomainFilter(e.target.value)}
-            className="rounded-md border border-border-subtle bg-[#0a0a0a] py-1.5 pl-8 pr-3 text-xs text-text-primary placeholder-text-muted outline-none focus:border-white/15 transition-colors w-44"
+            className="rounded-md border border-border-subtle py-1.5 pl-8 pr-3 text-xs text-text-primary placeholder-text-muted outline-none focus:border-white/15 transition-colors w-44"
+            style={{ background: 'var(--bg-surface-input)' }}
           />
         </div>
         <MultiSelectFilter label="Fingerprint" options={fpIdOptions} selected={selectedFpIds} onChange={setSelectedFpIds} />
@@ -214,7 +215,7 @@ export default function MatchDashboard() {
       </div>
 
       {/* Table */}
-      <div className="overflow-x-auto rounded-lg border border-border-subtle bg-[#080808]">
+      <div className="overflow-x-auto rounded-lg border border-border-subtle" style={{ background: 'var(--bg-surface)' }}>
         <table className="intel-table w-full text-left">
           <thead>
             {table.getHeaderGroups().map(hg => (

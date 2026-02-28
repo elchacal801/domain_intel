@@ -159,7 +159,8 @@ export default function BriefingView() {
                         <select
                             value={selectedDate || briefing.date}
                             onChange={e => loadHistorical(e.target.value)}
-                            className="rounded-md border border-border-subtle bg-[#0a0a0a] px-2 py-1.5 text-xs text-text-secondary outline-none focus:border-white/15"
+                            className="rounded-md border border-border-subtle px-2 py-1.5 text-xs text-text-secondary outline-none focus:border-white/15"
+                            style={{ background: 'var(--bg-surface-input)' }}
                         >
                             {(Array.isArray(history) ? history : []).map(d => {
                                 const date = typeof d === 'string' ? d : d.date;
@@ -214,11 +215,11 @@ export default function BriefingView() {
                 <Section title={`Key Risks (${briefing.key_risks.length})`} icon={<AlertTriangle className="h-3.5 w-3.5 text-red-400/50" />} accentColor="rgba(239,68,68,0.15)">
                     <div className="space-y-2">
                         {briefing.key_risks.map((risk, i) => (
-                            <div key={i} className="flex gap-3 rounded-lg bg-[#0a0a0a] border border-border-subtle p-3">
+                            <div key={i} className="flex gap-3 rounded-lg border border-border-subtle p-3" style={{ background: 'var(--bg-surface)' }}>
                                 <span className="shrink-0 flex h-5 w-5 items-center justify-center rounded-full bg-red-500/10 text-[10px] font-bold text-red-400">
                                     {i + 1}
                                 </span>
-                                <p className="text-xs leading-relaxed text-text-secondary">{sanitize(risk)}</p>
+                                <MarkdownText className="text-xs leading-relaxed text-text-secondary">{risk}</MarkdownText>
                             </div>
                         ))}
                     </div>
@@ -230,9 +231,9 @@ export default function BriefingView() {
                 <Section title={`Action Items (${actions.length})`} icon={<Target className="h-3.5 w-3.5 text-white/30" />} accentColor="rgba(255,255,255,0.08)">
                     <div className="space-y-2">
                         {actions.map((item, i) => (
-                            <div key={i} className="flex gap-3 rounded-lg bg-[#0a0a0a] border border-border-subtle p-3">
+                            <div key={i} className="flex gap-3 rounded-lg border border-border-subtle p-3" style={{ background: 'var(--bg-surface)' }}>
                                 {item.priority && <PriorityTag text={item.priority} />}
-                                <p className="text-xs leading-relaxed text-text-secondary flex-1">{sanitize(item.body)}</p>
+                                <MarkdownText className="text-xs leading-relaxed text-text-secondary flex-1">{item.body}</MarkdownText>
                             </div>
                         ))}
                     </div>
@@ -246,7 +247,7 @@ export default function BriefingView() {
                     icon={<Shield className="h-3.5 w-3.5 text-white/30" />}
                     accentColor="rgba(255,255,255,0.08)"
                 >
-                    <div className="overflow-x-auto rounded-lg border border-border-subtle bg-[#080808]">
+                    <div className="overflow-x-auto rounded-lg border border-border-subtle" style={{ background: 'var(--bg-surface)' }}>
                         <table className="intel-table w-full text-left">
                             <thead>
                                 <tr>

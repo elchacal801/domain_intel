@@ -78,9 +78,9 @@ export default function DomainDetail() {
   }
 
   const d = data;
-  const matches = d.matches || [];
-  const highestScore = matches.length > 0 ? Math.max(...matches.map(m => Number(m.confidence) || 0)) : null;
-  const flameTpIds = d.flame_tp_ids
+  const matches = d?.matches || [];
+  const highestScore = matches.length > 0 ? Math.max(...matches.map(m => Number(m?.confidence) || 0)) : null;
+  const flameTpIds = d?.flame_tp_ids
     ? String(d.flame_tp_ids).split(/[,;]+/).map(s => s.trim()).filter(Boolean) : [];
 
   const showEntity = hasAny(d, ['os_match_score', 'os_entity_type', 'os_dataset', 'icij_match_score', 'icij_entity_match', 'gleif_lei', 'gleif_status']);
@@ -375,7 +375,7 @@ export default function DomainDetail() {
 function EntityCard({ title, titleColor, fields }) {
   const hasData = fields.some(f => f.value != null && f.value !== '' && f.value !== 'N/A');
   return (
-    <div className="rounded-lg border border-border-subtle bg-[#0a0a0a] p-3.5">
+    <div className="rounded-lg border border-border-subtle p-3.5" style={{ background: 'var(--bg-surface)' }}>
       <h4 className="mb-2 text-[10px] font-semibold uppercase tracking-wider" style={{ color: titleColor }}>{title}</h4>
       {!hasData ? <p className="text-[10px] text-text-muted">No data</p> : (
         <dl className="space-y-1.5">{fields.map(f => <Field key={f.label} {...f} />)}</dl>
@@ -393,7 +393,7 @@ function MatchCard({ match }) {
     catch { evidence = String(m.evidence); }
   }
   return (
-    <div className="rounded-lg border border-border-subtle bg-[#0a0a0a] p-3 hover:border-border-hover transition-colors">
+    <div className="rounded-lg border border-border-subtle p-3 hover:border-border-hover transition-colors" style={{ background: 'var(--bg-surface)' }}>
       <div className="flex flex-wrap items-center gap-2">
         <Tooltip text={`Fingerprint pattern match`}>
           <span className="rounded bg-orange-500/8 px-2 py-0.5 font-mono text-xs font-medium text-fp/80">{m.fp_id}</span>
@@ -407,7 +407,7 @@ function MatchCard({ match }) {
         )}
       </div>
       {expanded && evidence && (
-        <pre className="mt-2 max-h-48 overflow-auto rounded bg-[#080808] border border-border-subtle p-3 font-mono text-[10px] text-text-muted animate-slide-down">{evidence}</pre>
+        <pre className="mt-2 max-h-48 overflow-auto rounded border border-border-subtle p-3 font-mono text-[10px] text-text-muted animate-slide-down" style={{ background: 'var(--bg-surface-raised)' }}>{evidence}</pre>
       )}
     </div>
   );

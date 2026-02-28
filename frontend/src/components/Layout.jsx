@@ -1,6 +1,7 @@
 import { NavLink, Outlet } from 'react-router-dom';
 import { Shield, Sun, Moon } from 'lucide-react';
 import GlobalSearch from './GlobalSearch';
+import ErrorBoundary from './ErrorBoundary';
 import { useData } from '@/context/DataContext';
 import { useTheme } from '@/context/ThemeContext';
 
@@ -64,7 +65,9 @@ export default function Layout() {
           </div>
         ) : (
           <div className="animate-fade-in">
-            <Outlet />
+            <ErrorBoundary>
+              <Outlet />
+            </ErrorBoundary>
           </div>
         )}
       </main>

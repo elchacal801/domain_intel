@@ -157,12 +157,13 @@ export default function ClusterView() {
           <div className="glass-card p-2.5">
             <input type="text" placeholder="Search clusters by MX, IP, or registrar…" value={search}
               onChange={e => { setSearch(e.target.value); setPage(0); }}
-              className="w-full rounded-md border border-border-subtle bg-[#0a0a0a] py-1.5 px-3 text-xs text-text-primary placeholder-text-muted outline-none focus:border-white/15 transition-colors"
+              className="w-full rounded-md border border-border-subtle py-1.5 px-3 text-xs text-text-primary placeholder-text-muted outline-none focus:border-white/15 transition-colors"
+              style={{ background: 'var(--bg-surface-input)' }}
             />
           </div>
 
           {/* Table */}
-          <div className="overflow-x-auto rounded-lg border border-border-subtle bg-[#080808]">
+          <div className="overflow-x-auto rounded-lg border border-border-subtle" style={{ background: 'var(--bg-surface)' }}>
             <table className="intel-table w-full text-left">
               <thead>
                 <tr>
@@ -216,14 +217,15 @@ export default function ClusterView() {
 
       {view === 'graph' && (
         <div className="flex h-[calc(100vh-10rem)] gap-4 animate-fade-in">
-          <div className="relative flex-1 overflow-hidden rounded-lg border border-border-subtle bg-[#050505]">
+          <div className="relative flex-1 overflow-hidden rounded-lg border border-border-subtle" style={{ background: 'var(--bg-body)' }}>
             {/* Back to table */}
             <button onClick={() => { setView('table'); setSelectedCluster(null); }}
-              className="absolute left-3 top-3 z-10 flex items-center gap-1 rounded-md border border-border-subtle bg-[#111] px-2.5 py-1 text-xs text-text-secondary hover:text-text-primary transition-colors"
+              className="absolute left-3 top-3 z-10 flex items-center gap-1 rounded-md border border-border-subtle px-2.5 py-1 text-xs text-text-secondary hover:text-text-primary transition-colors"
+              style={{ background: 'var(--bg-surface-raised)' }}
             ><ChevronLeft className="h-3 w-3" /> Back to table</button>
 
             {selectedCluster && (
-              <div className="absolute right-3 top-3 z-10 rounded-md border border-border-subtle bg-[#111] px-3 py-1.5 text-xs text-text-secondary">
+              <div className="absolute right-3 top-3 z-10 rounded-md border border-border-subtle px-3 py-1.5 text-xs text-text-secondary" style={{ background: 'var(--bg-surface-raised)' }}>
                 <span className="font-mono text-text-primary">{selectedCluster.label}</span>
                 <span className="text-text-muted ml-2">{selectedCluster.domainCount} domains</span>
               </div>
@@ -240,7 +242,7 @@ export default function ClusterView() {
 
           {/* Sidebar */}
           {selectedCluster && (
-            <div className="w-72 shrink-0 overflow-y-auto rounded-lg border border-border-subtle bg-[#0a0a0a] p-4">
+            <div className="w-72 shrink-0 overflow-y-auto rounded-lg border border-border-subtle p-4" style={{ background: 'var(--bg-surface)' }}>
               <div className="mb-4">
                 <div className="text-[10px] font-semibold uppercase tracking-widest text-text-muted">
                   {TYPE_META[selectedCluster.type]?.label}

@@ -282,7 +282,7 @@ jobs:
         run: |
           if [ -n "$VT_API_KEY" ]; then
              python scripts/enrich_virustotal.py --input data/triage_candidates.csv \
-               --output data/virustotal_intelligence.csv --budget 500 --limit 500
+               --output data/virustotal_intelligence.csv --budget 100 --limit 100
           fi
           cp data/virustotal_intelligence.csv docs/data/ || true
 
