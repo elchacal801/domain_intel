@@ -6,6 +6,8 @@ import FlameBadge from '@/components/FlameBadge';
 import Section from '@/components/Section';
 import Tooltip from '@/components/Tooltip';
 import DomainTimeline from '@/components/DomainTimeline';
+import ResolutionChain from '@/components/ResolutionChain';
+import SharedInfraBanner from '@/components/SharedInfraBanner';
 import {
   ArrowLeft, Fingerprint, ShieldAlert, Globe, Brain, FileKey, Activity,
   AlertTriangle, Server, Network, ExternalLink, Copy, Check,
@@ -217,6 +219,27 @@ export default function DomainDetail() {
 
       {/* DNS */}
       <Section title="DNS Infrastructure" icon={<Server className="h-3.5 w-3.5 text-mx/50" />} accentColor="rgba(59,130,246,0.12)">
+        {d.resolution_chain && (
+          <p className="text-[10px] text-text-muted mb-2">
+            {d.resolution_chain.mx_shared
+              ? `MX Server IP (Shared — ${d.resolution_chain.mx_provider_label})`
+              : 'MX Server IP (Dedicated)'}
+          </p>
+        )}
+        {d.resolution_chain && (
+          <div className="mb-3">
+            <ResolutionChain chain={d.resolution_chain} />
+          </div>
+        )}
+        {d.resolution_chain?.mx_shared && (
+          <div className="mb-3">
+            <SharedInfraBanner
+              provider={d.resolution_chain.mx_provider}
+              providerLabel={d.resolution_chain.mx_provider_label}
+              providerCategory="email"
+            />
+          </div>
+        )}
         <dl className="grid gap-x-6 gap-y-3 sm:grid-cols-2 lg:grid-cols-4">
           <Field label="Primary MX" value={d.primary_mx} mono /><Field label="MX IP" value={d.mx_ip} mono />
           <Field label="ASN" value={d.asn ? `${d.asn} — ${d.asn_name || ''}` : d.asn_name} mono />
