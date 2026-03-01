@@ -2,11 +2,13 @@ import { useState, useMemo, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useData } from '@/context/DataContext';
 import SigmaGraph from '@/components/SigmaGraph';
-import { Network, Sliders, ExternalLink, BarChart3, ChevronLeft, ChevronRight, X } from 'lucide-react';
+import ClusterConfidenceBadge from '@/components/ClusterConfidenceBadge';
+import SharedInfraBanner from '@/components/SharedInfraBanner';
+import { Network, Sliders, ExternalLink, BarChart3, ChevronLeft, ChevronRight, X, SlidersHorizontal } from 'lucide-react';
 
 const TYPE_META = {
   mx_host: { label: 'MX Host', color: '#3b82f6' },
-  ip: { label: 'IP Address', color: '#f97316' },
+  ip: { label: 'MX Server IP', color: '#f97316' },
   registrar_ns: { label: 'Registrar+NS', color: '#22c55e' },
 };
 
@@ -44,6 +46,16 @@ function buildClusterTable(data) {
       type: node.type,
       domainCount: domains.size,
       domains: [...domains].sort(),
+      shared_infra: node.shared_infra || false,
+      provider: node.provider || null,
+      provider_label: node.provider_label || null,
+      provider_category: node.provider_category || null,
+      confidence: node.confidence != null ? node.confidence : null,
+      confidence_level: node.confidence_level || null,
+      confidence_breakdown: node.confidence_breakdown || null,
+      resolution_method: node.resolution_method || null,
+      domain_count: node.domain_count || null,
+      related_mx_hosts: node.related_mx_hosts || null,
     });
   }
   rows.sort((a, b) => b.domainCount - a.domainCount);
@@ -84,14 +96,50 @@ export default function ClusterView() {
   const [selectedCluster, setSelectedCluster] = useState(null);
   const [page, setPage] = useState(0);
   const [search, setSearch] = useState('');
+  const [showSharedInfra, setShowSharedInfra] = useState(false);
+  const [confidenceFilter, setConfidenceFilter] = useState('all');
+  const [sortBy, setSortBy] = useState('size');
+
+  // Wrappers that reset page when filter state changes
+  const updateShowSharedInfra = useCallback((v) => { setShowSharedInfra(v); setPage(0); }, []);
+  const updateConfidenceFilter = useCallback((v) => { setConfidenceFilter(v); setPage(0); }, []);
+  const updateSortBy = useCallback((v) => { setSortBy(v); setPage(0); }, []);
 
   const clusterTable = useMemo(() => buildClusterTable(clusters), [clusters]);
 
+  const sharedCount = useMemo(
+    () => clusterTable.filter(r => r.shared_infra).length,
+    [clusterTable],
+  );
+
   const filtered = useMemo(() => {
-    if (!search) return clusterTable;
-    const l = search.toLowerCase();
-    return clusterTable.filter(r => r.label.toLowerCase().includes(l));
-  }, [clusterTable, search]);
+    let result = clusterTable;
+
+    // Text search (existing)
+    if (search) {
+      const l = search.toLowerCase();
+      result = result.filter(r => r.label.toLowerCase().includes(l));
+    }
+
+    // Hide shared infra unless toggled on
+    if (!showSharedInfra) {
+      result = result.filter(r => !r.shared_infra);
+    }
+
+    // Confidence level filter
+    if (confidenceFilter !== 'all') {
+      result = result.filter(r => r.confidence_level === confidenceFilter);
+    }
+
+    // Sort
+    if (sortBy === 'confidence') {
+      result = [...result].sort((a, b) => (b.confidence || 0) - (a.confidence || 0));
+    } else {
+      result = [...result].sort((a, b) => b.domainCount - a.domainCount);
+    }
+
+    return result;
+  }, [clusterTable, search, showSharedInfra, confidenceFilter, sortBy]);
 
   const pageCount = Math.ceil(filtered.length / PAGE_SIZE);
   const pageRows = filtered.slice(page * PAGE_SIZE, (page + 1) * PAGE_SIZE);
@@ -116,7 +164,7 @@ export default function ClusterView() {
       <div className="flex h-80 items-center justify-center">
         <div className="flex flex-col items-center gap-3">
           <div className="h-7 w-7 animate-spin rounded-full border-2 border-white/10 border-t-white/50" />
-          <span className="text-xs text-text-muted">Loading clusters…</span>
+          <span className="text-xs text-text-muted">Loading clusters...</span>
         </div>
       </div>
     );
@@ -131,6 +179,16 @@ export default function ClusterView() {
     );
   }
 
+  /** Render the type label, appending "(Shared)" for shared infra IP nodes. */
+  const renderTypeLabel = (row) => {
+    const meta = TYPE_META[row.type];
+    const label = meta?.label || row.type;
+    if (row.shared_infra && row.type === 'ip') return `${label} (Shared)`;
+    return label;
+  };
+
+  const CONFIDENCE_LEVELS = ['all', 'high', 'medium', 'low'];
+
   return (
     <div className="space-y-4">
       {/* Header */}
@@ -138,7 +196,7 @@ export default function ClusterView() {
         <div>
           <h1 className="text-lg font-bold text-text-primary">Infrastructure Clusters</h1>
           <p className="text-xs text-text-muted">
-            {clusterTable.length.toLocaleString()} clusters linking {clusters?.nodes?.length?.toLocaleString() || 0} nodes
+            {clusterTable.length.toLocaleString()} clusters{sharedCount > 0 && ` (${sharedCount} shared infrastructure)`} linking {clusters?.nodes?.length?.toLocaleString() || 0} nodes
           </p>
         </div>
         <div className="flex gap-1">
@@ -155,11 +213,61 @@ export default function ClusterView() {
         <>
           {/* Search */}
           <div className="glass-card p-2.5">
-            <input type="text" placeholder="Search clusters by MX, IP, or registrar…" value={search}
+            <input type="text" placeholder="Search clusters by MX, IP, or registrar..." value={search}
               onChange={e => { setSearch(e.target.value); setPage(0); }}
               className="w-full rounded-md border border-border-subtle py-1.5 px-3 text-xs text-text-primary placeholder-text-muted outline-none focus:border-white/15 transition-colors"
               style={{ background: 'var(--bg-surface-input)' }}
             />
+          </div>
+
+          {/* Filter controls */}
+          <div className="flex flex-wrap items-center gap-4 rounded-lg border border-border-subtle px-3 py-2" style={{ background: 'var(--bg-surface)' }}>
+            <div className="flex items-center gap-1.5 text-xs text-text-muted">
+              <SlidersHorizontal className="h-3 w-3" />
+              <span>Filters</span>
+            </div>
+
+            {/* Shared infra toggle */}
+            <label className="flex items-center gap-1.5 text-xs text-text-secondary cursor-pointer select-none">
+              <input
+                type="checkbox"
+                checked={showSharedInfra}
+                onChange={e => updateShowSharedInfra(e.target.checked)}
+                className="rounded border border-border-subtle"
+              />
+              Show shared infrastructure
+            </label>
+
+            {/* Confidence filter */}
+            <div className="flex items-center gap-1">
+              {CONFIDENCE_LEVELS.map(level => (
+                <button
+                  key={level}
+                  onClick={() => updateConfidenceFilter(level)}
+                  className={`rounded-md border px-2 py-0.5 text-xs font-medium transition-colors ${
+                    confidenceFilter === level
+                      ? 'border-white/10 bg-white/8 text-white'
+                      : 'border-border-subtle text-text-muted hover:text-text-secondary'
+                  }`}
+                >
+                  {level.charAt(0).toUpperCase() + level.slice(1)}
+                </button>
+              ))}
+            </div>
+
+            {/* Sort control */}
+            <div className="flex items-center gap-1.5 ml-auto">
+              <span className="text-xs text-text-muted">Sort:</span>
+              <select
+                value={sortBy}
+                onChange={e => updateSortBy(e.target.value)}
+                className="rounded-md border border-border-subtle py-0.5 px-2 text-xs text-text-secondary outline-none transition-colors focus:border-white/15"
+                style={{ background: 'var(--bg-surface-input)' }}
+              >
+                <option value="size">Size</option>
+                <option value="confidence">Confidence</option>
+              </select>
+            </div>
           </div>
 
           {/* Table */}
@@ -169,19 +277,35 @@ export default function ClusterView() {
                 <tr>
                   <th>Infrastructure Node</th>
                   <th>Type</th>
+                  <th>Confidence</th>
+                  <th>Provider</th>
                   <th className="text-right">Connected Domains</th>
                   <th>Top Connected</th>
                 </tr>
               </thead>
               <tbody>
                 {pageRows.map(row => (
-                  <tr key={row.id} onClick={() => { setSelectedCluster(row); setView('graph'); }}>
+                  <tr
+                    key={row.id}
+                    onClick={() => { setSelectedCluster(row); setView('graph'); }}
+                    className={row.shared_infra ? 'opacity-60' : ''}
+                  >
                     <td><span className="font-mono text-sm text-text-primary">{row.label}</span></td>
                     <td>
                       <span className="inline-flex items-center gap-1.5 text-xs text-text-muted">
                         <span className="h-2 w-2 rounded-full" style={{ backgroundColor: TYPE_META[row.type]?.color || '#888' }} />
-                        {TYPE_META[row.type]?.label || row.type}
+                        {renderTypeLabel(row)}
                       </span>
+                    </td>
+                    <td>
+                      <ClusterConfidenceBadge confidence={row.confidence} confidenceLevel={row.confidence_level} />
+                    </td>
+                    <td>
+                      {row.shared_infra && row.provider_label ? (
+                        <span className="text-xs text-text-secondary">{row.provider_label}</span>
+                      ) : (
+                        <span className="text-xs text-text-muted">&mdash;</span>
+                      )}
                     </td>
                     <td className="text-right font-mono text-sm text-text-primary">{row.domainCount.toLocaleString()}</td>
                     <td>
@@ -250,6 +374,68 @@ export default function ClusterView() {
                 <div className="mt-1 break-all font-mono text-base font-bold text-text-primary">{selectedCluster.label}</div>
                 <div className="mt-1 text-xs text-text-muted">{selectedCluster.domainCount} connected domains</div>
               </div>
+
+              {/* Confidence section */}
+              {selectedCluster.confidence != null && (
+                <>
+                  <div className="h-px bg-border-subtle mb-3" />
+                  <div className="text-[10px] font-semibold uppercase tracking-widest text-text-muted mb-2">Confidence</div>
+                  <div className="mb-2">
+                    <ClusterConfidenceBadge confidence={selectedCluster.confidence} confidenceLevel={selectedCluster.confidence_level} />
+                  </div>
+                  {selectedCluster.confidence_breakdown && (
+                    <div className="space-y-0.5 mb-3">
+                      {Object.entries(selectedCluster.confidence_breakdown).map(([key, value]) => (
+                        <div key={key} className="flex items-center justify-between text-xs">
+                          <span className="text-text-muted">{key.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase())}</span>
+                          <span className={`font-mono ${value >= 0 ? 'text-text-secondary' : 'text-red-400'}`}>
+                            {value >= 0 ? value : value}
+                          </span>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </>
+              )}
+
+              {/* Shared infra / provider info */}
+              {selectedCluster.shared_infra && (
+                <>
+                  <div className="h-px bg-border-subtle mb-3" />
+                  <div className="mb-3">
+                    <SharedInfraBanner
+                      provider={selectedCluster.provider}
+                      providerLabel={selectedCluster.provider_label}
+                      providerCategory={selectedCluster.provider_category}
+                    />
+                  </div>
+                </>
+              )}
+
+              {/* Resolution method */}
+              {selectedCluster.resolution_method && (
+                <>
+                  <div className="h-px bg-border-subtle mb-3" />
+                  <div className="text-[10px] font-semibold uppercase tracking-widest text-text-muted mb-1">Resolution Method</div>
+                  <div className="text-xs font-mono text-text-secondary mb-3">{selectedCluster.resolution_method}</div>
+                </>
+              )}
+
+              {/* Related MX hosts */}
+              {selectedCluster.related_mx_hosts && selectedCluster.related_mx_hosts.length > 0 && (
+                <>
+                  <div className="h-px bg-border-subtle mb-3" />
+                  <div className="text-[10px] font-semibold uppercase tracking-widest text-text-muted mb-2">Related MX Hosts</div>
+                  <div className="space-y-0.5 mb-3">
+                    {selectedCluster.related_mx_hosts.map(host => (
+                      <div key={host} className="text-xs font-mono text-text-secondary px-2 py-1 rounded bg-white/[0.02]">
+                        {host}
+                      </div>
+                    ))}
+                  </div>
+                </>
+              )}
+
               <div className="h-px bg-border-subtle mb-3" />
               <div className="text-[10px] font-semibold uppercase tracking-widest text-text-muted mb-2">Connected Domains</div>
               <div className="space-y-0.5">
