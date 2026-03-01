@@ -25,12 +25,19 @@ Optional inputs (warn if missing, don't crash):
 
 import argparse
 import csv
+import fnmatch
+import ipaddress
 import json
 import logging
 import os
 import sys
 from collections import Counter, defaultdict
 from datetime import datetime, timezone
+
+try:
+    import yaml
+except ImportError:
+    yaml = None
 
 logging.basicConfig(level=logging.INFO, format="[%(levelname)s] %(message)s")
 log = logging.getLogger(__name__)
@@ -341,10 +348,174 @@ def build_infra_index(domains, fp_matches):
 
 
 # ---------------------------------------------------------------------------
+# Shared infrastructure detection
+# ---------------------------------------------------------------------------
+
+def load_shared_infra_config(path=None):
+    """
+    Load the shared infrastructure YAML config.
+
+    Parses IP ranges into ipaddress.ip_network objects for efficient matching.
+    Returns structured config dict, or empty config on failure.
+    """
+    if path is None:
+        path = os.path.join(
+            os.path.dirname(os.path.dirname(__file__)),
+            "config", "shared_infrastructure.yaml",
+        )
+
+    if yaml is None:
+        log.warning("PyYAML not installed; shared infra detection disabled")
+        return {}
+
+    if not os.path.exists(path):
+        log.warning("Shared infrastructure config not found: %s", path)
+        return {}
+
+    try:
+        with open(path, "r", encoding="utf-8") as f:
+            config = yaml.safe_load(f) or {}
+    except Exception as exc:
+        log.warning("Failed to load shared infra config: %s", exc)
+        return {}
+
+    # Parse IP ranges into ipaddress objects
+    for provider_id, provider in config.get("providers", {}).items():
+        parsed_ranges = []
+        for cidr in provider.get("ip_ranges", []):
+            try:
+                parsed_ranges.append(ipaddress.ip_network(cidr, strict=False))
+            except ValueError as exc:
+                log.warning("Invalid CIDR %s in provider %s: %s", cidr, provider_id, exc)
+        provider["_parsed_ip_ranges"] = parsed_ranges
+
+    log.info("Loaded shared infra config with %d providers from %s",
+             len(config.get("providers", {})), path)
+    return config
+
+
+def match_shared_provider(value, value_type, config):
+    """
+    Check whether a value matches a known shared infrastructure provider.
+
+    Args:
+        value: the string to check (MX hostname, IP address, or NS hostname)
+        value_type: one of "mx", "ip", or "ns"
+        config: shared infra config dict from load_shared_infra_config()
+
+    Returns:
+        (provider_id, provider_label, category) or None
+    """
+    if not config or not value:
+        return None
+
+    providers = config.get("providers", {})
+    value_lower = value.strip().lower()
+
+    for provider_id, provider in providers.items():
+        if value_type == "mx":
+            for pattern in provider.get("mx_patterns", []):
+                if fnmatch.fnmatch(value_lower, pattern.lower()):
+                    return (provider_id, provider.get("label", provider_id),
+                            provider.get("category", ""))
+
+        elif value_type == "ip":
+            try:
+                addr = ipaddress.ip_address(value.strip())
+            except ValueError:
+                return None
+            for net in provider.get("_parsed_ip_ranges", []):
+                if addr in net:
+                    return (provider_id, provider.get("label", provider_id),
+                            provider.get("category", ""))
+
+        elif value_type == "ns":
+            for pattern in provider.get("ns_patterns", []):
+                if fnmatch.fnmatch(value_lower, pattern.lower()):
+                    return (provider_id, provider.get("label", provider_id),
+                            provider.get("category", ""))
+
+    return None
+
+
+def compute_cluster_confidence(cluster_size, shared_match, domains_in_cluster,
+                               all_domains, config, uniqueness_bonus=0):
+    """
+    Score how likely a cluster represents genuine shared-operator infrastructure.
+
+    Args:
+        cluster_size: number of domains in the cluster
+        shared_match: result from match_shared_provider() or None
+        domains_in_cluster: set of domain names in this cluster
+        all_domains: full domains dict (domain -> data)
+        config: shared infra config dict
+        uniqueness_bonus: extra score for MX hostname uniqueness in IP clusters
+
+    Returns:
+        (score: int 0-100, level: str, breakdown: dict)
+    """
+    base = 80
+
+    # Size penalty from config (largest matching threshold)
+    size_penalty = 0
+    size_penalties = config.get("size_penalties", [])
+    for threshold in sorted(size_penalties, key=lambda x: x["above"], reverse=True):
+        if cluster_size > threshold["above"]:
+            size_penalty = -threshold["penalty"]
+            break
+
+    # Shared infrastructure penalty
+    shared_penalty = -35 if shared_match else 0
+
+    # ASN diversity penalty
+    unique_asns = set()
+    for d in domains_in_cluster:
+        ddata = all_domains.get(d, {})
+        asn_val = str(ddata.get("asn", "")).strip()
+        if asn_val:
+            unique_asns.add(asn_val)
+
+    diversity_penalty = 0
+    if len(unique_asns) > 1:
+        unique_asn_ratio = len(unique_asns) / cluster_size
+        if unique_asn_ratio > 0.7:
+            diversity_penalty = -15
+        elif unique_asn_ratio > 0.4:
+            diversity_penalty = -8
+
+    score = base + size_penalty + shared_penalty + diversity_penalty + uniqueness_bonus
+    score = max(0, min(100, score))
+
+    # Map to level using thresholds from config
+    high_threshold = config.get("confidence_thresholds", {}).get("high", 70)
+    medium_threshold = config.get("confidence_thresholds", {}).get("medium", 40)
+
+    if score >= high_threshold:
+        level = "high"
+    elif score >= medium_threshold:
+        level = "medium"
+    else:
+        level = "low"
+
+    breakdown = {
+        "base": base,
+        "size_penalty": size_penalty,
+        "shared_penalty": shared_penalty,
+        "diversity_penalty": diversity_penalty,
+        "uniqueness_bonus": uniqueness_bonus,
+        "cluster_size": cluster_size,
+        "unique_asns": len(unique_asns),
+    }
+
+    return score, level, breakdown
+
+
+# ---------------------------------------------------------------------------
 # Cluster computation
 # ---------------------------------------------------------------------------
 
-def compute_clusters(domains, min_cluster_size=DEFAULT_MIN_CLUSTER_SIZE):
+def compute_clusters(domains, min_cluster_size=DEFAULT_MIN_CLUSTER_SIZE,
+                     shared_infra_config=None):
     """
     Group domains by shared infrastructure into a graph structure.
 
@@ -377,14 +548,32 @@ def compute_clusters(domains, min_cluster_size=DEFAULT_MIN_CLUSTER_SIZE):
     nodes = {}  # id -> node dict (dedup)
     edges = []
 
-    def add_infra_node(node_id, node_type, label, domain_count):
+    # Use empty dict if no shared infra config provided
+    si_config = shared_infra_config or {}
+
+    def add_infra_node(node_id, node_type, label, domain_set,
+                       shared_match=None, confidence_score=0,
+                       confidence_level="low", confidence_breakdown=None,
+                       resolution_method=None, extra=None):
         if node_id not in nodes:
-            nodes[node_id] = {
+            node = {
                 "id": node_id,
                 "type": node_type,
                 "label": label,
-                "size": min(5 + domain_count, 30),
+                "size": min(5 + len(domain_set), 30),
+                "shared_infra": bool(shared_match),
+                "provider": shared_match[0] if shared_match else None,
+                "provider_label": shared_match[1] if shared_match else None,
+                "provider_category": shared_match[2] if shared_match else None,
+                "confidence": confidence_score,
+                "confidence_level": confidence_level,
+                "confidence_breakdown": confidence_breakdown,
+                "resolution_method": resolution_method,
+                "domain_count": len(domain_set),
             }
+            if extra:
+                node.update(extra)
+            nodes[node_id] = node
 
     def add_domain_node(domain):
         node_id = f"dom:{domain}"
@@ -401,7 +590,23 @@ def compute_clusters(domains, min_cluster_size=DEFAULT_MIN_CLUSTER_SIZE):
     for mx_host, domain_set in mx_groups.items():
         if len(domain_set) >= min_cluster_size:
             infra_id = f"mx:{mx_host}"
-            add_infra_node(infra_id, "mx_host", mx_host, len(domain_set))
+
+            shared_match = match_shared_provider(mx_host, "mx", si_config) if si_config else None
+            confidence_score, confidence_level, breakdown = compute_cluster_confidence(
+                cluster_size=len(domain_set),
+                shared_match=shared_match,
+                domains_in_cluster=domain_set,
+                all_domains=domains,
+                config=si_config,
+                uniqueness_bonus=0,
+            )
+
+            add_infra_node(infra_id, "mx_host", mx_host, domain_set,
+                           shared_match=shared_match,
+                           confidence_score=confidence_score,
+                           confidence_level=confidence_level,
+                           confidence_breakdown=breakdown,
+                           resolution_method="mx_host")
             for d in domain_set:
                 dom_id = add_domain_node(d)
                 edges.append({"source": dom_id, "target": infra_id})
@@ -410,7 +615,44 @@ def compute_clusters(domains, min_cluster_size=DEFAULT_MIN_CLUSTER_SIZE):
     for ip, domain_set in ip_groups.items():
         if len(domain_set) >= min_cluster_size:
             infra_id = f"ip:{ip}"
-            add_infra_node(infra_id, "ip", ip, len(domain_set))
+
+            shared_match = match_shared_provider(ip, "ip", si_config) if si_config else None
+
+            # MX hostname uniqueness bonus: if not shared and all domains
+            # share the same primary_mx, award +10
+            uniqueness_bonus = 0
+            if not shared_match:
+                mx_values = set()
+                for d in domain_set:
+                    pmx = domains.get(d, {}).get("primary_mx", "").strip()
+                    if pmx:
+                        mx_values.add(pmx)
+                if len(mx_values) == 1:
+                    uniqueness_bonus = 10
+
+            confidence_score, confidence_level, breakdown = compute_cluster_confidence(
+                cluster_size=len(domain_set),
+                shared_match=shared_match,
+                domains_in_cluster=domain_set,
+                all_domains=domains,
+                config=si_config,
+                uniqueness_bonus=uniqueness_bonus,
+            )
+
+            # Collect related MX hostnames from domains in this cluster
+            related_mx = set()
+            for d in domain_set:
+                pmx = domains.get(d, {}).get("primary_mx", "").strip()
+                if pmx:
+                    related_mx.add(pmx)
+
+            add_infra_node(infra_id, "ip", ip, domain_set,
+                           shared_match=shared_match,
+                           confidence_score=confidence_score,
+                           confidence_level=confidence_level,
+                           confidence_breakdown=breakdown,
+                           resolution_method="mx_ip",
+                           extra={"related_mx_hosts": sorted(related_mx)})
             for d in domain_set:
                 dom_id = add_domain_node(d)
                 edges.append({"source": dom_id, "target": infra_id})
@@ -420,7 +662,31 @@ def compute_clusters(domains, min_cluster_size=DEFAULT_MIN_CLUSTER_SIZE):
         if len(domain_set) >= min_cluster_size:
             infra_id = f"regns:{reg}|{ns}"
             label = f"{reg} / {ns}"
-            add_infra_node(infra_id, "registrar_ns", label, len(domain_set))
+
+            # Match individual nameservers against shared infra config
+            shared_match = None
+            if si_config:
+                ns_parts = [s.strip() for s in ns.replace(",", ";").split(";") if s.strip()]
+                for ns_entry in ns_parts:
+                    shared_match = match_shared_provider(ns_entry, "ns", si_config)
+                    if shared_match:
+                        break
+
+            confidence_score, confidence_level, breakdown = compute_cluster_confidence(
+                cluster_size=len(domain_set),
+                shared_match=shared_match,
+                domains_in_cluster=domain_set,
+                all_domains=domains,
+                config=si_config,
+                uniqueness_bonus=0,
+            )
+
+            add_infra_node(infra_id, "registrar_ns", label, domain_set,
+                           shared_match=shared_match,
+                           confidence_score=confidence_score,
+                           confidence_level=confidence_level,
+                           confidence_breakdown=breakdown,
+                           resolution_method="registration")
             for d in domain_set:
                 dom_id = add_domain_node(d)
                 edges.append({"source": dom_id, "target": infra_id})
@@ -467,7 +733,18 @@ def compute_stats(domains, fp_matches, clusters):
     for domain in domains:
         tld_counter[_extract_tld(domain)] += 1
 
-    return {
+    # Count cluster confidence distribution
+    confidence_dist = {"high": 0, "medium": 0, "low": 0}
+    shared_count = 0
+    for node in clusters.get("nodes", []):
+        if node.get("type") != "domain":
+            level = node.get("confidence_level", "low")
+            if level in confidence_dist:
+                confidence_dist[level] += 1
+            if node.get("shared_infra"):
+                shared_count += 1
+
+    stats = {
         "total_domains": len(domains),
         "matched_domains": len(fp_matches),
         "total_clusters": total_clusters,
@@ -476,6 +753,10 @@ def compute_stats(domains, fp_matches, clusters):
         "top_fingerprints": dict(fp_counter.most_common(10)),
         "last_updated": datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
     }
+    stats["cluster_confidence_distribution"] = confidence_dist
+    stats["shared_infra_clusters"] = shared_count
+
+    return stats
 
 
 # ---------------------------------------------------------------------------
@@ -514,6 +795,12 @@ def build_outputs(probed_path, fingerprints_path, output_dir,
     if optional_files is None:
         optional_files = {}
 
+    # Load shared infrastructure config
+    shared_infra_config = load_shared_infra_config(
+        os.path.join(os.path.dirname(os.path.dirname(__file__)),
+                     "config", "shared_infrastructure.yaml")
+    )
+
     # Load required data
     domains = load_probed_csv(probed_path)
     fp_matches = load_fingerprint_matches(fingerprints_path)
@@ -536,7 +823,26 @@ def build_outputs(probed_path, fingerprints_path, output_dir,
         data["risk_signals"] = signals
 
     # Compute derived structures
-    clusters = compute_clusters(domains, min_cluster_size=min_cluster_size)
+    clusters = compute_clusters(domains, min_cluster_size=min_cluster_size,
+                                shared_infra_config=shared_infra_config)
+
+    # Add resolution chain to domain records
+    for domain, data in domains.items():
+        primary_mx = data.get("primary_mx", "").strip()
+        mx_ip = data.get("mx_ip", "").strip()
+        if primary_mx:
+            mx_match = match_shared_provider(primary_mx, "mx", shared_infra_config) if shared_infra_config else None
+            if mx_ip:
+                path = [domain, "MX", primary_mx, "A", mx_ip]
+            else:
+                path = [domain, "MX", primary_mx]
+            data["resolution_chain"] = {
+                "path": path,
+                "mx_provider": mx_match[0] if mx_match else None,
+                "mx_provider_label": mx_match[1] if mx_match else None,
+                "mx_shared": bool(mx_match),
+            }
+
     stats = compute_stats(domains, fp_matches, clusters)
 
     # Build infrastructure pivot index
