@@ -1,0 +1,38 @@
+﻿2026-02-28T19:55:36.9462321Z ##[group]Run cd frontend
+2026-02-28T19:55:36.9462671Z [36;1mcd frontend[0m
+2026-02-28T19:55:36.9462954Z [36;1mnpm ci[0m
+2026-02-28T19:55:36.9463227Z [36;1mnpm run build[0m
+2026-02-28T19:55:36.9518071Z shell: /usr/bin/bash -e {0}
+2026-02-28T19:55:36.9518398Z env:
+2026-02-28T19:55:36.9518734Z   pythonLocation: /opt/hostedtoolcache/Python/3.10.19/x64
+2026-02-28T19:55:36.9519439Z   PKG_CONFIG_PATH: /opt/hostedtoolcache/Python/3.10.19/x64/lib/pkgconfig
+2026-02-28T19:55:36.9519944Z   Python_ROOT_DIR: /opt/hostedtoolcache/Python/3.10.19/x64
+2026-02-28T19:55:36.9520417Z   Python2_ROOT_DIR: /opt/hostedtoolcache/Python/3.10.19/x64
+2026-02-28T19:55:36.9520895Z   Python3_ROOT_DIR: /opt/hostedtoolcache/Python/3.10.19/x64
+2026-02-28T19:55:36.9521376Z   LD_LIBRARY_PATH: /opt/hostedtoolcache/Python/3.10.19/x64/lib
+2026-02-28T19:55:36.9521779Z ##[endgroup]
+2026-02-28T19:55:41.4790339Z 
+2026-02-28T19:55:41.4799605Z added 178 packages, and audited 179 packages in 4s
+2026-02-28T19:55:41.4800182Z 
+2026-02-28T19:55:41.4800611Z 84 packages are looking for funding
+2026-02-28T19:55:41.4801297Z   run `npm fund` for details
+2026-02-28T19:55:41.4804979Z 
+2026-02-28T19:55:41.4805442Z found 0 vulnerabilities
+2026-02-28T19:55:41.6075812Z 
+2026-02-28T19:55:41.6076741Z > domain-intel-frontend@1.0.0 build
+2026-02-28T19:55:41.6077598Z > vite build
+2026-02-28T19:55:41.6077913Z 
+2026-02-28T19:55:42.1705061Z [36mvite v7.3.1 [32mbuilding client environment for production...[36m[39m
+2026-02-28T19:55:42.2373495Z transforming...
+2026-02-28T19:55:45.5936623Z [32m✓[39m 1807 modules transformed.
+2026-02-28T19:55:45.9341015Z rendering chunks...
+2026-02-28T19:55:45.9436730Z computing gzip size...
+2026-02-28T19:55:45.9904259Z [2m../docs/[22m[32mindex.html                 [39m[1m[2m  0.93 kB[22m[1m[22m[2m │ gzip:   0.54 kB[22m
+2026-02-28T19:55:45.9906000Z [2m../docs/[22m[2massets/[22m[35mindex-DdzU3kNO.css  [39m[1m[2m 37.82 kB[22m[1m[22m[2m │ gzip:   7.80 kB[22m
+2026-02-28T19:55:45.9907450Z [33m
+2026-02-28T19:55:45.9909010Z [2m../docs/[22m[2massets/[22m[36mindex-Bv_FjNZI.js   [39m[1m[33m676.26 kB[39m[22m[2m │ gzip: 195.96 kB[22m
+2026-02-28T19:55:45.9910624Z (!) Some chunks are larger than 500 kB after minification. Consider:
+2026-02-28T19:55:45.9911811Z - Using dynamic import() to code-split the application
+2026-02-28T19:55:45.9913391Z - Use build.rollupOptions.output.manualChunks to improve chunking: https://rollupjs.org/configuration-options/#output-manualchunks
+2026-02-28T19:55:45.9915071Z - Adjust chunk size limit for this warning via build.chunkSizeWarningLimit.[39m
+2026-02-28T19:55:45.9916178Z [32m✓ built in 3.79s[39m

@@ -1,0 +1,14 @@
+﻿2026-02-28T18:36:39.8119515Z ##[group]Run python scripts/enrich_gleif.py
+2026-02-28T18:36:39.8119977Z [36;1mpython scripts/enrich_gleif.py[0m
+2026-02-28T18:36:39.8168483Z shell: /usr/bin/bash -e {0}
+2026-02-28T18:36:39.8169064Z env:
+2026-02-28T18:36:39.8169450Z   pythonLocation: /opt/hostedtoolcache/Python/3.10.19/x64
+2026-02-28T18:36:39.8169977Z   PKG_CONFIG_PATH: /opt/hostedtoolcache/Python/3.10.19/x64/lib/pkgconfig
+2026-02-28T18:36:39.8170476Z   Python_ROOT_DIR: /opt/hostedtoolcache/Python/3.10.19/x64
+2026-02-28T18:36:39.8170926Z   Python2_ROOT_DIR: /opt/hostedtoolcache/Python/3.10.19/x64
+2026-02-28T18:36:39.8171381Z   Python3_ROOT_DIR: /opt/hostedtoolcache/Python/3.10.19/x64
+2026-02-28T18:36:39.8171840Z   LD_LIBRARY_PATH: /opt/hostedtoolcache/Python/3.10.19/x64/lib
+2026-02-28T18:36:39.8172235Z ##[endgroup]
+2026-02-28T18:36:41.4112635Z 2026-02-28 18:36:41,410 - INFO - Found 0 unique org names to query GLEIF
+2026-02-28T18:36:43.2489829Z 2026-02-28 18:36:43,248 - INFO - Enriched 0 domains with GLEIF data. Output: data/dea_domains_probed.csv
+2026-02-28T18:36:43.3610611Z 2026-02-28 18:36:43,360 - INFO - Done. 0 domains enriched.

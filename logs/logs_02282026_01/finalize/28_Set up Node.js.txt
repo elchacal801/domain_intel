@@ -1,0 +1,25 @@
+﻿2026-02-28T19:55:33.4096097Z ##[group]Run actions/setup-node@v4
+2026-02-28T19:55:33.4096466Z with:
+2026-02-28T19:55:33.4096729Z   node-version: 20
+2026-02-28T19:55:33.4097009Z   cache: npm
+2026-02-28T19:55:33.4097333Z   cache-dependency-path: frontend/package-lock.json
+2026-02-28T19:55:33.4097724Z   always-auth: false
+2026-02-28T19:55:33.4098007Z   check-latest: false
+2026-02-28T19:55:33.4098409Z   token: ***
+2026-02-28T19:55:33.4098671Z env:
+2026-02-28T19:55:33.4099228Z   pythonLocation: /opt/hostedtoolcache/Python/3.10.19/x64
+2026-02-28T19:55:33.4099748Z   PKG_CONFIG_PATH: /opt/hostedtoolcache/Python/3.10.19/x64/lib/pkgconfig
+2026-02-28T19:55:33.4100255Z   Python_ROOT_DIR: /opt/hostedtoolcache/Python/3.10.19/x64
+2026-02-28T19:55:33.4100709Z   Python2_ROOT_DIR: /opt/hostedtoolcache/Python/3.10.19/x64
+2026-02-28T19:55:33.4101168Z   Python3_ROOT_DIR: /opt/hostedtoolcache/Python/3.10.19/x64
+2026-02-28T19:55:33.4101634Z   LD_LIBRARY_PATH: /opt/hostedtoolcache/Python/3.10.19/x64/lib
+2026-02-28T19:55:33.4102030Z ##[endgroup]
+2026-02-28T19:55:33.5893081Z Found in cache @ /opt/hostedtoolcache/node/20.20.0/x64
+2026-02-28T19:55:33.5899620Z ##[group]Environment details
+2026-02-28T19:55:36.3816099Z node: v20.20.0
+2026-02-28T19:55:36.3816474Z npm: 10.8.2
+2026-02-28T19:55:36.3816754Z yarn: 1.22.22
+2026-02-28T19:55:36.3817523Z ##[endgroup]
+2026-02-28T19:55:36.3843911Z [command]/opt/hostedtoolcache/node/20.20.0/x64/bin/npm config get cache
+2026-02-28T19:55:36.6524195Z /home/runner/.npm
+2026-02-28T19:55:36.9346402Z npm cache is not found

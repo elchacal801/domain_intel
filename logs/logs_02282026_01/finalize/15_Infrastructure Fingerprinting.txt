@@ -1,0 +1,21 @@
+﻿2026-02-28T18:37:17.9568913Z ##[group]Run python scripts/match_fingerprints.py
+2026-02-28T18:37:17.9569405Z [36;1mpython scripts/match_fingerprints.py[0m
+2026-02-28T18:37:17.9618980Z shell: /usr/bin/bash -e {0}
+2026-02-28T18:37:17.9619499Z env:
+2026-02-28T18:37:17.9619841Z   pythonLocation: /opt/hostedtoolcache/Python/3.10.19/x64
+2026-02-28T18:37:17.9620375Z   PKG_CONFIG_PATH: /opt/hostedtoolcache/Python/3.10.19/x64/lib/pkgconfig
+2026-02-28T18:37:17.9620883Z   Python_ROOT_DIR: /opt/hostedtoolcache/Python/3.10.19/x64
+2026-02-28T18:37:17.9621345Z   Python2_ROOT_DIR: /opt/hostedtoolcache/Python/3.10.19/x64
+2026-02-28T18:37:17.9621811Z   Python3_ROOT_DIR: /opt/hostedtoolcache/Python/3.10.19/x64
+2026-02-28T18:37:17.9622281Z   LD_LIBRARY_PATH: /opt/hostedtoolcache/Python/3.10.19/x64/lib
+2026-02-28T18:37:17.9622675Z ##[endgroup]
+2026-02-28T18:37:18.0234926Z 2026-02-28 18:37:18,023 INFO __main__: Loaded fingerprint FP-0001 from config/fingerprints/FP-0001-ovh-cpanel-dea.yaml
+2026-02-28T18:37:18.0278758Z 2026-02-28 18:37:18,027 INFO __main__: Loaded fingerprint FP-0002 from config/fingerprints/FP-0002-alibaba-sideloading.yaml
+2026-02-28T18:37:18.0326853Z 2026-02-28 18:37:18,032 INFO __main__: Loaded fingerprint FP-0003 from config/fingerprints/FP-0003-crypto-finance-cohosting.yaml
+2026-02-28T18:37:18.0373891Z 2026-02-28 18:37:18,037 INFO __main__: Loaded fingerprint FP-0004 from config/fingerprints/FP-0004-gname-cloudflare-china.yaml
+2026-02-28T18:37:18.0415733Z 2026-02-28 18:37:18,041 INFO __main__: Loaded fingerprint FP-0005 from config/fingerprints/FP-0005-godaddy-bulk-registration.yaml
+2026-02-28T18:37:18.0460673Z 2026-02-28 18:37:18,045 INFO __main__: Loaded fingerprint FP-0006 from config/fingerprints/FP-0006-shell-domain-mx-cluster.yaml
+2026-02-28T18:37:18.0509353Z 2026-02-28 18:37:18,050 INFO __main__: Loaded fingerprint FP-0007 from config/fingerprints/FP-0007-typosquat-evasion-infra.yaml
+2026-02-28T18:37:18.0510761Z 2026-02-28 18:37:18,050 INFO __main__: Loaded 7 fingerprint(s) from config/fingerprints
+2026-02-28T18:37:21.2077422Z 2026-02-28 18:37:21,207 INFO __main__: Processed 280875 rows, wrote 17004 matches to data/fingerprint_matches.csv
+2026-02-28T18:37:21.2078490Z 2026-02-28 18:37:21,207 INFO __main__: Total matches: 17004

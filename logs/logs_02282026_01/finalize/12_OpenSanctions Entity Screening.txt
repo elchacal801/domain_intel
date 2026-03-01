@@ -1,0 +1,17 @@
+﻿2026-02-28T18:36:43.4015109Z ##[group]Run python scripts/enrich_opensanctions.py
+2026-02-28T18:36:43.4015626Z [36;1mpython scripts/enrich_opensanctions.py[0m
+2026-02-28T18:36:43.4065474Z shell: /usr/bin/bash -e {0}
+2026-02-28T18:36:43.4065800Z env:
+2026-02-28T18:36:43.4066147Z   pythonLocation: /opt/hostedtoolcache/Python/3.10.19/x64
+2026-02-28T18:36:43.4066694Z   PKG_CONFIG_PATH: /opt/hostedtoolcache/Python/3.10.19/x64/lib/pkgconfig
+2026-02-28T18:36:43.4067226Z   Python_ROOT_DIR: /opt/hostedtoolcache/Python/3.10.19/x64
+2026-02-28T18:36:43.4067711Z   Python2_ROOT_DIR: /opt/hostedtoolcache/Python/3.10.19/x64
+2026-02-28T18:36:43.4068189Z   Python3_ROOT_DIR: /opt/hostedtoolcache/Python/3.10.19/x64
+2026-02-28T18:36:43.4068669Z   LD_LIBRARY_PATH: /opt/hostedtoolcache/Python/3.10.19/x64/lib
+2026-02-28T18:36:43.4069268Z ##[endgroup]
+2026-02-28T18:36:44.9191925Z 2026-02-28 18:36:44,918 - INFO - Downloading OpenSanctions dataset from https://data.opensanctions.org/datasets/latest/default/targets.simple.csv
+2026-02-28T18:36:49.4412127Z 2026-02-28 18:36:49,440 - INFO - Downloaded to data/.opensanctions_cache/targets.simple.csv, parsing...
+2026-02-28T18:36:58.1102870Z 2026-02-28 18:36:58,109 - INFO - Parsed 2466708 name entries from OpenSanctions CSV
+2026-02-28T18:36:58.3215620Z 2026-02-28 18:36:58,321 - INFO - Matching 0 unique org names against OpenSanctions (2466708 entries)
+2026-02-28T18:37:00.3001684Z 2026-02-28 18:37:00,299 - INFO - Enriched 0 domains with OpenSanctions data. Output: data/dea_domains_probed.csv
+2026-02-28T18:37:00.8033486Z 2026-02-28 18:37:00,803 - INFO - Done. 0 domains enriched.

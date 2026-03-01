@@ -1,0 +1,22 @@
+﻿2026-02-28T18:49:17.2887098Z ##[group]Run python scripts/triage_domains.py
+2026-02-28T18:49:17.2887545Z [36;1mpython scripts/triage_domains.py[0m
+2026-02-28T18:49:17.2936434Z shell: /usr/bin/bash -e {0}
+2026-02-28T18:49:17.2936756Z env:
+2026-02-28T18:49:17.2937097Z   pythonLocation: /opt/hostedtoolcache/Python/3.10.19/x64
+2026-02-28T18:49:17.2937628Z   PKG_CONFIG_PATH: /opt/hostedtoolcache/Python/3.10.19/x64/lib/pkgconfig
+2026-02-28T18:49:17.2938134Z   Python_ROOT_DIR: /opt/hostedtoolcache/Python/3.10.19/x64
+2026-02-28T18:49:17.2938624Z   Python2_ROOT_DIR: /opt/hostedtoolcache/Python/3.10.19/x64
+2026-02-28T18:49:17.2939272Z   Python3_ROOT_DIR: /opt/hostedtoolcache/Python/3.10.19/x64
+2026-02-28T18:49:17.2939734Z   LD_LIBRARY_PATH: /opt/hostedtoolcache/Python/3.10.19/x64/lib
+2026-02-28T18:49:17.2940127Z ##[endgroup]
+2026-02-28T18:49:28.5976994Z [*] Loading Triage Data...
+2026-02-28T18:49:28.5977864Z     - Targets: 179
+2026-02-28T18:49:28.5978394Z     - Keywords: 92
+2026-02-28T18:49:28.5979462Z     - Input Domains: 255776
+2026-02-28T18:49:28.5980077Z     - FLAME TP mappings: 362
+2026-02-28T18:49:28.5980570Z     - Fingerprint matches: 16978
+2026-02-28T18:49:28.5981069Z [*] Running Heuristic Triage...
+2026-02-28T18:49:28.5981533Z [*] Triage Complete.
+2026-02-28T18:49:28.5981975Z     - Total Candidates found: 10217
+2026-02-28T18:49:28.5982487Z     - Reduction: 255776 -> 10217 (3.99%)
+2026-02-28T18:49:28.5983053Z [*] Candidates saved to data/triage_candidates.csv

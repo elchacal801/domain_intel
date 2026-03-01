@@ -27,6 +27,12 @@ function hasAny(obj, keys) {
   return keys.some(k => obj[k] != null && obj[k] !== '' && obj[k] !== 'N/A');
 }
 
+function safe(v) {
+  if (v == null) return null;
+  if (typeof v === 'object') return JSON.stringify(v);
+  return String(v);
+}
+
 export default function DomainDetail() {
   const { domain } = useParams();
   const navigate = useNavigate();
@@ -150,7 +156,7 @@ export default function DomainDetail() {
       <div className="glass-card p-5">
         <div className="flex flex-wrap items-center gap-3">
           <Globe className="h-5 w-5 text-white/25" />
-          <h1 className="font-mono text-xl font-bold text-text-primary">{domain}</h1>
+          <h1 className="font-mono text-xl font-bold text-text-primary">{safe(domain)}</h1>
           <button onClick={copyDomain} className="rounded border border-border-subtle p-1 text-text-muted hover:text-text-primary transition-colors" title="Copy domain">
             {copied ? <Check className="h-3.5 w-3.5 text-green-400" /> : <Copy className="h-3.5 w-3.5" />}
           </button>
@@ -158,7 +164,7 @@ export default function DomainDetail() {
           {d.risk_score != null && (
             <Tooltip text={`Composite risk: ${d.risk_score}/100 (${d.risk_level})`}>
               <span className="rounded-full px-2.5 py-0.5 text-xs font-bold" style={{ background: `${riskColor}15`, color: riskColor, boxShadow: `inset 0 0 0 1px ${riskColor}30` }}>
-                {d.risk_level} ({d.risk_score})
+                {safe(d.risk_level)} ({safe(d.risk_score)})
               </span>
             </Tooltip>
           )}
@@ -261,11 +267,11 @@ export default function DomainDetail() {
               <div className="text-[10px] font-semibold uppercase tracking-widest text-text-muted mb-2">Signal Breakdown</div>
               {Object.entries(d.risk_signals).map(([key, val]) => (
                 <div key={key} className="flex items-center gap-2">
-                  <span className="w-24 text-[10px] text-text-muted truncate">{key}</span>
+                  <span className="w-24 text-[10px] text-text-muted truncate">{safe(key)}</span>
                   <div className="flex-1 h-1.5 rounded-full bg-white/5 overflow-hidden">
                     <div className="h-full rounded-full transition-all" style={{ width: `${Math.min(val, 100)}%`, background: val >= 75 ? '#ef4444' : val >= 50 ? '#f97316' : val >= 25 ? '#eab308' : '#22c55e' }} />
                   </div>
-                  <span className="w-8 text-right font-mono text-[10px] text-text-muted">{Math.round(val)}</span>
+                  <span className="w-8 text-right font-mono text-[10px] text-text-muted">{safe(Math.round(val))}</span>
                 </div>
               ))}
             </div>
@@ -292,13 +298,13 @@ export default function DomainDetail() {
           <div className="flex flex-wrap items-center gap-4">
             {d.vt_malicious_count != null && (
               <div className="flex flex-col items-center rounded-lg bg-red-500/8 border border-red-500/15 px-4 py-2">
-                <span className="font-mono text-2xl font-bold text-red-400">{d.vt_malicious_count}</span>
+                <span className="font-mono text-2xl font-bold text-red-400">{safe(d.vt_malicious_count)}</span>
                 <span className="text-[10px] text-text-muted">Malicious</span>
               </div>
             )}
             {d.vt_undetected_count != null && (
               <div className="flex flex-col items-center rounded-lg bg-green-500/8 border border-green-500/15 px-4 py-2">
-                <span className="font-mono text-2xl font-bold text-green-400">{d.vt_undetected_count}</span>
+                <span className="font-mono text-2xl font-bold text-green-400">{safe(d.vt_undetected_count)}</span>
                 <span className="text-[10px] text-text-muted">Undetected</span>
               </div>
             )}
@@ -340,10 +346,10 @@ export default function DomainDetail() {
                 className="flex items-center gap-2 rounded px-2 py-1.5 text-xs hover:bg-white/[0.03] transition-colors"
               >
                 <ExternalLink className="h-3 w-3 text-text-muted shrink-0" />
-                <span className="font-mono text-text-secondary">{rd.domain}</span>
+                <span className="font-mono text-text-secondary">{safe(rd.domain)}</span>
                 <span className="ml-auto flex gap-1">
                   {rd.linkTypes.map(t => (
-                    <span key={t} className="rounded bg-white/5 px-1.5 py-0.5 text-[9px] text-text-muted">{t.replace('_', ' ')}</span>
+                    <span key={t} className="rounded bg-white/5 px-1.5 py-0.5 text-[9px] text-text-muted">{safe(t.replace('_', ' '))}</span>
                   ))}
                 </span>
               </Link>
@@ -396,9 +402,9 @@ function MatchCard({ match }) {
     <div className="rounded-lg border border-border-subtle p-3 hover:border-border-hover transition-colors" style={{ background: 'var(--bg-surface)' }}>
       <div className="flex flex-wrap items-center gap-2">
         <Tooltip text={`Fingerprint pattern match`}>
-          <span className="rounded bg-orange-500/8 px-2 py-0.5 font-mono text-xs font-medium text-fp/80">{m.fp_id}</span>
+          <span className="rounded bg-orange-500/8 px-2 py-0.5 font-mono text-xs font-medium text-fp/80">{safe(m.fp_id)}</span>
         </Tooltip>
-        <span className="text-xs text-text-secondary">{m.fp_name}</span>
+        <span className="text-xs text-text-secondary">{safe(m.fp_name)}</span>
         <ConfidenceBadge score={m.confidence} fpId={m.fp_id} />
         {evidence && (
           <button onClick={() => setExpanded(p => !p)} className="ml-auto text-[10px] text-text-muted hover:text-text-primary transition-colors">

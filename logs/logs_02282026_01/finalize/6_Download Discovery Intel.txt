@@ -1,0 +1,26 @@
+﻿2026-02-28T18:34:10.0210195Z ##[group]Run actions/download-artifact@v4
+2026-02-28T18:34:10.0210597Z with:
+2026-02-28T18:34:10.0210855Z   name: discovery-intel
+2026-02-28T18:34:10.0211143Z   path: data
+2026-02-28T18:34:10.0211403Z   merge-multiple: false
+2026-02-28T18:34:10.0211701Z   repository: elchacal801/domain_intel
+2026-02-28T18:34:10.0212035Z   run-id: 22524758904
+2026-02-28T18:34:10.0212295Z env:
+2026-02-28T18:34:10.0212614Z   pythonLocation: /opt/hostedtoolcache/Python/3.10.19/x64
+2026-02-28T18:34:10.0213121Z   PKG_CONFIG_PATH: /opt/hostedtoolcache/Python/3.10.19/x64/lib/pkgconfig
+2026-02-28T18:34:10.0213635Z   Python_ROOT_DIR: /opt/hostedtoolcache/Python/3.10.19/x64
+2026-02-28T18:34:10.0214103Z   Python2_ROOT_DIR: /opt/hostedtoolcache/Python/3.10.19/x64
+2026-02-28T18:34:10.0214557Z   Python3_ROOT_DIR: /opt/hostedtoolcache/Python/3.10.19/x64
+2026-02-28T18:34:10.0215016Z   LD_LIBRARY_PATH: /opt/hostedtoolcache/Python/3.10.19/x64/lib
+2026-02-28T18:34:10.0215403Z ##[endgroup]
+2026-02-28T18:34:10.2203976Z Downloading single artifact
+2026-02-28T18:34:10.4950696Z Preparing to download the following artifacts:
+2026-02-28T18:34:10.4951994Z - discovery-intel (ID: 5704598903, Size: 5901212, Expected Digest: sha256:0e496362b186d00f54fca47da09ad1c7a6bf34952768a71c6eea5da2c2d60d23)
+2026-02-28T18:34:10.6631820Z Redirecting to blob download url: https://productionresultssa11.blob.core.windows.net/actions-results/ef927044-b86d-4b12-ba8c-05b128c916c1/workflow-job-run-5abb6e79-4125-557b-935d-499188022177/artifacts/f11b3467524415521c07fe9441f41670683d1359f445de87fecd6cae299d3642.zip
+2026-02-28T18:34:10.6634140Z Starting download of artifact to: /home/runner/work/domain_intel/domain_intel/data
+2026-02-28T18:34:10.9672195Z (node:2434) [DEP0005] DeprecationWarning: Buffer() is deprecated due to security and usability issues. Please use the Buffer.alloc(), Buffer.allocUnsafe(), or Buffer.from() methods instead.
+2026-02-28T18:34:10.9673605Z (Use `node --trace-deprecation ...` to show where the warning was created)
+2026-02-28T18:34:11.8148529Z SHA256 digest of downloaded artifact is 0e496362b186d00f54fca47da09ad1c7a6bf34952768a71c6eea5da2c2d60d23
+2026-02-28T18:34:11.8149743Z Artifact download completed successfully.
+2026-02-28T18:34:11.8150131Z Total of 1 artifact(s) downloaded
+2026-02-28T18:34:11.8155609Z Download artifact has finished successfully

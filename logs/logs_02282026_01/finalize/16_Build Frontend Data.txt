@@ -1,0 +1,67 @@
+﻿2026-02-28T18:37:21.2177987Z ##[group]Run python scripts/build_frontend_data.py
+2026-02-28T18:37:21.2178479Z [36;1mpython scripts/build_frontend_data.py[0m
+2026-02-28T18:37:21.2227995Z shell: /usr/bin/bash -e {0}
+2026-02-28T18:37:21.2228324Z env:
+2026-02-28T18:37:21.2228667Z   pythonLocation: /opt/hostedtoolcache/Python/3.10.19/x64
+2026-02-28T18:37:21.2229422Z   PKG_CONFIG_PATH: /opt/hostedtoolcache/Python/3.10.19/x64/lib/pkgconfig
+2026-02-28T18:37:21.2229949Z   Python_ROOT_DIR: /opt/hostedtoolcache/Python/3.10.19/x64
+2026-02-28T18:37:21.2230416Z   Python2_ROOT_DIR: /opt/hostedtoolcache/Python/3.10.19/x64
+2026-02-28T18:37:21.2230885Z   Python3_ROOT_DIR: /opt/hostedtoolcache/Python/3.10.19/x64
+2026-02-28T18:37:21.2231365Z   LD_LIBRARY_PATH: /opt/hostedtoolcache/Python/3.10.19/x64/lib
+2026-02-28T18:37:21.2231770Z ##[endgroup]
+2026-02-28T18:37:21.2646915Z [WARNING] Optional file not found (skipping): data/virustotal_intelligence.csv
+2026-02-28T18:37:23.4605147Z [INFO] Loaded 280873 domains from data/dea_domains_probed.csv
+2026-02-28T18:37:23.5315021Z [INFO] Loaded fingerprint matches for 16978 domains from data/fingerprint_matches.csv
+2026-02-28T18:37:23.5382934Z [INFO] Loaded optional data for 2000 domains from data/ai_classifications.csv
+2026-02-28T18:37:23.5406133Z [INFO] Merged 2000 domains with prefix 'ai_'
+2026-02-28T18:37:23.5439779Z [INFO] Loaded optional data for 1130 domains from data/ai_typosquats.csv
+2026-02-28T18:37:23.5450610Z [INFO] Merged 1130 domains with prefix 'typosquat_'
+2026-02-28T18:37:23.5479882Z [INFO] Loaded optional data for 517 domains from data/shodan_intelligence.csv
+2026-02-28T18:37:23.5486460Z [INFO] Merged 517 domains with prefix 'shodan_'
+2026-02-28T18:37:23.5487327Z [INFO] Loaded optional data for 3 domains from data/phishtank_matches.csv
+2026-02-28T18:37:23.5488115Z [INFO] Merged 3 domains with prefix 'phishtank_'
+2026-02-28T18:37:23.5505722Z [INFO] Loaded optional data for 0 domains from data/openclaw_exposed.csv
+2026-02-28T18:37:23.6733108Z [INFO] Loaded optional data for 47732 domains from data/domain_registrars.csv
+2026-02-28T18:37:23.7172209Z [INFO] Merged 47251 domains with prefix 'whois_'
+2026-02-28T18:37:23.7293158Z [INFO] Loaded optional data for 0 domains from data/enriched_candidates.csv
+2026-02-28T18:37:27.1470361Z [INFO] Wrote docs/data/domains_0.json (1428 domains)
+2026-02-28T18:37:27.2728236Z [INFO] Wrote docs/data/domains_1.json (2676 domains)
+2026-02-28T18:37:27.3707824Z [INFO] Wrote docs/data/domains_2.json (2103 domains)
+2026-02-28T18:37:27.4574368Z [INFO] Wrote docs/data/domains_3.json (1870 domains)
+2026-02-28T18:37:27.5412777Z [INFO] Wrote docs/data/domains_4.json (1778 domains)
+2026-02-28T18:37:27.6204538Z [INFO] Wrote docs/data/domains_5.json (1630 domains)
+2026-02-28T18:37:27.7013349Z [INFO] Wrote docs/data/domains_6.json (1676 domains)
+2026-02-28T18:37:27.7734593Z [INFO] Wrote docs/data/domains_7.json (1551 domains)
+2026-02-28T18:37:27.8552617Z [INFO] Wrote docs/data/domains_8.json (1761 domains)
+2026-02-28T18:37:27.9268593Z [INFO] Wrote docs/data/domains_9.json (1545 domains)
+2026-02-28T18:37:28.8061294Z [INFO] Wrote docs/data/domains_a.json (17764 domains)
+2026-02-28T18:37:29.5816484Z [INFO] Wrote docs/data/domains_b.json (15612 domains)
+2026-02-28T18:37:30.4307291Z [INFO] Wrote docs/data/domains_c.json (17125 domains)
+2026-02-28T18:37:30.9864530Z [INFO] Wrote docs/data/domains_d.json (11542 domains)
+2026-02-28T18:37:31.4788313Z [INFO] Wrote docs/data/domains_e.json (9986 domains)
+2026-02-28T18:37:31.9240377Z [INFO] Wrote docs/data/domains_f.json (9552 domains)
+2026-02-28T18:37:32.4481415Z [INFO] Wrote docs/data/domains_g.json (10589 domains)
+2026-02-28T18:37:32.9207315Z [INFO] Wrote docs/data/domains_h.json (9759 domains)
+2026-02-28T18:37:33.3372209Z [INFO] Wrote docs/data/domains_i.json (8442 domains)
+2026-02-28T18:37:33.5914356Z [INFO] Wrote docs/data/domains_j.json (5547 domains)
+2026-02-28T18:37:33.9415238Z [INFO] Wrote docs/data/domains_k.json (7247 domains)
+2026-02-28T18:37:34.3878960Z [INFO] Wrote docs/data/domains_l.json (9514 domains)
+2026-02-28T18:37:35.3151493Z [INFO] Wrote docs/data/domains_m.json (19444 domains)
+2026-02-28T18:37:35.7126356Z [INFO] Wrote docs/data/domains_n.json (8392 domains)
+2026-02-28T18:37:36.0602380Z [INFO] Wrote docs/data/domains_o.json (7230 domains)
+2026-02-28T18:37:36.7146482Z [INFO] Wrote docs/data/domains_p.json (13619 domains)
+2026-02-28T18:37:36.8744135Z [INFO] Wrote docs/data/domains_q.json (3442 domains)
+2026-02-28T18:37:37.3383061Z [INFO] Wrote docs/data/domains_r.json (9918 domains)
+2026-02-28T18:37:38.3295938Z [INFO] Wrote docs/data/domains_s.json (20393 domains)
+2026-02-28T18:37:39.0194435Z [INFO] Wrote docs/data/domains_t.json (14491 domains)
+2026-02-28T18:37:39.2851624Z [INFO] Wrote docs/data/domains_u.json (5421 domains)
+2026-02-28T18:37:39.5784782Z [INFO] Wrote docs/data/domains_v.json (6382 domains)
+2026-02-28T18:37:39.9488679Z [INFO] Wrote docs/data/domains_w.json (7617 domains)
+2026-02-28T18:37:40.2153320Z [INFO] Wrote docs/data/domains_x.json (5295 domains)
+2026-02-28T18:37:40.4256440Z [INFO] Wrote docs/data/domains_y.json (4402 domains)
+2026-02-28T18:37:40.6178399Z [INFO] Wrote docs/data/domains_z.json (4130 domains)
+2026-02-28T18:37:40.6183090Z [INFO] Wrote docs/data/domain_shards.json (36 shards, 280873 total domains)
+2026-02-28T18:37:40.7377015Z [INFO] Wrote docs/data/fingerprint_matches.json (17004 matches)
+2026-02-28T18:37:41.7129015Z [INFO] Wrote docs/data/clusters.json (91125 nodes, 169855 edges)
+2026-02-28T18:37:41.7131088Z [INFO] Wrote docs/data/stats.json
+2026-02-28T18:37:41.7330617Z [INFO] Wrote docs/data/infra_index.json (37125 index entries)

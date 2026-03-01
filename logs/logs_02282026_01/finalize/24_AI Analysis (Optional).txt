@@ -1,0 +1,184 @@
+﻿2026-02-28T19:32:17.9484183Z ##[group]Run if [ -n "$GEMINI_API_KEY" ] || [ -n "$OPENAI_API_KEY" ] || [ -n "$ANTHROPIC_API_KEY" ]; then
+2026-02-28T19:32:17.9484927Z [36;1mif [ -n "$GEMINI_API_KEY" ] || [ -n "$OPENAI_API_KEY" ] || [ -n "$ANTHROPIC_API_KEY" ]; then[0m
+2026-02-28T19:32:17.9485460Z [36;1m  # Analysis (Limit strictly to fit in 40m)[0m
+2026-02-28T19:32:17.9486054Z [36;1m  python scripts/ai_typosquat.py --limit 2000 --batch-size 100 --input data/triage_candidates.csv[0m
+2026-02-28T19:32:17.9486824Z [36;1m  python scripts/ai_classify_web.py --limit 2000 --batch-size 50 --input data/dea_domains_probed.csv[0m
+2026-02-28T19:32:17.9487477Z [36;1m  # Briefing runs last to capture Shodan/Infrastructure stats[0m
+2026-02-28T19:32:17.9487920Z [36;1m  python scripts/ai_briefing.py[0m
+2026-02-28T19:32:17.9488277Z [36;1mfi[0m
+2026-02-28T19:32:17.9488542Z [36;1m# Sync artifacts[0m
+2026-02-28T19:32:17.9489065Z [36;1mcp data/daily_briefing.json docs/data/ || true[0m
+2026-02-28T19:32:17.9489501Z [36;1mcp data/ai_typosquats.csv docs/data/ || true[0m
+2026-02-28T19:32:17.9489962Z [36;1mcp data/ai_classifications.csv docs/data/ || true[0m
+2026-02-28T19:32:17.9539055Z shell: /usr/bin/bash -e {0}
+2026-02-28T19:32:17.9539463Z env:
+2026-02-28T19:32:17.9539812Z   pythonLocation: /opt/hostedtoolcache/Python/3.10.19/x64
+2026-02-28T19:32:17.9540335Z   PKG_CONFIG_PATH: /opt/hostedtoolcache/Python/3.10.19/x64/lib/pkgconfig
+2026-02-28T19:32:17.9540835Z   Python_ROOT_DIR: /opt/hostedtoolcache/Python/3.10.19/x64
+2026-02-28T19:32:17.9541292Z   Python2_ROOT_DIR: /opt/hostedtoolcache/Python/3.10.19/x64
+2026-02-28T19:32:17.9550717Z   Python3_ROOT_DIR: /opt/hostedtoolcache/Python/3.10.19/x64
+2026-02-28T19:32:17.9551306Z   LD_LIBRARY_PATH: /opt/hostedtoolcache/Python/3.10.19/x64/lib
+2026-02-28T19:32:17.9552374Z   OPENAI_API_KEY: ***
+2026-02-28T19:32:17.9552788Z   GEMINI_API_KEY: ***
+2026-02-28T19:32:17.9553478Z   ANTHROPIC_API_KEY: ***
+2026-02-28T19:32:17.9553846Z   SHODAN_API_KEY: ***
+2026-02-28T19:32:17.9554325Z   ALIENVAULT_OTX_API_KEY: ***
+2026-02-28T19:32:17.9554655Z ##[endgroup]
+2026-02-28T19:32:20.3164389Z Reading domains from data/triage_candidates.csv...
+2026-02-28T19:32:20.3165039Z Loaded 2000 domains to analyze.
+2026-02-28T19:32:20.3165527Z 
+2026-02-28T19:32:29.0175604Z Analyzing Batches:   0%|          | 0/20 [00:00<?, ?it/s]
+2026-02-28T19:33:00.0499816Z Analyzing Batches:   5%|▌         | 1/20 [00:08<02:45,  8.70s/it]
+2026-02-28T19:33:38.2215855Z Analyzing Batches:  10%|█         | 2/20 [00:39<06:33, 21.84s/it]
+2026-02-28T19:34:15.0337247Z Analyzing Batches:  15%|█▌        | 3/20 [01:17<08:18, 29.30s/it]
+2026-02-28T19:34:50.0106784Z Analyzing Batches:  20%|██        | 4/20 [01:54<08:36, 32.26s/it]
+2026-02-28T19:35:27.6084082Z Analyzing Batches:  25%|██▌       | 5/20 [02:29<08:18, 33.24s/it]
+2026-02-28T19:36:04.8022447Z Analyzing Batches:  30%|███       | 6/20 [03:07<08:06, 34.72s/it]
+2026-02-28T19:36:39.1029139Z Analyzing Batches:  35%|███▌      | 7/20 [03:44<07:41, 35.53s/it]
+2026-02-28T19:37:16.0304227Z Analyzing Batches:  40%|████      | 8/20 [04:18<07:01, 35.14s/it]
+2026-02-28T19:37:57.5247770Z Analyzing Batches:  45%|████▌     | 9/20 [04:55<06:32, 35.70s/it]
+2026-02-28T19:38:09.2811346Z Analyzing Batches:  50%|█████     | 10/20 [05:37<06:14, 37.49s/it]
+2026-02-28T19:38:26.4746828Z Analyzing Batches:  55%|█████▌    | 11/20 [05:48<04:26, 29.61s/it]
+2026-02-28T19:38:40.6786479Z Analyzing Batches:  60%|██████    | 12/20 [06:06<03:26, 25.83s/it]
+2026-02-28T19:38:43.9826198Z Analyzing Batches:  65%|██████▌   | 13/20 [06:20<02:36, 22.31s/it]
+2026-02-28T19:38:54.5695762Z Analyzing Batches:  70%|███████   | 14/20 [06:23<01:39, 16.57s/it]
+2026-02-28T19:39:23.0392141Z Analyzing Batches:  75%|███████▌  | 15/20 [06:34<01:13, 14.77s/it]
+2026-02-28T19:39:42.6337911Z Analyzing Batches:  80%|████████  | 16/20 [07:02<01:15, 18.89s/it]
+2026-02-28T19:39:49.0343416Z Analyzing Batches:  85%|████████▌ | 17/20 [07:22<00:57, 19.10s/it]
+2026-02-28T19:39:57.4304988Z Analyzing Batches:  90%|█████████ | 18/20 [07:28<00:30, 15.29s/it]
+2026-02-28T19:40:48.8518407Z Analyzing Batches:  95%|█████████▌| 19/20 [07:37<00:13, 13.22s/it]
+2026-02-28T19:40:48.8520527Z Analyzing Batches: 100%|██████████| 20/20 [08:28<00:00, 24.69s/it]
+2026-02-28T19:40:48.8521492Z Done. Found 1106 potential typosquats. Saved to data/ai_typosquats.csv
+2026-02-28T19:40:48.8523325Z Analyzing Batches: 100%|██████████| 20/20 [08:28<00:00, 25.43s/it]
+2026-02-28T19:40:52.9563782Z Reading probed data from data/dea_domains_probed.csv...
+2026-02-28T19:40:52.9564658Z Found 2000 items with content to classify.
+2026-02-28T19:40:52.9565113Z 
+2026-02-28T19:41:26.0640398Z Classifying batches:   0%|          | 0/40 [00:00<?, ?it/s]
+2026-02-28T19:41:26.7277116Z Classifying batches:   2%|▎         | 1/40 [00:33<21:31, 33.11s/it]
+2026-02-28T19:41:28.3132953Z Classifying batches:   5%|▌         | 2/40 [00:33<08:52, 14.02s/it]
+2026-02-28T19:42:00.6932419Z Classifying batches:   8%|▊         | 3/40 [00:35<05:08,  8.34s/it]
+2026-02-28T19:42:01.4573706Z Classifying batches:  10%|█         | 4/40 [01:07<10:41, 17.83s/it]
+2026-02-28T19:42:06.5305933Z Classifying batches:  12%|█▎        | 5/40 [01:08<06:48, 11.68s/it]
+2026-02-28T19:42:35.0407507Z Classifying batches:  15%|█▌        | 6/40 [01:13<05:20,  9.43s/it]
+2026-02-28T19:42:36.1993581Z Classifying batches:  18%|█▊        | 7/40 [01:42<08:37, 15.67s/it]
+2026-02-28T19:42:40.0908623Z Classifying batches:  20%|██        | 8/40 [01:43<05:53, 11.05s/it]
+2026-02-28T19:43:09.6290091Z Classifying batches:  22%|██▎       | 9/40 [01:47<04:33,  8.81s/it]
+2026-02-28T19:43:10.1244740Z Classifying batches:  25%|██▌       | 10/40 [02:16<07:36, 15.21s/it]
+2026-02-28T19:43:14.1026296Z Classifying batches:  28%|██▊       | 11/40 [02:17<05:10, 10.71s/it]
+2026-02-28T19:43:42.5549103Z Classifying batches:  30%|███       | 12/40 [02:21<04:02,  8.66s/it]
+2026-02-28T19:43:43.4691755Z Classifying batches:  32%|███▎      | 13/40 [02:49<06:35, 14.66s/it]
+2026-02-28T19:43:49.3085783Z Classifying batches:  35%|███▌      | 14/40 [02:50<04:33, 10.51s/it]
+2026-02-28T19:44:18.6731171Z Classifying batches:  38%|███▊      | 15/40 [02:56<03:47,  9.10s/it]
+2026-02-28T19:44:19.3658380Z Classifying batches:  40%|████      | 16/40 [03:25<06:04, 15.20s/it]
+2026-02-28T19:44:23.0362120Z Classifying batches:  42%|████▎     | 17/40 [03:26<04:09, 10.84s/it]
+2026-02-28T19:44:53.9219389Z Classifying batches:  45%|████▌     | 18/40 [03:30<03:11,  8.68s/it]
+2026-02-28T19:44:55.4740811Z Classifying batches:  48%|████▊     | 19/40 [04:00<05:22, 15.35s/it]
+2026-02-28T19:44:59.5760478Z Classifying batches:  50%|█████     | 20/40 [04:02<03:44, 11.21s/it]
+2026-02-28T19:45:29.8703313Z Classifying batches:  52%|█████▎    | 21/40 [04:06<02:52,  9.08s/it]
+2026-02-28T19:45:32.6399700Z Classifying batches:  55%|█████▌    | 22/40 [04:36<04:37, 15.44s/it]
+2026-02-28T19:45:35.2014204Z Classifying batches:  57%|█████▊    | 23/40 [04:39<03:17, 11.64s/it]
+2026-02-28T19:46:04.6199936Z Classifying batches:  60%|██████    | 24/40 [04:42<02:22,  8.92s/it]
+2026-02-28T19:46:08.6531453Z Classifying batches:  62%|██████▎   | 25/40 [05:11<03:46, 15.07s/it]
+2026-02-28T19:46:08.7825697Z Classifying batches:  65%|██████▌   | 26/40 [05:15<02:44, 11.76s/it]
+2026-02-28T19:46:42.0045089Z Classifying batches:  68%|██████▊   | 27/40 [05:15<01:47,  8.27s/it]
+2026-02-28T19:46:42.8373740Z Classifying batches:  70%|███████   | 28/40 [05:49<03:09, 15.75s/it]
+2026-02-28T19:46:43.0701587Z Classifying batches:  72%|███████▎  | 29/40 [05:49<02:04, 11.28s/it]
+2026-02-28T19:47:14.5886300Z Classifying batches:  75%|███████▌  | 30/40 [05:50<01:19,  7.96s/it]
+2026-02-28T19:47:17.6325698Z Classifying batches:  78%|███████▊  | 31/40 [06:21<02:15, 15.03s/it]
+2026-02-28T19:47:21.4557376Z Classifying batches:  80%|████████  | 32/40 [06:24<01:31, 11.43s/it]
+2026-02-28T19:47:50.2415232Z Classifying batches:  82%|████████▎ | 33/40 [06:28<01:04,  9.15s/it]
+2026-02-28T19:47:51.6785292Z Classifying batches:  85%|████████▌ | 34/40 [06:57<01:30, 15.04s/it]
+2026-02-28T19:47:55.5423988Z Classifying batches:  88%|████████▊ | 35/40 [06:58<00:54, 10.96s/it]
+2026-02-28T19:48:25.2358400Z Classifying batches:  90%|█████████ | 36/40 [07:02<00:35,  8.83s/it]
+2026-02-28T19:48:28.6968122Z Classifying batches:  92%|█████████▎| 37/40 [07:32<00:45, 15.09s/it]
+2026-02-28T19:48:30.5759154Z Classifying batches:  95%|█████████▌| 38/40 [07:35<00:23, 11.60s/it]
+2026-02-28T19:48:59.5689083Z Classifying batches:  98%|█████████▊| 39/40 [07:37<00:08,  8.68s/it]
+2026-02-28T19:48:59.5690396Z Classifying batches: 100%|██████████| 40/40 [08:06<00:00, 14.78s/it]
+2026-02-28T19:48:59.5691431Z Classifying batches: 100%|██████████| 40/40 [08:06<00:00, 12.17s/it]
+2026-02-28T19:48:59.5701993Z Done. Classified 2000 domains. Saved to data/ai_classifications.csv
+2026-02-28T19:50:22.5284923Z Generating briefing with data:
+2026-02-28T19:50:22.5285402Z 
+2026-02-28T19:50:22.5285626Z     Date: 2026-02-28
+2026-02-28T19:50:22.5286170Z     Total Domains Monitored: 280948
+2026-02-28T19:50:22.5286833Z     Domains Analyzed by AI: ~1000 (0.36% sample)
+2026-02-28T19:50:22.5287620Z     
+2026-02-28T19:50:22.5288174Z     [Historical Trend]
+2026-02-28T19:50:22.5289170Z     Total Domains: 243,871 (+143 from previous day)
+2026-02-28T19:50:22.5291852Z     Live Domains: 74,223 (-863 from previous day)
+2026-02-28T19:50:22.5292460Z     
+2026-02-28T19:50:22.5292854Z     [Threat Detection]
+2026-02-28T19:50:22.5293368Z     Confirmed Typosquats: 1106
+2026-02-28T19:50:22.5293960Z     Top Impersonated Brands: Google, Facebook, Amazon
+2026-02-28T19:50:22.5294602Z     Phishing Sites Identified: 355
+2026-02-28T19:50:22.5295136Z     Suspected C2 Panels: 347
+2026-02-28T19:50:22.5295600Z     
+2026-02-28T19:50:22.5296014Z     [FLAME Threat Path Distribution]
+2026-02-28T19:50:22.5296549Z     - TP-0001: 122 domains
+2026-02-28T19:50:22.5297012Z     - TP-0015: 77 domains
+2026-02-28T19:50:22.5297468Z     - TP-0019: 55 domains
+2026-02-28T19:50:22.5297901Z     - TP-0005: 48 domains
+2026-02-28T19:50:22.5298609Z     - TP-0013: 45 domains
+2026-02-28T19:50:22.5308694Z     - TP-0017: 19 domains
+2026-02-28T19:50:22.5309449Z     - TP-0012: 16 domains
+2026-02-28T19:50:22.5309911Z     - TP-0002: 13 domains
+2026-02-28T19:50:22.5310370Z     - TP-0004: 2 domains
+2026-02-28T19:50:22.5310810Z     - TP-0008: 1 domains
+2026-02-28T19:50:22.5311075Z 
+2026-02-28T19:50:22.5311274Z     [FLAME Evidence Candidates]
+2026-02-28T19:50:22.5311994Z     - TP-0001: 122 domains (High confidence) [samples: 2var.com, 7go.info, adkbe.com]
+2026-02-28T19:50:22.5312956Z     - TP-0015: 77 domains (High confidence) [samples: aetne.com, aetnq.com, aetno.com]
+2026-02-28T19:50:22.5313898Z     - TP-0019: 55 domains (High confidence) [samples: 1se.io, alrbnb.com, 1secmail.co]
+2026-02-28T19:50:22.5314889Z     - TP-0005: 48 domains (Medium confidence) [samples: aedna.com, aeetna.com, allsate.com]
+2026-02-28T19:50:22.5315887Z     - TP-0013: 45 domains (Medium confidence) [samples: aetns.com, amaon.com, aetmna.com]
+2026-02-28T19:50:22.5316869Z     - TP-0017: 19 domains (Medium confidence) [samples: 333ua.com, 333qp.com, 32wim.info]
+2026-02-28T19:50:22.5317830Z     - TP-0012: 16 domains (Medium confidence) [samples: 1se.io, 1secmail.co, am-azon.com]
+2026-02-28T19:50:22.5318950Z     - TP-0002: 13 domains (Medium confidence) [samples: 1se.io, alrbnb.com, 67gmil.com]
+2026-02-28T19:50:22.5319518Z 
+2026-02-28T19:50:22.5319708Z     [Regulatory Pulse]
+2026-02-28T19:50:22.5320320Z Active Regulatory Alerts: 18804 total (18704 high, 100 medium, 0 low)
+2026-02-28T19:50:22.5321011Z     By Source: OFAC (18704), CFPB (100)
+2026-02-28T19:50:22.5321544Z     TP-Linked Alerts:
+2026-02-28T19:50:22.5321809Z 
+2026-02-28T19:50:22.5321816Z 
+2026-02-28T19:50:22.5322013Z     [Risk Signal Breakdown]
+2026-02-28T19:50:22.5322487Z     - HighRisk:NoMX: 4366
+2026-02-28T19:50:22.5322976Z     - HighRisk:ParkingPage: 1089
+2026-02-28T19:50:22.5323502Z     - HighRisk:PrivateIP: 598
+2026-02-28T19:50:22.5324012Z     - HighRisk:SuspiciousTitle: 136
+2026-02-28T19:50:22.5324524Z     
+2026-02-28T19:50:22.5324921Z     [Infrastructure Intelligence]
+2026-02-28T19:50:22.5325431Z     Malicious ASNs Active: 2950
+2026-02-28T19:50:22.5325942Z     Tor Exit Nodes Mapped: 2138
+2026-02-28T19:50:22.5326902Z     Shodan Findings: 2360 vulnerabilities detected. Top Ports: 80, 443, 2083
+2026-02-28T19:50:22.5327820Z     Infrastructure Pivots: 0 new domains discovered via Whois pivoting.
+2026-02-28T19:50:22.5328336Z 
+2026-02-28T19:50:22.5328552Z     [Campaign & Investigation Tracking]
+2026-02-28T19:50:22.5329257Z     Campaign IPs Tracked: 31
+2026-02-28T19:50:22.5329737Z     Countries Observed: 11
+2026-02-28T19:50:22.5330213Z     Active Hunt Queries: 6
+2026-02-28T19:50:22.5330657Z     
+2026-02-28T19:50:22.5331038Z     [Shadow AI / OpenClaw Exposure]
+2026-02-28T19:50:22.5331552Z     Exposed Instances: 322
+2026-02-28T19:50:22.5332049Z     Risk Level Breakdown: MEDIUM: 322
+2026-02-28T19:50:22.5332394Z 
+2026-02-28T19:50:22.5332598Z     [Registrar Concentration Risk]
+2026-02-28T19:50:22.5333428Z     Top Registrars for Confirmed Typosquats: Unknown (575), Dynadot Inc (371), Not Found (37)
+2026-02-28T19:50:22.5334204Z     
+2026-02-28T19:50:22.5334634Z     *High Risk Registrar Presence (Watchlist)*:
+2026-02-28T19:50:22.5335223Z     - Nicenic: 79 domains
+2026-02-28T19:50:22.5335685Z     - Dominet: 60 domains
+2026-02-28T19:50:22.5336127Z     - Gname: 553 domains
+2026-02-28T19:50:22.5336568Z     - Aceville: 7 domains
+2026-02-28T19:50:22.5337005Z     
+2026-02-28T19:50:22.5337561Z     IMPORTANT: The AI analysis was performed on a SAMPLE of the total data. 
+2026-02-28T19:50:22.5338577Z     Do NOT claim that "no malicious activity was detected" for the entire dataset if the sample was clean.
+2026-02-28T19:50:22.5339740Z     State clearly that findings are based on the analyzed sample.
+2026-02-28T19:50:22.5340688Z     Cross-reference all intelligence domains: correlate typosquat registrars with campaign IPs, 
+2026-02-28T19:50:22.5341787Z     OpenClaw exposure with infrastructure pivots, and risk signals with Shodan findings.
+2026-02-28T19:50:22.5343075Z     If FLAME Threat Path data is present, reference the threat path titles and IDs in your narrative.
+2026-02-28T19:50:22.5344219Z     If FLAME Evidence Candidates are listed, include an "Evidence Pipeline" section recommending
+2026-02-28T19:50:22.5345297Z     which clusters should be submitted as operational evidence to the FLAME framework.
+2026-02-28T19:50:22.5346314Z     If Regulatory Pulse data is present, include a "Regulatory Landscape" section assessing
+2026-02-28T19:50:22.5347387Z     how regulatory enforcement trends align with observed threat activity in the domain telemetry.
+2026-02-28T19:50:22.5348207Z     
+2026-02-28T19:50:22.5349166Z Briefing saved to data/daily_briefing.json, docs/data/briefings/briefing_2026-02-28.json, and appended to history.

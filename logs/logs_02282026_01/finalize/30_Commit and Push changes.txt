@@ -1,0 +1,196 @@
+﻿2026-02-28T19:55:46.0498719Z ##[group]Run git config --global user.name 'github-actions[bot]'
+2026-02-28T19:55:46.0499753Z [36;1mgit config --global user.name 'github-actions[bot]'[0m
+2026-02-28T19:55:46.0500359Z [36;1mgit config --global user.email 'github-actions[bot]@users.noreply.github.com'[0m
+2026-02-28T19:55:46.0500880Z [36;1m[0m
+2026-02-28T19:55:46.0501150Z [36;1mmkdir -p docs/data[0m
+2026-02-28T19:55:46.0501486Z [36;1mtouch docs/.nojekyll[0m
+2026-02-28T19:55:46.0501808Z [36;1mcp data/*.csv docs/data/[0m
+2026-02-28T19:55:46.0502186Z [36;1mgzip -f data/domain_intel_bundle.json[0m
+2026-02-28T19:55:46.0502565Z [36;1mcp data/*.json.gz docs/data/[0m
+2026-02-28T19:55:46.0502936Z [36;1mcp data/openclaw_stix.json docs/data/[0m
+2026-02-28T19:55:46.0503327Z [36;1mcp data/openclaw_sigma.yml docs/data/[0m
+2026-02-28T19:55:46.0503755Z [36;1mcp data/fingerprint_matches.csv docs/data/ || true[0m
+2026-02-28T19:55:46.0504308Z [36;1m# Remove stale monolithic domains.json (now sharded by build_frontend_data.py)[0m
+2026-02-28T19:55:46.0504842Z [36;1mrm -f docs/data/domains.json[0m
+2026-02-28T19:55:46.0505174Z [36;1m[0m
+2026-02-28T19:55:46.0505433Z [36;1mgit add data docs[0m
+2026-02-28T19:55:46.0505731Z [36;1m[0m
+2026-02-28T19:55:46.0506194Z [36;1mif git diff --staged --quiet; then[0m
+2026-02-28T19:55:46.0506563Z [36;1m  echo "No changes to commit"[0m
+2026-02-28T19:55:46.0506891Z [36;1melse[0m
+2026-02-28T19:55:46.0507271Z [36;1m  git commit -m "Automated Map Shard Update: $(date +'%Y-%m-%d')"[0m
+2026-02-28T19:55:46.0507945Z [36;1m  # Use -X theirs to prioritize the workflow's fresh generated data over concurrent remote changes[0m
+2026-02-28T19:55:46.0508565Z [36;1m  git pull --rebase -X theirs origin main[0m
+2026-02-28T19:55:46.0509150Z [36;1m  git push[0m
+2026-02-28T19:55:46.0509435Z [36;1mfi[0m
+2026-02-28T19:55:46.0559283Z shell: /usr/bin/bash -e {0}
+2026-02-28T19:55:46.0559687Z env:
+2026-02-28T19:55:46.0560043Z   pythonLocation: /opt/hostedtoolcache/Python/3.10.19/x64
+2026-02-28T19:55:46.0560572Z   PKG_CONFIG_PATH: /opt/hostedtoolcache/Python/3.10.19/x64/lib/pkgconfig
+2026-02-28T19:55:46.0561115Z   Python_ROOT_DIR: /opt/hostedtoolcache/Python/3.10.19/x64
+2026-02-28T19:55:46.0561575Z   Python2_ROOT_DIR: /opt/hostedtoolcache/Python/3.10.19/x64
+2026-02-28T19:55:46.0562061Z   Python3_ROOT_DIR: /opt/hostedtoolcache/Python/3.10.19/x64
+2026-02-28T19:55:46.0562556Z   LD_LIBRARY_PATH: /opt/hostedtoolcache/Python/3.10.19/x64/lib
+2026-02-28T19:55:46.0562961Z ##[endgroup]
+2026-02-28T19:55:59.3119277Z [main c9af9da] Automated Map Shard Update: 2026-02-28
+2026-02-28T19:55:59.3122321Z  1328 files changed, 855663 insertions(+), 646433 deletions(-)
+2026-02-28T19:55:59.3123223Z  create mode 100644 data/.flame_cache/.reg_meta.json
+2026-02-28T19:55:59.3124247Z  create mode 100644 data/.flame_cache/regulatory-alerts.json
+2026-02-28T19:55:59.3125358Z  create mode 100644 data/screenshots/166ac.com.jpg
+2026-02-28T19:55:59.3126420Z  create mode 100644 data/screenshots/1716666.app.jpg
+2026-02-28T19:55:59.3127551Z  create mode 100644 data/screenshots/1716eee.com.jpg
+2026-02-28T19:55:59.3128669Z  create mode 100644 data/screenshots/1oh1.com.jpg
+2026-02-28T19:55:59.3129904Z  create mode 100644 data/screenshots/1para1bet.net.jpg
+2026-02-28T19:55:59.3130734Z  create mode 100644 data/screenshots/1q.cx.jpg
+2026-02-28T19:55:59.3131384Z  create mode 100644 data/screenshots/1secmail.co.jpg
+2026-02-28T19:55:59.3132037Z  create mode 100644 data/screenshots/1wyws.top.jpg
+2026-02-28T19:55:59.3132658Z  create mode 100644 data/screenshots/1xp.fr.jpg
+2026-02-28T19:55:59.3133306Z  create mode 100644 data/screenshots/addthis.site.jpg
+2026-02-28T19:55:59.3133956Z  create mode 100644 data/screenshots/adobr.com.jpg
+2026-02-28T19:55:59.3134934Z  create mode 100644 data/screenshots/adstra.dev.jpg
+2026-02-28T19:55:59.3136152Z  create mode 100644 data/screenshots/aerionaerospace.com.jpg
+2026-02-28T19:55:59.3137523Z  create mode 100644 data/screenshots/aeriontechnology.com.jpg
+2026-02-28T19:55:59.3139153Z  create mode 100644 data/screenshots/aetnar.com.jpg
+2026-02-28T19:55:59.3141030Z  create mode 100644 data/screenshots/affekopf.ch.jpg
+2026-02-28T19:55:59.3142145Z  create mode 100644 data/screenshots/affordablemedicareplans.com.jpg
+2026-02-28T19:55:59.3143275Z  create mode 100644 data/screenshots/aflac-wellness-form.pdffiller.com.jpg
+2026-02-28T19:55:59.3144318Z  create mode 100644 data/screenshots/afud.com.jpg
+2026-02-28T19:55:59.3145161Z  create mode 100644 data/screenshots/agdrtv.com.jpg
+2026-02-28T19:55:59.3146002Z  create mode 100644 data/screenshots/agemail.com.jpg
+2026-02-28T19:55:59.3146828Z  create mode 100644 data/screenshots/agen45.org.jpg
+2026-02-28T19:55:59.3147885Z  create mode 100644 data/screenshots/agenciasviajesrepublicadominicana.com.jpg
+2026-02-28T19:55:59.3149146Z  create mode 100644 data/screenshots/agoranews.top.jpg
+2026-02-28T19:55:59.3150036Z  create mode 100644 data/screenshots/agridaya.com.jpg
+2026-02-28T19:55:59.3150917Z  create mode 100644 data/screenshots/agrifood-ric.org.jpg
+2026-02-28T19:55:59.3151805Z  create mode 100644 data/screenshots/agrinova.org.jpg
+2026-02-28T19:55:59.3152794Z  create mode 100644 data/screenshots/agriturismomontefieno.com.jpg
+2026-02-28T19:55:59.3153792Z  create mode 100644 data/screenshots/ahhhh.ahhhhh.com.jpg
+2026-02-28T19:55:59.3154913Z  create mode 100644 data/screenshots/ahhw.com.jpg
+2026-02-28T19:55:59.3155865Z  create mode 100644 data/screenshots/attackonknightslanding.net.jpg
+2026-02-28T19:55:59.3156847Z  create mode 100644 data/screenshots/bridescatalog.com.jpg
+2026-02-28T19:55:59.3157773Z  create mode 100644 data/screenshots/buscarpr.com.jpg
+2026-02-28T19:55:59.3158626Z  create mode 100644 data/screenshots/chasc.com.jpg
+2026-02-28T19:55:59.3159729Z  create mode 100644 data/screenshots/chase3.com.jpg
+2026-02-28T19:55:59.3160608Z  create mode 100644 data/screenshots/discover.com.jpg
+2026-02-28T19:55:59.3161303Z  create mode 100644 data/screenshots/diuwindownloadapk.com.jpg
+2026-02-28T19:55:59.3161854Z  create mode 100644 data/screenshots/freemedipedia.org.jpg
+2026-02-28T19:55:59.3162380Z  create mode 100644 data/screenshots/highcountrywallet.com.jpg
+2026-02-28T19:55:59.3162898Z  create mode 100644 data/screenshots/hinegpt.xyz.jpg
+2026-02-28T19:55:59.3163391Z  create mode 100644 data/screenshots/hinokio-movie.com.jpg
+2026-02-28T19:55:59.3163894Z  create mode 100644 data/screenshots/hitnspinlogin.com.jpg
+2026-02-28T19:55:59.3164365Z  create mode 100644 data/screenshots/huddiez.org.jpg
+2026-02-28T19:55:59.3164821Z  create mode 100644 data/screenshots/jimgrieve.net.jpg
+2026-02-28T19:55:59.3165284Z  create mode 100644 data/screenshots/kiyonna.ru.jpg
+2026-02-28T19:55:59.3165789Z  create mode 100644 data/screenshots/promo.bankofamerica.com.jpg
+2026-02-28T19:55:59.3166566Z  create mode 100644 data/screenshots/protonmail.ch.jpg
+2026-02-28T19:55:59.3167499Z  create mode 100644 data/screenshots/protonmail.com.jpg
+2026-02-28T19:55:59.3168407Z  create mode 100644 data/screenshots/proxysitelist.net.jpg
+2026-02-28T19:55:59.3169587Z  create mode 100644 data/screenshots/psn-wallet.com.jpg
+2026-02-28T19:55:59.3170508Z  create mode 100644 data/screenshots/scbet88.net.jpg
+2026-02-28T19:55:59.3171398Z  create mode 100644 data/screenshots/scxhwab.com.jpg
+2026-02-28T19:55:59.3172225Z  create mode 100644 data/screenshots/sdf.org.jpg
+2026-02-28T19:55:59.3173117Z  create mode 100644 data/screenshots/secure-mail.biz.jpg
+2026-02-28T19:55:59.3174080Z  create mode 100644 data/screenshots/securecheckcashing.com.jpg
+2026-02-28T19:55:59.3175074Z  create mode 100644 data/screenshots/secureorder.online.jpg
+2026-02-28T19:55:59.3175978Z  create mode 100644 data/screenshots/securespend.app.jpg
+2026-02-28T19:55:59.3176873Z  create mode 100644 data/screenshots/securiotec.com.jpg
+2026-02-28T19:55:59.3177756Z  create mode 100644 data/screenshots/sellsfargo.com.jpg
+2026-02-28T19:55:59.3178625Z  create mode 100644 data/screenshots/thegothamgirl.com.jpg
+2026-02-28T19:55:59.3179677Z  create mode 100644 data/screenshots/tmail.io.jpg
+2026-02-28T19:55:59.3180484Z  create mode 100644 data/screenshots/wafaz.com.jpg
+2026-02-28T19:55:59.3181329Z  create mode 100644 data/screenshots/wellsfarg9.com.jpg
+2026-02-28T19:55:59.3182494Z  create mode 100644 data/screenshots/wellsfarge.com.jpg
+2026-02-28T19:55:59.3183389Z  create mode 100644 data/screenshots/wellsfarog.com.jpg
+2026-02-28T19:55:59.3184284Z  create mode 100644 data/screenshots/wellsfarqo.com.jpg
+2026-02-28T19:55:59.3185191Z  create mode 100644 data/screenshots/wellsfarto.com.jpg
+2026-02-28T19:55:59.3186137Z  create mode 100644 data/screenshots/wellzfargo.com.jpg
+2026-02-28T19:55:59.3187449Z  create mode 100644 data/screenshots/welmsfargo.com.jpg
+2026-02-28T19:55:59.3188206Z  create mode 100644 data/screenshots/welsfargo.com.jpg
+2026-02-28T19:55:59.3188991Z  create mode 100644 data/screenshots/welslsfargo.com.jpg
+2026-02-28T19:55:59.3189615Z  create mode 100644 data/screenshots/xn--guada-lp1b.com.jpg
+2026-02-28T19:55:59.3190173Z  create mode 100644 data/screenshots/xn--guada-src.com.jpg
+2026-02-28T19:55:59.3190725Z  create mode 100644 data/screenshots/xn--ledge-mcb.com.jpg
+2026-02-28T19:55:59.3191256Z  create mode 100644 data/screenshots/youkybox.org.jpg
+2026-02-28T19:55:59.3191769Z  create mode 100644 docs/data/infra_index.json
+2026-02-28T19:55:59.3192273Z  create mode 100644 docs/data/screenshots/166ac.com.jpg
+2026-02-28T19:55:59.3193004Z  create mode 100644 docs/data/screenshots/1716666.app.jpg
+2026-02-28T19:55:59.3193532Z  create mode 100644 docs/data/screenshots/1716eee.com.jpg
+2026-02-28T19:55:59.3194048Z  create mode 100644 docs/data/screenshots/1oh1.com.jpg
+2026-02-28T19:55:59.3194579Z  create mode 100644 docs/data/screenshots/1para1bet.net.jpg
+2026-02-28T19:55:59.3195098Z  create mode 100644 docs/data/screenshots/1q.cx.jpg
+2026-02-28T19:55:59.3195613Z  create mode 100644 docs/data/screenshots/1secmail.co.jpg
+2026-02-28T19:55:59.3196125Z  create mode 100644 docs/data/screenshots/1wyws.top.jpg
+2026-02-28T19:55:59.3196630Z  create mode 100644 docs/data/screenshots/1xp.fr.jpg
+2026-02-28T19:55:59.3197150Z  create mode 100644 docs/data/screenshots/addthis.site.jpg
+2026-02-28T19:55:59.3197684Z  create mode 100644 docs/data/screenshots/adobr.com.jpg
+2026-02-28T19:55:59.3198210Z  create mode 100644 docs/data/screenshots/adstra.dev.jpg
+2026-02-28T19:55:59.3198961Z  create mode 100644 docs/data/screenshots/aerionaerospace.com.jpg
+2026-02-28T19:55:59.3199628Z  create mode 100644 docs/data/screenshots/aeriontechnology.com.jpg
+2026-02-28T19:55:59.3200207Z  create mode 100644 docs/data/screenshots/aetnar.com.jpg
+2026-02-28T19:55:59.3200749Z  create mode 100644 docs/data/screenshots/affekopf.ch.jpg
+2026-02-28T19:55:59.3201352Z  create mode 100644 docs/data/screenshots/affordablemedicareplans.com.jpg
+2026-02-28T19:55:59.3202043Z  create mode 100644 docs/data/screenshots/aflac-wellness-form.pdffiller.com.jpg
+2026-02-28T19:55:59.3202665Z  create mode 100644 docs/data/screenshots/afud.com.jpg
+2026-02-28T19:55:59.3203183Z  create mode 100644 docs/data/screenshots/agdrtv.com.jpg
+2026-02-28T19:55:59.3203717Z  create mode 100644 docs/data/screenshots/agemail.com.jpg
+2026-02-28T19:55:59.3204244Z  create mode 100644 docs/data/screenshots/agen45.org.jpg
+2026-02-28T19:55:59.3204892Z  create mode 100644 docs/data/screenshots/agenciasviajesrepublicadominicana.com.jpg
+2026-02-28T19:55:59.3205647Z  create mode 100644 docs/data/screenshots/agoranews.top.jpg
+2026-02-28T19:55:59.3206666Z  create mode 100644 docs/data/screenshots/agridaya.com.jpg
+2026-02-28T19:55:59.3207764Z  create mode 100644 docs/data/screenshots/agrifood-ric.org.jpg
+2026-02-28T19:55:59.3209860Z  create mode 100644 docs/data/screenshots/agrinova.org.jpg
+2026-02-28T19:55:59.3210841Z  create mode 100644 docs/data/screenshots/agriturismomontefieno.com.jpg
+2026-02-28T19:55:59.3211831Z  create mode 100644 docs/data/screenshots/ahhhh.ahhhhh.com.jpg
+2026-02-28T19:55:59.3212686Z  create mode 100644 docs/data/screenshots/ahhw.com.jpg
+2026-02-28T19:55:59.3213614Z  create mode 100644 docs/data/screenshots/attackonknightslanding.net.jpg
+2026-02-28T19:55:59.3214602Z  create mode 100644 docs/data/screenshots/bridescatalog.com.jpg
+2026-02-28T19:55:59.3215543Z  create mode 100644 docs/data/screenshots/buscarpr.com.jpg
+2026-02-28T19:55:59.3216577Z  create mode 100644 docs/data/screenshots/chasc.com.jpg
+2026-02-28T19:55:59.3217396Z  create mode 100644 docs/data/screenshots/chase3.com.jpg
+2026-02-28T19:55:59.3218236Z  create mode 100644 docs/data/screenshots/discover.com.jpg
+2026-02-28T19:55:59.3219316Z  create mode 100644 docs/data/screenshots/diuwindownloadapk.com.jpg
+2026-02-28T19:55:59.3220272Z  create mode 100644 docs/data/screenshots/freemedipedia.org.jpg
+2026-02-28T19:55:59.3221240Z  create mode 100644 docs/data/screenshots/highcountrywallet.com.jpg
+2026-02-28T19:55:59.3222205Z  create mode 100644 docs/data/screenshots/hinegpt.xyz.jpg
+2026-02-28T19:55:59.3223163Z  create mode 100644 docs/data/screenshots/hinokio-movie.com.jpg
+2026-02-28T19:55:59.3224127Z  create mode 100644 docs/data/screenshots/hitnspinlogin.com.jpg
+2026-02-28T19:55:59.3225013Z  create mode 100644 docs/data/screenshots/huddiez.org.jpg
+2026-02-28T19:55:59.3225858Z  create mode 100644 docs/data/screenshots/jimgrieve.net.jpg
+2026-02-28T19:55:59.3226715Z  create mode 100644 docs/data/screenshots/kiyonna.ru.jpg
+2026-02-28T19:55:59.3227649Z  create mode 100644 docs/data/screenshots/promo.bankofamerica.com.jpg
+2026-02-28T19:55:59.3228583Z  create mode 100644 docs/data/screenshots/protonmail.ch.jpg
+2026-02-28T19:55:59.3229882Z  create mode 100644 docs/data/screenshots/protonmail.com.jpg
+2026-02-28T19:55:59.3230781Z  create mode 100644 docs/data/screenshots/proxysitelist.net.jpg
+2026-02-28T19:55:59.3231689Z  create mode 100644 docs/data/screenshots/psn-wallet.com.jpg
+2026-02-28T19:55:59.3232545Z  create mode 100644 docs/data/screenshots/scbet88.net.jpg
+2026-02-28T19:55:59.3233376Z  create mode 100644 docs/data/screenshots/scxhwab.com.jpg
+2026-02-28T19:55:59.3234178Z  create mode 100644 docs/data/screenshots/sdf.org.jpg
+2026-02-28T19:55:59.3235025Z  create mode 100644 docs/data/screenshots/secure-mail.biz.jpg
+2026-02-28T19:55:59.3235977Z  create mode 100644 docs/data/screenshots/securecheckcashing.com.jpg
+2026-02-28T19:55:59.3236945Z  create mode 100644 docs/data/screenshots/secureorder.online.jpg
+2026-02-28T19:55:59.3237874Z  create mode 100644 docs/data/screenshots/securespend.app.jpg
+2026-02-28T19:55:59.3238753Z  create mode 100644 docs/data/screenshots/securiotec.com.jpg
+2026-02-28T19:55:59.3254652Z  create mode 100644 docs/data/screenshots/sellsfargo.com.jpg
+2026-02-28T19:55:59.3255581Z  create mode 100644 docs/data/screenshots/thegothamgirl.com.jpg
+2026-02-28T19:55:59.3256453Z  create mode 100644 docs/data/screenshots/tmail.io.jpg
+2026-02-28T19:55:59.3257255Z  create mode 100644 docs/data/screenshots/wafaz.com.jpg
+2026-02-28T19:55:59.3258101Z  create mode 100644 docs/data/screenshots/wellsfarg9.com.jpg
+2026-02-28T19:55:59.3259154Z  create mode 100644 docs/data/screenshots/wellsfarge.com.jpg
+2026-02-28T19:55:59.3260046Z  create mode 100644 docs/data/screenshots/wellsfarog.com.jpg
+2026-02-28T19:55:59.3260918Z  create mode 100644 docs/data/screenshots/wellsfarqo.com.jpg
+2026-02-28T19:55:59.3261781Z  create mode 100644 docs/data/screenshots/wellsfarto.com.jpg
+2026-02-28T19:55:59.3262664Z  create mode 100644 docs/data/screenshots/wellzfargo.com.jpg
+2026-02-28T19:55:59.3263534Z  create mode 100644 docs/data/screenshots/welmsfargo.com.jpg
+2026-02-28T19:55:59.3264402Z  create mode 100644 docs/data/screenshots/welsfargo.com.jpg
+2026-02-28T19:55:59.3265283Z  create mode 100644 docs/data/screenshots/welslsfargo.com.jpg
+2026-02-28T19:55:59.3266192Z  create mode 100644 docs/data/screenshots/xn--guada-lp1b.com.jpg
+2026-02-28T19:55:59.3267112Z  create mode 100644 docs/data/screenshots/xn--guada-src.com.jpg
+2026-02-28T19:55:59.3268016Z  create mode 100644 docs/data/screenshots/xn--ledge-mcb.com.jpg
+2026-02-28T19:55:59.3269036Z  create mode 100644 docs/data/screenshots/youkybox.org.jpg
+2026-02-28T19:55:59.8105290Z From https://github.com/elchacal801/domain_intel
+2026-02-28T19:55:59.8112550Z  * branch            main       -> FETCH_HEAD
+2026-02-28T19:55:59.8113422Z    dcb3842..c871e1c  main       -> origin/main
+2026-02-28T19:56:03.2449970Z Rebasing (1/1)
+2026-02-28T19:56:03.2451066Z Successfully rebased and updated refs/heads/main.
+2026-02-28T19:56:27.6027475Z To https://github.com/elchacal801/domain_intel
+2026-02-28T19:56:27.6028012Z    c871e1c..2696b0d  main -> main
