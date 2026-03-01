@@ -10,8 +10,25 @@ const NODE_COLORS = {
   domain: '#94a3b8',
 };
 
+const NODE_COLORS_DIMMED = {
+  mx_host: '#1e3a5f',     // dimmed blue
+  ip: '#5c3a10',          // dimmed orange
+  registrar_ns: '#1a4a2e', // dimmed green
+};
+
 const HIGHLIGHT_COLOR = '#fbbf24';
 const DIM_COLOR = '#1f2937';
+
+function abbreviateProvider(label) {
+  const abbrevs = {
+    'Cloudflare Email Routing': 'CF Email',
+    'Google Workspace': 'Google',
+    'Microsoft 365': 'MS365',
+    'Cloudflare DNS': 'CF DNS',
+    'AWS Route 53': 'AWS R53',
+  };
+  return abbrevs[label] || label.split(' ')[0];
+}
 
 /**
  * Build a filtered graphology Graph from cluster data.
@@ -67,11 +84,23 @@ function buildGraph(data, filters) {
   for (const id of infraIds) {
     const node = nodeMap.get(id);
     if (node) {
+      const color = node.shared_infra
+        ? (NODE_COLORS_DIMMED[node.type] || '#3a3a3a')
+        : (NODE_COLORS[node.type] || NODE_COLORS.domain);
+
+      const label = node.shared_infra && node.provider_label
+        ? `${node.label} (${abbreviateProvider(node.provider_label)})`
+        : node.label;
+
       graph.addNode(id, {
-        label: node.label,
+        label: label,
         size: node.size || 10,
-        color: NODE_COLORS[node.type] || NODE_COLORS.domain,
+        color: color,
         nodeType: node.type,
+        sharedInfra: node.shared_infra || false,
+        confidence: node.confidence,
+        confidenceLevel: node.confidence_level,
+        providerLabel: node.provider_label,
         x: Math.random() * 100,
         y: Math.random() * 100,
       });
@@ -241,6 +270,10 @@ export default function SigmaGraph({ data, onClickNode, filters }) {
           id: node,
           label: attrs.label,
           domains: domainNeighbors,
+          sharedInfra: attrs.sharedInfra,
+          confidence: attrs.confidence,
+          confidenceLevel: attrs.confidenceLevel,
+          providerLabel: attrs.providerLabel,
         });
       }
     });
