@@ -18,7 +18,6 @@ providers:
       - "route*.mx.cloudflare.net"
     ip_ranges:
       - "162.159.205.0/24"
-    asns: [13335]
 
   google_workspace:
     label: "Google Workspace"
@@ -27,7 +26,6 @@ providers:
       - "aspmx.l.google.com"
       - "alt*.aspmx.l.google.com"
       - "*.googlemail.com"
-    asns: [15169]
 
   microsoft_365:
     label: "Microsoft 365"

@@ -618,17 +618,19 @@ def compute_clusters(domains, min_cluster_size=DEFAULT_MIN_CLUSTER_SIZE,
 
             shared_match = match_shared_provider(ip, "ip", si_config) if si_config else None
 
+            # Collect all primary_mx values once for both uniqueness bonus
+            # and related_mx_hosts output
+            related_mx = set()
+            for d in domain_set:
+                pmx = domains.get(d, {}).get("primary_mx", "").strip()
+                if pmx:
+                    related_mx.add(pmx)
+
             # MX hostname uniqueness bonus: if not shared and all domains
             # share the same primary_mx, award +10
             uniqueness_bonus = 0
-            if not shared_match:
-                mx_values = set()
-                for d in domain_set:
-                    pmx = domains.get(d, {}).get("primary_mx", "").strip()
-                    if pmx:
-                        mx_values.add(pmx)
-                if len(mx_values) == 1:
-                    uniqueness_bonus = 10
+            if not shared_match and len(related_mx) == 1:
+                uniqueness_bonus = 10
 
             confidence_score, confidence_level, breakdown = compute_cluster_confidence(
                 cluster_size=len(domain_set),
@@ -638,13 +640,6 @@ def compute_clusters(domains, min_cluster_size=DEFAULT_MIN_CLUSTER_SIZE,
                 config=si_config,
                 uniqueness_bonus=uniqueness_bonus,
             )
-
-            # Collect related MX hostnames from domains in this cluster
-            related_mx = set()
-            for d in domain_set:
-                pmx = domains.get(d, {}).get("primary_mx", "").strip()
-                if pmx:
-                    related_mx.add(pmx)
 
             add_infra_node(infra_id, "ip", ip, domain_set,
                            shared_match=shared_match,
@@ -796,10 +791,7 @@ def build_outputs(probed_path, fingerprints_path, output_dir,
         optional_files = {}
 
     # Load shared infrastructure config
-    shared_infra_config = load_shared_infra_config(
-        os.path.join(os.path.dirname(os.path.dirname(__file__)),
-                     "config", "shared_infrastructure.yaml")
-    )
+    shared_infra_config = load_shared_infra_config()
 
     # Load required data
     domains = load_probed_csv(probed_path)
@@ -826,7 +818,10 @@ def build_outputs(probed_path, fingerprints_path, output_dir,
     clusters = compute_clusters(domains, min_cluster_size=min_cluster_size,
                                 shared_infra_config=shared_infra_config)
 
-    # Add resolution chain to domain records
+    # Add resolution chain to domain records.
+    # NOTE: Resolution chains are intentionally MX-only (domain -> MX -> IP).
+    # NS paths are excluded per the design spec because NS infrastructure is
+    # already captured separately in registrar+NS clusters.
     for domain, data in domains.items():
         primary_mx = data.get("primary_mx", "").strip()
         mx_ip = data.get("mx_ip", "").strip()
