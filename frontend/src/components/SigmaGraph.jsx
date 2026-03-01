@@ -71,7 +71,7 @@ function buildGraph(data, filters) {
         label: node.label,
         size: node.size || 10,
         color: NODE_COLORS[node.type] || NODE_COLORS.domain,
-        type: node.type,
+        nodeType: node.type,
         x: Math.random() * 100,
         y: Math.random() * 100,
       });
@@ -86,7 +86,7 @@ function buildGraph(data, filters) {
         label: node.label,
         size: node.size || 5,
         color: NODE_COLORS.domain,
-        type: 'domain',
+        nodeType: 'domain',
         x: Math.random() * 100,
         y: Math.random() * 100,
       });
@@ -118,7 +118,7 @@ function buildGraph(data, filters) {
   // Remove orphaned domain nodes (domains with no remaining edges)
   const domainToRemove = [];
   graph.forEachNode((id, attrs) => {
-    if (attrs.type === 'domain' && graph.degree(id) === 0) {
+    if (attrs.nodeType === 'domain' && graph.degree(id) === 0) {
       domainToRemove.push(id);
     }
   });
@@ -225,19 +225,19 @@ export default function SigmaGraph({ data, onClickNode, filters }) {
     // Click node handler
     sigma.on('clickNode', ({ node }) => {
       const attrs = graph.getNodeAttributes(node);
-      if (attrs.type === 'domain') {
+      if (attrs.nodeType === 'domain') {
         // Domain click: navigate to investigation
         onClickNode?.({ type: 'domain', id: node, label: attrs.label });
       } else {
         // Infrastructure click: highlight neighbors and report
         const domainNeighbors = graph
           .neighbors(node)
-          .filter((nid) => graph.getNodeAttributes(nid).type === 'domain')
+          .filter((nid) => graph.getNodeAttributes(nid).nodeType === 'domain')
           .map((nid) => graph.getNodeAttributes(nid).label);
 
         highlightNeighbors(node);
         onClickNode?.({
-          type: attrs.type,
+          type: attrs.nodeType,
           id: node,
           label: attrs.label,
           domains: domainNeighbors,

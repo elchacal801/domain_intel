@@ -1,4 +1,4 @@
-import { NavLink, Outlet } from 'react-router-dom';
+import { NavLink, Outlet, useLocation } from 'react-router-dom';
 import { Shield, Sun, Moon } from 'lucide-react';
 import GlobalSearch from './GlobalSearch';
 import ErrorBoundary from './ErrorBoundary';
@@ -15,6 +15,7 @@ const NAV_ITEMS = [
 export default function Layout() {
   const { loading, stats } = useData();
   const { theme, toggleTheme } = useTheme();
+  const location = useLocation();
 
   return (
     <div className="min-h-screen flex flex-col" style={{ background: 'var(--bg-body)' }}>
@@ -65,7 +66,7 @@ export default function Layout() {
           </div>
         ) : (
           <div className="animate-fade-in">
-            <ErrorBoundary>
+            <ErrorBoundary key={location.pathname}>
               <Outlet />
             </ErrorBoundary>
           </div>
