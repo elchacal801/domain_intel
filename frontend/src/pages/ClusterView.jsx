@@ -96,7 +96,7 @@ export default function ClusterView() {
   const [selectedCluster, setSelectedCluster] = useState(null);
   const [page, setPage] = useState(0);
   const [search, setSearch] = useState('');
-  const [showSharedInfra, setShowSharedInfra] = useState(false);
+  const [showSharedInfra, setShowSharedInfra] = useState(true);
   const [confidenceFilter, setConfidenceFilter] = useState('all');
   const [sortBy, setSortBy] = useState('size');
 
@@ -121,7 +121,7 @@ export default function ClusterView() {
       result = result.filter(r => r.label.toLowerCase().includes(l));
     }
 
-    // Hide shared infra unless toggled on
+    // Filter out shared infra when toggle is off
     if (!showSharedInfra) {
       result = result.filter(r => !r.shared_infra);
     }
@@ -131,11 +131,17 @@ export default function ClusterView() {
       result = result.filter(r => r.confidence_level === confidenceFilter);
     }
 
-    // Sort
+    // Sort — shared infra always sinks to bottom, then by selected field
     if (sortBy === 'confidence') {
-      result = [...result].sort((a, b) => (b.confidence || 0) - (a.confidence || 0));
+      result = [...result].sort((a, b) => {
+        if (a.shared_infra !== b.shared_infra) return a.shared_infra ? 1 : -1;
+        return (b.confidence || 0) - (a.confidence || 0);
+      });
     } else {
-      result = [...result].sort((a, b) => b.domainCount - a.domainCount);
+      result = [...result].sort((a, b) => {
+        if (a.shared_infra !== b.shared_infra) return a.shared_infra ? 1 : -1;
+        return b.domainCount - a.domainCount;
+      });
     }
 
     return result;
@@ -389,7 +395,7 @@ export default function ClusterView() {
                         <div key={key} className="flex items-center justify-between text-xs">
                           <span className="text-text-muted">{key.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase())}</span>
                           <span className={`font-mono ${value >= 0 ? 'text-text-secondary' : 'text-red-400'}`}>
-                            {value >= 0 ? value : value}
+                            {value > 0 ? `+${value}` : value}
                           </span>
                         </div>
                       ))}
