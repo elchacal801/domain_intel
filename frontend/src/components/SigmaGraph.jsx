@@ -7,6 +7,7 @@ const NODE_COLORS = {
   mx_host: '#3b82f6',
   ip: '#f97316',
   registrar_ns: '#22c55e',
+  a_record_ip: '#a855f7',  // purple
   domain: '#94a3b8',
 };
 
@@ -14,6 +15,7 @@ const NODE_COLORS_DIMMED = {
   mx_host: '#1e3a5f',     // dimmed blue
   ip: '#5c3a10',          // dimmed orange
   registrar_ns: '#1a4a2e', // dimmed green
+  a_record_ip: '#4a2560', // dimmed purple
 };
 
 const HIGHLIGHT_COLOR = '#fbbf24';

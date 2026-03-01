@@ -240,8 +240,30 @@ export default function DomainDetail() {
             />
           </div>
         )}
+        {d.a_record_chain && (
+          <>
+            <p className="text-[10px] text-text-muted mb-2 mt-4">
+              {d.a_record_chain.web_shared
+                ? `Web Hosting IP (Shared — ${d.a_record_chain.web_provider_label})`
+                : 'Web Hosting IP (Dedicated)'}
+            </p>
+            <div className="mb-3">
+              <ResolutionChain chain={d.a_record_chain} />
+            </div>
+            {d.a_record_chain.web_shared && (
+              <div className="mb-3">
+                <SharedInfraBanner
+                  provider={d.a_record_chain.web_provider}
+                  providerLabel={d.a_record_chain.web_provider_label}
+                  providerCategory="web_hosting"
+                />
+              </div>
+            )}
+          </>
+        )}
         <dl className="grid gap-x-6 gap-y-3 sm:grid-cols-2 lg:grid-cols-4">
           <Field label="Primary MX" value={d.primary_mx} mono /><Field label="MX IP" value={d.mx_ip} mono />
+          <Field label="A Record (Web IP)" value={d.a_record} mono />
           <Field label="ASN" value={d.asn ? `${d.asn} — ${d.asn_name || ''}` : d.asn_name} mono />
           <Field label="BGP Prefix" value={d.bgp_prefix} mono /><Field label="Nameservers" value={d.nameservers} mono />
           <Field label="Country" value={d.cc} /><Field label="MX Records" value={d.mx_records} mono />

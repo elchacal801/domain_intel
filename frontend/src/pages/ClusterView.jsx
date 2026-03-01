@@ -10,6 +10,7 @@ const TYPE_META = {
   mx_host: { label: 'MX Host', color: '#3b82f6' },
   ip: { label: 'MX Server IP', color: '#f97316' },
   registrar_ns: { label: 'Registrar+NS', color: '#22c55e' },
+  a_record_ip: { label: 'Web Hosting IP', color: '#a855f7' },
 };
 
 const PAGE_SIZE = 30;
@@ -56,6 +57,8 @@ function buildClusterTable(data) {
       resolution_method: node.resolution_method || null,
       domain_count: node.domain_count || null,
       related_mx_hosts: node.related_mx_hosts || null,
+      hosting_asn: node.hosting_asn || null,
+      hosting_asn_name: node.hosting_asn_name || null,
     });
   }
   rows.sort((a, b) => b.domainCount - a.domainCount);
@@ -161,7 +164,7 @@ export default function ClusterView() {
   }, [navigate]);
 
   const graphFilters = useMemo(() => ({
-    types: ['mx_host', 'ip', 'registrar_ns'],
+    types: ['mx_host', 'ip', 'registrar_ns', 'a_record_ip'],
     minSize: 0,
   }), []);
 
@@ -438,6 +441,20 @@ export default function ClusterView() {
                         {host}
                       </div>
                     ))}
+                  </div>
+                </>
+              )}
+
+              {/* Hosting ASN */}
+              {selectedCluster.type === 'a_record_ip' && selectedCluster.hosting_asn && (
+                <>
+                  <div className="h-px bg-border-subtle mb-3" />
+                  <div className="text-[10px] font-semibold uppercase tracking-widest text-text-muted mb-2">
+                    Hosting ASN
+                  </div>
+                  <div className="text-xs font-mono text-text-secondary px-2 py-1 rounded bg-white/[0.02]">
+                    AS{selectedCluster.hosting_asn}
+                    {selectedCluster.hosting_asn_name && ` (${selectedCluster.hosting_asn_name})`}
                   </div>
                 </>
               )}

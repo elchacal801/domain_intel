@@ -8,7 +8,9 @@ export default function SharedInfraBanner({ provider, providerLabel, providerCat
       ? 'Co-location on this mail server does not indicate operational relationship.'
       : providerCategory === 'dns'
         ? 'Shared DNS provider does not indicate operational relationship.'
-        : 'Co-location on this infrastructure does not indicate operational relationship.';
+        : providerCategory === 'web_hosting'
+          ? 'Shared web hosting/CDN provider does not indicate operational relationship.'
+          : 'Co-location on this infrastructure does not indicate operational relationship.';
 
   return (
     <div className="rounded-lg border border-amber-500/20 bg-amber-500/5 px-3 py-2">
