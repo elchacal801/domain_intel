@@ -405,8 +405,8 @@ def match_shared_provider(value, value_type, config):
     Check whether a value matches a known shared infrastructure provider.
 
     Args:
-        value: the string to check (MX hostname, IP address, or NS hostname)
-        value_type: one of "mx", "ip", or "ns"
+        value: the string to check (MX hostname, IP address, NS hostname, or ASN)
+        value_type: one of "mx", "ip", "ns", or "asn"
         config: shared infra config dict from load_shared_infra_config()
 
     Returns:
@@ -589,7 +589,7 @@ def compute_a_record_cluster_confidence(cluster_size, shared_match, domains_in_c
     breakdown = {
         "base": base,
         "size": size_bonus,
-        "shared_infra": 0 if not shared_match else -(80 - base),
+        "shared_infra": -25 if shared_match else 0,  # delta from unknown base (50) to known base (25)
         "homogeneity": homogeneity_bonus,
     }
 
