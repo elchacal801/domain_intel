@@ -304,7 +304,7 @@ def build_infra_index(domains, fp_matches):
     """
     Build a reverse-lookup index for infrastructure pivot search.
 
-    Returns dict with keys: asn, mx, registrar, fp.
+    Returns dict with keys: asn, mx, registrar, fp, a_record.
     Each maps a value to a list of domains (capped at MAX_INDEX_ENTRIES).
     Only buckets with >= 2 domains are included.
     """
@@ -312,6 +312,7 @@ def build_infra_index(domains, fp_matches):
     mx_idx = defaultdict(list)
     reg_idx = defaultdict(list)
     fp_idx = defaultdict(list)
+    a_record_idx = defaultdict(list)
 
     for domain, data in domains.items():
         asn = str(data.get("asn", "")).strip()
@@ -325,6 +326,10 @@ def build_infra_index(domains, fp_matches):
         reg = str(data.get("registrant_org", "")).strip()
         if reg:
             reg_idx[reg].append(domain)
+
+        a_record = str(data.get("a_record", "")).strip()
+        if a_record:
+            a_record_idx[a_record].append(domain)
 
     for domain, match_list in fp_matches.items():
         for m in match_list:
@@ -344,6 +349,7 @@ def build_infra_index(domains, fp_matches):
         "mx": _trim(mx_idx),
         "registrar": _trim(reg_idx),
         "fp": _trim(fp_idx),
+        "a_record": _trim(a_record_idx),
     }
 
 
@@ -435,6 +441,12 @@ def match_shared_provider(value, value_type, config):
                     return (provider_id, provider.get("label", provider_id),
                             provider.get("category", ""))
 
+        elif value_type == "asn":
+            for asn_val in provider.get("asn_list", []):
+                if value_lower == str(asn_val).strip().lower():
+                    return (provider_id, provider.get("label", provider_id),
+                            provider.get("category", ""))
+
     return None
 
 
@@ -510,6 +522,80 @@ def compute_cluster_confidence(cluster_size, shared_match, domains_in_cluster,
     return score, level, breakdown
 
 
+def compute_a_record_cluster_confidence(cluster_size, shared_match, domains_in_cluster,
+                                        all_domains, config):
+    """
+    Inverted confidence for A-record clusters: large unknown = high signal.
+
+    Unlike MX/IP clusters where large size + unknown provider gets penalized
+    (probably a shared provider we don't know about), A-record clusters use
+    inverted semantics:
+      - Large size + unknown provider = HIGH confidence (campaign infrastructure)
+      - Large size + known CDN = LOW confidence (shared hosting)
+
+    Args:
+        cluster_size: number of domains in the cluster
+        shared_match: result from match_shared_provider() or None
+        domains_in_cluster: set of domain names in this cluster
+        all_domains: full domains dict (domain -> data)
+        config: shared infra config dict
+
+    Returns:
+        (score: int 0-100, level: str, breakdown: dict)
+    """
+    if shared_match:
+        # Known CDN/hosting: always low
+        base = 25
+        size_bonus = 0
+    else:
+        # Unknown provider: scale UP with size
+        base = 50
+        size_bonus = 0
+        bonuses = config.get("a_record_size_bonuses", [
+            {"above": 100, "bonus": 30},
+            {"above": 50, "bonus": 20},
+            {"above": 20, "bonus": 15},
+            {"above": 10, "bonus": 10},
+            {"above": 5, "bonus": 5},
+        ])
+        for threshold in sorted(bonuses, key=lambda x: x["above"], reverse=True):
+            if cluster_size > threshold["above"]:
+                size_bonus = threshold["bonus"]
+                break
+
+    # ASN homogeneity bonus (all domains on same ASN = more likely campaign infra)
+    unique_asns = set()
+    for d in domains_in_cluster:
+        ddata = all_domains.get(d, {})
+        asn_val = str(ddata.get("a_record_asn", ddata.get("asn", ""))).strip()
+        if asn_val:
+            unique_asns.add(asn_val)
+
+    homogeneity_bonus = 0
+    if not shared_match and len(unique_asns) == 1 and cluster_size >= 3:
+        homogeneity_bonus = 10
+
+    score = max(0, min(100, base + size_bonus + homogeneity_bonus))
+
+    high_threshold = config.get("confidence_thresholds", {}).get("high", 70)
+    medium_threshold = config.get("confidence_thresholds", {}).get("medium", 40)
+    if score >= high_threshold:
+        level = "high"
+    elif score >= medium_threshold:
+        level = "medium"
+    else:
+        level = "low"
+
+    breakdown = {
+        "base": base,
+        "size": size_bonus,
+        "shared_infra": 0 if not shared_match else -(80 - base),
+        "homogeneity": homogeneity_bonus,
+    }
+
+    return score, level, breakdown
+
+
 # ---------------------------------------------------------------------------
 # Cluster computation
 # ---------------------------------------------------------------------------
@@ -530,6 +616,7 @@ def compute_clusters(domains, min_cluster_size=DEFAULT_MIN_CLUSTER_SIZE,
     mx_groups = defaultdict(set)      # mx_host -> set of domains
     ip_groups = defaultdict(set)      # ip -> set of domains
     regns_groups = defaultdict(set)   # (registrant_org, nameservers) -> set of domains
+    a_record_groups = defaultdict(set)  # a_record IP -> set of domains
 
     for domain, data in domains.items():
         mx = data.get("primary_mx", "").strip()
@@ -544,6 +631,10 @@ def compute_clusters(domains, min_cluster_size=DEFAULT_MIN_CLUSTER_SIZE,
         ns = data.get("nameservers", "").strip()
         if reg and ns:
             regns_groups[(reg, ns)].add(domain)
+
+        a_record = data.get("a_record", "").strip()
+        if a_record:
+            a_record_groups[a_record].add(domain)
 
     nodes = {}  # id -> node dict (dedup)
     edges = []
@@ -686,6 +777,50 @@ def compute_clusters(domains, min_cluster_size=DEFAULT_MIN_CLUSTER_SIZE,
                 dom_id = add_domain_node(d)
                 edges.append({"source": dom_id, "target": infra_id})
 
+    # Process A-record clusters
+    for a_ip, domain_set in a_record_groups.items():
+        if len(domain_set) >= min_cluster_size:
+            infra_id = f"a_ip:{a_ip}"
+
+            # Get cluster ASN from any domain's a_record_asn
+            cluster_asn = ""
+            cluster_asn_name = ""
+            for d in domain_set:
+                ddata = domains.get(d, {})
+                asn_val = str(ddata.get("a_record_asn", "")).strip()
+                if asn_val:
+                    cluster_asn = asn_val
+                    cluster_asn_name = str(ddata.get("a_record_asn_name", "")).strip()
+                    break
+
+            # Match ASN via shared infra config
+            shared_match = None
+            if si_config and cluster_asn:
+                shared_match = match_shared_provider(cluster_asn, "asn", si_config)
+
+            # Score with inverted A-record confidence
+            confidence_score, confidence_level, breakdown = compute_a_record_cluster_confidence(
+                cluster_size=len(domain_set),
+                shared_match=shared_match,
+                domains_in_cluster=domain_set,
+                all_domains=domains,
+                config=si_config,
+            )
+
+            add_infra_node(infra_id, "a_record_ip", a_ip, domain_set,
+                           shared_match=shared_match,
+                           confidence_score=confidence_score,
+                           confidence_level=confidence_level,
+                           confidence_breakdown=breakdown,
+                           resolution_method="a_record",
+                           extra={
+                               "hosting_asn": cluster_asn,
+                               "hosting_asn_name": cluster_asn_name,
+                           })
+            for d in domain_set:
+                dom_id = add_domain_node(d)
+                edges.append({"source": dom_id, "target": infra_id})
+
     return {"nodes": list(nodes.values()), "edges": edges}
 
 
@@ -750,6 +885,13 @@ def compute_stats(domains, fp_matches, clusters):
     }
     stats["cluster_confidence_distribution"] = confidence_dist
     stats["shared_infra_clusters"] = shared_count
+
+    # Count A-record clusters
+    a_record_cluster_count = sum(
+        1 for n in clusters.get("nodes", [])
+        if n.get("type") == "a_record_ip"
+    )
+    stats["a_record_clusters"] = a_record_cluster_count
 
     return stats
 
@@ -836,6 +978,20 @@ def build_outputs(probed_path, fingerprints_path, output_dir,
                 "mx_provider": mx_match[0] if mx_match else None,
                 "mx_provider_label": mx_match[1] if mx_match else None,
                 "mx_shared": bool(mx_match),
+            }
+
+        # A-record resolution chain
+        a_record = data.get("a_record", "").strip()
+        if a_record:
+            a_asn = data.get("a_record_asn", "").strip()
+            a_shared = None
+            if shared_infra_config and a_asn:
+                a_shared = match_shared_provider(a_asn, "asn", shared_infra_config)
+            data["a_record_chain"] = {
+                "path": [domain, "A", a_record],
+                "web_provider": a_shared[0] if a_shared else None,
+                "web_provider_label": a_shared[1] if a_shared else None,
+                "web_shared": bool(a_shared),
             }
 
     stats = compute_stats(domains, fp_matches, clusters)

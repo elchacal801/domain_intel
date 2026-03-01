@@ -625,7 +625,7 @@ class TestBuildInfraIndex:
 
     def test_empty_inputs(self):
         index = build_infra_index({}, {})
-        assert index == {"asn": {}, "mx": {}, "registrar": {}, "fp": {}}
+        assert index == {"asn": {}, "mx": {}, "registrar": {}, "fp": {}, "a_record": {}}
 
     def test_deduplication(self):
         """Domains should be deduplicated in index entries."""
