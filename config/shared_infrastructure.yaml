@@ -10,6 +10,13 @@ size_penalties:
   - { above: 20,  penalty: 20 }
   - { above: 10,  penalty: 10 }
 
+a_record_size_bonuses:
+  - { above: 100, bonus: 30 }
+  - { above: 50,  bonus: 20 }
+  - { above: 20,  bonus: 15 }
+  - { above: 10,  bonus: 10 }
+  - { above: 5,   bonus: 5  }
+
 providers:
   cloudflare_email_routing:
     label: "Cloudflare Email Routing"
@@ -110,3 +117,54 @@ providers:
     category: "dns"
     ns_patterns:
       - "ns*.digitalocean.com"
+
+  # Web Hosting / CDN Providers
+  cloudflare_cdn:
+    label: "Cloudflare CDN"
+    category: "web_hosting"
+    asn_list: ["13335"]
+
+  aws_hosting:
+    label: "AWS"
+    category: "web_hosting"
+    asn_list: ["16509", "14618"]
+
+  google_cloud:
+    label: "Google Cloud"
+    category: "web_hosting"
+    asn_list: ["15169", "396982"]
+
+  akamai:
+    label: "Akamai"
+    category: "web_hosting"
+    asn_list: ["20940", "16625"]
+
+  fastly:
+    label: "Fastly"
+    category: "web_hosting"
+    asn_list: ["54113"]
+
+  azure:
+    label: "Microsoft Azure"
+    category: "web_hosting"
+    asn_list: ["8075"]
+
+  digitalocean:
+    label: "DigitalOcean"
+    category: "web_hosting"
+    asn_list: ["14061"]
+
+  ovh:
+    label: "OVH"
+    category: "web_hosting"
+    asn_list: ["16276"]
+
+  hetzner:
+    label: "Hetzner"
+    category: "web_hosting"
+    asn_list: ["24940"]
+
+  godaddy_hosting:
+    label: "GoDaddy Hosting"
+    category: "web_hosting"
+    asn_list: ["26496"]
