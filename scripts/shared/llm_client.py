@@ -23,6 +23,7 @@ import os
 import json
 import logging
 import sqlite3
+import threading
 import time
 from datetime import datetime, timezone
 from pathlib import Path
@@ -109,6 +110,7 @@ class LLMClient:
         self.cache_db_path = cache_db_path or self.DEFAULT_CACHE_DB
         self.cost_log_path = cost_log_path or self.DEFAULT_COST_LOG
         self._cache_conn: Optional[sqlite3.Connection] = None
+        self._cost_log_lock = threading.Lock()
         self._init_cache()
     
     def close(self):
@@ -191,22 +193,23 @@ class LLMClient:
         """Append a row to the cost log CSV. Creates the file with header if needed."""
         log_path = Path(self.cost_log_path)
         log_path.parent.mkdir(exist_ok=True, parents=True)
-        write_header = not log_path.exists() or log_path.stat().st_size == 0
-        with open(log_path, "a", newline="") as f:
-            writer = csv.writer(f)
-            if write_header:
+        with self._cost_log_lock:
+            write_header = not log_path.exists() or log_path.stat().st_size == 0
+            with open(log_path, "a", newline="") as f:
+                writer = csv.writer(f)
+                if write_header:
+                    writer.writerow([
+                        "timestamp", "model", "prompt_tokens",
+                        "completion_tokens", "total_tokens", "cached",
+                    ])
                 writer.writerow([
-                    "timestamp", "model", "prompt_tokens",
-                    "completion_tokens", "total_tokens", "cached",
+                    datetime.now(timezone.utc).isoformat(),
+                    model,
+                    prompt_tokens,
+                    completion_tokens,
+                    total_tokens,
+                    cached,
                 ])
-            writer.writerow([
-                datetime.now(timezone.utc).isoformat(),
-                model,
-                prompt_tokens,
-                completion_tokens,
-                total_tokens,
-                cached,
-            ])
 
     # ------------------------------------------------------------------
     # API key helpers
