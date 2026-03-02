@@ -36,7 +36,7 @@ export function DataProvider({ children }) {
         setFpMatches(fpRes || []);
         setClusters(clustersRes || { nodes: [], edges: [] });
         setShardManifest(manifestRes || {});
-        setInfraIndex(infraRes || { asn: {}, mx: {}, registrar: {}, fp: {} });
+        setInfraIndex(infraRes || { asn: {}, mx: {}, registrar: {}, fp: {}, a_record: {} });
         setHistory(histRes || []);
       } catch (err) {
         console.error('Failed to load data:', err);

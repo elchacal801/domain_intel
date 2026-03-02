@@ -16,6 +16,7 @@ export default function InvestigateLanding() {
   const [query, setQuery] = useState('');
   const [pivotResults, setPivotResults] = useState(null);
   const [pivotLabel, setPivotLabel] = useState('');
+  const [infraMeta, setInfraMeta] = useState(null);
 
   // Browse state
   const [activeShard, setActiveShard] = useState(null);
@@ -25,10 +26,20 @@ export default function InvestigateLanding() {
   const [sortKey, setSortKey] = useState('domain');
   const [sortAsc, setSortAsc] = useState(true);
 
+  /** Extract domain list from an infra_index entry (handles both enriched and legacy formats) */
+  function getEntryDomains(entry) {
+    if (!entry) return [];
+    if (Array.isArray(entry)) return entry; // legacy format: plain array
+    return entry.domains || []; // enriched format: { domains, private, entity_stats }
+  }
+
   function handleSubmit(e) {
     e.preventDefault();
     const q = query.trim();
     if (!q) return;
+
+    // Clear previous infra metadata
+    setInfraMeta(null);
 
     // Pivot search: ASN:, MX:, REG:, FP:
     const pivotMatch = q.match(/^(ASN|MX|REG|FP):\s*(.+)$/i);
@@ -37,30 +48,101 @@ export default function InvestigateLanding() {
       const val = pivotMatch[2].trim();
       let results = [];
       let label = '';
+      let matchedMeta = null;
 
       if (type === 'ASN' && infraIndex.asn) {
-        results = infraIndex.asn[val] || [];
+        const entry = infraIndex.asn[val];
+        results = getEntryDomains(entry);
         label = `ASN ${val}`;
+        if (entry && !Array.isArray(entry)) matchedMeta = { type: 'asn', key: val, ...entry };
       } else if (type === 'MX' && infraIndex.mx) {
-        // Partial match for MX
         const lower = val.toLowerCase();
-        for (const [k, v] of Object.entries(infraIndex.mx)) {
-          if (k.toLowerCase().includes(lower)) { results = [...results, ...v]; label = `MX matching "${val}"`; }
+        for (const [k, entry] of Object.entries(infraIndex.mx)) {
+          if (k.toLowerCase().includes(lower)) {
+            results = [...results, ...getEntryDomains(entry)];
+            label = `MX matching "${val}"`;
+            if (!Array.isArray(entry)) matchedMeta = { type: 'mx', key: k, ...entry };
+          }
         }
       } else if (type === 'REG' && infraIndex.registrar) {
         const lower = val.toLowerCase();
-        for (const [k, v] of Object.entries(infraIndex.registrar)) {
-          if (k.toLowerCase().includes(lower)) { results = [...results, ...v]; label = `Registrar matching "${val}"`; }
+        for (const [k, entry] of Object.entries(infraIndex.registrar)) {
+          if (k.toLowerCase().includes(lower)) {
+            results = [...results, ...getEntryDomains(entry)];
+            label = `Registrar matching "${val}"`;
+            if (!Array.isArray(entry)) matchedMeta = { type: 'registrar', key: k, ...entry };
+          }
         }
       } else if (type === 'FP' && infraIndex.fp) {
-        results = infraIndex.fp[val] || infraIndex.fp[val.toUpperCase()] || [];
+        const entry = infraIndex.fp[val] || infraIndex.fp[val.toUpperCase()];
+        results = getEntryDomains(entry);
         label = `Fingerprint ${val}`;
+        if (entry && !Array.isArray(entry)) matchedMeta = { type: 'fp', key: val.toUpperCase(), ...entry };
       }
 
       results = [...new Set(results)];
       setPivotResults(results);
       setPivotLabel(label || `${type}:${val}`);
+      if (matchedMeta) setInfraMeta(matchedMeta);
       return;
+    }
+
+    // Auto-detection for unprefixed infrastructure inputs
+    if (infraIndex) {
+      const isIP = /^\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}$/.test(q);
+
+      if (isIP) {
+        // Search a_record index and MX index for IP matches
+        let results = [];
+        let matchedMeta = null;
+        const aEntry = infraIndex.a_record?.[q];
+        if (aEntry) {
+          results.push(...getEntryDomains(aEntry));
+          if (!Array.isArray(aEntry)) matchedMeta = { type: 'a_record', key: q, ...aEntry };
+        }
+        const mxEntry = infraIndex.mx?.[q];
+        if (mxEntry) {
+          results.push(...getEntryDomains(mxEntry));
+          if (!Array.isArray(mxEntry)) matchedMeta = matchedMeta || { type: 'mx', key: q, ...mxEntry };
+        }
+        if (results.length > 0) {
+          results = [...new Set(results)];
+          setPivotResults(results);
+          setPivotLabel(`IP ${q}`);
+          if (matchedMeta) setInfraMeta(matchedMeta);
+          return;
+        }
+      }
+
+      // Check for exact MX key match
+      if (infraIndex.mx?.[q]) {
+        const entry = infraIndex.mx[q];
+        const results = [...new Set(getEntryDomains(entry))];
+        setPivotResults(results);
+        setPivotLabel(`MX ${q}`);
+        if (!Array.isArray(entry)) setInfraMeta({ type: 'mx', key: q, ...entry });
+        return;
+      }
+
+      // Check for partial MX hostname match (contains dots, not an IP)
+      if (q.includes('.') && !(/^\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}$/.test(q))) {
+        const lower = q.toLowerCase();
+        let results = [];
+        let matchedMeta = null;
+        for (const [k, entry] of Object.entries(infraIndex.mx || {})) {
+          if (k.toLowerCase().includes(lower)) {
+            results.push(...getEntryDomains(entry));
+            if (!Array.isArray(entry)) matchedMeta = { type: 'mx', key: k, ...entry };
+          }
+        }
+        if (results.length > 0) {
+          results = [...new Set(results)];
+          setPivotResults(results);
+          setPivotLabel(`MX matching "${q}"`);
+          if (matchedMeta) setInfraMeta(matchedMeta);
+          return;
+        }
+      }
     }
 
     // Default: navigate to domain
@@ -131,7 +213,7 @@ export default function InvestigateLanding() {
         </div>
         <h1 className="mb-1 text-2xl font-normal tracking-tight" style={{ color: 'var(--text-primary)' }}>Domain Investigation</h1>
         <p className="mb-6 max-w-md text-center text-xs text-text-muted">
-          Search any domain, or use <span className="font-mono text-text-secondary">ASN:</span> <span className="font-mono text-text-secondary">MX:</span> <span className="font-mono text-text-secondary">REG:</span> <span className="font-mono text-text-secondary">FP:</span> for infrastructure pivot search.
+          Search any domain, IP address, or MX hostname. Use <span className="font-mono text-text-secondary">ASN:</span> <span className="font-mono text-text-secondary">MX:</span> <span className="font-mono text-text-secondary">REG:</span> <span className="font-mono text-text-secondary">FP:</span> prefixes for specific pivot types.
         </p>
         <form onSubmit={handleSubmit} className="relative w-full max-w-lg">
           <Search className="absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-text-muted" />
