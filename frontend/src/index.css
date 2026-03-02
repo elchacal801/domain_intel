@@ -72,16 +72,16 @@
 }
 
 @theme {
-  --color-surface: #0a0a0a;
-  --color-surface-raised: #111111;
-  --color-surface-hover: #181818;
-  --color-border-subtle: rgba(255, 255, 255, 0.06);
-  --color-border-hover: rgba(255, 255, 255, 0.12);
+  --color-surface: var(--bg-surface);
+  --color-surface-raised: var(--bg-surface-raised);
+  --color-surface-hover: var(--bg-surface-hover);
+  --color-border-subtle: var(--border-subtle);
+  --color-border-hover: var(--border-hover);
   --color-accent: #3b82f6;
   --color-accent-muted: rgba(59, 130, 246, 0.12);
-  --color-text-primary: #f0f0f0;
-  --color-text-secondary: #888888;
-  --color-text-muted: #555555;
+  --color-text-primary: var(--text-primary);
+  --color-text-secondary: var(--text-secondary);
+  --color-text-muted: var(--text-muted);
   --color-risk-high: #ef4444;
   --color-risk-med: #eab308;
   --color-risk-low: #22c55e;
@@ -291,7 +291,7 @@ body {
 .tooltip-content {
   position: absolute;
   z-index: 100;
-  bottom: calc(100% + 6px);
+  top: calc(100% + 6px);
   left: 50%;
   transform: translateX(-50%);
   padding: 0.5rem 0.75rem;
@@ -312,11 +312,11 @@ body {
 .tooltip-content::after {
   content: '';
   position: absolute;
-  top: 100%;
+  bottom: 100%;
   left: 50%;
   transform: translateX(-50%);
   border: 5px solid transparent;
-  border-top-color: var(--tooltip-bg);
+  border-bottom-color: var(--tooltip-bg);
 }
 
 /* Briefing */

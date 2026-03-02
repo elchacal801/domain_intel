@@ -1,7 +1,9 @@
+import { useState } from 'react';
 import { NavLink, Outlet, useLocation } from 'react-router-dom';
-import { Shield, Sun, Moon, Github } from 'lucide-react';
+import { Shield, Sun, Moon, Github, Info } from 'lucide-react';
 import GlobalSearch from './GlobalSearch';
 import ErrorBoundary from './ErrorBoundary';
+import AboutModal from './AboutModal';
 import { useData } from '@/context/DataContext';
 import { useTheme } from '@/context/ThemeContext';
 
@@ -16,6 +18,7 @@ export default function Layout() {
   const { loading, stats } = useData();
   const { theme, toggleTheme } = useTheme();
   const location = useLocation();
+  const [aboutOpen, setAboutOpen] = useState(false);
 
   return (
     <div className="min-h-screen flex flex-col" style={{ background: 'var(--bg-body)' }}>
@@ -48,12 +51,15 @@ export default function Layout() {
           </div>
           <div className="flex items-center gap-3">
             <GlobalSearch />
+            <button onClick={() => setAboutOpen(true)} className="theme-toggle" title="About">
+              <Info className="h-3.5 w-3.5" />
+            </button>
             <a
               href="https://github.com/elchacal801/domain_intel"
               target="_blank"
               rel="noopener noreferrer"
               className="theme-toggle"
-              title="About — View on GitHub"
+              title="View on GitHub"
             >
               <Github className="h-3.5 w-3.5" />
             </a>
@@ -97,6 +103,8 @@ export default function Layout() {
           )}
         </div>
       </footer>
+
+      <AboutModal open={aboutOpen} onClose={() => setAboutOpen(false)} />
     </div>
   );
 }
