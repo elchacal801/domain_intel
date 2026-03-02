@@ -178,6 +178,23 @@ def classify_rules(item: Dict) -> Optional[Dict]:
     return None
 
 
+def _load_existing_domains(filepath: str) -> set:
+    """Read an existing classifications CSV and return a set of domain strings."""
+    domains = set()
+    if not os.path.exists(filepath):
+        return domains
+    try:
+        with open(filepath, 'r', encoding='utf-8-sig', errors='replace') as f:
+            reader = csv.DictReader(f)
+            for row in reader:
+                d = (row.get('domain') or '').strip()
+                if d:
+                    domains.add(d)
+    except Exception as exc:
+        logger.warning("Could not read existing output %s: %s", filepath, exc)
+    return domains
+
+
 def read_probed_domains(filepath: str, limit: int = 0) -> List[Dict]:
     data = []
     if not os.path.exists(filepath):
@@ -256,6 +273,8 @@ def main():
     parser.add_argument("--output", default=OUTPUT_FILE)
     parser.add_argument("--limit", type=int, default=100, help="Max pages to check")
     parser.add_argument("--batch-size", type=int, default=10, help="Items per API call")
+    parser.add_argument("--force", action="store_true",
+                        help="Re-classify all domains (ignore previous results)")
     args = parser.parse_args()
 
     if not os.getenv("OPENAI_API_KEY"):
@@ -277,11 +296,21 @@ def main():
     items = read_probed_domains(args.input, args.limit)
     print(f"Found {len(items)} items with content to classify.")
 
-    # Reset/Init output
+    # --- Delta mode: skip already-classified domains ---
     headers = ["domain", "category", "reason", "confidence", "flame_tp_ids", "flame_confidence"]
-    with open(args.output, 'w', newline='', encoding='utf-8') as f:
-        writer = csv.DictWriter(f, fieldnames=headers)
-        writer.writeheader()
+    if args.force or not os.path.exists(args.output):
+        # Force mode or first run: reset file with headers
+        with open(args.output, 'w', newline='', encoding='utf-8') as f:
+            writer = csv.DictWriter(f, fieldnames=headers)
+            writer.writeheader()
+    else:
+        # Delta mode: filter out already-classified domains
+        existing = _load_existing_domains(args.output)
+        items = [it for it in items if it.get("domain") not in existing]
+        print(f"Delta mode: {len(existing)} already classified, "
+              f"{len(items)} new domains to process")
+        logger.info("Delta mode: %d already classified, %d new domains to process",
+                    len(existing), len(items))
 
     # --- Rule-based pre-filter: classify obvious cases without the LLM ---
     rule_results = []

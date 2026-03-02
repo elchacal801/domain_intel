@@ -21,7 +21,9 @@
       "Bash(PYTHONPATH=scripts python:*)",
       "Bash(pip install:*)",
       "Bash(python3:*)",
-      "Bash(npm run:*)"
+      "Bash(npm run:*)",
+      "Bash(npx vite build)",
+      "Bash(npm install)"
     ]
   }
 }

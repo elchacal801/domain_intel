@@ -9,6 +9,7 @@ using LLM-based semantic similarity and visual homoglyph awareness.
 import os
 import csv
 import argparse
+import logging
 import sys
 from typing import List, Dict
 from dotenv import load_dotenv
@@ -19,6 +20,7 @@ load_dotenv()
 
 # LLM Client — uses Haiku-first chain for typosquat detection (cost-optimized)
 llm = LLMClient(models=load_model_chain("typosquat"))
+logger = logging.getLogger(__name__)
 OUTPUT_FILE = "data/ai_typosquats.csv"
 INPUT_FILE = "data/triage_candidates.csv" # Default to using the funnel
 
@@ -50,6 +52,23 @@ Return JSON format only:
 }}
 If no matches, return {{ "matches": [] }}.
 """
+
+def _load_existing_domains(filepath: str) -> set:
+    """Read an existing typosquats CSV and return a set of domain strings."""
+    domains = set()
+    if not os.path.exists(filepath):
+        return domains
+    try:
+        with open(filepath, 'r', encoding='utf-8-sig', errors='replace') as f:
+            reader = csv.DictReader(f)
+            for row in reader:
+                d = (row.get('domain') or '').strip()
+                if d:
+                    domains.add(d)
+    except Exception as exc:
+        logger.warning("Could not read existing output %s: %s", filepath, exc)
+    return domains
+
 
 def read_domains(filepath: str, limit: int = 0) -> List[str]:
     domains = []
@@ -108,6 +127,8 @@ def main():
     parser.add_argument("--output", default=OUTPUT_FILE)
     parser.add_argument("--limit", type=int, default=100, help="Max domains to check (cost control)")
     parser.add_argument("--batch-size", type=int, default=20, help="Domains per API call")
+    parser.add_argument("--force", action="store_true",
+                        help="Re-analyze all domains (ignore previous results)")
     args = parser.parse_args()
 
     # Using OpenAI Key
@@ -123,12 +144,22 @@ def main():
     total_matches = 0
     import math
     from tqdm import tqdm
-    
-    # Reset/Init output file with headers
+
+    # --- Delta mode: skip already-analyzed domains ---
     headers = ["domain", "target", "reason", "confidence"]
-    with open(args.output, 'w', newline='', encoding='utf-8') as f:
-        writer = csv.DictWriter(f, fieldnames=headers)
-        writer.writeheader()
+    if args.force or not os.path.exists(args.output):
+        # Force mode or first run: reset file with headers
+        with open(args.output, 'w', newline='', encoding='utf-8') as f:
+            writer = csv.DictWriter(f, fieldnames=headers)
+            writer.writeheader()
+    else:
+        # Delta mode: filter out already-analyzed domains
+        existing = _load_existing_domains(args.output)
+        all_domains = [d for d in all_domains if d not in existing]
+        print(f"Delta mode: {len(existing)} already analyzed, "
+              f"{len(all_domains)} new domains to process")
+        logger.info("Delta mode: %d already analyzed, %d new domains to process",
+                    len(existing), len(all_domains))
 
     num_batches = math.ceil(len(all_domains) / args.batch_size)
     
