@@ -56,6 +56,34 @@ export default function DomainDetail() {
     return () => { cancelled = true; };
   }, [domain, loadDomain]);
 
+  // Related domains from cluster data
+  const relatedDomains = useMemo(() => {
+    if (!clusters?.edges || !clusters?.nodes) return [];
+    const domId = `dom:${domain}`;
+    const infraIds = new Set();
+    for (const e of clusters.edges) {
+      if (e.source === domId) infraIds.add(e.target);
+      if (e.target === domId) infraIds.add(e.source);
+    }
+    if (infraIds.size === 0) return [];
+    const related = new Map();
+    for (const e of clusters.edges) {
+      if (infraIds.has(e.target) && e.source !== domId && e.source.startsWith('dom:')) {
+        const d = e.source.slice(4);
+        const infraNode = clusters.nodes.find(n => n.id === e.target);
+        if (!related.has(d)) related.set(d, []);
+        related.get(d).push(infraNode?.type || 'unknown');
+      }
+      if (infraIds.has(e.source) && e.target !== domId && e.target.startsWith('dom:')) {
+        const d = e.target.slice(4);
+        const infraNode = clusters.nodes.find(n => n.id === e.source);
+        if (!related.has(d)) related.set(d, []);
+        related.get(d).push(infraNode?.type || 'unknown');
+      }
+    }
+    return [...related.entries()].slice(0, 20).map(([dom, types]) => ({ domain: dom, linkTypes: [...new Set(types)] }));
+  }, [clusters, domain]);
+
   function copyDomain() {
     navigator.clipboard.writeText(domain);
     setCopied(true);
@@ -98,34 +126,6 @@ export default function DomainDetail() {
   const showVT = hasAny(d, ['vt_malicious_count', 'vt_undetected_count', 'vt_last_analysis']);
   const showPhishTank = hasAny(d, ['phishtank_phishtank_url', 'phishtank_urlhaus_threat', 'phishtank_phishtank_match']);
   const showOpenClaw = hasAny(d, ['openclaw_agent_type', 'openclaw_exposure_level', 'openclaw_model_id']);
-
-  // Related domains from cluster data
-  const relatedDomains = useMemo(() => {
-    if (!clusters?.edges || !clusters?.nodes) return [];
-    const domId = `dom:${domain}`;
-    const infraIds = new Set();
-    for (const e of clusters.edges) {
-      if (e.source === domId) infraIds.add(e.target);
-      if (e.target === domId) infraIds.add(e.source);
-    }
-    if (infraIds.size === 0) return [];
-    const related = new Map();
-    for (const e of clusters.edges) {
-      if (infraIds.has(e.target) && e.source !== domId && e.source.startsWith('dom:')) {
-        const d = e.source.slice(4);
-        const infraNode = clusters.nodes.find(n => n.id === e.target);
-        if (!related.has(d)) related.set(d, []);
-        related.get(d).push(infraNode?.type || 'unknown');
-      }
-      if (infraIds.has(e.source) && e.target !== domId && e.target.startsWith('dom:')) {
-        const d = e.target.slice(4);
-        const infraNode = clusters.nodes.find(n => n.id === e.source);
-        if (!related.has(d)) related.set(d, []);
-        related.get(d).push(infraNode?.type || 'unknown');
-      }
-    }
-    return [...related.entries()].slice(0, 20).map(([dom, types]) => ({ domain: dom, linkTypes: [...new Set(types)] }));
-  }, [clusters, domain]);
 
   // STIX export
   function exportStix() {
