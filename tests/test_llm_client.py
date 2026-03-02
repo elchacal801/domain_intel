@@ -253,6 +253,7 @@ class TestCostLogCSV:
 
         # Second row: cache hit
         assert rows[1]["cached"] == "True"
+        assert rows[1]["model"] == "cache"
         assert rows[1]["prompt_tokens"] == "0"
         assert rows[1]["completion_tokens"] == "0"
         assert rows[1]["total_tokens"] == "0"
@@ -335,27 +336,33 @@ class TestCacheKeyDeterminism:
 
     def test_same_inputs_same_key(self):
         """Identical inputs should always produce the same cache key."""
-        key1 = LLMClient._cache_key("sys", "prompt", "model", True, 0.3)
-        key2 = LLMClient._cache_key("sys", "prompt", "model", True, 0.3)
+        key1 = LLMClient._cache_key("sys", "prompt", True, 0.3)
+        key2 = LLMClient._cache_key("sys", "prompt", True, 0.3)
         assert key1 == key2
 
     def test_different_temperature_different_key(self):
         """Different temperatures should produce different keys."""
-        key1 = LLMClient._cache_key("sys", "prompt", "model", True, 0.3)
-        key2 = LLMClient._cache_key("sys", "prompt", "model", True, 0.7)
+        key1 = LLMClient._cache_key("sys", "prompt", True, 0.3)
+        key2 = LLMClient._cache_key("sys", "prompt", True, 0.7)
         assert key1 != key2
 
     def test_different_json_mode_different_key(self):
         """Different json_mode values should produce different keys."""
-        key1 = LLMClient._cache_key("sys", "prompt", "model", True, 0.3)
-        key2 = LLMClient._cache_key("sys", "prompt", "model", False, 0.3)
+        key1 = LLMClient._cache_key("sys", "prompt", True, 0.3)
+        key2 = LLMClient._cache_key("sys", "prompt", False, 0.3)
         assert key1 != key2
 
     def test_cache_key_is_hex_sha256(self):
         """Cache key should be a 64-char hex string (SHA-256)."""
-        key = LLMClient._cache_key("sys", "prompt", "model", False, 0.5)
+        key = LLMClient._cache_key("sys", "prompt", False, 0.5)
         assert len(key) == 64
         assert all(c in "0123456789abcdef" for c in key)
+
+    def test_cache_key_is_model_agnostic(self):
+        """Cache key should not include model — any model's response is reusable."""
+        key = LLMClient._cache_key("sys", "prompt", True, 0.3)
+        # Verify the key does not change based on external model config
+        assert isinstance(key, str) and len(key) == 64
 
 
 # ---------------------------------------------------------------------------

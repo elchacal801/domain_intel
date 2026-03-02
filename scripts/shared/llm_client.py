@@ -56,7 +56,6 @@ class LLMClient:
     - Per-call cost tracking to CSV log
     """
 
-    DEFAULT_CACHE_DIR = os.path.join("data", ".llm_cache")
     DEFAULT_CACHE_DB = os.path.join("data", ".llm_cache", "llm_cache.db")
     DEFAULT_COST_LOG = os.path.join("data", "llm_cost_log.csv")
 
@@ -84,6 +83,18 @@ class LLMClient:
         self._cache_conn: Optional[sqlite3.Connection] = None
         self._init_cache()
     
+    def close(self):
+        """Close the SQLite cache connection."""
+        if self._cache_conn:
+            self._cache_conn.close()
+            self._cache_conn = None
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, *args):
+        self.close()
+
     # ------------------------------------------------------------------
     # Cache management
     # ------------------------------------------------------------------
@@ -104,10 +115,16 @@ class LLMClient:
         self._cache_conn.commit()
 
     @staticmethod
-    def _cache_key(system: str, prompt: str, model: str, json_mode: bool, temperature: float) -> str:
-        """Generate a deterministic SHA-256 cache key from request parameters."""
+    def _cache_key(system: str, prompt: str, json_mode: bool, temperature: float) -> str:
+        """Generate a deterministic SHA-256 cache key from request parameters.
+
+        The key is model-agnostic: any model's response for the same prompt is
+        interchangeable for cost-saving purposes.  This means a cached response
+        from a fallback model will be served on subsequent calls even if the
+        primary model is available again.
+        """
         key_material = json.dumps(
-            [system, prompt, model, json_mode, temperature],
+            [system, prompt, json_mode, temperature],
             sort_keys=True,
         )
         return hashlib.sha256(key_material.encode("utf-8")).hexdigest()
@@ -194,15 +211,15 @@ class LLMClient:
         Returns:
             The response content string, or None if all models fail.
         """
-        # --- Cache lookup ---
-        cache_key = self._cache_key(system, prompt, self.models[0], json_mode, temperature)
+        # --- Cache lookup (model-agnostic key) ---
+        cache_key = self._cache_key(system, prompt, json_mode, temperature)
 
         if use_cache:
             cached_content = self._cache_get(cache_key)
             if cached_content is not None:
-                logger.info(f"Cache hit for {self.models[0]} (hash: {cache_key[:8]})")
+                logger.info(f"Cache hit (hash: {cache_key[:8]})")
                 self._log_cost(
-                    model=self.models[0],
+                    model="cache",
                     prompt_tokens=0,
                     completion_tokens=0,
                     total_tokens=0,
