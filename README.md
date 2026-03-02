@@ -37,9 +37,9 @@ This repository provides different layers of data for different security roles:
 
 ## Project Structure
 
-* **`frontend/`**: Vite + vanilla JS dashboard application (source).
+* **`frontend/`**: React 19 + Vite 7 + Tailwind CSS 4 investigation dashboard (source).
   * Built with `npm run build` and output to `docs/` for GitHub Pages deployment.
-  * 4 tabbed views: Overview, Threats, Infrastructure, Campaigns.
+  * Pages: Briefing, Investigate (domain search + detail), Cluster View (graph + table), Fingerprint Matches, Domain Compare.
 
 * **`scripts/`**: The Python pipeline.
   * **Shared Utilities** (`scripts/shared/`):
@@ -49,10 +49,12 @@ This repository provides different layers of data for different security roles:
   * **Core Pipeline**:
     * `merge_lists_v3b.py`: Aggregates and cleans public sources.
     * `split_data.py`: Splits large datasets for parallel processing (Sharding).
-    * `enrich_infrastructure.py`: Performs bulk DNS/ASN resolution.
+    * `enrich_infrastructure.py`: Performs bulk DNS/ASN resolution (MX, NS, domain A-records, ASN for both MX and web hosting IPs).
     * `enrich_reputation.py`: Checks RBLs and queries RDAP.
     * `probe_web.py`: Performs active HTTP/S fingerprinting.
     * `merge_results.py`: Merges processed shards back into a single dataset.
+    * `match_fingerprints.py`: YAML-driven indicator matching with confidence scoring (uses `config/fingerprints/`).
+    * `build_frontend_data.py`: Builds frontend JSON data — domain shards, infrastructure clusters (with shared infra detection and confidence scoring), fingerprint matches, resolution chains, and stats.
     * `generate_pivots.py`: Generates intelligence pivot datasets and stats.
     * `build_dashboard_data.py`: Generates pre-computed dashboard summary JSON.
     * `export_stix.py`: Exports intelligence to STIX 2.1 JSON.
@@ -80,6 +82,11 @@ This repository provides different layers of data for different security roles:
   * **Analytics & Whois**:
     * `track_history.py`: Daily tracker for Domain Growth and Liveness (Stats).
     * `drip_whois.py`: Slow, rate-limited Registrar enumeration (Port 43).
+
+* **`config/`**: Pipeline and detection configuration.
+  * `shared_infrastructure.yaml`: Shared provider definitions (email, DNS, web hosting) with pattern/ASN-based matching for cluster confidence scoring.
+  * `defaults.yaml`: Default thresholds and settings.
+  * `fingerprints/*.yaml`: YAML-driven indicator matching rules (7 fingerprints) with confidence scoring.
 
 * **`data/`**: The authoritative source for domain lists and derived intelligence.
   > **[View Data Dictionary](data/README.md)** for a detailed explanation of every file.
@@ -171,7 +178,14 @@ The model priority chain is configured centrally in `scripts/shared/llm_client.p
     python scripts/generate_evidence.py               # Generate packages
     ```
 
-5. **Dashboard Build**: Build the frontend and generate the summary manifest.
+5. **Fingerprinting & Clustering**: Run fingerprint matching and build frontend data.
+
+    ```bash
+    python scripts/match_fingerprints.py
+    python scripts/build_frontend_data.py
+    ```
+
+6. **Dashboard Build**: Build the frontend and generate the summary manifest.
 
     ```bash
     python scripts/build_dashboard_data.py
@@ -202,7 +216,7 @@ graph TD
 
     subgraph Enrichment
         G --> H[Async DNS Resolution]
-        H -->|MX, A, NS| I[Concurrent ASN Enrichment]
+        H -->|MX, NS, A-Record| I[Concurrent ASN Enrichment]
         H -->|Nameservers| J[Registrar Risk Analysis]
         I --> K["Reputation (OTX/SafeBrowsing)"]
         K --> L[Web Probing]
@@ -224,13 +238,21 @@ graph TD
         BUDGET["shodan_utils.py (Rate Limit)"]
     end
 
+    subgraph "Detection & Scoring"
+        L --> FP["Fingerprint Matching (YAML)"]
+        FP --> CLUSTER["Infrastructure Clustering"]
+        CLUSTER --> SHARED{"Shared Infra Detection"}
+        SHARED -->|"Confidence Scoring"| CONF["Cluster Confidence"]
+        SHARED_CFG["shared_infrastructure.yaml"] --> SHARED
+    end
+
     subgraph Output
         CLASS & TYPO & S --> M{Aggregation}
         L --> N[Visual Forensics]
         N -.->|Hashes| SP("Shodan Pivoting (Cached)")
-        M & SP --> O[Risk & Threat Tagging]
+        M & SP & CONF --> O[Risk & Threat Tagging]
         O --> P(Daily Briefing LLM)
-        O --> DASH_BUILD["Dashboard Build (Vite)"]
+        O --> DASH_BUILD["Frontend Build (React)"]
         O --> R[STIX 2.1 Bundle]
         
         OC -->|Shadow AI STIX| OC_STIX[OpenClaw STIX]
@@ -253,6 +275,9 @@ graph TD
     style P fill:#bfb,stroke:#333,stroke-width:2px,color:black
     style OC fill:#da3633,stroke:#333,stroke-width:2px,color:white
     style HUNT fill:#da3633,stroke:#333,stroke-width:2px,color:white
+    style CLUSTER fill:#a855f7,stroke:#333,stroke-width:2px,color:white
+    style SHARED fill:#a855f7,stroke:#333,stroke-width:2px,color:white
+    style FP fill:#a855f7,stroke:#333,stroke-width:2px,color:white
     style DASH_BUILD fill:#58a6ff,stroke:#333,stroke-width:2px,color:black
     style RETRY fill:#2d333b,stroke:#555,stroke-width:1px,color:#8b97a8
     style CYMRU fill:#2d333b,stroke:#555,stroke-width:1px,color:#8b97a8
@@ -275,7 +300,8 @@ To efficiently find threats in a sea of millions of domains without burning mill
 
 The remaining domains are hydrated with deep infrastructure data:
 
-* **Infrastructure**: Who handles email (MX)? Who hosts the server (ASN/IP)?
+* **Infrastructure**: Who handles email (MX)? Who hosts the web server (A-record IP/ASN)? What nameservers are used?
+* **Clustering**: Domains are grouped by shared infrastructure (MX hosts, MX IPs, web hosting IPs, registrar+NS). Known shared providers (Cloudflare, Google, AWS, etc.) are detected via ASN and pattern matching, with cluster confidence scored using inverted semantics — large clusters on unknown IPs are flagged as high-confidence campaign infrastructure.
 * **Shodan**: Are there open ports (RDP, C2 panels) or vulnerabilities?
 * **Visual Forensics**: Headless browsers capture screenshots and generate perceptual hashes (pHash) to find identical phishing kits.
 

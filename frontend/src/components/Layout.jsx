@@ -1,5 +1,5 @@
 import { NavLink, Outlet, useLocation } from 'react-router-dom';
-import { Shield, Sun, Moon } from 'lucide-react';
+import { Shield, Sun, Moon, Github } from 'lucide-react';
 import GlobalSearch from './GlobalSearch';
 import ErrorBoundary from './ErrorBoundary';
 import { useData } from '@/context/DataContext';
@@ -48,6 +48,15 @@ export default function Layout() {
           </div>
           <div className="flex items-center gap-3">
             <GlobalSearch />
+            <a
+              href="https://github.com/elchacal801/domain_intel"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="theme-toggle"
+              title="About — View on GitHub"
+            >
+              <Github className="h-3.5 w-3.5" />
+            </a>
             <button onClick={toggleTheme} className="theme-toggle" title={`Switch to ${theme === 'dark' ? 'light' : 'dark'} mode`}>
               {theme === 'dark' ? <Sun className="h-3.5 w-3.5" /> : <Moon className="h-3.5 w-3.5" />}
             </button>
