@@ -1013,6 +1013,13 @@ def compute_stats(domains, fp_matches, clusters):
     )
     stats["a_record_clusters"] = a_record_cluster_count
 
+    # Count infrastructure nodes flagged with entity risk
+    entity_linked = sum(
+        1 for n in clusters.get("nodes", [])
+        if n.get("type") != "domain" and n.get("entity_risk")
+    )
+    stats["entity_linked_clusters"] = entity_linked
+
     return stats
 
 

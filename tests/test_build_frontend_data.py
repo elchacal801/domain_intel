@@ -336,6 +336,7 @@ class TestComputeStats:
         assert stats["matched_domains"] == 2
         assert stats["unique_fingerprints"] == 2
         assert stats["total_clusters"] >= 0
+        assert stats["entity_linked_clusters"] == 0
         assert "last_updated" in stats
 
     def test_tld_distribution(self):
@@ -361,11 +362,27 @@ class TestComputeStats:
         assert "top_fingerprints" in stats
         assert len(stats["top_fingerprints"]) <= 10
 
+    def test_entity_linked_clusters(self):
+        """entity_linked_clusters should count infra nodes with entity_risk=True."""
+        clusters = {
+            "nodes": [
+                {"type": "mx_host", "entity_risk": True},
+                {"type": "ip", "entity_risk": False},
+                {"type": "mx_host", "entity_risk": True},
+                {"type": "domain", "entity_risk": True},  # domain nodes excluded
+                {"type": "registrar_ns"},  # no entity_risk key at all
+            ],
+            "edges": [],
+        }
+        stats = compute_stats({"a.com": {"domain": "a.com"}}, {}, clusters)
+        assert stats["entity_linked_clusters"] == 2
+
     def test_stats_with_empty_data(self):
         stats = compute_stats({}, {}, {"nodes": [], "edges": []})
         assert stats["total_domains"] == 0
         assert stats["matched_domains"] == 0
         assert stats["unique_fingerprints"] == 0
+        assert stats["entity_linked_clusters"] == 0
 
 
 # ---------------------------------------------------------------------------
