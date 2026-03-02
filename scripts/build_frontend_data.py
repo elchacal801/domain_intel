@@ -300,12 +300,74 @@ def compute_risk_score(domain_data):
 MAX_INDEX_ENTRIES = 200  # cap domain list per key
 
 
+def _compute_entity_stats(domain_names, domains_dict):
+    """Compute entity statistics for a set of domains sharing infrastructure.
+
+    Args:
+        domain_names: list of domain name strings
+        domains_dict: the full domains dict keyed by domain name
+
+    Returns:
+        dict with keys: os_hits, icij_hits, gleif_active, unique_registrants, total
+    """
+    os_hits = 0
+    icij_hits = 0
+    gleif_active = 0
+    registrants = set()
+
+    for d in domain_names:
+        data = domains_dict.get(d, {})
+
+        os_score = str(data.get("os_match_score", "")).strip()
+        if os_score:
+            try:
+                if float(os_score) > 0:
+                    os_hits += 1
+            except (ValueError, TypeError):
+                pass
+
+        icij = str(data.get("icij_entity_match", "")).strip()
+        if icij:
+            icij_hits += 1
+
+        gleif = str(data.get("gleif_status", "")).strip().upper()
+        if gleif == "ACTIVE":
+            gleif_active += 1
+
+        reg = str(data.get("registrant_org", "")).strip()
+        if reg:
+            registrants.add(reg)
+
+    return {
+        "os_hits": os_hits,
+        "icij_hits": icij_hits,
+        "gleif_active": gleif_active,
+        "unique_registrants": len(registrants),
+        "total": len(domain_names),
+    }
+
+
+# Map from infra_index category name to match_shared_provider value_type.
+# Categories without a corresponding provider check use None.
+_CATEGORY_TO_PROVIDER_TYPE = {
+    "mx": "mx",
+    "asn": "asn",
+    "a_record": "ip",
+    "registrar": None,
+    "fp": None,
+}
+
+
 def build_infra_index(domains, fp_matches):
     """
     Build a reverse-lookup index for infrastructure pivot search.
 
     Returns dict with keys: asn, mx, registrar, fp, a_record.
-    Each maps a value to a list of domains (capped at MAX_INDEX_ENTRIES).
+    Each maps a value to an enriched dict containing:
+      - domains: list of domain names (capped at MAX_INDEX_ENTRIES)
+      - private: bool — True if infrastructure is NOT a known shared provider
+      - entity_stats: dict with os_hits, icij_hits, gleif_active,
+                      unique_registrants, total
     Only buckets with >= 2 domains are included.
     """
     asn_idx = defaultdict(list)
@@ -337,19 +399,38 @@ def build_infra_index(domains, fp_matches):
             if fp_id:
                 fp_idx[fp_id].append(domain)
 
-    def _trim(index):
-        return {
-            k: sorted(set(v))[:MAX_INDEX_ENTRIES]
-            for k, v in index.items()
-            if len(set(v)) >= 2
-        }
+    # Load shared infra config for private flag determination
+    si_config = load_shared_infra_config()
+
+    def _enrich(index, category):
+        result = {}
+        provider_type = _CATEGORY_TO_PROVIDER_TYPE.get(category)
+        for k, v in index.items():
+            unique = sorted(set(v))
+            if len(unique) < 2:
+                continue
+            domain_list = unique[:MAX_INDEX_ENTRIES]
+
+            # Determine if this is private (not a known shared provider)
+            if provider_type and si_config:
+                is_shared = match_shared_provider(k, provider_type, si_config) is not None
+            else:
+                is_shared = False
+            private = not is_shared
+
+            result[k] = {
+                "domains": domain_list,
+                "private": private,
+                "entity_stats": _compute_entity_stats(domain_list, domains),
+            }
+        return result
 
     return {
-        "asn": _trim(asn_idx),
-        "mx": _trim(mx_idx),
-        "registrar": _trim(reg_idx),
-        "fp": _trim(fp_idx),
-        "a_record": _trim(a_record_idx),
+        "asn": _enrich(asn_idx, "asn"),
+        "mx": _enrich(mx_idx, "mx"),
+        "registrar": _enrich(reg_idx, "registrar"),
+        "fp": _enrich(fp_idx, "fp"),
+        "a_record": _enrich(a_record_idx, "a_record"),
     }
 
 
@@ -1064,7 +1145,7 @@ def build_outputs(probed_path, fingerprints_path, output_dir,
     infra_path = os.path.join(output_dir, "infra_index.json")
     with open(infra_path, "w", encoding="utf-8") as f:
         json.dump(infra_index, f, separators=(",", ":"), ensure_ascii=False)
-    idx_size = sum(len(v) for cat in infra_index.values() for v in cat.values())
+    idx_size = sum(len(v["domains"]) for cat in infra_index.values() for v in cat.values())
     log.info("Wrote %s (%d index entries)", infra_path, idx_size)
 
     return domains, flat_matches, clusters, stats

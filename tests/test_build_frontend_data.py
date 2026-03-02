@@ -598,7 +598,7 @@ class TestBuildInfraIndex:
         }
         index = build_infra_index(domains, {})
         assert "16276" in index["asn"]
-        assert len(index["asn"]["16276"]) == 2
+        assert len(index["asn"]["16276"]["domains"]) == 2
         # Single-domain ASN should not appear
         assert "99999" not in index["asn"]
 
@@ -609,7 +609,7 @@ class TestBuildInfraIndex:
         }
         index = build_infra_index(domains, {})
         assert "mx.shared.com" in index["mx"]
-        assert len(index["mx"]["mx.shared.com"]) == 2
+        assert len(index["mx"]["mx.shared.com"]["domains"]) == 2
 
     def test_fp_index(self):
         fp_matches = {
@@ -619,7 +619,7 @@ class TestBuildInfraIndex:
         }
         index = build_infra_index({}, fp_matches)
         assert "FP-001" in index["fp"]
-        assert len(index["fp"]["FP-001"]) == 2
+        assert len(index["fp"]["FP-001"]["domains"]) == 2
         # Single-domain FP should not appear
         assert "FP-002" not in index["fp"]
 
@@ -634,4 +634,4 @@ class TestBuildInfraIndex:
             "b.com": [{"fp_id": "FP-001"}],
         }
         index = build_infra_index({}, fp_matches)
-        assert len(index["fp"]["FP-001"]) == 2  # a.com appears only once
+        assert len(index["fp"]["FP-001"]["domains"]) == 2  # a.com appears only once
