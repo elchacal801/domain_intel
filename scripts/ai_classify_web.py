@@ -16,7 +16,8 @@ import csv
 import argparse
 import logging
 import sys
-from typing import List, Dict
+import re
+from typing import List, Dict, Optional
 from dotenv import load_dotenv
 from shared.llm_client import LLMClient, load_model_chain
 from shared.flame_client import get_tp_summaries_for_prompt
@@ -56,6 +57,126 @@ Return JSON format only:
 For flame_tp_ids: map each domain to zero or more FLAME Threat Path IDs from the taxonomy below (comma-separated). Use empty string if no match.
 For flame_confidence: rate your confidence in the FLAME mapping as high, medium, or low. Use empty string if no FLAME match.
 """
+
+# ---------------------------------------------------------------------------
+# Rule-based pre-filter — classifies obvious cases without using the LLM
+# ---------------------------------------------------------------------------
+
+# Parked-domain title keywords (checked case-insensitively)
+_PARKED_PATTERNS: List[str] = [
+    "parked", "for sale", "domain for sale", "coming soon",
+    "under construction", "buy this domain", "this domain",
+    "is available", "godaddy", "namecheap parking", "sedoparking",
+    "hugedomains", "dan.com", "afternic",
+]
+
+# Default-page title keywords (checked case-insensitively)
+_DEFAULT_TITLE_PATTERNS: List[str] = [
+    "welcome to nginx", "apache2 ubuntu", "it works", "test page",
+    "iis windows", "default web page", "congratulations",
+    "welcome to centos",
+]
+
+# Server headers that indicate an unconfigured default when title is empty
+_DEFAULT_SERVER_NAMES: List[str] = [
+    "nginx", "apache", "microsoft-iis", "lighttpd", "litespeed",
+    "caddy", "openresty",
+]
+
+# Error-page title phrases (checked case-insensitively)
+_ERROR_TITLE_PHRASES: List[str] = [
+    "403 forbidden", "404 not found", "500 internal",
+    "502 bad gateway", "503 service unavailable", "access denied",
+]
+
+
+def _make_result(domain: str, category: str, reason: str,
+                 confidence: str) -> Dict:
+    """Build a classification result dict with empty FLAME fields."""
+    return {
+        "domain": domain,
+        "category": category,
+        "reason": reason,
+        "confidence": confidence,
+        "flame_tp_ids": "",
+        "flame_confidence": "",
+    }
+
+
+def classify_rules(item: Dict) -> Optional[Dict]:
+    """Attempt to classify *item* using deterministic rules.
+
+    Returns a classification dict if a rule matches, or ``None`` when the
+    item should be forwarded to the LLM for analysis.
+    """
+    domain = item.get("domain", "")
+    title = (item.get("title") or "").strip()
+    server = (item.get("server") or "").strip()
+    status = (item.get("status") or "").strip()
+    title_lower = title.lower()
+    server_lower = server.lower()
+
+    # --- Rule 1: Error (HTTP 4xx/5xx or error title phrases) ---
+    if status.isdigit() and 400 <= int(status) <= 599:
+        return _make_result(domain, "Error",
+                            f"HTTP {status} status", "High")
+
+    for phrase in _ERROR_TITLE_PHRASES:
+        if phrase in title_lower:
+            return _make_result(domain, "Error",
+                                f"Title matches error phrase: {phrase}",
+                                "High")
+
+    # --- Rule 2: Unknown (completely empty probing data) ---
+    if not status and not title and not server:
+        return _make_result(domain, "Unknown",
+                            "No HTTP status, title, or server header",
+                            "Medium")
+
+    # --- Rule 3: Parked ---
+    for pattern in _PARKED_PATTERNS:
+        if pattern in title_lower:
+            return _make_result(domain, "Parked",
+                                f"Title matches parked domain pattern: {pattern}",
+                                "High")
+
+    # --- Rule 4: Default page ---
+    for pattern in _DEFAULT_TITLE_PATTERNS:
+        if pattern in title_lower:
+            return _make_result(domain, "Default",
+                                f"Title matches default page pattern: {pattern}",
+                                "High")
+
+    # Server-only default: known server header with empty title
+    if not title and server_lower:
+        for srv_name in _DEFAULT_SERVER_NAMES:
+            if srv_name in server_lower:
+                return _make_result(
+                    domain, "Default",
+                    f"Default server ({server}) with no page title", "High")
+
+    # --- Rule 5: C2 indicators ---
+    if title == "Index of /":
+        return _make_result(domain, "C2",
+                            "Title is 'Index of /' (directory listing)",
+                            "Medium")
+
+    # Empty title + status 200 + suspicious server patterns
+    if not title and status == "200" and server_lower:
+        # Cobalt Strike, Meterpreter, and other unusual servers
+        suspicious_re = re.compile(
+            r"cobalt|meterpreter|empire|covenant|sliver|havoc|posh",
+            re.IGNORECASE,
+        )
+        if suspicious_re.search(server):
+            return _make_result(
+                domain, "C2",
+                f"Suspicious server header ({server}) with empty title",
+                "Medium")
+
+    # No rule matched — needs LLM analysis
+    return None
+
 
 def read_probed_domains(filepath: str, limit: int = 0) -> List[Dict]:
     data = []
@@ -162,28 +283,47 @@ def main():
         writer = csv.DictWriter(f, fieldnames=headers)
         writer.writeheader()
 
+    # --- Rule-based pre-filter: classify obvious cases without the LLM ---
+    rule_results = []
+    ai_items = []
+    for item in items:
+        result = classify_rules(item)
+        if result is not None:
+            rule_results.append(result)
+        else:
+            ai_items.append(item)
+
+    if rule_results:
+        save_results(rule_results, args.output)
+
+    logger.info("Rule-based: %d classified, %d remaining for AI analysis",
+                len(rule_results), len(ai_items))
+    print(f"Rule-based: {len(rule_results)} classified, "
+          f"{len(ai_items)} remaining for AI analysis")
+
     import math
     from concurrent.futures import ThreadPoolExecutor, as_completed
     from tqdm import tqdm
-    
-    total_classified = 0
-    
-    # Process batches concurrently (LIMIT to 3 workers for Tier 1 API limits)
-    with ThreadPoolExecutor(max_workers=3) as executor:
-        futures = []
-        for i in range(0, len(items), args.batch_size):
-            batch = items[i : i + args.batch_size]
-            futures.append(executor.submit(classify_batch, batch, flame_taxonomy))
-            
-        for future in tqdm(as_completed(futures), total=len(futures), desc="Classifying batches"):
-            try:
-                results = future.result()
-                if results:
-                    save_results(results, args.output)
-                    total_classified += len(results)
-            except Exception as e:
-                print(f"Batch failed: {e}")
-            
+
+    total_classified = len(rule_results)
+
+    # Process remaining items in batches concurrently (LIMIT to 3 workers for Tier 1 API limits)
+    if ai_items:
+        with ThreadPoolExecutor(max_workers=3) as executor:
+            futures = []
+            for i in range(0, len(ai_items), args.batch_size):
+                batch = ai_items[i : i + args.batch_size]
+                futures.append(executor.submit(classify_batch, batch, flame_taxonomy))
+
+            for future in tqdm(as_completed(futures), total=len(futures), desc="Classifying batches"):
+                try:
+                    results = future.result()
+                    if results:
+                        save_results(results, args.output)
+                        total_classified += len(results)
+                except Exception as e:
+                    print(f"Batch failed: {e}")
+
     print(f"Done. Classified {total_classified} domains. Saved to {args.output}")
 
 if __name__ == "__main__":
