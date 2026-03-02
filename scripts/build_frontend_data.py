@@ -347,6 +347,45 @@ def _compute_entity_stats(domain_names, domains_dict):
     }
 
 
+def enrich_clusters_with_entity_stats(clusters, domains):
+    """Add entity screening stats to infrastructure nodes in cluster data.
+
+    For each non-domain node, find connected domain nodes via edges,
+    look up their entity screening data, and compute aggregate stats.
+    Sets entity_risk=True if private infrastructure has >=2 entity hits.
+    """
+    # Build adjacency: infra_node_id -> set of domain_node_ids
+    infra_domains = {}
+    for edge in clusters.get("edges", []):
+        src, tgt = edge["source"], edge["target"]
+        # Edges go domain -> infra, so target is infra
+        if src.startswith("dom:"):
+            infra_domains.setdefault(tgt, set()).add(src)
+        elif tgt.startswith("dom:"):
+            infra_domains.setdefault(src, set()).add(tgt)
+
+    for node in clusters.get("nodes", []):
+        if node.get("type") == "domain":
+            continue
+
+        # Get connected domain names (strip "dom:" prefix)
+        connected = infra_domains.get(node["id"], set())
+        domain_names = [d[4:] for d in connected]  # strip "dom:"
+
+        # Compute entity stats using the shared helper
+        node["entity_stats"] = _compute_entity_stats(domain_names, domains)
+
+        # Entity risk: private infra with >= 2 total entity hits
+        total_hits = (
+            node["entity_stats"]["os_hits"]
+            + node["entity_stats"]["icij_hits"]
+            + node["entity_stats"]["gleif_active"]
+        )
+        node["entity_risk"] = (
+            not node.get("shared_infra", False)
+        ) and total_hits >= 2
+
+
 # Map from infra_index category name to match_shared_provider value_type.
 # Categories without a corresponding provider check use None.
 _CATEGORY_TO_PROVIDER_TYPE = {
@@ -1040,6 +1079,7 @@ def build_outputs(probed_path, fingerprints_path, output_dir,
     # Compute derived structures
     clusters = compute_clusters(domains, min_cluster_size=min_cluster_size,
                                 shared_infra_config=shared_infra_config)
+    enrich_clusters_with_entity_stats(clusters, domains)
 
     # Add resolution chain to domain records.
     # NOTE: Resolution chains are intentionally MX-only (domain -> MX -> IP).
