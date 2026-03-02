@@ -4,6 +4,7 @@ import { useState, useMemo } from 'react';
 import { useData } from '@/context/DataContext';
 import Tooltip from '@/components/Tooltip';
 import Sparkline from '@/components/Sparkline';
+import InfraResults from '@/components/InfraResults';
 import { kpiTooltips } from '@/data/fpRegistry';
 
 const LETTERS = 'abcdefghijklmnopqrstuvwxyz'.split('');
@@ -255,10 +256,12 @@ export default function InvestigateLanding() {
             <span className="text-xs text-text-muted">
               <span className="font-mono font-semibold text-text-secondary">{pivotResults.length.toLocaleString()}</span> domains for {pivotLabel}
             </span>
-            <button onClick={() => setPivotResults(null)} className="text-[10px] text-text-muted hover:text-text-primary transition-colors">Clear ✕</button>
+            <button onClick={() => { setPivotResults(null); setInfraMeta(null); }} className="text-[10px] text-text-muted hover:text-text-primary transition-colors">Clear ✕</button>
           </div>
           {pivotResults.length === 0 ? (
             <div className="glass-card p-6 text-center text-xs text-text-muted">No domains found</div>
+          ) : infraMeta ? (
+            <InfraResults infraMeta={infraMeta} pivotResults={pivotResults} />
           ) : (
             <div className="overflow-x-auto rounded-lg border border-border-subtle" style={{ background: 'var(--bg-surface)' }}>
               <table className="intel-table w-full text-left">
