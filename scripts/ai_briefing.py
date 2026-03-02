@@ -19,14 +19,14 @@ import sys
 from datetime import datetime
 from collections import Counter
 from dotenv import load_dotenv
-from shared.llm_client import LLMClient
+from shared.llm_client import LLMClient, load_model_chain
 from shared.flame_client import get_regulatory_alerts
 
 # Load environment variables
 load_dotenv()
 
-# LLM Client — uses centralized model chain from shared/llm_client.py
-llm = LLMClient()
+# LLM Client — uses Sonnet-first chain for briefing (quality-optimized)
+llm = LLMClient(models=load_model_chain("briefing"))
 
 OUTPUT_FILE = "data/daily_briefing.json"
 TYPOSQUAT_FILE = "data/ai_typosquats.csv"

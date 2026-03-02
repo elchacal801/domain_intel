@@ -14,7 +14,7 @@ import pytest
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', 'scripts'))
 
-from shared.llm_client import LLMClient
+from shared.llm_client import LLMClient, load_model_chain, DEFAULT_MODEL_CHAIN
 
 
 # ---------------------------------------------------------------------------
@@ -471,3 +471,62 @@ class TestUsageAttributeHandling:
         assert rows[0]["prompt_tokens"] == "0"
         assert rows[0]["completion_tokens"] == "0"
         assert rows[0]["total_tokens"] == "0"
+
+
+# ---------------------------------------------------------------------------
+# TestLoadModelChain
+# ---------------------------------------------------------------------------
+
+class TestLoadModelChain:
+    """Verify that load_model_chain() returns correct per-task model chains."""
+
+    def test_briefing_returns_sonnet_chain(self):
+        """load_model_chain('briefing') should return the Sonnet chain from config."""
+        chain = load_model_chain("briefing")
+        assert isinstance(chain, list)
+        assert len(chain) > 0
+        assert "anthropic/claude-sonnet-4-5-20250929" == chain[0]
+
+    def test_classification_returns_haiku_chain(self):
+        """load_model_chain('classification') should return the Haiku chain from config."""
+        chain = load_model_chain("classification")
+        assert isinstance(chain, list)
+        assert len(chain) > 0
+        assert "anthropic/claude-haiku-4-5-20251001" == chain[0]
+
+    def test_typosquat_returns_haiku_chain(self):
+        """load_model_chain('typosquat') should return the Haiku chain from config."""
+        chain = load_model_chain("typosquat")
+        assert isinstance(chain, list)
+        assert len(chain) > 0
+        assert "anthropic/claude-haiku-4-5-20251001" == chain[0]
+
+    def test_nonexistent_task_falls_back_to_default(self):
+        """load_model_chain('nonexistent') should fall back to DEFAULT_MODEL_CHAIN."""
+        chain = load_model_chain("nonexistent")
+        assert chain == DEFAULT_MODEL_CHAIN
+
+    def test_fallback_returns_copy_not_reference(self):
+        """Fallback should return a copy so callers cannot mutate the global default."""
+        chain = load_model_chain("nonexistent")
+        assert chain == DEFAULT_MODEL_CHAIN
+        chain.append("extra-model")
+        assert DEFAULT_MODEL_CHAIN != chain  # original unchanged
+
+    @patch("shared.config.get", side_effect=Exception("config unavailable"))
+    def test_config_exception_falls_back(self, mock_config_get):
+        """When shared.config.get raises, fall back to DEFAULT_MODEL_CHAIN."""
+        chain = load_model_chain("briefing")
+        assert chain == DEFAULT_MODEL_CHAIN
+
+    @patch("shared.config.get", return_value=None)
+    def test_config_returns_none_falls_back(self, mock_config_get):
+        """When config has no entry for the task, fall back to DEFAULT_MODEL_CHAIN."""
+        chain = load_model_chain("nonexistent_task")
+        assert chain == DEFAULT_MODEL_CHAIN
+
+    @patch("shared.config.get", return_value=[])
+    def test_config_returns_empty_list_falls_back(self, mock_config_get):
+        """When config returns an empty list, fall back to DEFAULT_MODEL_CHAIN."""
+        chain = load_model_chain("briefing")
+        assert chain == DEFAULT_MODEL_CHAIN

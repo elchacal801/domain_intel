@@ -18,14 +18,14 @@ import logging
 import sys
 from typing import List, Dict
 from dotenv import load_dotenv
-from shared.llm_client import LLMClient
+from shared.llm_client import LLMClient, load_model_chain
 from shared.flame_client import get_tp_summaries_for_prompt
 
 # Load environment variables
 load_dotenv()
 
-# LLM Client — uses centralized model chain from shared/llm_client.py
-llm = LLMClient()
+# LLM Client — uses Haiku-first chain for classification (cost-optimized)
+llm = LLMClient(models=load_model_chain("classification"))
 logger = logging.getLogger(__name__)
 OUTPUT_FILE = "data/ai_classifications.csv"
 INPUT_FILE = "data/dea_domains_probed.csv" # Must use probed CSV (has title/status/server columns)

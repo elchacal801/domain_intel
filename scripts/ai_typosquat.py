@@ -12,13 +12,13 @@ import argparse
 import sys
 from typing import List, Dict
 from dotenv import load_dotenv
-from shared.llm_client import LLMClient
+from shared.llm_client import LLMClient, load_model_chain
 
 # Load environment variables
 load_dotenv()
 
-# LLM Client — uses centralized model chain from shared/llm_client.py
-llm = LLMClient()
+# LLM Client — uses Haiku-first chain for typosquat detection (cost-optimized)
+llm = LLMClient(models=load_model_chain("typosquat"))
 OUTPUT_FILE = "data/ai_typosquats.csv"
 INPUT_FILE = "data/triage_candidates.csv" # Default to using the funnel
 

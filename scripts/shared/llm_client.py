@@ -43,6 +43,34 @@ DEFAULT_MODEL_CHAIN = [
 ]
 
 
+def load_model_chain(task_name: str) -> List[str]:
+    """Load the model chain for a specific task from config/defaults.yaml.
+
+    Looks up ``ai.<task_name>.model_chain`` via :mod:`shared.config`.
+    Falls back to :data:`DEFAULT_MODEL_CHAIN` when the task name is not
+    found or the config file is unavailable.
+
+    Args:
+        task_name: Task identifier (e.g. "briefing", "classification",
+                   "typosquat").
+
+    Returns:
+        Ordered list of model identifiers for litellm.
+    """
+    try:
+        from shared.config import get as config_get
+
+        chain = config_get(f"ai.{task_name}.model_chain")
+        if isinstance(chain, list) and chain:
+            logger.info("Loaded model chain for task '%s': %s", task_name, chain)
+            return chain
+    except Exception as exc:
+        logger.warning("Failed to load model chain for '%s': %s", task_name, exc)
+
+    logger.info("Using DEFAULT_MODEL_CHAIN for task '%s'", task_name)
+    return list(DEFAULT_MODEL_CHAIN)
+
+
 class LLMClient:
     """
     Wrapper around litellm with configurable model fallback chain and JSON output support.

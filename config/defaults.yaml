@@ -12,11 +12,22 @@ flame:
 ai:
   batch_size: 100
   max_domains: 2000
-  model_chain:
-    - "anthropic/claude-sonnet-4-5-20250929"
-    - "gemini/gemini-3-pro-preview"
-    - "gpt-4o"
-    - "gemini/gemini-flash-latest"
+  briefing:
+    model_chain:
+      - "anthropic/claude-sonnet-4-5-20250929"
+      - "gemini/gemini-3-pro-preview"
+      - "gpt-4o"
+      - "gemini/gemini-flash-latest"
+  classification:
+    model_chain:
+      - "anthropic/claude-haiku-4-5-20251001"
+      - "gemini/gemini-flash-latest"
+      - "gpt-4o"
+  typosquat:
+    model_chain:
+      - "anthropic/claude-haiku-4-5-20251001"
+      - "gemini/gemini-flash-latest"
+      - "gpt-4o"
 
 shodan:
   budget_default: 20
