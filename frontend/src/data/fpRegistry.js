@@ -86,4 +86,5 @@ export const kpiTooltips = {
     matched_domains: 'Domains matching at least one infrastructure fingerprint pattern',
     unique_fingerprints: 'Number of distinct fingerprint patterns that matched at least one domain',
     total_clusters: 'Infrastructure clusters where ≥3 domains share MX, IP, or registrar+NS',
+    entity_linked_clusters: 'Private infrastructure clusters where domains have sanctions, leak database, or legal entity screening hits',
 };

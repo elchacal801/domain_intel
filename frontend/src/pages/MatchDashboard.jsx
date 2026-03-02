@@ -4,7 +4,7 @@ import {
   useReactTable, getCoreRowModel, getSortedRowModel,
   getPaginationRowModel, createColumnHelper, flexRender,
 } from '@tanstack/react-table';
-import { Globe, Fingerprint, Network, Hash, Filter, X, ChevronLeft, ChevronRight, Download } from 'lucide-react';
+import { Globe, Fingerprint, Network, Hash, Filter, X, ChevronLeft, ChevronRight, Download, ShieldAlert } from 'lucide-react';
 import { useData } from '@/context/DataContext';
 import ConfidenceBadge from '@/components/ConfidenceBadge';
 import FlameBadge from '@/components/FlameBadge';
@@ -182,11 +182,12 @@ export default function MatchDashboard() {
   return (
     <div className="space-y-4">
       {/* Stats */}
-      <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+      <div className="grid grid-cols-2 gap-3 sm:grid-cols-5">
         <KpiCard icon={Globe} label="Total Domains" value={stats?.total_domains?.toLocaleString()} color="#888" tooltip={kpiTooltips.total_domains} />
         <KpiCard icon={Fingerprint} label="FP Matches" value={stats?.matched_domains?.toLocaleString()} color="#f97316" tooltip={kpiTooltips.matched_domains} />
         <KpiCard icon={Hash} label="Unique FPs" value={stats?.unique_fingerprints?.toLocaleString()} color="#888" tooltip={kpiTooltips.unique_fingerprints} />
         <KpiCard icon={Network} label="Clusters" value={stats?.total_clusters?.toLocaleString()} color="#888" tooltip={kpiTooltips.total_clusters} />
+        <KpiCard icon={ShieldAlert} label="Entity-Linked" value={stats?.entity_linked_clusters?.toLocaleString()} color="#C0272D" tooltip={kpiTooltips.entity_linked_clusters} />
       </div>
 
       {/* Filters */}
