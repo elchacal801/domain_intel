@@ -4,7 +4,7 @@ import { useData } from '@/context/DataContext';
 import SigmaGraph from '@/components/SigmaGraph';
 import ClusterConfidenceBadge from '@/components/ClusterConfidenceBadge';
 import SharedInfraBanner from '@/components/SharedInfraBanner';
-import { Network, Sliders, ExternalLink, BarChart3, ChevronLeft, ChevronRight, X, SlidersHorizontal } from 'lucide-react';
+import { Network, Sliders, ExternalLink, BarChart3, ChevronLeft, ChevronRight, X, SlidersHorizontal, ShieldAlert } from 'lucide-react';
 
 const TYPE_META = {
   mx_host: { label: 'MX Host', color: '#5b8abf' },
@@ -59,6 +59,8 @@ function buildClusterTable(data) {
       related_mx_hosts: node.related_mx_hosts || null,
       hosting_asn: node.hosting_asn || null,
       hosting_asn_name: node.hosting_asn_name || null,
+      entity_stats: node.entity_stats || null,
+      entity_risk: node.entity_risk || false,
     });
   }
   rows.sort((a, b) => b.domainCount - a.domainCount);
@@ -91,6 +93,17 @@ function buildSubgraph(data, infraId) {
   return { nodes: subNodes, edges: subEdges };
 }
 
+function EntityStatCard({ label, count, color }) {
+  return (
+    <div className="rounded border p-2 text-center" style={{ borderColor: 'var(--border-subtle)', background: 'var(--bg-surface)' }}>
+      <div className="font-mono text-sm font-bold" style={{ color: count > 0 ? color : 'var(--text-muted)' }}>
+        {count}
+      </div>
+      <div className="text-[9px]" style={{ color: 'var(--text-muted)' }}>{label}</div>
+    </div>
+  );
+}
+
 export default function ClusterView() {
   const { clusters, loading } = useData();
   const navigate = useNavigate();
@@ -102,11 +115,13 @@ export default function ClusterView() {
   const [showSharedInfra, setShowSharedInfra] = useState(true);
   const [confidenceFilter, setConfidenceFilter] = useState('all');
   const [sortBy, setSortBy] = useState('size');
+  const [entityOnly, setEntityOnly] = useState(false);
 
   // Wrappers that reset page when filter state changes
   const updateShowSharedInfra = useCallback((v) => { setShowSharedInfra(v); setPage(0); }, []);
   const updateConfidenceFilter = useCallback((v) => { setConfidenceFilter(v); setPage(0); }, []);
   const updateSortBy = useCallback((v) => { setSortBy(v); setPage(0); }, []);
+  const updateEntityOnly = useCallback((v) => { setEntityOnly(v); setPage(0); }, []);
 
   const clusterTable = useMemo(() => buildClusterTable(clusters), [clusters]);
 
@@ -134,6 +149,11 @@ export default function ClusterView() {
       result = result.filter(r => r.confidence_level === confidenceFilter);
     }
 
+    // Entity-linked filter
+    if (entityOnly) {
+      result = result.filter(r => r.entity_risk === true);
+    }
+
     // Sort — shared infra always sinks to bottom, then by selected field
     if (sortBy === 'confidence') {
       result = [...result].sort((a, b) => {
@@ -148,7 +168,7 @@ export default function ClusterView() {
     }
 
     return result;
-  }, [clusterTable, search, showSharedInfra, confidenceFilter, sortBy]);
+  }, [clusterTable, search, showSharedInfra, confidenceFilter, sortBy, entityOnly]);
 
   const pageCount = Math.ceil(filtered.length / PAGE_SIZE);
   const pageRows = filtered.slice(page * PAGE_SIZE, (page + 1) * PAGE_SIZE);
@@ -247,6 +267,22 @@ export default function ClusterView() {
               Show shared infrastructure
             </label>
 
+            {/* Entity-linked filter */}
+            <button
+              onClick={() => updateEntityOnly(!entityOnly)}
+              className={`rounded px-2 py-1 text-[10px] font-medium transition-colors ${
+                entityOnly ? 'text-white' : ''
+              }`}
+              style={{
+                background: entityOnly ? '#C0272D' : 'var(--bg-surface)',
+                color: entityOnly ? '#fff' : 'var(--text-secondary)',
+                border: `1px solid ${entityOnly ? '#C0272D' : 'var(--border-subtle)'}`,
+              }}
+            >
+              <ShieldAlert className="inline h-3 w-3 mr-1" />
+              Entity-Linked Only
+            </button>
+
             {/* Confidence filter */}
             <div className="flex items-center gap-1">
               {CONFIDENCE_LEVELS.map(level => (
@@ -299,7 +335,12 @@ export default function ClusterView() {
                     onClick={() => { setSelectedCluster(row); setView('graph'); }}
                     className={row.shared_infra ? 'opacity-60' : ''}
                   >
-                    <td><span className="font-mono text-sm text-text-primary">{row.label}</span></td>
+                    <td>
+                      <span className="font-mono text-sm text-text-primary">{row.label}</span>
+                      {row.entity_risk && (
+                        <ShieldAlert className="inline h-3 w-3 ml-1" style={{ color: '#C0272D' }} />
+                      )}
+                    </td>
                     <td>
                       <span className="inline-flex items-center gap-1.5 text-xs text-text-muted">
                         <span className="h-2 w-2 rounded-full" style={{ backgroundColor: TYPE_META[row.type]?.color || '#888' }} />
@@ -404,6 +445,33 @@ export default function ClusterView() {
                       ))}
                     </div>
                   )}
+                </>
+              )}
+
+              {/* Entity Screening */}
+              {selectedCluster?.entity_stats && (
+                <>
+                  <div className="h-px bg-border-subtle mb-3" />
+                  <div className="space-y-2">
+                    <div className="text-[10px] font-semibold uppercase tracking-widest" style={{ color: 'var(--text-muted)' }}>
+                      Entity Screening
+                    </div>
+                    <div className="grid grid-cols-3 gap-2">
+                      <EntityStatCard label="OpenSanctions" count={selectedCluster.entity_stats.os_hits} color="#ef4444" />
+                      <EntityStatCard label="ICIJ" count={selectedCluster.entity_stats.icij_hits} color="#eab308" />
+                      <EntityStatCard label="GLEIF Active" count={selectedCluster.entity_stats.gleif_active} color="#22c55e" />
+                    </div>
+                    <div className="text-[10px]" style={{ color: 'var(--text-muted)' }}>
+                      {selectedCluster.entity_stats.unique_registrants} unique registrant(s) across {selectedCluster.entity_stats.total} domains
+                    </div>
+                    {selectedCluster.entity_risk && (
+                      <div className="flex items-center gap-1.5 rounded border px-2.5 py-1.5 text-[10px]"
+                           style={{ borderColor: 'rgba(192,39,45,0.2)', background: 'rgba(192,39,45,0.05)', color: '#C0272D' }}>
+                        <ShieldAlert className="h-3 w-3" />
+                        Entity-linked cluster — private infrastructure with entity screening hits
+                      </div>
+                    )}
+                  </div>
                 </>
               )}
 
