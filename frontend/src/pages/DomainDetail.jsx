@@ -120,7 +120,7 @@ export default function DomainDetail() {
     ? String(d.flame_tp_ids).split(/[,;]+/).map(s => s.trim()).filter(Boolean) : [];
 
   const showEntity = hasAny(d, ['os_match_score', 'os_entity_type', 'os_dataset', 'icij_match_score', 'icij_entity_match', 'gleif_lei', 'gleif_status']);
-  const showAI = hasAny(d, ['ai_category', 'ai_confidence_score', 'dnstwist_match', 'dnstwist_fuzzer', 'dnstwist_target', 'redirects_to_brand']);
+  const showAI = hasAny(d, ['ai_category', 'ai_confidence_score', 'dnstwist_match', 'dnstwist_fuzzer', 'dnstwist_target', 'redirects_to_brand', 'similarity_score']);
   const showRisk = hasAny(d, ['risk_tags', 'rbl_hits', 'otx_risk', 'risk_score']);
   const showShodan = hasAny(d, ['shodan_ports', 'shodan_vulns', 'shodan_os', 'shodan_tags', 'shodan_hostnames']);
   const showVT = hasAny(d, ['vt_malicious_count', 'vt_undetected_count', 'vt_last_analysis']);
@@ -277,6 +277,7 @@ export default function DomainDetail() {
             <Field label="Category" value={d.ai_category} /><Field label="AI Confidence" value={d.ai_confidence_score} />
             <Field label="DNSTwist Match" value={d.dnstwist_match} /><Field label="Fuzzer" value={d.dnstwist_fuzzer} />
             <Field label="Target" value={d.dnstwist_target} mono /><Field label="Redirects to Brand" value={d.redirects_to_brand} />
+            <Field label="Similarity Score" value={d.similarity_score} />
           </dl>
         </Section>
       )}
@@ -287,6 +288,10 @@ export default function DomainDetail() {
           <Field label="Registrant Org" value={d.registrant_org} /><Field label="Creation Date" value={d.creation_date} />
           <Field label="Age (days)" value={d.age_days} /><Field label="Registry" value={d.registry} />
           <Field label="SSL Present" value={d.ssl_present} /><Field label="Registrant Mismatch" value={d.registrant_mismatch} />
+          <Field label="SSL Organization" value={d.ssl_org} />
+          <Field label="SSL Serial" value={d.ssl_serial} mono />
+          <Field label="Registrar Changes" value={d.st_registrar_changes} />
+          <Field label="DNS History Count" value={d.st_dns_history_count} />
         </dl>
       </Section>
 
@@ -404,7 +409,7 @@ export default function DomainDetail() {
       )}
 
       {/* Visual Fingerprint */}
-      {d.visual_cluster_id && (
+      {(d.visual_cluster_id || d.visual_hash) && (
         <Section title="Visual Fingerprint" icon={<Image className="h-3.5 w-3.5 text-indigo-400/50" />} accentColor="rgba(99,102,241,0.12)" defaultOpen={false}>
           <div className="flex gap-4">
             <img
@@ -415,6 +420,7 @@ export default function DomainDetail() {
             />
             <dl className="space-y-2">
               <Field label="Visual Cluster" value={d.visual_cluster_id} mono />
+              <Field label="Visual Hash" value={d.visual_hash} mono />
             </dl>
           </div>
         </Section>
