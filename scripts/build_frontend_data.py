@@ -1004,7 +1004,7 @@ def build_outputs(probed_path, fingerprints_path, output_dir,
     for domain, match_list in fp_matches.items():
         domain_data = domains.get(domain, {})
         tld = _extract_tld(domain)
-        registrar = domain_data.get("registrant_org", "")
+        registrar = domain_data.get("whois_registrar", "")
         for m in match_list:
             flat_match = dict(m)
             flat_match["domain"] = domain

@@ -1,5 +1,5 @@
 import { useEffect, useRef } from 'react';
-import { X, Shield, Globe, Fingerprint, Network, Search, Brain, Target } from 'lucide-react';
+import { X, Shield, Globe, Fingerprint, Network, Search, Brain, Target, Flame } from 'lucide-react';
 
 const SECTIONS = [
   {
@@ -33,6 +33,20 @@ const SECTIONS = [
       'The Matches page shows domains matching YAML-defined fingerprint rules. Each fingerprint defines required indicators (gates) and optional confidence modifiers. Fingerprints detect patterns like OVH-hosted cPanel DEA infrastructure, Alibaba sideloading networks, and crypto co-hosting clusters. Confidence scores reflect how many optional indicators matched beyond the required gates.',
   },
   {
+    icon: Fingerprint,
+    title: 'Active Fingerprints',
+    note: 'Auto-generated from YAML definitions in config/fingerprints/.',
+    items: [
+      { label: 'FP-0001 — OVH cPanel DEA Infrastructure', detail: 'Bulk DEA domains on OVH (ASN 16276) using cprapid.com nameservers and temp-mail-pro.com MX.' },
+      { label: 'FP-0002 — Alibaba App Sideloading', detail: 'Domains on Alibaba Cloud (ASN 45102) with app sideloading/download keywords, common for malicious APK distribution.' },
+      { label: 'FP-0003 — Crypto/Finance Fraud Co-hosting', detail: 'Financial/crypto keyword domains hosted alongside DEA-pattern MX, common for investment scam infrastructure.' },
+      { label: 'FP-0004 — Gname + Cloudflare China Hosting', detail: 'Gname registrar + Cloudflare NS + Chinese hosting ASN, a pattern seen in bulk fraud domain registration campaigns.' },
+      { label: 'FP-0005 — GoDaddy Bulk Registration', detail: 'GoDaddy registrations with bulk registration indicators, associated with mass domain registration for fraud campaigns.' },
+      { label: 'FP-0006 — Coordinated Shell Domain Network', detail: 'Domains sharing non-standard MX infrastructure with no web content and short registration age, indicating coordinated shell networks.' },
+      { label: 'FP-0007 — Typosquat Evasion Infrastructure', detail: 'dnstwist-confirmed typosquats exhibiting evasion behaviors: strategic redirects, active MX, registrant mismatch, or sanctions matches.' },
+    ],
+  },
+  {
     icon: Search,
     title: 'Investigation Workflow',
     items: [
@@ -49,8 +63,15 @@ const SECTIONS = [
       { label: 'Inverted Confidence', detail: 'For web hosting (A-record) clusters, large size on unknown IPs indicates dedicated campaign infrastructure — the opposite of MX clusters where large size typically means shared hosting noise.' },
       { label: 'Resolution Chains', detail: 'Visual traces showing how a domain resolves: Domain \u2192 MX Host \u2192 MX IP \u2192 ASN, or Domain \u2192 A Record \u2192 ASN. These chains reveal shared infrastructure.' },
       { label: 'Shared Infrastructure', detail: 'Clusters on known providers (Cloudflare, Google, AWS) are scored LOW confidence — the shared hosting creates co-location, not operational linkage.' },
-      { label: 'FLAME Integration', detail: 'Evidence packages in FLAME format link technical indicators to fraud threat paths for analyst review and case building.' },
+      { label: 'FLAME Integration', detail: 'FLAME (Fraud Lead Analysis & Mitigation Evidence) is a structured threat intelligence framework that maps technical indicators — domains, IPs, infrastructure patterns — to numbered Threat Paths (TP-XXXX). Each fingerprint match links to one or more Threat Paths, creating an evidence chain from raw domain data to actionable fraud intelligence. Threat Paths represent specific campaign patterns (e.g., TP-0003 = bulk DEA hosting on OVH, TP-0012 = tier-1 brand typosquats).' },
     ],
+  },
+  {
+    icon: Flame,
+    title: 'FLAME Framework',
+    content:
+      'FLAME (Fraud Lead Analysis & Mitigation Evidence) is the structured evidence framework that powers Domain Intel\'s threat intelligence output. It maps technical indicators discovered through enrichment and fingerprinting into numbered Threat Paths (TP-XXXX), each representing a specific fraud campaign pattern. Analysts use FLAME packages to build cases, track campaigns over time, and share structured intelligence across teams.',
+    link: { url: 'https://elchacal801.github.io/flame-fraud/', text: 'View the FLAME Framework \u2192' },
   },
 ];
 
@@ -116,6 +137,11 @@ export default function AboutModal({ open, onClose }) {
                     {section.content}
                   </p>
                 )}
+                {section.note && (
+                  <p className="text-[10px] italic pl-6 mt-1" style={{ color: 'var(--text-muted)' }}>
+                    {section.note}
+                  </p>
+                )}
                 {section.items && (
                   <div className="space-y-2 pl-6">
                     {section.items.map((item, i) => (
@@ -129,6 +155,19 @@ export default function AboutModal({ open, onClose }) {
                         </span>
                       </div>
                     ))}
+                  </div>
+                )}
+                {section.link && (
+                  <div className="pl-6 mt-2">
+                    <a
+                      href={section.link.url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center gap-1 text-xs font-medium transition-colors hover:underline"
+                      style={{ color: '#C0272D' }}
+                    >
+                      {section.link.text}
+                    </a>
                   </div>
                 )}
                 {idx < SECTIONS.length - 1 && (
