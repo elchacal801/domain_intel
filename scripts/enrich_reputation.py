@@ -12,6 +12,7 @@ Optimized: Higher concurrency with ThreadPoolExecutor map.
 """
 
 import argparse
+import logging
 import os
 import csv
 import dns.resolver
@@ -23,6 +24,8 @@ from concurrent.futures import ThreadPoolExecutor
 from typing import Dict, List, Optional
 from tqdm import tqdm
 from shared.sanitize import sanitize_csv_value
+
+logger = logging.getLogger(__name__)
 
 # Generic RBLs to check (careful with rate limits on public resolvers)
 RBLS = [
@@ -83,6 +86,148 @@ def check_rbl(domain: str, resolver) -> List[str]:
         pass
     return hits
 
+def _extract_org_from_vcard(vcard_array) -> str:
+    """Extract organization name from a jCard (RFC 7095) vcardArray.
+
+    Prefers the ``org`` property over ``fn`` since ``fn`` is often a
+    person's formatted name rather than the organisation.
+
+    Args:
+        vcard_array: The ``vcardArray`` value from an RDAP entity, e.g.
+            ``["vcard", [["version", {}, "text", "4.0"], ["fn", ...]]]``.
+
+    Returns:
+        The extracted organisation string, or ``""`` if none found.
+    """
+    if not isinstance(vcard_array, list) or len(vcard_array) < 2:
+        return ""
+
+    properties = vcard_array[1]
+    if not isinstance(properties, list):
+        return ""
+
+    org_val = ""
+    fn_val = ""
+    for prop in properties:
+        if not isinstance(prop, list) or len(prop) < 4:
+            continue
+        name = prop[0]
+        value = prop[3]
+        # value can be a string or (for org) sometimes a list
+        if isinstance(value, list):
+            value = value[0] if value else ""
+        if not isinstance(value, str) or not value.strip():
+            continue
+        if name == "org":
+            org_val = value.strip()
+        elif name == "fn":
+            fn_val = value.strip()
+
+    # Prefer org; fall back to fn
+    return org_val or fn_val
+
+
+def _extract_registrant_org(data: dict) -> str:
+    """Walk an RDAP response and return the registrant organisation.
+
+    The function tries multiple strategies in priority order:
+
+    1. Top-level entity with ``"registrant"`` role -- parse its vCard.
+    2. Nested entities (entity inside another entity) with
+       ``"registrant"`` role -- parse their vCard.
+    3. Entity ``handle``, ``name``, or ``publicIds`` fields on the
+       registrant entity when vCard parsing yields nothing.
+
+    Returns:
+        The registrant organisation string, or ``""`` if not found.
+    """
+
+    def _org_from_entity(entity: dict) -> str:
+        """Try to get org from a single entity dict."""
+        # Strategy A: vCard
+        vcard_array = entity.get("vcardArray")
+        org = _extract_org_from_vcard(vcard_array)
+        if org:
+            return org
+
+        # Strategy B: handle / name fields (some registries use these)
+        for field in ("name", "handle"):
+            val = entity.get(field)
+            if isinstance(val, str) and val.strip():
+                return val.strip()
+
+        # Strategy C: publicIds
+        for pid in entity.get("publicIds", []):
+            ident = pid.get("identifier")
+            if isinstance(ident, str) and ident.strip():
+                return ident.strip()
+
+        return ""
+
+    # Pass 1: top-level entities with registrant role
+    for entity in data.get("entities", []):
+        roles = entity.get("roles", [])
+        if "registrant" in roles:
+            org = _org_from_entity(entity)
+            if org:
+                return org
+
+    # Pass 2: nested entities (one level deep -- covers registrant
+    # nested under the registrar entity, which some TLDs do)
+    for entity in data.get("entities", []):
+        for sub in entity.get("entities", []):
+            roles = sub.get("roles", [])
+            if "registrant" in roles:
+                org = _org_from_entity(sub)
+                if org:
+                    return org
+
+    return ""
+
+
+def _extract_creation_date(data: dict):
+    """Extract the domain creation date from RDAP events.
+
+    Prefers the ``registration`` event; falls back to ``last changed``
+    if no registration event is present.
+
+    Returns:
+        A ``(creation_date_str, age_days_str)`` tuple, or ``("", "")``
+        if no usable event is found.
+    """
+    events = data.get("events", [])
+    registration_date = None
+    last_changed_date = None
+
+    for e in events:
+        action = e.get("eventAction")
+        date_str = e.get("eventDate")
+        if not date_str:
+            continue
+        if action == "registration":
+            registration_date = date_str
+        elif action == "last changed" and last_changed_date is None:
+            last_changed_date = date_str
+
+    c_date = registration_date or last_changed_date
+    if not c_date:
+        return ("", "")
+
+    try:
+        dt = datetime.datetime.strptime(c_date.split("T")[0], "%Y-%m-%d")
+        creation_str = dt.strftime("%Y-%m-%d")
+        delta = datetime.datetime.now(datetime.timezone.utc) - dt.replace(tzinfo=datetime.timezone.utc)
+        return (creation_str, str(delta.days))
+    except (ValueError, IndexError):
+        return ("", "")
+
+
+# RDAP bootstrap URL.  rdap.org acts as a redirect service that routes
+# to the authoritative RDAP server for each TLD.
+RDAP_BASE_URL = "https://rdap.org/domain/{}"
+RDAP_TIMEOUT = 10  # seconds -- RDAP redirects can be slow
+
+
 def get_rdap_data(domain: str) -> Dict[str, str]:
     """
     Queries RDAP for creation date and registrant organization.
@@ -90,43 +235,32 @@ def get_rdap_data(domain: str) -> Dict[str, str]:
     """
     res = {"creation_date": "", "age_days": "", "registrant_org": ""}
     try:
-        # RDAP.org is a handy redirector, or use direct registrar if known.
-        # We'll use a public RDAP bootstrap or rdap.org for simplicity.
-        # Note: Heavy usage might get rate limited.
-        url = f"https://rdap.org/domain/{domain}"
-        r = requests.get(url, timeout=5)
-        if r.status_code == 200:
-            data = r.json()
-            events = data.get("events", [])
-            c_date = None
-            for e in events:
-                if e.get("eventAction") in ("registration", "last changed"): 
-                    # 'registration' is best, 'last changed' is fallback
-                    if e.get("eventAction") == "registration":
-                        c_date = e.get("eventDate")
-                        break
-            
-            if c_date:
-                # Format: 2021-01-23T12:34:56Z
-                dt = datetime.datetime.strptime(c_date.split('T')[0], "%Y-%m-%d")
-                res["creation_date"] = dt.strftime("%Y-%m-%d")
-                delta = datetime.datetime.now() - dt
-                res["age_days"] = str(delta.days)
+        url = RDAP_BASE_URL.format(domain)
+        r = requests.get(url, timeout=RDAP_TIMEOUT)
+        if r.status_code != 200:
+            logger.debug("RDAP HTTP %s for %s", r.status_code, domain)
+            return res
 
-            # Extract registrant organization
-            for entity in data.get("entities", []):
-                if "registrant" in entity.get("roles", []):
-                    vcard_array = entity.get("vcardArray", [[], []])
-                    if len(vcard_array) > 1:
-                        for vcard in vcard_array[1]:
-                            if isinstance(vcard, list) and len(vcard) > 3 and vcard[0] in ("fn", "org"):
-                                org_val = vcard[3]
-                                if isinstance(org_val, str) and org_val.strip():
-                                    res["registrant_org"] = sanitize_csv_value(org_val.strip())
-                                break
-                    break
-    except (requests.RequestException, ValueError, KeyError):
-        pass
+        data = r.json()
+
+        # --- Creation date / age ---
+        creation_date, age_days = _extract_creation_date(data)
+        res["creation_date"] = creation_date
+        res["age_days"] = age_days
+
+        # --- Registrant organisation ---
+        org = _extract_registrant_org(data)
+        if org:
+            res["registrant_org"] = sanitize_csv_value(org)
+
+    except requests.Timeout:
+        logger.debug("RDAP timeout for %s", domain)
+    except requests.ConnectionError:
+        logger.debug("RDAP connection error for %s", domain)
+    except requests.RequestException as exc:
+        logger.debug("RDAP request error for %s: %s", domain, exc)
+    except (ValueError, KeyError) as exc:
+        logger.debug("RDAP parse error for %s: %s", domain, exc)
 
     return res
 
