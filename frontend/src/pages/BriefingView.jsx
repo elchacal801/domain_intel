@@ -149,7 +149,7 @@ export default function BriefingView() {
                             <span className="text-[10px] text-text-muted">—</span>
                             <span className="text-[10px] font-mono text-text-secondary">{briefing.date}</span>
                         </div>
-                        <h1 className="text-lg font-bold leading-snug text-text-primary">
+                        <h1 className="text-lg font-normal leading-snug text-text-primary">
                             {briefing.headline}
                         </h1>
                     </div>

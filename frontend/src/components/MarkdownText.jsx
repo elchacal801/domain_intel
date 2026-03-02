@@ -36,7 +36,7 @@ export default function MarkdownText({ children, className = '' }) {
                     code: ({ children }) => <code className="font-mono text-[11px] bg-white/5 rounded px-1 py-0.5 text-text-primary">{children}</code>,
                     blockquote: ({ children }) => <blockquote className="border-l-2 border-white/10 pl-3 my-2 text-text-muted">{children}</blockquote>,
                     hr: () => <hr className="border-border-subtle my-3" />,
-                    a: ({ href, children }) => <a href={href} className="text-blue-400 hover:underline" target="_blank" rel="noopener noreferrer">{children}</a>,
+                    a: ({ href, children }) => <a href={href} className="text-[#C0272D] hover:underline" target="_blank" rel="noopener noreferrer">{children}</a>,
                 }}
             >
                 {sanitized}

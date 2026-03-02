@@ -76,7 +76,7 @@ export default function AboutModal({ open, onClose }) {
     >
       <div
         ref={panelRef}
-        className="relative w-full max-w-2xl rounded-xl border shadow-2xl animate-fade-in"
+        className="relative w-full max-w-2xl rounded-xl border animate-fade-in"
         style={{
           background: 'var(--bg-surface)',
           borderColor: 'var(--border-subtle)',
@@ -86,7 +86,7 @@ export default function AboutModal({ open, onClose }) {
         <div className="flex items-center justify-between border-b px-6 py-4" style={{ borderColor: 'var(--border-subtle)' }}>
           <div className="flex items-center gap-2.5">
             <Globe className="h-5 w-5" style={{ color: 'var(--text-muted)' }} />
-            <span className="text-sm font-bold tracking-tight" style={{ color: 'var(--text-primary)' }}>
+            <span className="text-sm font-medium tracking-tight" style={{ color: 'var(--text-primary)' }}>
               About Domain Intel
             </span>
           </div>

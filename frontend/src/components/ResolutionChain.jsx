@@ -15,11 +15,11 @@ export default function ResolutionChain({ chain, className = '' }) {
     // Check if previous element was "MX" (case-insensitive)
     const prevElement = index > 0 ? path[index - 1] : null;
     if (prevElement && /^MX$/i.test(prevElement)) {
-      return 'font-mono text-blue-400';
+      return 'font-mono text-[#5b8abf]';
     }
 
     if (isIP) {
-      return 'font-mono text-orange-400';
+      return 'font-mono text-[#c98a5a]';
     }
 
     // Default: domain names and hostnames

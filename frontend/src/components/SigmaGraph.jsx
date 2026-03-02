@@ -4,22 +4,22 @@ import Sigma from 'sigma';
 import forceAtlas2 from 'graphology-layout-forceatlas2';
 
 const NODE_COLORS = {
-  mx_host: '#3b82f6',
-  ip: '#f97316',
-  registrar_ns: '#22c55e',
-  a_record_ip: '#a855f7',  // purple
-  domain: '#94a3b8',
+  mx_host: '#5b8abf',
+  ip: '#c98a5a',
+  registrar_ns: '#6aab7b',
+  a_record_ip: '#8b7ec7',
+  domain: '#71717a',
 };
 
 const NODE_COLORS_DIMMED = {
-  mx_host: '#1e3a5f',     // dimmed blue
-  ip: '#5c3a10',          // dimmed orange
-  registrar_ns: '#1a4a2e', // dimmed green
-  a_record_ip: '#4a2560', // dimmed purple
+  mx_host: '#2d3f52',
+  ip: '#4a3927',
+  registrar_ns: '#2a4433',
+  a_record_ip: '#3a3252',
 };
 
-const HIGHLIGHT_COLOR = '#fbbf24';
-const DIM_COLOR = '#1f2937';
+const HIGHLIGHT_COLOR = '#C0272D';
+const DIM_COLOR = '#18181B';
 
 function abbreviateProvider(label) {
   const abbrevs = {
@@ -246,8 +246,8 @@ export default function SigmaGraph({ data, onClickNode, filters }) {
     const sigma = new Sigma(graph, containerRef.current, {
       renderLabels: true,
       labelRenderedSizeThreshold: 8,
-      defaultEdgeColor: '#374151',
-      defaultNodeColor: '#94a3b8',
+      defaultEdgeColor: '#27272a',
+      defaultNodeColor: '#71717a',
     });
 
     sigmaRef.current = sigma;

@@ -82,7 +82,7 @@ export default function GlobalSearch() {
         <span className="absolute right-2.5 top-1/2 -translate-y-1/2 rounded border border-border-subtle px-1 py-0.5 text-[8px] text-text-muted font-mono">/</span>
       </div>
       {open && results.length > 0 && (
-        <div className="absolute right-0 top-full z-50 mt-1.5 w-80 overflow-hidden rounded-lg border shadow-2xl animate-slide-down"
+        <div className="absolute right-0 top-full z-50 mt-1.5 w-80 overflow-hidden rounded-lg border animate-slide-down"
           style={{ background: 'var(--bg-nav)', borderColor: 'var(--border-subtle)' }}>
           {results.map((r, i) => (
             <button key={r.domain} onClick={() => handleSelect(r.domain)}

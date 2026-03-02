@@ -129,7 +129,7 @@ export default function InvestigateLanding() {
         <div className="mb-3 flex h-12 w-12 items-center justify-center rounded-xl" style={{ background: 'var(--nav-inactive-hover-bg)' }}>
           <Search className="h-6 w-6" style={{ color: 'var(--text-muted)' }} strokeWidth={1.5} />
         </div>
-        <h1 className="mb-1 text-2xl font-bold tracking-tight" style={{ color: 'var(--text-primary)' }}>Domain Investigation</h1>
+        <h1 className="mb-1 text-2xl font-normal tracking-tight" style={{ color: 'var(--text-primary)' }}>Domain Investigation</h1>
         <p className="mb-6 max-w-md text-center text-xs text-text-muted">
           Search any domain, or use <span className="font-mono text-text-secondary">ASN:</span> <span className="font-mono text-text-secondary">MX:</span> <span className="font-mono text-text-secondary">REG:</span> <span className="font-mono text-text-secondary">FP:</span> for infrastructure pivot search.
         </p>

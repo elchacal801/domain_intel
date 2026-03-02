@@ -7,10 +7,10 @@ import SharedInfraBanner from '@/components/SharedInfraBanner';
 import { Network, Sliders, ExternalLink, BarChart3, ChevronLeft, ChevronRight, X, SlidersHorizontal } from 'lucide-react';
 
 const TYPE_META = {
-  mx_host: { label: 'MX Host', color: '#3b82f6' },
-  ip: { label: 'MX Server IP', color: '#f97316' },
-  registrar_ns: { label: 'Registrar+NS', color: '#22c55e' },
-  a_record_ip: { label: 'Web Hosting IP', color: '#a855f7' },
+  mx_host: { label: 'MX Host', color: '#5b8abf' },
+  ip: { label: 'MX Server IP', color: '#c98a5a' },
+  registrar_ns: { label: 'Registrar+NS', color: '#6aab7b' },
+  a_record_ip: { label: 'Web Hosting IP', color: '#8b7ec7' },
 };
 
 const PAGE_SIZE = 30;
@@ -203,7 +203,7 @@ export default function ClusterView() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-lg font-bold text-text-primary">Infrastructure Clusters</h1>
+          <h1 className="text-lg font-normal text-text-primary">Infrastructure Clusters</h1>
           <p className="text-xs text-text-muted">
             {clusterTable.length.toLocaleString()} clusters{sharedCount > 0 && ` (${sharedCount} shared infrastructure)`} linking {clusters?.nodes?.length?.toLocaleString() || 0} nodes
           </p>

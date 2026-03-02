@@ -22,11 +22,11 @@ function daysAgo(d) {
 }
 
 const EVENT_COLORS = {
-    created: '#3b82f6',
-    expires: '#f97316',
-    scan: '#22c55e',
+    created: '#5b8abf',
+    expires: '#c98a5a',
+    scan: '#6aab7b',
     risk: '#ef4444',
-    match: '#8b5cf6',
+    match: '#8b7ec7',
 };
 
 export default function DomainTimeline({ data }) {

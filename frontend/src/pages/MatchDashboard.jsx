@@ -57,7 +57,7 @@ function MultiSelectFilter({ label, options, selected, onChange }) {
         )}
       </button>
       {open && (
-        <div className="absolute left-0 z-50 mt-1.5 max-h-52 w-56 overflow-y-auto rounded-lg border border-border-subtle shadow-2xl animate-slide-down" style={{ background: 'var(--bg-surface-raised)' }}>
+        <div className="absolute left-0 z-50 mt-1.5 max-h-52 w-56 overflow-y-auto rounded-lg border border-border-subtle animate-slide-down" style={{ background: 'var(--bg-surface-raised)' }}>
           {options.length === 0 ? (
             <div className="px-3 py-3 text-xs text-text-muted">No options</div>
           ) : options.map(opt => (

@@ -218,7 +218,7 @@ export default function DomainDetail() {
       )}
 
       {/* DNS */}
-      <Section title="DNS Infrastructure" icon={<Server className="h-3.5 w-3.5 text-mx/50" />} accentColor="rgba(59,130,246,0.12)">
+      <Section title="DNS Infrastructure" icon={<Server className="h-3.5 w-3.5 text-mx/50" />} accentColor="rgba(91,138,191,0.12)">
         {d.resolution_chain && (
           <p className="text-[10px] text-text-muted mb-2">
             {d.resolution_chain.mx_shared
@@ -326,7 +326,7 @@ export default function DomainDetail() {
 
       {/* Shodan Intelligence */}
       {showShodan && (
-        <Section title="Shodan Intelligence" icon={<Radar className="h-3.5 w-3.5 text-blue-400/50" />} accentColor="rgba(59,130,246,0.12)">
+        <Section title="Shodan Intelligence" icon={<Radar className="h-3.5 w-3.5 text-[#5b8abf]/50" />} accentColor="rgba(91,138,191,0.12)">
           <dl className="grid gap-x-6 gap-y-3 sm:grid-cols-2 lg:grid-cols-3">
             <Field label="Open Ports" value={d.shodan_ports} mono />
             <Field label="Vulnerabilities" value={d.shodan_vulns} />

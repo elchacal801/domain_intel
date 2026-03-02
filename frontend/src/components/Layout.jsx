@@ -1,11 +1,10 @@
 import { useState } from 'react';
 import { NavLink, Outlet, useLocation } from 'react-router-dom';
-import { Shield, Sun, Moon, Github, Info } from 'lucide-react';
+import { Shield, Github, Info } from 'lucide-react';
 import GlobalSearch from './GlobalSearch';
 import ErrorBoundary from './ErrorBoundary';
 import AboutModal from './AboutModal';
 import { useData } from '@/context/DataContext';
-import { useTheme } from '@/context/ThemeContext';
 
 const NAV_ITEMS = [
   { to: '/matches', label: 'Matches' },
@@ -16,7 +15,6 @@ const NAV_ITEMS = [
 
 export default function Layout() {
   const { loading, stats } = useData();
-  const { theme, toggleTheme } = useTheme();
   const location = useLocation();
   const [aboutOpen, setAboutOpen] = useState(false);
 
@@ -24,13 +22,13 @@ export default function Layout() {
     <div className="min-h-screen flex flex-col" style={{ background: 'var(--bg-body)' }}>
       {/* Nav */}
       <nav className="sticky top-0 z-50 border-b border-border-subtle"
-        style={{ background: 'var(--bg-nav)', backdropFilter: 'blur(12px)' }}
+        style={{ background: 'var(--bg-nav)', backdropFilter: 'blur(24px) saturate(1.2)' }}
       >
         <div className="mx-auto flex max-w-screen-2xl items-center justify-between px-5 py-2.5">
           <div className="flex items-center gap-7">
             <div className="flex items-center gap-2.5">
               <Shield className="h-5 w-5" style={{ color: 'var(--text-muted)' }} strokeWidth={2} />
-              <span className="text-base font-bold tracking-tight" style={{ color: 'var(--text-primary)' }}>
+              <span className="text-base font-normal tracking-tight" style={{ color: 'var(--text-primary)' }}>
                 Domain Intel
               </span>
             </div>
@@ -63,9 +61,6 @@ export default function Layout() {
             >
               <Github className="h-3.5 w-3.5" />
             </a>
-            <button onClick={toggleTheme} className="theme-toggle" title={`Switch to ${theme === 'dark' ? 'light' : 'dark'} mode`}>
-              {theme === 'dark' ? <Sun className="h-3.5 w-3.5" /> : <Moon className="h-3.5 w-3.5" />}
-            </button>
           </div>
         </div>
       </nav>

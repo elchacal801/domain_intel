@@ -130,7 +130,7 @@ export default function DomainCompare() {
                     <ArrowLeft className="h-4 w-4" />
                 </Link>
                 <ArrowLeftRight className="h-4 w-4" style={{ color: 'var(--text-muted)' }} />
-                <h1 className="text-lg font-bold" style={{ color: 'var(--text-primary)' }}>Domain Comparison</h1>
+                <h1 className="text-lg font-normal" style={{ color: 'var(--text-primary)' }}>Domain Comparison</h1>
             </div>
 
             {/* Domain Selector */}
