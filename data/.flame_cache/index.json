@@ -11,6 +11,9 @@
     "confidence_score": 82,
     "source_reliability": "B",
     "info_credibility": 2,
+    "infrastructure_generation_method": null,
+    "geopolitical_timing": null,
+    "nation_state_nexus": null,
     "sectors": [
       "banking"
     ],
@@ -160,6 +163,9 @@
     "confidence_score": 88,
     "source_reliability": "B",
     "info_credibility": 1,
+    "infrastructure_generation_method": null,
+    "geopolitical_timing": null,
+    "nation_state_nexus": null,
     "sectors": [
       "banking",
       "cross-sector"
@@ -266,7 +272,7 @@
     "id": "TP-0003",
     "title": "Synthetic Identity \u2014 Credit Card Bust-Out",
     "category": "ThreatPath",
-    "date": "2026-02-12",
+    "date": "2026-03-04",
     "author": "FLAME Project",
     "source": "Federal Reserve / FinCEN / ACFE reporting",
     "tlp": "WHITE",
@@ -274,6 +280,9 @@
     "confidence_score": 80,
     "source_reliability": "B",
     "info_credibility": 2,
+    "infrastructure_generation_method": null,
+    "geopolitical_timing": null,
+    "nation_state_nexus": null,
     "sectors": [
       "banking",
       "fintech"
@@ -352,6 +361,10 @@
       {
         "id": "TP-0029",
         "relationship": "related-to"
+      },
+      {
+        "id": "TP-0040",
+        "relationship": "variant-of"
       }
     ],
     "evidence_count": 2
@@ -368,6 +381,9 @@
     "confidence_score": 80,
     "source_reliability": "B",
     "info_credibility": 2,
+    "infrastructure_generation_method": null,
+    "geopolitical_timing": null,
+    "nation_state_nexus": null,
     "sectors": [
       "cross-sector"
     ],
@@ -475,6 +491,9 @@
     "confidence_score": 72,
     "source_reliability": "B",
     "info_credibility": 3,
+    "infrastructure_generation_method": null,
+    "geopolitical_timing": null,
+    "nation_state_nexus": null,
     "sectors": [
       "insurance"
     ],
@@ -580,6 +599,9 @@
     "confidence_score": 88,
     "source_reliability": "A",
     "info_credibility": 2,
+    "infrastructure_generation_method": null,
+    "geopolitical_timing": null,
+    "nation_state_nexus": null,
     "sectors": [
       "banking",
       "cross-sector"
@@ -699,6 +721,9 @@
     "confidence_score": 68,
     "source_reliability": "C",
     "info_credibility": 2,
+    "infrastructure_generation_method": null,
+    "geopolitical_timing": null,
+    "nation_state_nexus": null,
     "sectors": [
       "banking",
       "cross-sector"
@@ -808,7 +833,7 @@
     "id": "TP-0008",
     "title": "SIM Swap to Cryptocurrency Exchange ATO",
     "category": "ThreatPath",
-    "date": "2026-02-12",
+    "date": "2026-03-04",
     "author": "FLAME Project",
     "source": "FBI IC3 / DOJ SIM swap prosecutions / industry reporting",
     "tlp": "WHITE",
@@ -816,6 +841,9 @@
     "confidence_score": 82,
     "source_reliability": "B",
     "info_credibility": 2,
+    "infrastructure_generation_method": null,
+    "geopolitical_timing": null,
+    "nation_state_nexus": null,
     "sectors": [
       "crypto",
       "fintech",
@@ -830,7 +858,10 @@
       "cryptocurrency",
       "MFA-bypass",
       "carrier-social-engineering",
-      "high-value-individual"
+      "high-value-individual",
+      "otp-interception",
+      "otp-bot",
+      "evilginx"
     ],
     "cfpf_phases": [
       "P1",
@@ -923,6 +954,10 @@
       {
         "id": "TP-0013",
         "relationship": "enables"
+      },
+      {
+        "id": "TP-0037",
+        "relationship": "enables"
       }
     ],
     "evidence_count": 0
@@ -931,7 +966,7 @@
     "id": "TP-0009",
     "title": "Check Washing and Fraudulent Mobile Deposit",
     "category": "ThreatPath",
-    "date": "2026-02-12",
+    "date": "2026-03-04",
     "author": "FLAME Project",
     "source": "USPS OIG / FinCEN / banking industry reporting",
     "tlp": "WHITE",
@@ -939,6 +974,9 @@
     "confidence_score": 72,
     "source_reliability": "B",
     "info_credibility": 3,
+    "infrastructure_generation_method": null,
+    "geopolitical_timing": null,
+    "nation_state_nexus": null,
     "sectors": [
       "banking",
       "credit-union"
@@ -951,7 +989,9 @@
       "mail-theft",
       "mobile-deposit",
       "duplicate-deposit",
-      "USPS"
+      "USPS",
+      "deurbanization",
+      "midwest-shift"
     ],
     "cfpf_phases": [
       "P1",
@@ -1027,6 +1067,9 @@
     "confidence_score": 60,
     "source_reliability": "C",
     "info_credibility": 3,
+    "infrastructure_generation_method": null,
+    "geopolitical_timing": null,
+    "nation_state_nexus": null,
     "sectors": [
       "insurance"
     ],
@@ -1103,7 +1146,7 @@
     "id": "TP-0011",
     "title": "Romance Scam to Money Mule Recruitment Pipeline",
     "category": "ThreatPath",
-    "date": "2026-02-12",
+    "date": "2026-03-04",
     "author": "FLAME Project",
     "source": "FBI IC3 / FinCEN Advisory FIN-2020-A008 / INTERPOL",
     "tlp": "WHITE",
@@ -1111,6 +1154,9 @@
     "confidence_score": 88,
     "source_reliability": "A",
     "info_credibility": 1,
+    "infrastructure_generation_method": null,
+    "geopolitical_timing": null,
+    "nation_state_nexus": null,
     "sectors": [
       "cross-sector"
     ],
@@ -1227,6 +1273,9 @@
     "confidence_score": 82,
     "source_reliability": "B",
     "info_credibility": 2,
+    "infrastructure_generation_method": null,
+    "geopolitical_timing": null,
+    "nation_state_nexus": null,
     "sectors": [
       "banking",
       "credit-union"
@@ -1340,6 +1389,9 @@
     "confidence_score": 64,
     "source_reliability": "C",
     "info_credibility": 3,
+    "infrastructure_generation_method": null,
+    "geopolitical_timing": null,
+    "nation_state_nexus": null,
     "sectors": [
       "fintech",
       "banking",
@@ -1452,6 +1504,9 @@
     "confidence_score": 80,
     "source_reliability": "B",
     "info_credibility": 2,
+    "infrastructure_generation_method": null,
+    "geopolitical_timing": null,
+    "nation_state_nexus": null,
     "sectors": [
       "banking",
       "credit-union",
@@ -1564,6 +1619,9 @@
     "confidence_score": 64,
     "source_reliability": "B",
     "info_credibility": 3,
+    "infrastructure_generation_method": null,
+    "geopolitical_timing": null,
+    "nation_state_nexus": null,
     "sectors": [
       "healthcare",
       "staffing",
@@ -1654,7 +1712,7 @@
     "id": "TP-0016",
     "title": "First-Party Fraud (Bust-Out)",
     "category": "ThreatPath",
-    "date": "2026-02-20",
+    "date": "2026-03-04",
     "author": "FLAME Project",
     "source": "Internal Knowledge Base",
     "tlp": "WHITE",
@@ -1662,6 +1720,9 @@
     "confidence_score": 72,
     "source_reliability": "B",
     "info_credibility": 3,
+    "infrastructure_generation_method": null,
+    "geopolitical_timing": null,
+    "nation_state_nexus": null,
     "sectors": [
       "banking",
       "credit-union"
@@ -1673,7 +1734,9 @@
     "tags": [
       "first-party",
       "credit-card",
-      "consumer-banking"
+      "consumer-banking",
+      "viral-fraud",
+      "lnrs-2026"
     ],
     "cfpf_phases": [
       "P1",
@@ -1727,6 +1790,10 @@
       {
         "id": "TP-0031",
         "relationship": "related-to"
+      },
+      {
+        "id": "TP-0040",
+        "relationship": "variant-of"
       }
     ],
     "evidence_count": 0
@@ -1743,6 +1810,9 @@
     "confidence_score": 88,
     "source_reliability": "A",
     "info_credibility": 1,
+    "infrastructure_generation_method": null,
+    "geopolitical_timing": null,
+    "nation_state_nexus": null,
     "sectors": [
       "banking",
       "crypto",
@@ -1840,6 +1910,9 @@
     "confidence_score": 60,
     "source_reliability": "C",
     "info_credibility": 3,
+    "infrastructure_generation_method": null,
+    "geopolitical_timing": null,
+    "nation_state_nexus": null,
     "sectors": [
       "banking",
       "credit-union",
@@ -1931,6 +2004,9 @@
     "confidence_score": 72,
     "source_reliability": "B",
     "info_credibility": 3,
+    "infrastructure_generation_method": null,
+    "geopolitical_timing": null,
+    "nation_state_nexus": null,
     "sectors": [
       "banking",
       "investment"
@@ -2030,6 +2106,9 @@
     "confidence_score": 68,
     "source_reliability": "B",
     "info_credibility": 3,
+    "infrastructure_generation_method": null,
+    "geopolitical_timing": null,
+    "nation_state_nexus": null,
     "sectors": [
       "banking",
       "cross-sector"
@@ -2130,6 +2209,9 @@
     "confidence_score": 82,
     "source_reliability": "A",
     "info_credibility": 2,
+    "infrastructure_generation_method": null,
+    "geopolitical_timing": null,
+    "nation_state_nexus": null,
     "sectors": [
       "healthcare",
       "insurance"
@@ -2210,6 +2292,9 @@
     "confidence_score": 82,
     "source_reliability": "A",
     "info_credibility": 2,
+    "infrastructure_generation_method": null,
+    "geopolitical_timing": null,
+    "nation_state_nexus": null,
     "sectors": [
       "government",
       "banking"
@@ -2307,6 +2392,9 @@
     "confidence_score": 72,
     "source_reliability": "B",
     "info_credibility": 2,
+    "infrastructure_generation_method": null,
+    "geopolitical_timing": null,
+    "nation_state_nexus": null,
     "sectors": [
       "banking",
       "fintech",
@@ -2405,7 +2493,7 @@
     "id": "TP-0024",
     "title": "Account-to-Account Instant Payment Fraud (Zelle / FedNow / Pix / UPI)",
     "category": "ThreatPath",
-    "date": "2026-03-02",
+    "date": "2026-03-04",
     "author": "FLAME Project",
     "source": "Original Research \u2014 multi-source intelligence compilation",
     "tlp": "WHITE",
@@ -2413,6 +2501,9 @@
     "confidence_score": 82,
     "source_reliability": "B",
     "info_credibility": 2,
+    "infrastructure_generation_method": null,
+    "geopolitical_timing": null,
+    "nation_state_nexus": null,
     "sectors": [
       "banking",
       "fintech",
@@ -2536,6 +2627,9 @@
     "confidence_score": 72,
     "source_reliability": "B",
     "info_credibility": 3,
+    "infrastructure_generation_method": null,
+    "geopolitical_timing": null,
+    "nation_state_nexus": null,
     "sectors": [
       "banking",
       "cross-sector"
@@ -2649,6 +2743,9 @@
     "confidence_score": 82,
     "source_reliability": "A",
     "info_credibility": 2,
+    "infrastructure_generation_method": null,
+    "geopolitical_timing": null,
+    "nation_state_nexus": null,
     "sectors": [
       "banking",
       "crypto",
@@ -2768,6 +2865,9 @@
     "confidence_score": 88,
     "source_reliability": "A",
     "info_credibility": 1,
+    "infrastructure_generation_method": null,
+    "geopolitical_timing": null,
+    "nation_state_nexus": null,
     "sectors": [
       "banking",
       "cross-sector"
@@ -2882,6 +2982,9 @@
     "confidence_score": 85,
     "source_reliability": "A",
     "info_credibility": 2,
+    "infrastructure_generation_method": null,
+    "geopolitical_timing": null,
+    "nation_state_nexus": null,
     "sectors": [
       "healthcare",
       "insurance",
@@ -2966,7 +3069,7 @@
     "id": "TP-0029",
     "title": "AI Synthetic Identity & Document Forgery",
     "category": "ThreatPath",
-    "date": "2026-03-02",
+    "date": "2026-03-04",
     "author": "FLAME Project",
     "source": "https://www.federalreserve.gov/newsevents/pressreleases/bcreg20240715a.htm",
     "tlp": "WHITE",
@@ -2974,6 +3077,9 @@
     "confidence_score": 68,
     "source_reliability": "C",
     "info_credibility": 2,
+    "infrastructure_generation_method": null,
+    "geopolitical_timing": null,
+    "nation_state_nexus": null,
     "sectors": [
       "banking",
       "fintech"
@@ -3070,7 +3176,7 @@
     "id": "TP-0030",
     "title": "E-Commerce Triangulation Fraud",
     "category": "ThreatPath",
-    "date": "2026-03-02",
+    "date": "2026-03-04",
     "author": "FLAME Project",
     "source": "https://www.chargebackgurus.com/blog/triangulation-fraud",
     "tlp": "WHITE",
@@ -3078,6 +3184,9 @@
     "confidence_score": 72,
     "source_reliability": "B",
     "info_credibility": 3,
+    "infrastructure_generation_method": null,
+    "geopolitical_timing": null,
+    "nation_state_nexus": null,
     "sectors": [
       "retail"
     ],
@@ -3161,6 +3270,18 @@
       {
         "id": "TP-0031",
         "relationship": "shares-infrastructure"
+      },
+      {
+        "id": "TP-0035",
+        "relationship": "feeds-into"
+      },
+      {
+        "id": "TP-0036",
+        "relationship": "shares-infrastructure"
+      },
+      {
+        "id": "TP-0038",
+        "relationship": "feeds-into"
       }
     ],
     "evidence_count": 0
@@ -3177,6 +3298,9 @@
     "confidence_score": 72,
     "source_reliability": "C",
     "info_credibility": 2,
+    "infrastructure_generation_method": null,
+    "geopolitical_timing": null,
+    "nation_state_nexus": null,
     "sectors": [
       "retail"
     ],
@@ -3271,6 +3395,9 @@
     "confidence_score": 82,
     "source_reliability": "B",
     "info_credibility": 1,
+    "infrastructure_generation_method": null,
+    "geopolitical_timing": null,
+    "nation_state_nexus": null,
     "sectors": [
       "web3",
       "crypto"
@@ -3378,6 +3505,9 @@
     "confidence_score": 68,
     "source_reliability": "B",
     "info_credibility": 3,
+    "infrastructure_generation_method": null,
+    "geopolitical_timing": null,
+    "nation_state_nexus": null,
     "sectors": [
       "education",
       "government"
@@ -3459,6 +3589,1632 @@
       },
       {
         "id": "TP-0022",
+        "relationship": "related-to"
+      }
+    ],
+    "evidence_count": 0
+  },
+  {
+    "id": "TP-0034",
+    "title": "DPRK State-Sponsored IT Worker Fraud & Data Extortion",
+    "category": "ThreatPath",
+    "date": "2026-03-03",
+    "author": "FLAME Project",
+    "source": "Original Research \u2014 aggregated from FBI IC3 PSAs, DOJ enforcement actions, Google Threat Intelligence, Microsoft Threat Intelligence (Jasper Sleet), CrowdStrike, Palo Alto Unit 42, SentinelOne",
+    "tlp": "WHITE",
+    "summary": "The Democratic People's Republic of Korea (DPRK) operates a state-sponsored employment fraud program in which North Korean IT workers \u2014 often operating from China, Russia, and Southeast Asia \u2014 use sto...",
+    "confidence_score": 85,
+    "source_reliability": "A",
+    "info_credibility": 1,
+    "infrastructure_generation_method": null,
+    "geopolitical_timing": null,
+    "nation_state_nexus": null,
+    "sectors": [
+      "technology",
+      "banking",
+      "crypto",
+      "healthcare",
+      "government",
+      "employment"
+    ],
+    "fraud_types": [
+      "dprk-it-worker-fraud",
+      "employment-fraud",
+      "identity-theft",
+      "data-theft"
+    ],
+    "tags": [
+      "dprk",
+      "north-korea",
+      "state-sponsored",
+      "it-worker",
+      "employment-fraud",
+      "sanctions-evasion",
+      "data-extortion",
+      "remote-work",
+      "identity-theft",
+      "code-exfiltration",
+      "salary-diversion",
+      "facilitator-network"
+    ],
+    "cfpf_phases": [
+      "P1",
+      "P2",
+      "P3",
+      "P4",
+      "P5"
+    ],
+    "mitre_attack": [
+      "T1583.001",
+      "T1589.001",
+      "T1566.001",
+      "T1078",
+      "T1005",
+      "T1020",
+      "T1587.001",
+      "T1657"
+    ],
+    "ft3_tactics": [
+      "FTA001",
+      "FTA002",
+      "FTA003",
+      "FTA004",
+      "FTA005",
+      "FTA006",
+      "FTA007",
+      "FTA009",
+      "FTA010",
+      "FT005.001",
+      "FT007.009",
+      "FT018",
+      "FT020",
+      "FT021",
+      "FT031",
+      "FT052.003"
+    ],
+    "mitre_f3": [],
+    "groupib_stages": [
+      "Reconnaissance",
+      "Resource Development",
+      "Trust Abuse",
+      "Credential Access",
+      "Account Access",
+      "Perform Fraud",
+      "Monetization",
+      "Laundering"
+    ],
+    "regulatory_refs": [
+      "REG-OFAC-SDN",
+      "REG-FINCEN-CDD",
+      "REG-FBI-IC3"
+    ],
+    "ucff_domains": {
+      "commit": "Level 3",
+      "assess": "Level 4",
+      "plan": "Level 3",
+      "act": "Level 4",
+      "monitor": "Level 4",
+      "report": "Level 3",
+      "improve": "Level 3"
+    },
+    "detection_rule_ids": [
+      "DL-0068",
+      "DL-0069",
+      "DL-0070",
+      "DL-0071",
+      "DL-0072",
+      "DL-0073",
+      "DL-0074"
+    ],
+    "related_tps": [
+      {
+        "id": "TP-0003",
+        "relationship": "shares-infrastructure"
+      },
+      {
+        "id": "TP-0015",
+        "relationship": "related-to"
+      },
+      {
+        "id": "TP-0019",
+        "relationship": "related-to"
+      },
+      {
+        "id": "TP-0029",
+        "relationship": "feeds-into"
+      }
+    ],
+    "evidence_count": 2
+  },
+  {
+    "id": "TP-0035",
+    "title": "Magecart E-Skimmer Data Compromise",
+    "category": "ThreatPath",
+    "date": "2026-03-04",
+    "author": "FLAME Project (sourced from Recorded Future Payment Fraud Intelligence Report 2025)",
+    "source": "https://www.recordedfuture.com/research/annual-payment-fraud-intelligence-report-2025",
+    "tlp": "WHITE",
+    "summary": "Magecart-style e-skimmer attacks remain one of the most persistent and scalable threats to online payment ecosystems. In 2025, Recorded Future identified over 10,500 unique e-skimmer infections active...",
+    "confidence_score": 78,
+    "source_reliability": "B",
+    "info_credibility": 2,
+    "infrastructure_generation_method": null,
+    "geopolitical_timing": null,
+    "nation_state_nexus": null,
+    "sectors": [
+      "retail",
+      "payments",
+      "fintech"
+    ],
+    "fraud_types": [
+      "e-skimmer",
+      "data-theft",
+      "malware",
+      "identity-theft"
+    ],
+    "tags": [
+      "magecart",
+      "e-skimmer",
+      "web-skimming",
+      "sniffer-by-fleras",
+      "acceptcar",
+      "smart-contract-c2",
+      "google-tag-manager-abuse",
+      "card-data-compromise",
+      "maas",
+      "pci-dss"
+    ],
+    "cfpf_phases": [
+      "P1",
+      "P2",
+      "P3",
+      "P4",
+      "P5"
+    ],
+    "mitre_attack": [
+      "T1059.007",
+      "T1189",
+      "T1583.001",
+      "T1027",
+      "T1041",
+      "T1657"
+    ],
+    "ft3_tactics": [
+      "FTA001",
+      "FTA002",
+      "FTA003",
+      "FTA005",
+      "FTA007",
+      "FTA009",
+      "FTA010",
+      "FT003",
+      "FT007.009",
+      "FT008.002",
+      "FT016",
+      "FT031"
+    ],
+    "mitre_f3": [],
+    "groupib_stages": [
+      "Reconnaissance",
+      "Resource Development",
+      "Initial Access",
+      "Execution",
+      "Credential Access",
+      "Perform Fraud",
+      "Monetization",
+      "Laundering"
+    ],
+    "regulatory_refs": [
+      "REG-FINCEN-CDD",
+      "REG-PSD3-SCA",
+      "REG-DORA"
+    ],
+    "ucff_domains": {
+      "commit": "Level 3",
+      "assess": "Level 3",
+      "plan": "Level 3",
+      "act": "Level 4",
+      "monitor": "Level 4",
+      "report": "Level 2",
+      "improve": "Level 3"
+    },
+    "detection_rule_ids": [
+      "DL-0075",
+      "DL-0076",
+      "DL-0077"
+    ],
+    "related_tps": [
+      {
+        "id": "TP-0013",
+        "relationship": "feeds-into"
+      },
+      {
+        "id": "TP-0030",
+        "relationship": "enables"
+      },
+      {
+        "id": "TP-0038",
+        "relationship": "shares-infrastructure"
+      }
+    ],
+    "evidence_count": 0
+  },
+  {
+    "id": "TP-0036",
+    "title": "Purchase Scam Merchant Networks",
+    "category": "ThreatPath",
+    "date": "2026-03-04",
+    "author": "FLAME Project (sourced from Recorded Future Payment Fraud Intelligence Report 2025)",
+    "source": "https://www.recordedfuture.com/research/annual-payment-fraud-intelligence-report-2025",
+    "tlp": "WHITE",
+    "summary": "Purchase scam merchant networks represent a rapidly scaling fraud threat that exploits the fundamental design of the payment ecosystem: because the victim authorizes the transaction themselves, tradit...",
+    "confidence_score": 75,
+    "source_reliability": "B",
+    "info_credibility": 2,
+    "infrastructure_generation_method": null,
+    "geopolitical_timing": null,
+    "nation_state_nexus": null,
+    "sectors": [
+      "retail",
+      "payments",
+      "banking"
+    ],
+    "fraud_types": [
+      "purchase-scam",
+      "brand-impersonation",
+      "first-party-fraud",
+      "social-engineering"
+    ],
+    "tags": [
+      "purchase-scam",
+      "scam-merchant",
+      "subscription-trap",
+      "ad-driven-fraud",
+      "victim-authorized-fraud",
+      "brand-abuse",
+      "social-media-ads",
+      "merchant-fraud",
+      "acquirer-risk"
+    ],
+    "cfpf_phases": [
+      "P1",
+      "P2",
+      "P3",
+      "P4",
+      "P5"
+    ],
+    "mitre_attack": [
+      "T1583.001",
+      "T1656",
+      "T1598",
+      "T1657"
+    ],
+    "ft3_tactics": [
+      "FTA001",
+      "FTA002",
+      "FTA003",
+      "FTA005",
+      "FTA007",
+      "FTA009",
+      "FTA010",
+      "FT016",
+      "FT017",
+      "FT028",
+      "FT007.009"
+    ],
+    "mitre_f3": [],
+    "groupib_stages": [
+      "Reconnaissance",
+      "Resource Development",
+      "Trust Abuse",
+      "End-user Interaction",
+      "Perform Fraud",
+      "Monetization",
+      "Laundering"
+    ],
+    "regulatory_refs": [
+      "REG-FINCEN-CDD",
+      "REG-UK-PSR-APP",
+      "REG-AU-SPF",
+      "REG-FCA-APP"
+    ],
+    "ucff_domains": {
+      "commit": "Level 2",
+      "assess": "Level 3",
+      "plan": "Level 3",
+      "act": "Level 3",
+      "monitor": "Level 3",
+      "report": "Level 2",
+      "improve": "Level 2"
+    },
+    "detection_rule_ids": [
+      "DL-0078",
+      "DL-0079"
+    ],
+    "related_tps": [
+      {
+        "id": "TP-0012",
+        "relationship": "related-to"
+      },
+      {
+        "id": "TP-0015",
+        "relationship": "related-to"
+      },
+      {
+        "id": "TP-0030",
+        "relationship": "shares-infrastructure"
+      }
+    ],
+    "evidence_count": 0
+  },
+  {
+    "id": "TP-0037",
+    "title": "Digital Wallet Fraud & NFC Relay Attacks",
+    "category": "ThreatPath",
+    "date": "2026-03-04",
+    "author": "FLAME Project (sourced from Recorded Future Payment Fraud Intelligence Report 2025)",
+    "source": "https://www.recordedfuture.com/research/annual-payment-fraud-intelligence-report-2025",
+    "tlp": "WHITE",
+    "summary": "Digital wallet fraud and NFC relay attacks represent a rapidly evolving convergence of social engineering, credential interception, and contactless payment abuse. In this threat path, attackers phish ...",
+    "confidence_score": 80,
+    "source_reliability": "B",
+    "info_credibility": 2,
+    "infrastructure_generation_method": null,
+    "geopolitical_timing": null,
+    "nation_state_nexus": null,
+    "sectors": [
+      "banking",
+      "fintech",
+      "payments",
+      "retail"
+    ],
+    "fraud_types": [
+      "digital-wallet-fraud",
+      "nfc-relay",
+      "account-takeover",
+      "social-engineering"
+    ],
+    "tags": [
+      "digital-wallet",
+      "nfc-relay",
+      "ghost-tapping",
+      "supercardx",
+      "otp-interception",
+      "wallet-provisioning",
+      "contactless-fraud",
+      "apple-pay",
+      "google-pay",
+      "evilginx"
+    ],
+    "cfpf_phases": [
+      "P1",
+      "P2",
+      "P3",
+      "P4",
+      "P5"
+    ],
+    "mitre_attack": [
+      "T1111",
+      "T1656",
+      "T1078",
+      "T1657"
+    ],
+    "ft3_tactics": [
+      "FTA001",
+      "FTA002",
+      "FTA003",
+      "FTA004",
+      "FTA005",
+      "FTA006",
+      "FTA007",
+      "FTA009",
+      "FTA010",
+      "FT011.002",
+      "FT013",
+      "FT016",
+      "FT031",
+      "FT043"
+    ],
+    "mitre_f3": [],
+    "groupib_stages": [
+      "Reconnaissance",
+      "Resource Development",
+      "Trust Abuse",
+      "Credential Access",
+      "Account Access",
+      "Defence Evasion",
+      "Perform Fraud",
+      "Monetization"
+    ],
+    "regulatory_refs": [
+      "REG-CFPB-REGE",
+      "REG-PSD3-SCA",
+      "REG-DORA",
+      "REG-FFIEC-AUTH",
+      "REG-OCC-FRAUD"
+    ],
+    "ucff_domains": {
+      "commit": "Level 3",
+      "assess": "Level 3",
+      "plan": "Level 3",
+      "act": "Level 4",
+      "monitor": "Level 4",
+      "report": "Level 2",
+      "improve": "Level 3"
+    },
+    "detection_rule_ids": [
+      "DL-0080",
+      "DL-0081",
+      "DL-0082"
+    ],
+    "related_tps": [
+      {
+        "id": "TP-0008",
+        "relationship": "enhances"
+      },
+      {
+        "id": "TP-0012",
+        "relationship": "feeds-into"
+      },
+      {
+        "id": "TP-0023",
+        "relationship": "related-to"
+      }
+    ],
+    "evidence_count": 0
+  },
+  {
+    "id": "TP-0038",
+    "title": "Card Testing Infrastructure Abuse",
+    "category": "ThreatPath",
+    "date": "2026-03-04",
+    "author": "FLAME Project (sourced from Recorded Future Payment Fraud Intelligence Report 2025)",
+    "source": "https://www.recordedfuture.com/research/annual-payment-fraud-intelligence-report-2025",
+    "tlp": "WHITE",
+    "summary": "Card testing infrastructure abuse is a foundational enabler for payment card fraud at scale. In this threat path, threat actors use automated tools to validate stolen or enumerated card numbers agains...",
+    "confidence_score": 72,
+    "source_reliability": "B",
+    "info_credibility": 2,
+    "infrastructure_generation_method": null,
+    "geopolitical_timing": null,
+    "nation_state_nexus": null,
+    "sectors": [
+      "payments",
+      "retail",
+      "fintech"
+    ],
+    "fraud_types": [
+      "card-testing",
+      "identity-theft",
+      "data-theft"
+    ],
+    "tags": [
+      "card-testing",
+      "BIN-attack",
+      "tester-merchant",
+      "telegram-carding",
+      "enumeration-attack",
+      "payment-gateway-abuse",
+      "card-validation"
+    ],
+    "cfpf_phases": [
+      "P1",
+      "P2",
+      "P3",
+      "P4",
+      "P5"
+    ],
+    "mitre_attack": [
+      "T1110.001",
+      "T1583.001",
+      "T1059",
+      "T1657"
+    ],
+    "ft3_tactics": [
+      "FTA001",
+      "FTA002",
+      "FTA003",
+      "FTA005",
+      "FTA007",
+      "FTA009",
+      "FTA010",
+      "FT003",
+      "FT007.009",
+      "FT017"
+    ],
+    "mitre_f3": [],
+    "groupib_stages": [
+      "Reconnaissance",
+      "Resource Development",
+      "Execution",
+      "Perform Fraud",
+      "Monetization"
+    ],
+    "regulatory_refs": [
+      "REG-FINCEN-CDD",
+      "REG-OCC-FRAUD"
+    ],
+    "ucff_domains": {
+      "commit": "Level 2",
+      "assess": "Level 3",
+      "plan": "Level 2",
+      "act": "Level 3",
+      "monitor": "Level 3",
+      "report": "Level 2",
+      "improve": "Level 2"
+    },
+    "detection_rule_ids": [
+      "DL-0083",
+      "DL-0084"
+    ],
+    "related_tps": [
+      {
+        "id": "TP-0013",
+        "relationship": "related-to"
+      },
+      {
+        "id": "TP-0030",
+        "relationship": "feeds-into"
+      },
+      {
+        "id": "TP-0035",
+        "relationship": "shares-infrastructure"
+      }
+    ],
+    "evidence_count": 0
+  },
+  {
+    "id": "TP-0039",
+    "title": "Agentic Commerce Fraud",
+    "category": "ThreatPath",
+    "date": "2026-03-04",
+    "author": "FLAME Project (sourced from Recorded Future Payment Fraud Intelligence Report 2025)",
+    "source": "https://www.recordedfuture.com/research/annual-payment-fraud-intelligence-report-2025",
+    "tlp": "WHITE",
+    "summary": "Agentic commerce fraud exploits the emerging paradigm of AI agent-mediated purchasing, where autonomous AI systems act on behalf of consumers to select merchants, negotiate prices, and execute transac...",
+    "confidence_score": 55,
+    "source_reliability": "C",
+    "info_credibility": 3,
+    "infrastructure_generation_method": null,
+    "geopolitical_timing": null,
+    "nation_state_nexus": null,
+    "sectors": [
+      "technology",
+      "retail",
+      "fintech",
+      "payments",
+      "cross-sector"
+    ],
+    "fraud_types": [
+      "autonomous-ai-fraud",
+      "social-engineering",
+      "account-takeover",
+      "unauthorized-transaction"
+    ],
+    "tags": [
+      "agentic-ai",
+      "ai-agent",
+      "intent-spoofing",
+      "automated-fraud-workflow",
+      "liability-ambiguity",
+      "commerce-automation",
+      "open-banking-parallel",
+      "amazon-buy-for-me",
+      "visa-intelligent-commerce",
+      "mastercard-agent-pay"
+    ],
+    "cfpf_phases": [
+      "P1",
+      "P2",
+      "P3",
+      "P4",
+      "P5"
+    ],
+    "mitre_attack": [
+      "T1059",
+      "T1078",
+      "T1656",
+      "T1657"
+    ],
+    "ft3_tactics": [
+      "FTA001",
+      "FTA002",
+      "FTA003",
+      "FTA005",
+      "FTA007",
+      "FTA009",
+      "FTA010",
+      "FT003",
+      "FT016",
+      "FT028",
+      "FT031"
+    ],
+    "mitre_f3": [],
+    "groupib_stages": [
+      "Reconnaissance",
+      "Resource Development",
+      "Trust Abuse",
+      "End-user Interaction",
+      "Account Access",
+      "Perform Fraud",
+      "Monetization"
+    ],
+    "regulatory_refs": [
+      "REG-CFPB-REGE",
+      "REG-DORA",
+      "REG-PSD3-SCA"
+    ],
+    "ucff_domains": {
+      "commit": "Level 2",
+      "assess": "Level 2",
+      "plan": "Level 2",
+      "act": "Level 3",
+      "monitor": "Level 3",
+      "report": "Level 2",
+      "improve": "Level 2"
+    },
+    "detection_rule_ids": [
+      "DL-0085",
+      "DL-0086"
+    ],
+    "related_tps": [
+      {
+        "id": "TP-0013",
+        "relationship": "related-to"
+      },
+      {
+        "id": "TP-0025",
+        "relationship": "related-to"
+      },
+      {
+        "id": "TP-0029",
+        "relationship": "enhances"
+      }
+    ],
+    "evidence_count": 0
+  },
+  {
+    "id": "TP-0040",
+    "title": "BNPL Multi-Provider Fraud \u2014 Synthetic Stacking, ATO & Friendly Fraud",
+    "category": "ThreatPath",
+    "date": "2026-03-04",
+    "author": "FLAME Project (sourced from LexisNexis Risk Solutions, Experian, ACI Worldwide, MRC, CFPB, FCA, ASIC research)",
+    "source": "https://www.lexisnexis.com/risk/global-fraud-identity-report",
+    "tlp": "WHITE",
+    "summary": "Buy Now, Pay Later (BNPL) services represent one of the fastest-growing fraud surfaces in consumer finance. The global BNPL market reached $452 billion in transaction value in 2025, with fraud rates o...",
+    "confidence_score": 78,
+    "source_reliability": "B",
+    "info_credibility": 2,
+    "infrastructure_generation_method": null,
+    "geopolitical_timing": null,
+    "nation_state_nexus": null,
+    "sectors": [
+      "retail",
+      "payments",
+      "fintech",
+      "banking"
+    ],
+    "fraud_types": [
+      "bnpl-fraud",
+      "first-party-fraud",
+      "identity-theft",
+      "account-takeover",
+      "social-engineering"
+    ],
+    "tags": [
+      "bnpl",
+      "klarna-method",
+      "synthetic-stacking",
+      "friendly-fraud",
+      "buy-now-pay-never",
+      "multi-provider",
+      "styx-marketplace",
+      "afterpay",
+      "affirm",
+      "phantom-delivery"
+    ],
+    "cfpf_phases": [
+      "P1",
+      "P2",
+      "P3",
+      "P4",
+      "P5"
+    ],
+    "mitre_attack": [
+      "T1586",
+      "T1589.001",
+      "T1657",
+      "T1583.001"
+    ],
+    "ft3_tactics": [
+      "FTA001",
+      "FTA002",
+      "FTA007",
+      "FTA009",
+      "FT003",
+      "FT007",
+      "FT016"
+    ],
+    "mitre_f3": [],
+    "groupib_stages": [
+      "Reconnaissance",
+      "Resource Development",
+      "Initial Access",
+      "Execution",
+      "Credential Access",
+      "Perform Fraud",
+      "Monetization",
+      "Laundering"
+    ],
+    "regulatory_refs": [
+      "REG-CFPB-REGE",
+      "REG-FCA-APP",
+      "REG-AU-SPF"
+    ],
+    "ucff_domains": {
+      "commit": "Level 3",
+      "assess": "Level 3",
+      "plan": "Level 3",
+      "act": "Level 4",
+      "monitor": "Level 4",
+      "report": "Level 2",
+      "improve": "Level 3"
+    },
+    "detection_rule_ids": [
+      "DL-0087",
+      "DL-0088",
+      "DL-0089",
+      "DL-0090",
+      "DL-0091"
+    ],
+    "related_tps": [
+      {
+        "id": "TP-0003",
+        "relationship": "related-to"
+      },
+      {
+        "id": "TP-0013",
+        "relationship": "feeds-into"
+      },
+      {
+        "id": "TP-0016",
+        "relationship": "related-to"
+      },
+      {
+        "id": "TP-0029",
+        "relationship": "enables"
+      },
+      {
+        "id": "TP-0030",
+        "relationship": "shares-infrastructure"
+      },
+      {
+        "id": "TP-0031",
+        "relationship": "related-to"
+      }
+    ],
+    "evidence_count": 0
+  },
+  {
+    "id": "TP-0041",
+    "title": "RDGA-Based Infrastructure Campaigns",
+    "category": "ThreatPath",
+    "date": "2026-03-05",
+    "author": "FLAME Project (sourced from CrimsonVector Strategic Intelligence Report, Infoblox DNS Intelligence)",
+    "source": "https://www.infoblox.com/threat-intel/threat-reports/",
+    "tlp": "WHITE",
+    "summary": "Registered Domain Generation Algorithms (RDGAs) represent a fundamentally different infrastructure threat from traditional embedded Domain Generation Algorithms (DGAs). In a traditional DGA, a malware...",
+    "confidence_score": 82,
+    "source_reliability": "B",
+    "info_credibility": 2,
+    "infrastructure_generation_method": "rdga-registered",
+    "geopolitical_timing": null,
+    "nation_state_nexus": null,
+    "sectors": [
+      "cross-sector",
+      "banking",
+      "crypto",
+      "investment"
+    ],
+    "fraud_types": [
+      "rdga-infrastructure"
+    ],
+    "tags": [
+      "rdga",
+      "registered-dga",
+      "prolific-puma",
+      "vextrio-viper",
+      "savvy-seahorse",
+      "revolver-rabbit",
+      "vault-viper",
+      "zone-file-analysis",
+      "dns-intelligence",
+      "bulk-registration",
+      "nameserver-clustering"
+    ],
+    "cfpf_phases": [
+      "P1",
+      "P2",
+      "P3",
+      "P4",
+      "P5"
+    ],
+    "mitre_attack": [
+      "T1583.001",
+      "T1583.003",
+      "T1568.002",
+      "T1071.001",
+      "T1090"
+    ],
+    "ft3_tactics": [
+      "FTA010",
+      "FTA009",
+      "FT007",
+      "FT016"
+    ],
+    "mitre_f3": [],
+    "groupib_stages": [
+      "Reconnaissance",
+      "Resource Development",
+      "Initial Access",
+      "Defence Evasion",
+      "Perform Fraud",
+      "Monetization"
+    ],
+    "regulatory_refs": [],
+    "ucff_domains": {
+      "commit": "Level 3",
+      "assess": "Level 4",
+      "plan": "Level 3",
+      "act": "Level 4",
+      "monitor": "Level 4",
+      "report": "Level 2",
+      "improve": "Level 3"
+    },
+    "detection_rule_ids": [
+      "DL-0092",
+      "DL-0093",
+      "DL-0094",
+      "DL-0099",
+      "DL-0100"
+    ],
+    "related_tps": [
+      {
+        "id": "TP-0042",
+        "relationship": "enables"
+      },
+      {
+        "id": "TP-0043",
+        "relationship": "related-to"
+      }
+    ],
+    "evidence_count": 0
+  },
+  {
+    "id": "TP-0042",
+    "title": "Traffic Distribution System (TDS) Chain Exploitation",
+    "category": "ThreatPath",
+    "date": "2026-03-05",
+    "author": "FLAME Project (sourced from CrimsonVector Strategic Intelligence Report, Infoblox DNS Intelligence)",
+    "source": "https://www.infoblox.com/threat-intel/threat-reports/",
+    "tlp": "WHITE",
+    "summary": "Traffic Distribution Systems (TDS) represent a critical infrastructure layer in the modern cybercrime ecosystem, functioning as the routing fabric that connects victim traffic to downstream fraud camp...",
+    "confidence_score": 85,
+    "source_reliability": "B",
+    "info_credibility": 2,
+    "infrastructure_generation_method": null,
+    "geopolitical_timing": null,
+    "nation_state_nexus": null,
+    "sectors": [
+      "cross-sector",
+      "banking",
+      "payments",
+      "retail"
+    ],
+    "fraud_types": [
+      "tds-exploitation",
+      "malvertising",
+      "phishing"
+    ],
+    "tags": [
+      "tds",
+      "traffic-distribution-system",
+      "vextrio",
+      "hazy-hawk",
+      "malvertising",
+      "redirect-chain",
+      "cloaking",
+      "affiliate-fraud",
+      "dns-hijack",
+      "seo-poisoning"
+    ],
+    "cfpf_phases": [
+      "P1",
+      "P2",
+      "P3",
+      "P4",
+      "P5"
+    ],
+    "mitre_attack": [
+      "T1583.001",
+      "T1608.005",
+      "T1189",
+      "T1090.002",
+      "T1071.001",
+      "T1036"
+    ],
+    "ft3_tactics": [
+      "FTA010",
+      "FTA005",
+      "FTA009",
+      "FT007",
+      "FT016"
+    ],
+    "mitre_f3": [],
+    "groupib_stages": [
+      "Reconnaissance",
+      "Resource Development",
+      "Initial Access",
+      "Defence Evasion",
+      "End-user Interaction",
+      "Perform Fraud",
+      "Monetization"
+    ],
+    "regulatory_refs": [],
+    "ucff_domains": {
+      "commit": "Level 3",
+      "assess": "Level 4",
+      "plan": "Level 3",
+      "act": "Level 4",
+      "monitor": "Level 4",
+      "report": "Level 2",
+      "improve": "Level 3"
+    },
+    "detection_rule_ids": [
+      "DL-0095",
+      "DL-0096",
+      "DL-0097",
+      "DL-0099",
+      "DL-0100"
+    ],
+    "related_tps": [
+      {
+        "id": "TP-0041",
+        "relationship": "shares-infrastructure"
+      },
+      {
+        "id": "TP-0043",
+        "relationship": "enables"
+      }
+    ],
+    "evidence_count": 0
+  },
+  {
+    "id": "TP-0043",
+    "title": "AI-Accelerated Fraud Infrastructure Generation",
+    "category": "ThreatPath",
+    "date": "2026-03-05",
+    "author": "FLAME Project (sourced from CrimsonVector Strategic Intelligence Report \u2014 multi-source synthesis)",
+    "source": "https://www.chainalysis.com/blog/2025-crypto-crime-report-introduction/",
+    "tlp": "WHITE",
+    "summary": "Generative AI has fundamentally collapsed the economics of fraud infrastructure generation. What previously required 16 hours of skilled human effort \u2014 crafting phishing emails, building credential ha...",
+    "confidence_score": 80,
+    "source_reliability": "B",
+    "info_credibility": 2,
+    "infrastructure_generation_method": "ai-assisted",
+    "geopolitical_timing": null,
+    "nation_state_nexus": null,
+    "sectors": [
+      "cross-sector",
+      "banking",
+      "payments",
+      "crypto"
+    ],
+    "fraud_types": [
+      "ai-accelerated-fraud-infrastructure",
+      "phishing",
+      "brand-impersonation"
+    ],
+    "tags": [
+      "ai-generated",
+      "llm-phishing",
+      "genai-scams",
+      "deepfake",
+      "campaign-automation",
+      "scam-as-a-service",
+      "domain-generation",
+      "content-generation",
+      "ai-vishing",
+      "infrastructure-economics"
+    ],
+    "cfpf_phases": [
+      "P1",
+      "P2",
+      "P3",
+      "P4",
+      "P5"
+    ],
+    "mitre_attack": [
+      "T1583.001",
+      "T1566.001",
+      "T1566.002",
+      "T1598",
+      "T1585.001",
+      "T1585.002",
+      "T1608.005"
+    ],
+    "ft3_tactics": [
+      "FTA005",
+      "FTA009",
+      "FTA010",
+      "FT007",
+      "FT016"
+    ],
+    "mitre_f3": [],
+    "groupib_stages": [
+      "Reconnaissance",
+      "Resource Development",
+      "Initial Access",
+      "End-user Interaction",
+      "Credential Access",
+      "Perform Fraud",
+      "Monetization"
+    ],
+    "regulatory_refs": [],
+    "ucff_domains": {
+      "commit": "Level 3",
+      "assess": "Level 3",
+      "plan": "Level 3",
+      "act": "Level 4",
+      "monitor": "Level 4",
+      "report": "Level 2",
+      "improve": "Level 3"
+    },
+    "detection_rule_ids": [
+      "DL-0098",
+      "DL-0099",
+      "DL-0100"
+    ],
+    "related_tps": [
+      {
+        "id": "TP-0029",
+        "relationship": "related-to"
+      },
+      {
+        "id": "TP-0041",
+        "relationship": "related-to"
+      },
+      {
+        "id": "TP-0042",
+        "relationship": "enables"
+      }
+    ],
+    "evidence_count": 0
+  },
+  {
+    "id": "TP-0044",
+    "title": "State-Criminal Infrastructure Convergence",
+    "category": "ThreatPath",
+    "date": "2026-03-05",
+    "author": "FLAME Project (sourced from CrimsonVector Strategic Intelligence Report, Microsoft Threat Intelligence, Gen Digital, Atlantic Council)",
+    "source": "https://www.microsoft.com/en-us/security/blog/topic/threat-intelligence/",
+    "tlp": "WHITE",
+    "summary": "State-sponsored threat actors and criminal cyber organizations are converging into hybrid operational structures that share infrastructure, tooling, and monetization networks. This convergence represe...",
+    "confidence_score": 78,
+    "source_reliability": "B",
+    "info_credibility": 2,
+    "infrastructure_generation_method": null,
+    "geopolitical_timing": "conflict-triggered",
+    "nation_state_nexus": "hybrid",
+    "sectors": [
+      "banking",
+      "crypto",
+      "cross-sector"
+    ],
+    "fraud_types": [
+      "state-criminal-convergence",
+      "crypto-laundering",
+      "malware"
+    ],
+    "tags": [
+      "state-criminal-convergence",
+      "dprk",
+      "moonstone-sleet",
+      "lazarus-group",
+      "gamaredon",
+      "qilin-ransomware",
+      "cmln",
+      "nation-state",
+      "hybrid-threat"
+    ],
+    "cfpf_phases": [
+      "P1",
+      "P2",
+      "P3",
+      "P4",
+      "P5"
+    ],
+    "mitre_attack": [
+      "T1583.001",
+      "T1583.003",
+      "T1584.001",
+      "T1586.002",
+      "T1059",
+      "T1486",
+      "T1071.001"
+    ],
+    "ft3_tactics": [],
+    "mitre_f3": [],
+    "groupib_stages": [
+      "Reconnaissance",
+      "Resource Development",
+      "Trust Abuse",
+      "Account Access",
+      "Perform Fraud",
+      "Monetization",
+      "Laundering"
+    ],
+    "regulatory_refs": [],
+    "ucff_domains": {
+      "commit": "Level 3",
+      "assess": "Level 4",
+      "plan": "Level 4",
+      "act": "Level 4",
+      "monitor": "Level 4",
+      "report": "Level 3",
+      "improve": "Level 3"
+    },
+    "detection_rule_ids": [
+      "DL-0101"
+    ],
+    "related_tps": [
+      {
+        "id": "TP-0041",
+        "relationship": "shares-infrastructure"
+      },
+      {
+        "id": "TP-0045",
+        "relationship": "enables"
+      }
+    ],
+    "evidence_count": 0
+  },
+  {
+    "id": "TP-0045",
+    "title": "Sanctions Evasion via Fraud Infrastructure",
+    "category": "ThreatPath",
+    "date": "2026-03-05",
+    "author": "FLAME Project (sourced from CrimsonVector Strategic Intelligence Report, Chainalysis, TRM Labs, OFAC)",
+    "source": "https://www.chainalysis.com/blog/crypto-crime-midyear-2025/",
+    "tlp": "WHITE",
+    "summary": "Sanctions evasion has evolved from a compliance challenge into a distinct infrastructure threat path, driven by the convergence of bulletproof hosting (BPH), purpose-built stablecoins, and rapid entit...",
+    "confidence_score": 85,
+    "source_reliability": "A",
+    "info_credibility": 1,
+    "infrastructure_generation_method": null,
+    "geopolitical_timing": "sanctions-response",
+    "nation_state_nexus": "confirmed",
+    "sectors": [
+      "crypto",
+      "banking",
+      "cross-sector"
+    ],
+    "fraud_types": [
+      "sanctions-evasion-infrastructure",
+      "crypto-laundering"
+    ],
+    "tags": [
+      "sanctions-evasion",
+      "ofac",
+      "a7a5-stablecoin",
+      "huione-group",
+      "usdh",
+      "funnull",
+      "garantex-grinex",
+      "aeza",
+      "bph-rebranding",
+      "crypto-laundering",
+      "infrastructure-migration"
+    ],
+    "cfpf_phases": [
+      "P1",
+      "P2",
+      "P3",
+      "P4",
+      "P5"
+    ],
+    "mitre_attack": [
+      "T1583.001",
+      "T1583.003",
+      "T1584.004",
+      "T1036",
+      "T1071.001",
+      "T1048"
+    ],
+    "ft3_tactics": [],
+    "mitre_f3": [],
+    "groupib_stages": [
+      "Reconnaissance",
+      "Resource Development",
+      "Defence Evasion",
+      "Perform Fraud",
+      "Monetization",
+      "Laundering"
+    ],
+    "regulatory_refs": [],
+    "ucff_domains": {
+      "commit": "Level 4",
+      "assess": "Level 4",
+      "plan": "Level 4",
+      "act": "Level 4",
+      "monitor": "Level 4",
+      "report": "Level 4",
+      "improve": "Level 3"
+    },
+    "detection_rule_ids": [
+      "DL-0102",
+      "DL-0103",
+      "DL-0104",
+      "DL-0106"
+    ],
+    "related_tps": [
+      {
+        "id": "TP-0041",
+        "relationship": "shares-infrastructure"
+      },
+      {
+        "id": "TP-0044",
+        "relationship": "related-to"
+      },
+      {
+        "id": "TP-0046",
+        "relationship": "enables"
+      }
+    ],
+    "evidence_count": 0
+  },
+  {
+    "id": "TP-0046",
+    "title": "Geopolitically-Timed Fraud Campaigns",
+    "category": "ThreatPath",
+    "date": "2026-03-05",
+    "author": "FLAME Project (sourced from CrimsonVector Strategic Intelligence Report, Finance Derivative 2026, Radware, Orange Cyberdefense)",
+    "source": "https://www.radware.com/threat-analysis/",
+    "tlp": "WHITE",
+    "summary": "Geopolitically-timed fraud campaigns represent a structurally distinct threat category in which financially-motivated and ideologically-motivated threat actors deliberately synchronize attack operatio...",
+    "confidence_score": 75,
+    "source_reliability": "B",
+    "info_credibility": 2,
+    "infrastructure_generation_method": null,
+    "geopolitical_timing": "election-cycle",
+    "nation_state_nexus": "suspected",
+    "sectors": [
+      "banking",
+      "payments",
+      "cross-sector"
+    ],
+    "fraud_types": [
+      "state-criminal-convergence"
+    ],
+    "tags": [
+      "geopolitical-timing",
+      "election-cycle",
+      "hacktivist",
+      "ddos",
+      "noname057",
+      "killnet",
+      "pro-russian",
+      "pro-palestinian",
+      "financial-sector-targeting",
+      "l7-dns-attacks",
+      "politically-motivated"
+    ],
+    "cfpf_phases": [
+      "P1",
+      "P2",
+      "P3",
+      "P4",
+      "P5"
+    ],
+    "mitre_attack": [
+      "T1583.001",
+      "T1498",
+      "T1499",
+      "T1566.001",
+      "T1591.004"
+    ],
+    "ft3_tactics": [],
+    "mitre_f3": [],
+    "groupib_stages": [
+      "Reconnaissance",
+      "Resource Development",
+      "Initial Access",
+      "End-user Interaction",
+      "Perform Fraud"
+    ],
+    "regulatory_refs": [],
+    "ucff_domains": {
+      "commit": "Level 3",
+      "assess": "Level 4",
+      "plan": "Level 3",
+      "act": "Level 4",
+      "monitor": "Level 4",
+      "report": "Level 3",
+      "improve": "Level 3"
+    },
+    "detection_rule_ids": [
+      "DL-0105",
+      "DL-0106",
+      "DL-0107"
+    ],
+    "related_tps": [
+      {
+        "id": "TP-0044",
+        "relationship": "related-to"
+      },
+      {
+        "id": "TP-0045",
+        "relationship": "related-to"
+      }
+    ],
+    "evidence_count": 0
+  },
+  {
+    "id": "TP-0047",
+    "title": "Human Trafficking-Linked Fraud Infrastructure",
+    "category": "ThreatPath",
+    "date": "2026-03-05",
+    "author": "FLAME Project (sourced from CrimsonVector Strategic Intelligence Report, FBI IC3, Chainalysis, OFAC)",
+    "source": "https://www.chainalysis.com/blog/crypto-crime-midyear-2025/",
+    "tlp": "WHITE",
+    "summary": "> **Scope Limitation**: This threat path documents the fraud infrastructure that is operationally dependent on or intersects with human trafficking networks in Southeast Asia. It does not attempt to d...",
+    "confidence_score": 80,
+    "source_reliability": "A",
+    "info_credibility": 2,
+    "infrastructure_generation_method": null,
+    "geopolitical_timing": null,
+    "nation_state_nexus": null,
+    "sectors": [
+      "crypto",
+      "banking",
+      "cross-sector"
+    ],
+    "fraud_types": [
+      "human-trafficking-facilitation",
+      "scam-compound-operations",
+      "crypto-laundering"
+    ],
+    "tags": [
+      "human-trafficking",
+      "scam-compound",
+      "pig-butchering",
+      "southeast-asia",
+      "huione-group",
+      "karen-national-army",
+      "ofac-sanctions",
+      "cryptocurrency",
+      "recruitment-fraud"
+    ],
+    "cfpf_phases": [
+      "P1",
+      "P2",
+      "P3",
+      "P4",
+      "P5"
+    ],
+    "mitre_attack": [
+      "T1583.001",
+      "T1566.001",
+      "T1566.002",
+      "T1071.001",
+      "T1048"
+    ],
+    "ft3_tactics": [],
+    "mitre_f3": [],
+    "groupib_stages": [
+      "Reconnaissance",
+      "Resource Development",
+      "End-user Interaction",
+      "Perform Fraud",
+      "Monetization",
+      "Laundering"
+    ],
+    "regulatory_refs": [],
+    "ucff_domains": {
+      "commit": "Level 4",
+      "assess": "Level 4",
+      "plan": "Level 3",
+      "act": "Level 4",
+      "monitor": "Level 4",
+      "report": "Level 4",
+      "improve": "Level 3"
+    },
+    "detection_rule_ids": [
+      "DL-0108",
+      "DL-0109"
+    ],
+    "related_tps": [
+      {
+        "id": "TP-0044",
+        "relationship": "related-to"
+      },
+      {
+        "id": "TP-0045",
+        "relationship": "shares-infrastructure"
+      },
+      {
+        "id": "TP-0049",
+        "relationship": "feeds-into"
+      }
+    ],
+    "evidence_count": 0
+  },
+  {
+    "id": "TP-0048",
+    "title": "Bulletproof Hosting Migration Patterns",
+    "category": "ThreatPath",
+    "date": "2026-03-05",
+    "author": "FLAME Project (sourced from CrimsonVector Strategic Intelligence Report, OFAC, CISA)",
+    "source": "https://www.cisa.gov/topics/cyber-threats-and-advisories",
+    "tlp": "WHITE",
+    "summary": "Bulletproof hosting (BPH) providers represent one of the most critical enablers of modern cybercrime and fraud infrastructure. Unlike legitimate hosting services that comply with abuse reports and law...",
+    "confidence_score": 82,
+    "source_reliability": "A",
+    "info_credibility": 2,
+    "infrastructure_generation_method": null,
+    "geopolitical_timing": null,
+    "nation_state_nexus": null,
+    "sectors": [
+      "cross-sector"
+    ],
+    "fraud_types": [
+      "bph-migration",
+      "sanctions-evasion-infrastructure"
+    ],
+    "tags": [
+      "bulletproof-hosting",
+      "bph-migration",
+      "funnull",
+      "aeza",
+      "media-land",
+      "ofac-sanctions",
+      "cloud-abuse",
+      "bgp-analysis",
+      "cname-clustering",
+      "infrastructure-lifecycle"
+    ],
+    "cfpf_phases": [
+      "P1",
+      "P2",
+      "P3",
+      "P4",
+      "P5"
+    ],
+    "mitre_attack": [
+      "T1583.003",
+      "T1583.004",
+      "T1584.004",
+      "T1036",
+      "T1578"
+    ],
+    "ft3_tactics": [],
+    "mitre_f3": [],
+    "groupib_stages": [
+      "Resource Development",
+      "Defence Evasion",
+      "Perform Fraud"
+    ],
+    "regulatory_refs": [],
+    "ucff_domains": {
+      "commit": "Level 3",
+      "assess": "Level 4",
+      "plan": "Level 3",
+      "act": "Level 4",
+      "monitor": "Level 4",
+      "report": "Level 3",
+      "improve": "Level 3"
+    },
+    "detection_rule_ids": [
+      "DL-0110",
+      "DL-0111",
+      "DL-0112"
+    ],
+    "related_tps": [
+      {
+        "id": "TP-0041",
+        "relationship": "enables"
+      },
+      {
+        "id": "TP-0042",
+        "relationship": "enables"
+      },
+      {
+        "id": "TP-0045",
+        "relationship": "shares-infrastructure"
+      }
+    ],
+    "evidence_count": 0
+  },
+  {
+    "id": "TP-0049",
+    "title": "Cryptocurrency Laundering Infrastructure",
+    "category": "ThreatPath",
+    "date": "2026-03-05",
+    "author": "FLAME Project (sourced from CrimsonVector Strategic Intelligence Report, Chainalysis, TRM Labs)",
+    "source": "https://www.chainalysis.com/blog/crypto-crime-midyear-2025/",
+    "tlp": "WHITE",
+    "summary": "Cryptocurrency Money Laundering Networks (CMLNs) have emerged as the dominant infrastructure layer enabling the monetization of virtually every category of crypto-enabled fraud and cybercrime. In 2025...",
+    "confidence_score": 85,
+    "source_reliability": "A",
+    "info_credibility": 1,
+    "infrastructure_generation_method": null,
+    "geopolitical_timing": null,
+    "nation_state_nexus": null,
+    "sectors": [
+      "crypto",
+      "banking",
+      "cross-sector"
+    ],
+    "fraud_types": [
+      "crypto-laundering-infrastructure",
+      "cmln-operations"
+    ],
+    "tags": [
+      "cmln",
+      "cryptocurrency-laundering",
+      "no-kyc-exchange",
+      "otc-broker",
+      "black-u",
+      "dprk-laundering-cycle",
+      "cross-chain-bridge",
+      "huione-group",
+      "chainalysis",
+      "trm-labs"
+    ],
+    "cfpf_phases": [
+      "P1",
+      "P2",
+      "P3",
+      "P4",
+      "P5"
+    ],
+    "mitre_attack": [
+      "T1583.001",
+      "T1071.001",
+      "T1048",
+      "T1565.003"
+    ],
+    "ft3_tactics": [],
+    "mitre_f3": [],
+    "groupib_stages": [
+      "Monetization",
+      "Laundering"
+    ],
+    "regulatory_refs": [],
+    "ucff_domains": {
+      "commit": "Level 4",
+      "assess": "Level 4",
+      "plan": "Level 4",
+      "act": "Level 4",
+      "monitor": "Level 4",
+      "report": "Level 4",
+      "improve": "Level 4"
+    },
+    "detection_rule_ids": [
+      "DL-0113",
+      "DL-0114"
+    ],
+    "related_tps": [
+      {
+        "id": "TP-0044",
+        "relationship": "related-to"
+      },
+      {
+        "id": "TP-0045",
+        "relationship": "shares-infrastructure"
+      },
+      {
+        "id": "TP-0047",
         "relationship": "related-to"
       }
     ],
