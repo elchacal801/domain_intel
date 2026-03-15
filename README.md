@@ -1,200 +1,117 @@
-# Disposable & Abuse Domain Intelligence
+<p align="center">
+  <img src="https://img.shields.io/badge/Domain_Intel-Threat_Intelligence_Platform-1a1b26?style=for-the-badge&logo=shield&logoColor=white" alt="Domain Intel" />
+</p>
 
-This repository contains research and tooling for analyzing disposable email address (DEA) providers and high-abuse domain infrastructure.
+<p align="center">
+  <strong>Automated threat intelligence platform for disposable email, typosquatting, and abuse infrastructure detection.</strong>
+</p>
 
-The goal is to move beyond simple static blocklists and provide **infrastructure-level intelligence** (MX records, ASNs, and hosting patterns) to help security teams, researchers, and fraud analysts detect abuse families that rotate domains frequently.
+<p align="center">
+  <a href="https://github.com/elchacal801/domain_intel/actions/workflows/update_intelligence.yml"><img src="https://github.com/elchacal801/domain_intel/actions/workflows/update_intelligence.yml/badge.svg" alt="Daily Data Update" /></a>
+  <a href="LICENSE"><img src="https://img.shields.io/badge/License-MIT-green.svg" alt="License: MIT" /></a>
+  <img src="https://img.shields.io/badge/Python-3.10+-3776AB?logo=python&logoColor=white" alt="Python 3.10+" />
+  <img src="https://img.shields.io/badge/Node.js-20+-339933?logo=node.js&logoColor=white" alt="Node.js 20+" />
+  <img src="https://img.shields.io/badge/React-19-61DAFB?logo=react&logoColor=black" alt="React 19" />
+  <img src="https://img.shields.io/badge/STIX-2.1-005B94" alt="STIX 2.1" />
+  <img src="https://img.shields.io/badge/Updates-Daily_(Automated)-blue" alt="Daily Updates" />
+</p>
+
+<p align="center">
+  <a href="https://elchacal801.github.io/domain_intel/"><strong>View Live Dashboard</strong></a>
+</p>
+
+---
+
+## Table of Contents
+
+- [Key Features](#key-features)
+- [Live Dashboard](#live-dashboard)
+- [Architecture](#architecture)
+- [How to Use This Intelligence](#how-to-use-this-intelligence)
+- [Quick Start](#quick-start)
+- [Pipeline Deep Dive](#pipeline-deep-dive)
+- [Configuration Reference](#configuration-reference)
+- [Project Structure](#project-structure)
+- [CI/CD & Automation](#cicd--automation)
+- [Testing](#testing)
+- [Data Dictionary](#data-dictionary)
+- [Responsible Use & Security](#responsible-use--security)
+- [Contributing](#contributing)
+- [Acknowledgments](#acknowledgments)
+- [License](#license)
+
+---
+
+## Key Features
+
+| Category | Capability |
+|---|---|
+| **Automated Pipeline** | Daily GitHub Actions workflow with 10-shard parallel processing, artifact passing, and auto-commit to GitHub Pages |
+| **AI-Powered Analysis** | Multi-model LLM chain (Claude Sonnet 4.5 / Gemini 3 Pro / GPT-4o) with automatic fallback, SQLite caching, and cost tracking |
+| **Infrastructure Clustering** | Groups domains by shared MX hosts, MX IPs, web hosting IPs, and registrar+NS — with confidence scoring that penalizes known shared providers |
+| **Fingerprint Detection** | 7 YAML-driven fingerprint rules with confidence modifiers, entity screening boosts, and FLAME threat-path mapping |
+| **FLAME Integration** | Maps clusters to [FLAME](https://github.com/elchacal801/flame-fraud) fraud threat paths with evidence package generation |
+| **STIX 2.1 Export** | Full STIX bundle generation for direct ingestion into OpenCTI, MISP, or any CTI platform |
+| **Shadow AI Scanner** | Detects exposed OpenClaw/Moltbot/Gateway AI agents on port 18789 via Shodan with STIX + Sigma rule export |
+| **Investigation Dashboard** | React 19 + Vite 7 + Tailwind CSS 4 frontend with Sigma.js graph visualization, TanStack Table, and fuzzy search |
+| **Proactive Discovery** | SEADS ad scanning, dnstwist permutation generation, Certificate Transparency log streaming, and Shodan campaign hunts |
+| **Entity Screening** | Cross-references domains against GLEIF (corporate registry), OpenSanctions (PEPs/sanctions), and ICIJ OffshoreLeaks |
+| **Threat Feed Matching** | Checks domains against PhishTank, URLhaus, VirusTotal, and AlienVault OTX |
+| **Visual Forensics** | Headless browser screenshots with perceptual hashing (pHash) to cluster identical phishing kits |
 
 > [!NOTE]
 > This repository **updates itself automatically** every day via GitHub Actions. The data in `data/` is always current.
 
+---
+
 ## Live Dashboard
 
-View the real-time threat intelligence visualization, featuring an **AI-generated Daily Briefing** and **Campaign Tracker**:
-> **[View Live Dashboard](https://elchacal801.github.io/domain_intel/)**
+> **[https://elchacal801.github.io/domain_intel/](https://elchacal801.github.io/domain_intel/)**
 
-## How to Use This Intelligence
+The dashboard provides five investigation views:
 
-This repository provides different layers of data for different security roles:
+| Page | Description |
+|---|---|
+| **Matches** | Fingerprint match table with KPI cards, multi-select filters (fingerprint, TLD, registrar), sorting, pagination, and CSV export |
+| **Investigate** | Global domain search with fuzzy matching. Click any domain for a full detail page with DNS, reputation, AI classification, Shodan, VirusTotal, FLAME mappings, and resolution chain |
+| **Clusters** | Interactive Sigma.js force-directed graph of infrastructure clusters. Table view with shared-infra detection, confidence scoring, and drill-down to connected domains |
+| **Intel Briefing** | AI-generated daily intelligence briefing in IC-style format — BLUF, strategic assessment, operational intelligence, campaign highlights, risk signals, action items, and FLAME evidence candidates |
+| **Compare** | Side-by-side domain comparison showing infrastructure overlap, shared clusters, and risk signal differences |
 
-### For SOC & Fraud Analysts
+---
 
-* **Block Disposable Email**: Use `data/dea_domains.csv` to block signups from temporary email services.
-* **Detect Malicious Ads**: Ingest `data/discovered_ads.csv` to block domains actively abusing search ads.
-* **Brand Protection**: Monitor `data/potential_typosquats.csv` for new registrations impersonating your brand.
+## Architecture
 
-### For Threat Researchers
+Domain Intel operates as a **daily batch pipeline** that discovers, triages, enriches, analyzes, and publishes threat intelligence — entirely automated via GitHub Actions.
 
-* **Infrastructure Pivoting**: Use `data/dea_domains_probed.csv` to find patterns.
-  * *Example*: "Find all domains hosted on AS12345 that have a page title containing 'Login'."
-* **Hosted Scams**: Check `data/risky_asn_list.csv` to identify hosting providers that ignore abuse reports (Bulletproof hosting).
-* **Campaign Tracking**: Review `data/campaign_hunt_history.csv` for new infrastructure discovered by automated Shodan hunts.
+### At a Glance
 
-### For Engineering/DevOps
-
-* **STIX Integration**: Use `data/domain_intel_bundle.json` to feed this intelligence directly into platforms like OpenCTI or MISP.
-* **Shadow AI Detection**: Use `data/openclaw_stix.json` to ingest indicators of compromised AI agents (OpenClaw/Moltbot) into your SIEM.
-* **Dashboard Summary**: Use `data/dashboard_summary.json` for pre-computed KPIs without parsing large CSVs.
-
-## Project Structure
-
-* **`frontend/`**: React 19 + Vite 7 + Tailwind CSS 4 investigation dashboard (source).
-  * Built with `npm run build` and output to `docs/` for GitHub Pages deployment.
-  * Pages: Briefing, Investigate (domain search + detail), Cluster View (graph + table), Fingerprint Matches, Domain Compare.
-
-* **`scripts/`**: The Python pipeline.
-  * **Shared Utilities** (`scripts/shared/`):
-    * `retry.py`: Exponential backoff decorator with sync/async support.
-    * `cymru_resolver.py`: Centralized Team Cymru DNS enrichment for ASN/IP data.
-    * `llm_client.py`: Unified LLM wrapper (LiteLLM) with model fallback chains and JSON parsing.
-  * **Core Pipeline**:
-    * `merge_lists_v3b.py`: Aggregates and cleans public sources.
-    * `split_data.py`: Splits large datasets for parallel processing (Sharding).
-    * `enrich_infrastructure.py`: Performs bulk DNS/ASN resolution (MX, NS, domain A-records, ASN for both MX and web hosting IPs).
-    * `enrich_reputation.py`: Checks RBLs and queries RDAP.
-    * `probe_web.py`: Performs active HTTP/S fingerprinting.
-    * `merge_results.py`: Merges processed shards back into a single dataset.
-    * `match_fingerprints.py`: YAML-driven indicator matching with confidence scoring (uses `config/fingerprints/`).
-    * `build_frontend_data.py`: Builds frontend JSON data — domain shards, infrastructure clusters (with shared infra detection and confidence scoring), fingerprint matches, resolution chains, and stats.
-    * `generate_pivots.py`: Generates intelligence pivot datasets and stats.
-    * `build_dashboard_data.py`: Generates pre-computed dashboard summary JSON.
-    * `export_stix.py`: Exports intelligence to STIX 2.1 JSON.
-    * `hunt_campaign.py`: Proactively hunts for specific campaign infrastructure using Shodan.
-  * **Shadow AI Scanner**:
-    * `openclaw_scan.py`: Scans for exposed OpenClaw/Moltbot/Gateway AI agents on port 18789.
-    * `openclaw_stix.py`: Converts OpenClaw findings to STIX 2.1 bundles.
-    * `shodan_utils.py`: Shared utility for safe Shodan scanning (Credit Budgeting + Caching + Thread Safety).
-  * **Infrastructure Intel**:
-    * `asn_intel.py`: Concurrent fetch and enrich suspicious ASNs.
-    * `vpn_intel.py`: Aggregates VPN/VPS provider ASNs.
-    * `tor_intel.py`: Tracks Tor Exit Nodes and Tor ASNs.
-    * `clean_data.py`: Automated CSV hygiene and schema correction.
-    * `enrich_asns.py`: Fetches missing ASN names from RIPE Stat API.
-  * **Rate Limiting**:
-    * `enrich_shodan.py`: Strictly enforced **1 Request Per Second (RPS)** to comply with API limits. Uses a `CreditBudget` singleton and thread-safe `RateLimiter`.
-    * `enrich_technical.py`: Uses 50 concurrent workers for DNS/SSL but limits processing volume per run (default 5k) to prevent timeouts.
-    * `ai_*.py`: Limits concurrency (3 workers) and batch sizes (2k items/run) to fit within 40m timeout.
-  * **AI Modules**:
-    * `ai_typosquat.py`: Uses LLM to detect semantic typosquatting.
-    * `ai_classify_web.py`: Uses LLM to concurrently classify web page intent (Batch Processing).
-    * `ai_briefing.py`: Generates the daily dashboard briefing (includes FLAME evidence candidates).
-  * **FLAME Integration**:
-    * `generate_evidence.py`: Generates [FLAME](https://github.com/elchacal801/flame-fraud)-formatted evidence packages from investigation clusters. Supports dry-run, duplicate checking, and configurable thresholds.
-  * **Analytics & Whois**:
-    * `track_history.py`: Daily tracker for Domain Growth and Liveness (Stats).
-    * `drip_whois.py`: Slow, rate-limited Registrar enumeration (Port 43).
-
-* **`config/`**: Pipeline and detection configuration.
-  * `shared_infrastructure.yaml`: Shared provider definitions (email, DNS, web hosting) with pattern/ASN-based matching for cluster confidence scoring.
-  * `defaults.yaml`: Default thresholds and settings.
-  * `fingerprints/*.yaml`: YAML-driven indicator matching rules (7 fingerprints) with confidence scoring.
-
-* **`data/`**: The authoritative source for domain lists and derived intelligence.
-  > **[View Data Dictionary](data/README.md)** for a detailed explanation of every file.
-
-* **`docs/`**: GitHub Pages deployment directory (built from `frontend/`).
-
-* **`tests/`**: Unit tests for shared utilities and enrichment logic.
-
-## Getting Started
-
-### Prerequisites
-
-* Python 3.10+
-* Node.js 20+ (for dashboard builds)
-* `dnspython`, `tqdm`, `requests`, `stix2`
-* `litellm`, `python-dotenv` (for AI features)
-
-Install dependencies:
-
-```bash
-pip install -r requirements.txt
-cd frontend && npm install
+```
+Discovery (ads, typosquats, CT logs, Shodan hunts)
+    │
+    ▼
+Triage (keyword + target matching → reduce 200k+ → ~10k candidates)
+    │
+    ▼
+Sharding (split into 10 chunks for parallel processing)
+    │
+    ▼
+Enrichment (DNS/MX/NS/ASN resolution → reputation → web probing)
+    │
+    ▼
+Advanced Intel (Shodan, VirusTotal, PhishTank, GLEIF, OpenSanctions, ICIJ, Whois)
+    │
+    ▼
+AI Analysis (typosquat detection + web intent classification + daily briefing)
+    │
+    ▼
+Detection & Scoring (YAML fingerprints → infrastructure clustering → confidence scoring)
+    │
+    ▼
+Output (STIX 2.1 bundle, React dashboard, JSON APIs, CSV exports)
 ```
 
-### Setting up AI Features
-
-To run the AI modules (`scripts/ai_*.py`), you need API keys.
-
-1. Create a `.env` file in the root directory:
-
-    ```env
-    OPENAI_API_KEY=sk-...
-    GEMINI_API_KEY=AIza...
-    ANTHROPIC_API_KEY=sk-ant-...
-    ```
-
-2. For GitHub Actions, add these as **Repository Secrets**.
-
-The model priority chain is configured centrally in `scripts/shared/llm_client.py`:
-
-* Primary: `claude-sonnet-4-5-20250929`
-* Secondary: `gemini-3-pro-preview`
-* Fallback: `gpt-4o`
-
-### Proactive Discovery
-
-* **Ad Intelligence**: `run_seads.py` scans search engines for malicious ads targeting specific keywords (Config: `config/seads_keywords.txt`).
-* **Typosquat Generation**: `generate_permutations.py` (via `dnstwist`) generates thousands of potential lookalike domains for high-value targets.
-* **Visual Fingerprinting**: `visual_fingerprint.py` uses headless browsers to group domains by visual similarity (pHash), tracking phishing kits.
-
-### Reproducing the Intelligence
-
-1. **Sharding & Enrichment**:
-    For large datasets (>10k domains), we use a sharding strategy to avoid network timeouts.
-
-    ```bash
-    # 1. Split data
-    python scripts/split_data.py --input data/dea_domains.csv --chunks 10
-    
-    # 2. Process shards (Example for shard 0)
-    python scripts/enrich_infrastructure.py --input data/dea_part_0.csv --output temp_0.csv
-    python scripts/enrich_reputation.py --input temp_0.csv --output temp_rep_0.csv
-    python scripts/probe_web.py --input temp_rep_0.csv --output data/result_part_0.csv
-    
-    # 3. Merge results
-    python scripts/merge_results.py --pattern "data/result_part_*.csv" --output data/dea_domains_probed.csv
-    ```
-
-2. **Infrastructure & Hygiene**: Fetch external intel and clean data.
-
-    ```bash
-    python scripts/asn_intel.py
-    python scripts/clean_data.py
-    python scripts/enrich_asns.py
-    ```
-
-3. **AI Analysis**: Run the AI tagging and briefing generation.
-
-    ```bash
-    python scripts/ai_typosquat.py --limit 50000 --batch-size 100
-    python scripts/ai_classify_web.py --limit 50000 --batch-size 50
-    python scripts/ai_briefing.py
-    ```
-
-4. **FLAME Evidence**: Generate evidence packages for the FLAME framework.
-
-    ```bash
-    python scripts/generate_evidence.py --dry-run    # Preview
-    python scripts/generate_evidence.py               # Generate packages
-    ```
-
-5. **Fingerprinting & Clustering**: Run fingerprint matching and build frontend data.
-
-    ```bash
-    python scripts/match_fingerprints.py
-    python scripts/build_frontend_data.py
-    ```
-
-6. **Dashboard Build**: Build the frontend and generate the summary manifest.
-
-    ```bash
-    python scripts/build_dashboard_data.py
-    cd frontend && npm run build
-    ```
-
-## Methodology & Architecture
-
-### Data Pipeline
+### Detailed Pipeline Diagram
 
 ```mermaid
 graph TD
@@ -254,7 +171,7 @@ graph TD
         O --> P(Daily Briefing LLM)
         O --> DASH_BUILD["Frontend Build (React)"]
         O --> R[STIX 2.1 Bundle]
-        
+
         OC -->|Shadow AI STIX| OC_STIX[OpenClaw STIX]
         OC -->|Exposure Stats| DASH_BUILD
         HUNT -->|New Hits| HUNT_LOG[Campaign History CSV]
@@ -284,53 +201,566 @@ graph TD
     style LLM fill:#2d333b,stroke:#555,stroke-width:1px,color:#8b97a8
 ```
 
-### Detection Logic & Triage Funnel
+---
 
-### 1. Discovery & Triage (The Funnel)
+## How to Use This Intelligence
 
-To efficiently find threats in a sea of millions of domains without burning millions of API credits, we use a **Tiered Funnel**:
+### For SOC & Fraud Analysts
 
-1. **Raw Ingestion**: We ingest ~200k+ domains daily from open sources (`merge_lists_v3b.py`) and proactive discovery (`dnstwist`, `seads`).
-2. **Heuristic Triage (`triage_domains.py`)**: A fast, local Python script filters these domains against:
-    * **High-Value Targets**: Is it a fuzzy match for "Google", "Amazon", "Citibank"?
-    * **High-Signal Keywords**: Does it contain "login", "update", "verify", "secure", "wallet"?
-    * **Result**: This reduces the "Haystack" (230k domains) to a "Needle Pile" (~10k candidates).
+| File | Use Case |
+|---|---|
+| `data/dea_domains.csv` | Block signups from disposable/temporary email services |
+| `data/discovered_ads.csv` | Block domains actively abusing search engine ads |
+| `data/potential_typosquats.csv` | Monitor for new registrations impersonating your brand |
+| `data/ai_typosquats.csv` | AI-validated typosquatting domains with confidence scores |
+| `data/phishtank_matches.csv` | Domains confirmed on PhishTank/URLhaus feeds |
+| `data/fingerprint_matches.csv` | Domains matching known abuse infrastructure patterns |
 
-### 2. Enrichment
+### For Threat Researchers
 
-The remaining domains are hydrated with deep infrastructure data:
+| File | Use Case |
+|---|---|
+| `data/dea_domains_probed.csv` | Full enriched dataset — DNS, ASN, MX, web probe, reputation |
+| `data/risky_asn_list.csv` | Hosting providers that tolerate abuse (bulletproof hosting) |
+| `data/campaign_hunt_history.csv` | Infrastructure discovered by automated Shodan campaign hunts |
+| `data/shodan_intelligence.csv` | Shodan enrichment for triaged candidates (ports, services, vulns) |
+| `data/enriched_candidates.csv` | Technical enrichment with DNS/SSL history and pivot selectors |
+| `data/openclaw_exposed.csv` | Exposed Shadow AI agents (OpenClaw/Moltbot) with IPs and ports |
 
-* **Infrastructure**: Who handles email (MX)? Who hosts the web server (A-record IP/ASN)? What nameservers are used?
-* **Clustering**: Domains are grouped by shared infrastructure (MX hosts, MX IPs, web hosting IPs, registrar+NS). Known shared providers (Cloudflare, Google, AWS, etc.) are detected via ASN and pattern matching, with cluster confidence scored using inverted semantics — large clusters on unknown IPs are flagged as high-confidence campaign infrastructure.
-* **Shodan**: Are there open ports (RDP, C2 panels) or vulnerabilities?
-* **Visual Forensics**: Headless browsers capture screenshots and generate perceptual hashes (pHash) to find identical phishing kits.
+### For Engineering & DevOps
 
-### 3. AI Analysis (The Laser)
+| File | Use Case |
+|---|---|
+| `data/domain_intel_bundle.json` | STIX 2.1 bundle for OpenCTI, MISP, or any CTI platform |
+| `data/openclaw_stix.json` | STIX bundle for Shadow AI exposure indicators |
+| `data/openclaw_sigma.yml` | Sigma detection rule for SIEM ingestion |
+| `data/dashboard_summary.json` | Pre-computed KPIs without parsing large CSVs |
+| `data/daily_briefing.json` | Structured JSON briefing for Slack/email integration |
 
-We apply expensive LLM analysis only to the **Triaged Candidates** and **Live Sites**:
+---
 
-* **Typosquatting**: "Is `rnicrosoft.com` malicious?" (Claude 4.6 Sonnet with Gemini/GPT fallback).
-* **Web Intent**: "Read the title and headers of `secure-login-update.com`. Is it a bank?" (Model chain via `shared/llm_client.py`).
-* **Daily Briefing**: An automated analyst summarizes the day's threats into an executive report.
+## Quick Start
 
-See [docs/detection_logic.md](docs/detection_logic.md) for details on fraud patterns.
+### Prerequisites
 
-### 4. Infrastructure Pivoting (Whoxy)
+| Requirement | Version | Purpose |
+|---|---|---|
+| Python | 3.10+ | Pipeline scripts |
+| Node.js | 20+ | Dashboard build |
+| pip | Latest | Python dependency management |
+| npm | Latest | Frontend dependency management |
 
-We use **Reverse Whois** to turn one bad domain into a map of the actor's entire network:
+### Installation
 
-* **Extraction**: We pull unique "Selectors" (SOA Emails, SSL Orgs) from the triaged domains.
-* **Pivoting**: We query the **Whoxy API** to find *other* active domains registered by the same emails.
-* **Discovery**: This proactively discovers new infrastructure before it is even used in a campaign.
+```bash
+# Clone the repository
+git clone https://github.com/elchacal801/domain_intel.git
+cd domain_intel
 
-## Responsible Use
+# Install Python dependencies
+pip install -r requirements.txt
 
-This project performs active reconnaissance (HTTP probing) and aggregates data that may be sensitive.
+# Install frontend dependencies
+cd frontend && npm install && cd ..
+```
 
-* **Rate Limits**: The web probe script (`probe_web.py`) is rate-limited and uses a clearly identifiable User-Agent (`DomainIntelResearch/1.0`). Please respect target infrastructure.
-* **Intent**: This data is for defensive research, fraud prevention, and detection engineering. Do not use it for offensive targeting.
-* **Opt-Out**: If you own a domain or ASN listed here and believe it is a false positive (or wish to block our probes), please open a GitHub Issue.
+### API Keys
+
+Create a `.env` file in the project root. All keys are optional — the pipeline degrades gracefully when keys are missing.
+
+| Variable | Provider | Required For | Free Tier |
+|---|---|---|---|
+| `OPENAI_API_KEY` | OpenAI | AI analysis (GPT-4o fallback) | Pay-per-use |
+| `GEMINI_API_KEY` | Google | AI analysis (Gemini secondary) | Yes |
+| `ANTHROPIC_API_KEY` | Anthropic | AI analysis (Claude primary) | Pay-per-use |
+| `SHODAN_API_KEY` | Shodan | Port/service enrichment, campaign hunts, OpenClaw scanning | Yes (limited) |
+| `VT_API_KEY` | VirusTotal | Malware/phishing reputation | Yes (4 req/min) |
+| `WHOXY_API_KEY` | Whoxy | Reverse Whois pivoting | Pay-per-use |
+| `ALIENVAULT_OTX_API_KEY` | AlienVault | OTX passive DNS pivoting | Yes |
+| `CENSYS_API_KEY` | Censys | Certificate Transparency discovery | Yes (limited) |
+
+```env
+# .env (example)
+ANTHROPIC_API_KEY=sk-ant-...
+GEMINI_API_KEY=AIza...
+OPENAI_API_KEY=sk-...
+SHODAN_API_KEY=...
+```
+
+For GitHub Actions, add these as **Repository Secrets** in Settings > Secrets and variables > Actions.
+
+### Running the Pipeline Locally
+
+```bash
+# 1. Merge and deduplicate source lists
+python scripts/merge_lists_v3b.py --include-stopforumspam
+
+# 2. Split into shards for parallel processing
+python scripts/split_data.py --input data/pipeline_input.csv --chunks 10 --output-prefix data/dea_part
+
+# 3. Process a single shard (repeat for each shard, or run in parallel)
+python scripts/enrich_infrastructure.py --input data/dea_part_0.csv --output temp_infra.csv --workers 200
+python scripts/enrich_reputation.py --input temp_infra.csv --output temp_rep.csv
+python scripts/probe_web.py --input temp_rep.csv --output data/result_part_0.csv --workers 50
+
+# 4. Merge all shards
+python scripts/merge_results.py --pattern "data/result_part_*.csv" --output data/dea_domains_probed.csv
+
+# 5. Infrastructure intel & data hygiene
+python scripts/asn_intel.py
+python scripts/vpn_intel.py
+python scripts/tor_intel.py
+python scripts/clean_data.py
+python scripts/enrich_asns.py
+
+# 6. Triage and advanced enrichment
+python scripts/triage_domains.py
+python scripts/enrich_shodan.py --input data/triage_candidates.csv --budget 2500 --limit 2000
+
+# 7. AI analysis (requires at least one LLM API key)
+python scripts/ai_typosquat.py --limit 2000 --batch-size 100 --input data/triage_candidates.csv
+python scripts/ai_classify_web.py --limit 2000 --batch-size 50
+python scripts/ai_briefing.py
+
+# 8. Detection & scoring
+python scripts/match_fingerprints.py
+python scripts/build_frontend_data.py
+python scripts/generate_pivots.py --input data/dea_domains_probed.csv
+
+# 9. Export
+python scripts/export_stix.py --input data/dea_domains_probed.csv
+python scripts/build_dashboard_data.py
+
+# 10. Build the dashboard
+cd frontend && npm run build
+```
+
+### Development Server
+
+```bash
+cd frontend
+npm run dev    # Starts Vite dev server at http://localhost:5173
+```
+
+---
+
+## Pipeline Deep Dive
+
+### 1. Discovery (The Net)
+
+Multiple discovery mechanisms cast a wide net to find suspicious domains before they're used in attacks:
+
+| Script | Method | Description |
+|---|---|---|
+| `merge_lists_v3b.py` | Open-source aggregation | Merges public DEA/abuse lists, StopForumSpam data, and prior discoveries |
+| `run_seads.py` | SEADS ad scanning | Searches search engines for malicious ads targeting keywords in `config/seads_keywords.txt` |
+| `generate_permutations.py` | dnstwist | Generates typosquat permutations for high-value targets in `config/targets.txt` |
+| `discover_ct.py` | Certificate Transparency | Streams CT logs via Censys for certificates matching target patterns |
+| `hunt_campaign.py` | Shodan campaign hunt | Proactively hunts for specific campaign infrastructure fingerprints |
+
+### 2. Triage (The Funnel)
+
+`triage_domains.py` reduces 200k+ ingested domains to ~10k high-priority candidates using local heuristics:
+
+- **High-value target matching**: Fuzzy matching against brands like major banks, tech companies, and crypto platforms
+- **Keyword signals**: Domains containing `login`, `update`, `verify`, `secure`, `wallet`, `confirm`
+- **Result**: Expensive enrichment (Shodan, VirusTotal, AI) runs only on triaged candidates
+
+### 3. Enrichment (The Microscope)
+
+Each shard is enriched in three passes:
+
+1. **Infrastructure** (`enrich_infrastructure.py`): Bulk async DNS resolution for MX, NS, and A-records. IP → ASN mapping via Team Cymru DNS.
+2. **Reputation** (`enrich_reputation.py`): RBL checks and RDAP queries for registrar/creation date.
+3. **Web Probing** (`probe_web.py`): HTTP/S fingerprinting capturing page titles, server headers, status codes, and redirect chains. Rate-limited with identifiable User-Agent (`DomainIntelResearch/1.0`).
+
+### 4. Advanced Intelligence
+
+After merge, the full dataset receives deeper enrichment:
+
+| Script | Source | Rate Limit |
+|---|---|---|
+| `enrich_shodan.py` | Shodan | 1 RPS, credit-budgeted |
+| `enrich_virustotal.py` | VirusTotal | 4 RPM, credit-budgeted |
+| `enrich_phishtank.py` | PhishTank + URLhaus | Bulk feed download |
+| `enrich_gleif.py` | GLEIF | Bulk API with local caching |
+| `enrich_opensanctions.py` | OpenSanctions | Bulk dataset with local caching |
+| `enrich_icij.py` | ICIJ OffshoreLeaks | Bulk dataset with local caching |
+| `enrich_dnstwist.py` | dnstwist cross-reference | Local |
+| `enrich_technical.py` | DNS/SSL history | 50 concurrent workers, 5k/run cap |
+| `enrich_pivot.py` | Whoxy reverse Whois | API-budgeted |
+| `drip_whois.py` | Port 43 Whois | Slow drip, separate workflow |
+
+### 5. AI Analysis (The Laser)
+
+LLM analysis runs only on triaged candidates to control costs. The model chain (`scripts/shared/llm_client.py`) automatically falls through on failure:
+
+| Task | Primary Model | Use |
+|---|---|---|
+| **Daily Briefing** | Claude Sonnet 4.5 | IC-style executive intelligence briefing with FLAME evidence candidates |
+| **Web Classification** | Claude Haiku 4.5 | Classifies web page intent: phishing, legitimate, parked, C2, error |
+| **Typosquat Detection** | Claude Haiku 4.5 | Detects semantic typosquatting beyond edit-distance heuristics |
+
+All responses are cached in SQLite (`data/.llm_cache/`) with 7-day TTL. Per-call costs are logged to `data/llm_cost_log.csv`.
+
+### 6. Detection & Scoring
+
+#### Fingerprint Matching (`match_fingerprints.py`)
+
+Seven YAML-defined fingerprint rules in `config/fingerprints/` match domains against known abuse infrastructure patterns:
+
+| ID | Name | Key Indicators |
+|---|---|---|
+| FP-0001 | OVH cPanel DEA Infrastructure | ASN 16276 + cprapid.com NS + temp-mail-pro.com MX |
+| FP-0002 | Alibaba App Sideloading Infrastructure | Alibaba ASN + sideloading patterns |
+| FP-0003 | Crypto/Finance Fraud Co-hosting | Shared hosting with crypto/finance scam indicators |
+| FP-0004 | Gname Registrar + Cloudflare China Hosting | Gname registrar + Cloudflare China infrastructure |
+| FP-0005 | GoDaddy Bulk Registration Pattern | Bulk GoDaddy registrations with common abuse signals |
+| FP-0006 | Coordinated Shell Domain Network (MX Clustering) | Shared MX cluster patterns indicating coordinated registration |
+| FP-0007 | Typosquat Evasion Infrastructure | Infrastructure patterns used to evade typosquatting detection |
+
+Each fingerprint has a `confidence_base` score modified by entity screening results (GLEIF, OpenSanctions, ICIJ, VirusTotal, PhishTank, SecurityTrails history), producing a final confidence score per domain.
+
+#### Infrastructure Clustering (`build_frontend_data.py`)
+
+Domains are grouped into clusters by four infrastructure dimensions:
+
+1. **MX Host** — shared mail exchange servers
+2. **MX Server IP** — shared MX IP addresses
+3. **Web Hosting IP** — shared A-record IPs
+4. **Registrar + NS** — same registrar and nameserver combination
+
+Cluster confidence uses **inverted semantics** via `config/shared_infrastructure.yaml`:
+- Clusters on **known shared providers** (Cloudflare, AWS, Google, etc.) receive **penalties** — co-location is expected
+- Clusters on **unknown/dedicated IPs** receive **high confidence** — co-location is a strong signal
+- Large clusters on unknown infrastructure receive **size bonuses** for A-record IPs
+
+---
+
+## Configuration Reference
+
+### `config/defaults.yaml`
+
+Central configuration for AI model chains, API budgets, rate limits, and file paths.
+
+```yaml
+ai:
+  briefing:
+    model_chain:
+      - "anthropic/claude-sonnet-4-5-20250929"   # Primary
+      - "gemini/gemini-3-pro-preview"             # Secondary
+      - "gpt-4o"                                   # Tertiary
+      - "gemini/gemini-flash-latest"               # Emergency fallback
+  classification:
+    model_chain:
+      - "anthropic/claude-haiku-4-5-20251001"     # Cost-optimized
+      - "gemini/gemini-flash-latest"
+      - "gpt-4o"
+
+shodan:
+  budget_default: 20
+  rate_limit_rps: 1
+
+virustotal:
+  budget_default: 500
+  rate_limit_rpm: 4
+  cache_ttl_days: 7
+```
+
+### `config/shared_infrastructure.yaml`
+
+Defines known shared infrastructure providers (email, DNS, web hosting) with MX patterns, NS patterns, and ASN lists. Used by the clustering engine to adjust confidence scores. Includes 25+ providers: Cloudflare, Google Workspace, Microsoft 365, AWS, Akamai, Fastly, DigitalOcean, Hetzner, OVH, and more.
+
+### `config/fingerprints/*.yaml`
+
+Each YAML file defines a fingerprint rule with:
+- `indicators` — required and optional field matches (exact, contains, range)
+- `confidence_base` — starting confidence score
+- `confidence_modifiers` — adjustments from entity screening, VirusTotal, PhishTank, SecurityTrails
+- `flame_tp_ids` — mapping to FLAME threat paths
+- `ttl_days` — how long a match remains valid
+
+### `config/seads_keywords.txt`
+
+Keywords for SEADS ad scanning (brand names, financial terms, etc.).
+
+### `config/targets.txt`
+
+High-value targets for dnstwist typosquat generation.
+
+---
+
+## Project Structure
+
+```
+domain_intel/
+├── frontend/                    # React 19 investigation dashboard
+│   ├── src/
+│   │   ├── components/          # 13 reusable components
+│   │   │   ├── Layout.jsx       #   App shell with nav, search, theme toggle
+│   │   │   ├── SigmaGraph.jsx   #   Force-directed graph (Sigma.js + Graphology)
+│   │   │   ├── GlobalSearch.jsx #   Fuzzy search across all domains (Fuse.js)
+│   │   │   ├── ResolutionChain.jsx  # DNS resolution chain visualization
+│   │   │   ├── DomainTimeline.jsx   # Domain history sparkline
+│   │   │   ├── SharedInfraBanner.jsx # Shared provider detection banner
+│   │   │   ├── FlameBadge.jsx       # FLAME threat-path badge
+│   │   │   └── ...
+│   │   ├── pages/               # 5 page views
+│   │   │   ├── MatchDashboard.jsx   # Fingerprint matches + KPIs
+│   │   │   ├── InvestigateLanding.jsx # Domain search + browse
+│   │   │   ├── DomainDetail.jsx     # Full domain investigation page
+│   │   │   ├── ClusterView.jsx      # Graph + table cluster explorer
+│   │   │   ├── DomainCompare.jsx    # Side-by-side domain comparison
+│   │   │   └── BriefingView.jsx     # AI daily briefing (IC-style)
+│   │   ├── context/             # React context providers
+│   │   │   ├── DataContext.jsx  #   Shard-based data loading
+│   │   │   └── ThemeContext.jsx #   Dark/light theme
+│   │   ├── data/
+│   │   │   └── fpRegistry.js    # Fingerprint metadata + tooltip text
+│   │   └── lib/
+│   │       └── utils.js         # Shared utilities
+│   ├── package.json             # React 19, Vite 7, Tailwind CSS 4
+│   └── vite.config.js
+│
+├── scripts/                     # Python intelligence pipeline (~40 scripts)
+│   ├── shared/                  # 7 shared utilities
+│   │   ├── llm_client.py        #   LLM wrapper with model chain + caching + cost tracking
+│   │   ├── flame_client.py      #   FLAME threat-path index client with caching
+│   │   ├── cymru_resolver.py    #   Team Cymru DNS-based ASN resolution
+│   │   ├── retry.py             #   Exponential backoff (sync + async)
+│   │   ├── shodan_utils.py      #   Shodan credit budgeting + rate limiting
+│   │   ├── otx_client.py        #   AlienVault OTX passive DNS client
+│   │   ├── api_budget.py        #   Generic API budget tracking
+│   │   ├── config.py            #   YAML config loader with dot-notation access
+│   │   └── sanitize.py          #   Input sanitization utilities
+│   ├── merge_lists_v3b.py       # Source aggregation and deduplication
+│   ├── split_data.py            # Dataset sharding for parallel processing
+│   ├── enrich_infrastructure.py # Bulk async DNS/ASN resolution
+│   ├── enrich_reputation.py     # RBL + RDAP checks
+│   ├── probe_web.py             # HTTP/S fingerprinting
+│   ├── merge_results.py         # Shard reassembly
+│   ├── triage_domains.py        # Heuristic candidate selection
+│   ├── match_fingerprints.py    # YAML fingerprint matching
+│   ├── build_frontend_data.py   # Frontend JSON generation + clustering
+│   ├── ai_briefing.py           # Daily LLM intelligence briefing
+│   ├── ai_classify_web.py       # LLM web page intent classification
+│   ├── ai_typosquat.py          # LLM typosquat detection
+│   ├── generate_evidence.py     # FLAME evidence package generation
+│   ├── export_stix.py           # STIX 2.1 bundle export
+│   ├── openclaw_scan.py         # Shadow AI agent scanner
+│   ├── openclaw_stix.py         # OpenClaw findings → STIX
+│   ├── hunt_campaign.py         # Proactive Shodan campaign hunting
+│   ├── visual_fingerprint.py    # Headless browser + pHash clustering
+│   └── ...                      # 20+ additional enrichment & utility scripts
+│
+├── config/                      # Pipeline configuration
+│   ├── defaults.yaml            # Model chains, budgets, rate limits, paths
+│   ├── shared_infrastructure.yaml # 25+ shared provider definitions
+│   ├── fingerprints/            # 7 YAML fingerprint detection rules
+│   ├── seads_keywords.txt       # Ad scanning keywords
+│   ├── targets.txt              # High-value targets for typosquat generation
+│   └── openclaw_targets.txt     # OpenClaw scanning targets
+│
+├── tests/                       # 20 pytest test modules
+├── data/                        # Generated intelligence outputs
+├── docs/                        # GitHub Pages deployment (built from frontend/)
+├── .github/workflows/           # 2 GitHub Actions workflows
+├── requirements.txt             # 17 Python dependencies
+├── pytest.ini                   # pytest configuration (async mode)
+└── LICENSE                      # MIT License
+```
+
+---
+
+## CI/CD & Automation
+
+### Daily Data Update (`update_intelligence.yml`)
+
+Runs daily at 11:00 UTC (6:00 AM EST) with manual dispatch support.
+
+```mermaid
+graph LR
+    A[discovery] -->|artifacts| B[setup]
+    B -->|shards| C["process_shard (x10)"]
+    C -->|results| D[finalize]
+
+    style A fill:#2d333b,stroke:#555,color:#c9d1d9
+    style B fill:#2d333b,stroke:#555,color:#c9d1d9
+    style C fill:#58a6ff,stroke:#333,color:black
+    style D fill:#bfb,stroke:#333,color:black
+```
+
+| Job | Runs | Duration | Description |
+|---|---|---|---|
+| **discovery** | 1 runner | ~20 min | SEADS ad scan, dnstwist, Shodan campaign hunt, CT log discovery |
+| **setup** | 1 runner | ~5 min | Merge sources, split into 10 shards, upload artifacts |
+| **process_shard** | 10 parallel runners | ~55 min each | Infrastructure enrichment → reputation → web probing per shard |
+| **finalize** | 1 runner | ~90 min | Merge shards, ASN/VPN/Tor intel, entity screening, fingerprinting, AI analysis, STIX export, frontend build, commit & push |
+
+### Slow Drip Whois (`drip_whois.yml`)
+
+Runs every 6 hours. Performs rate-limited Port 43 Whois lookups to enumerate registrars without triggering abuse limits.
+
+---
+
+## Testing
+
+```bash
+# Run all tests
+pytest
+
+# Run a specific test module
+pytest tests/test_llm_client.py -v
+```
+
+The test suite covers 20 modules:
+
+| Test Module | Coverage |
+|---|---|
+| `test_llm_client.py` | LLM model chain fallback, caching, JSON parsing |
+| `test_shared_infra.py` | Shared infrastructure provider detection |
+| `test_build_frontend_clusters.py` | Cluster generation and confidence scoring |
+| `test_a_record_clusters.py` | A-record IP clustering with size bonuses |
+| `test_merge_lists.py` | Source merging and deduplication |
+| `test_probe_web.py` | HTTP/S probing and fingerprinting |
+| `test_classify_rules.py` | Web classification rules |
+| `test_typosquat_scoring.py` | Typosquat confidence scoring |
+| `test_pivots.py` | Pivot generation (SOA/SSL selectors) |
+| `test_gleif.py` | GLEIF corporate entity verification |
+| `test_opensanctions.py` | OpenSanctions PEP/sanctions screening |
+| `test_virustotal.py` | VirusTotal enrichment |
+| `test_rdap_parsing.py` | RDAP response parsing |
+| `test_config.py` | YAML config loading |
+| `test_scripts_import.py` | Script import validation |
+| `test_delta_mode.py` | Delta/incremental processing |
+| `test_infra_index_enrichment.py` | Infrastructure index building |
+| `test_sync_detection_rules.py` | Detection rule synchronization |
+| `test_flame_regulatory.py` | FLAME regulatory alert integration |
+
+Configuration: `pytest.ini` with `asyncio_mode = auto` for async test support.
+
+---
+
+## Data Dictionary
+
+> **[View Full Data Dictionary](data/README.md)** for column-level documentation of every file.
+
+### Key Output Files
+
+| File | Records | Description |
+|---|---|---|
+| `dea_domains.csv` | 200k+ | Raw deduplicated domain list from all sources |
+| `dea_domains_probed.csv` | 200k+ | Full enriched dataset (DNS, MX, ASN, reputation, web probe) |
+| `pipeline_input.csv` | 200k+ | Pipeline input after merge and triage |
+| `triage_candidates.csv` | ~10k | High-priority candidates for expensive enrichment |
+| `fingerprint_matches.csv` | Varies | Domains matching YAML fingerprint rules |
+| `ai_classifications.csv` | Up to 2k/run | LLM web intent classifications |
+| `ai_typosquats.csv` | Up to 2k/run | LLM typosquat detections |
+| `daily_briefing.json` | 1 | Today's AI intelligence briefing |
+| `domain_intel_bundle.json` | Varies | Full STIX 2.1 bundle |
+| `openclaw_stix.json` | Varies | Shadow AI STIX bundle |
+| `openclaw_sigma.yml` | 1 | Sigma detection rule for Shadow AI |
+| `shodan_intelligence.csv` | Up to 2k | Shodan enrichment results |
+| `campaign_hunt_history.csv` | Growing | Proactive Shodan campaign hunt history |
+| `history.csv` | Growing | Daily domain count and liveness tracking |
+
+---
+
+## Responsible Use & Security
+
+This project performs active reconnaissance and aggregates data that may be sensitive.
+
+### Rate Limiting
+
+| Script | Limit | Mechanism |
+|---|---|---|
+| `enrich_shodan.py` | 1 request/second | `CreditBudget` singleton + thread-safe `RateLimiter` |
+| `enrich_virustotal.py` | 4 requests/minute | Credit-budgeted with local caching (7-day TTL) |
+| `enrich_technical.py` | 50 concurrent workers | 5k items/run cap to prevent timeouts |
+| `ai_*.py` | 3 concurrent workers | 2k items/run, fits within 40-minute timeout |
+| `probe_web.py` | Configurable workers | Identifiable User-Agent: `DomainIntelResearch/1.0` |
+| `drip_whois.py` | Slow drip | Separate 6-hour workflow to respect Port 43 limits |
+
+### Intent Declaration
+
+This data is for **defensive research**, **fraud prevention**, and **detection engineering**. Do not use it for offensive targeting, harassment, or any purpose that violates applicable law.
+
+### Opt-Out
+
+If you own a domain or ASN listed here and believe it is a false positive (or wish to block our probes), please [open a GitHub Issue](https://github.com/elchacal801/domain_intel/issues).
+
+---
+
+## Contributing
+
+Contributions are welcome. Please follow these guidelines:
+
+### Getting Started
+
+1. **Fork** the repository
+2. **Create a feature branch**: `git checkout -b feature/your-feature`
+3. **Install dependencies**: `pip install -r requirements.txt && cd frontend && npm install`
+4. **Make your changes**
+5. **Run tests**: `pytest`
+6. **Submit a pull request** with a clear description of the change
+
+### Code Guidelines
+
+- Python scripts live in `scripts/`, shared utilities in `scripts/shared/`
+- Use the `shared/retry.py` decorator for any network calls with retry logic
+- Use `shared/llm_client.py` for all LLM interactions — never call litellm directly
+- Use `shared/config.py` for reading `config/defaults.yaml` values
+- Fingerprint rules go in `config/fingerprints/` as YAML files following the existing schema
+- Frontend components use Tailwind CSS 4 utility classes with CSS custom properties for theming
+- All new enrichment scripts should support `--input`, `--output`, and `--limit` CLI arguments
+
+### Adding a New Fingerprint
+
+1. Create `config/fingerprints/FP-XXXX-descriptive-name.yaml` following the schema in existing files
+2. Define `indicators` (required + optional), `confidence_base`, `confidence_modifiers`, and `flame_tp_ids`
+3. Run `python scripts/match_fingerprints.py` to test
+4. Run `python scripts/generate_fp_registry.py` to update the frontend registry
+
+---
+
+## Acknowledgments
+
+### Data Sources & APIs
+
+| Source | Type | Usage |
+|---|---|---|
+| [Shodan](https://www.shodan.io/) | API | Port scanning, service detection, campaign hunting |
+| [VirusTotal](https://www.virustotal.com/) | API | Malware/phishing reputation scoring |
+| [AlienVault OTX](https://otx.alienvault.com/) | API | Passive DNS and threat intelligence pivoting |
+| [Whoxy](https://www.whoxy.com/) | API | Reverse Whois lookups for domain pivoting |
+| [GLEIF](https://www.gleif.org/) | API | Legal Entity Identifier (LEI) corporate verification |
+| [OpenSanctions](https://www.opensanctions.org/) | Dataset | PEP and sanctions screening |
+| [ICIJ OffshoreLeaks](https://offshoreleaks.icij.org/) | Dataset | Offshore entity screening |
+| [PhishTank](https://phishtank.org/) | Feed | Confirmed phishing URL database |
+| [URLhaus](https://urlhaus.abuse.ch/) | Feed | Malware URL database |
+| [Team Cymru](https://www.team-cymru.com/) | DNS | IP → ASN mapping |
+| [RIPE Stat](https://stat.ripe.net/) | API | ASN metadata enrichment |
+| [Censys](https://censys.io/) | API | Certificate Transparency log discovery |
+| [SecurityTrails](https://securitytrails.com/) | API | Historical DNS and Whois data |
+| [StopForumSpam](https://www.stopforumspam.com/) | List | Abuse domain list |
+
+### Frameworks & Libraries
+
+| Component | Technology |
+|---|---|
+| AI Orchestration | [LiteLLM](https://github.com/BerriAI/litellm) — unified API for Claude, Gemini, GPT |
+| Fraud Taxonomy | [FLAME](https://github.com/elchacal801/flame-fraud) — Fraud Lifecycle Attack Map & Encyclopedia |
+| Threat Intel Format | [STIX 2.1](https://oasis-open.github.io/cti-documentation/) via `stix2` Python library |
+| Graph Visualization | [Sigma.js](https://www.sigmajs.org/) + [Graphology](https://graphology.github.io/) |
+| Data Tables | [TanStack Table](https://tanstack.com/table) |
+| Fuzzy Search | [Fuse.js](https://www.fusejs.io/) |
+| Typosquat Generation | [dnstwist](https://github.com/elceef/dnstwist) |
+| Frontend | [React 19](https://react.dev/) + [Vite 7](https://vite.dev/) + [Tailwind CSS 4](https://tailwindcss.com/) |
+
+---
 
 ## License
 
-MIT License. Use this data freely for research or defensive setups. See [LICENSE](LICENSE) for details.
+MIT License. See [LICENSE](LICENSE) for details.
+
+Use this data freely for research, detection engineering, or defensive security operations.
