@@ -264,27 +264,34 @@ def get_rdap_data(domain: str) -> Dict[str, str]:
 
     return res
 
+_DEADLINE = None  # Global deadline timestamp (set by main via --timeout-minutes)
+
+
 def process_one(row: Dict) -> Dict:
+    # If we've exceeded the time budget, return the row unprocessed
+    if _DEADLINE is not None and time.time() > _DEADLINE:
+        return row
+
     resolver = dns.resolver.Resolver()
     resolver.timeout = 2
     resolver.lifetime = 2
-    
+
     domain = row.get("domain", "")
     if not domain:
         return row
-        
+
     # RBL
     hits = check_rbl(domain, resolver)
     row["rbl_hits"] = ";".join(hits)
-    
+
     # RDAP
     # We might want to limit RDAP to only 'suspicious' ones to save API calls
-    # or just do all if list is small. 
+    # or just do all if list is small.
     rdap = get_rdap_data(domain)
     row["creation_date"] = rdap["creation_date"]
     row["age_days"] = rdap["age_days"]
     row["registrant_org"] = rdap.get("registrant_org", "")
-    
+
     # OTX Check (if key exists)
     otx_tags = check_otx(domain)
     if otx_tags:
@@ -294,12 +301,20 @@ def process_one(row: Dict) -> Dict:
 
 
 def main():
+    global _DEADLINE
+
     ap = argparse.ArgumentParser()
     ap.add_argument("--input", default="data/dea_domains_enriched.csv")
     ap.add_argument("--output", default="data/dea_domains_reputation.csv")
-    ap.add_argument("--workers", type=int, default=50) 
+    ap.add_argument("--workers", type=int, default=50)
+    ap.add_argument("--timeout-minutes", type=int, default=0,
+                    help="Global time budget in minutes. 0 = unlimited (default).")
     args = ap.parse_args()
-    
+
+    if args.timeout_minutes > 0:
+        _DEADLINE = time.time() + args.timeout_minutes * 60
+        print(f"[*] Global timeout set to {args.timeout_minutes} minutes.")
+
     rows = []
     try:
         with open(args.input, "r", encoding="utf-8") as f:
@@ -309,32 +324,38 @@ def main():
     except FileNotFoundError:
         print("[!] Input file not found.")
         return
-            
+
     # Add new headers
     new_cols = ["rbl_hits", "creation_date", "age_days", "otx_risk", "registrant_org"]
     for c in new_cols:
         if c not in fieldnames:
             fieldnames.append(c)
-    
+
     print(f"[*] Processing {len(rows)} domains for reputation/age with {args.workers} workers...")
-    
+
     results = []
     # Use map instead of submitting futures to a list to save memory
     with ThreadPoolExecutor(max_workers=args.workers) as exe:
-        # map is lazy-ish, but for lists it might consume. 
+        # map is lazy-ish, but for lists it might consume.
         # However, it yields results in order, which is nice.
         # We wrap in list() to consume all, or iterate.
         iterator = exe.map(process_one, rows)
-        
+
         # Wrap with tqdm for progress
         for res in tqdm(iterator, total=len(rows)):
             results.append(res)
-            
+            if _DEADLINE is not None and time.time() > _DEADLINE:
+                print(f"\n[!] Timeout reached. Processed {len(results)}/{len(rows)} domains. Writing partial results.")
+                # Append remaining unprocessed rows as-is
+                remaining_rows = rows[len(results):]
+                results.extend(remaining_rows)
+                break
+
     with open(args.output, "w", newline="", encoding="utf-8") as f:
         writer = csv.DictWriter(f, fieldnames=fieldnames)
         writer.writeheader()
         writer.writerows(results)
-        
+
     print(f"[*] Done. Saved to {args.output}")
 
 if __name__ == "__main__":
