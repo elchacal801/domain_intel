@@ -140,7 +140,7 @@ async def prober(input_file: str, output_file: str, max_workers: int, proxy: str
     connector = aiohttp.TCPConnector(limit=0, ttl_dns_cache=300, force_close=False)
     
     # Global deadline: write partial results instead of hanging in CI
-    global_timeout_secs = 35 * 60  # 35 minutes
+    global_timeout_secs = 30 * 60  # 30 minutes
 
     async with aiohttp.ClientSession(connector=connector) as session:
         # Create workers

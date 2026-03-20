@@ -131,27 +131,26 @@ jobs:
           name: shards
           path: data
 
-      - name: Process Shard ${{ matrix.shard }}
-        timeout-minutes: 55
+      - name: 'Shard ${{ matrix.shard }}: Enrich Infrastructure'
+        timeout-minutes: 10
+        run: |
+          PART_FILE="data/dea_part_${{ matrix.shard }}.csv"
+          echo "Processing $PART_FILE..."
+          python scripts/enrich_infrastructure.py --input "$PART_FILE" --output start_temp.csv --workers 200
+
+      - name: 'Shard ${{ matrix.shard }}: Enrich Reputation'
+        timeout-minutes: 20
         env:
           ALIENVAULT_OTX_API_KEY: ${{ secrets.ALIENVAULT_OTX_API_KEY }}
         run: |
-          PART_FILE="data/dea_part_${{ matrix.shard }}.csv"
+          python scripts/enrich_reputation.py --input start_temp.csv --output reputation_temp.csv --timeout-minutes 18
+
+      - name: 'Shard ${{ matrix.shard }}: Web Probe'
+        timeout-minutes: 35
+        run: |
           OUT_FILE="data/result_part_${{ matrix.shard }}.csv"
-          
-          echo "Processing $PART_FILE..."
-          
-          # 1. Enrich Infrastructure (MX/ASN)
-          # Reduced workers to stay safe per runner
-          python scripts/enrich_infrastructure.py --input "$PART_FILE" --output start_temp.csv --workers 200
-          
-          # 2. Enrich Reputation (Input=Enriched infrastructure)
-          python scripts/enrich_reputation.py --input start_temp.csv --output reputation_temp.csv
-          
-          # 3. Web Probe (Input=Reputation)
           python scripts/probe_web.py --input reputation_temp.csv --output "$OUT_FILE" --workers 50
-          
-          rm start_temp.csv reputation_temp.csv
+          rm -f start_temp.csv reputation_temp.csv
 
       - name: Upload Result Shard
         uses: actions/upload-artifact@v4
