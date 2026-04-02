@@ -1,46 +1,41 @@
 {
-  "date": "2026-04-01",
-  "headline": "Sustained Typosquat Campaign Targets Financial Brands; Regulatory Enforcement Surge Aligns with Sanctions-Linked Infrastructure",
-  "executive_summary": "The threat landscape remains elevated with 1,773 confirmed typosquats actively impersonating Google, Gmail, and cryptocurrency exchanges (Coinbase/Binance). Analysis of a 0.35% sample (approximately 1,000 domains) reveals 1,127 phishing sites and 730 suspected C2 panels, indicating persistent adversary infrastructure development. Regulatory enforcement activity has surged to 18,933 alerts (99.4% high severity), predominantly OFAC sanctions-related, with significant correlation to FLAME Threat Paths TP-0055, TP-0044, and TP-0045. High-risk registrars (Gname: 1,006 domains, Nicenic: 145 domains) continue to facilitate threat actor domain registration at scale. Infrastructure exposure analysis identifies 321 shadow AI instances and 4,259 Shodan-detected vulnerabilities, creating exploitable attack surface across 2,947 malicious ASNs.",
-  "strategic_assessment": "**Threat Landscape Trajectory: Stable-to-Increasing with Regulatory Convergence**\n\nThe domain threat surface expanded modestly (+143 domains, +0.06% growth rate) while live domain counts contracted (-863, -1.15%), suggesting either takedown effectiveness or natural domain expiration cycles. However, the **concentration of high-confidence threat activity** within the analyzed sample is concerning. With 1,773 confirmed typosquats and 1,127 phishing sites identified from just 1,000 analyzed domains, we assess with **high confidence** that the unanalyzed 99.65% of the dataset contains substantial additional malicious infrastructure.\n\n**Key Strategic Observations:**\n\n1. **Brand Impersonation Consistency:** Google/Gmail and cryptocurrency platforms remain primary targets, indicating **sustained credential harvesting and financial fraud campaigns**. The persistence of these targets across reporting periods suggests organized threat actor groups with established operational playbooks.\n\n2. **FLAME Threat Path Concentration:** TP-0001 (547 domains), TP-0019 (246 domains), and TP-0012 (178 domains) dominate the threat landscape. The high-confidence classification across these paths indicates mature adversary tradecraft with repeatable infrastructure patterns. The presence of obvious typosquats in samples (amzon.com, ad0be.com, applw.com) suggests **low-sophistication, high-volume campaigns** designed to exploit user inattention rather than technical vulnerabilities.\n\n3. **Regulatory-Threat Convergence:** The extraordinary volume of OFAC-linked alerts (18,707 of 18,933 total) correlated with specific threat paths (TP-0055: 17,967 alerts, TP-0044: 14,019 alerts) represents a **critical intelligence gap**. This correlation suggests either: (a) sanctioned entities are directly operating domain infrastructure, or (b) threat actors are leveraging sanctioned infrastructure providers. We assess it is **highly likely** that a subset of observed domains are operated by or benefit sanctioned jurisdictions or entities.\n\n4. **Registrar Ecosystem Exploitation:** The \"Unknown\" registrar category (796 domains) combined with high-risk registrar concentration (Gname: 1,006 domains) indicates **deliberate obfuscation of registration chains**. This pattern is consistent with professional threat actor operational security practices.\n\n**Probabilistic Assessment:** We assess with **high confidence** that current threat activity will persist through Q2 2026 absent significant registrar-level intervention. There is a **roughly even chance** that regulatory pressure on high-risk registrars will trigger infrastructure migration to alternative providers within 60-90 days.",
-  "operational_intelligence": "**Technical Observations and Infrastructure Patterns:**\n\n**Domain Infrastructure:**\n- **Risk Signal Distribution:** 3,414 domains exhibit no MX records (HighRisk:NoMX), a 78% majority of flagged infrastructure, indicating domains configured for redirection or placeholder operations rather than email-based phishing. The 797 parking page domains (HighRisk:ParkingPage) suggest **domain warehousing** for future campaign activation.\n- **Private IP Allocation:** 659 domains resolve to private IP space (HighRisk:PrivateIP), indicating either misconfiguration or intentional use of VPN/proxy infrastructure to mask true hosting locations.\n- **Suspicious Titling:** 112 domains flagged for suspicious page titles represent the **highest-fidelity phishing indicators** within the risk signal taxonomy.\n\n**Network Infrastructure:**\n- **ASN Diversity:** 2,947 malicious ASNs represent significant geographic and organizational distribution, complicating network-level blocking strategies. This diversity suggests **infrastructure-as-a-service** procurement from bulletproof hosting providers.\n- **Tor Integration:** 2,102 mapped Tor exit nodes indicate adversary investment in anonymization infrastructure, consistent with **advanced persistent threat (APT) tradecraft** or sophisticated fraud operations.\n- **Shodan Vulnerability Landscape:** 4,259 detected vulnerabilities concentrated on ports 80 (HTTP), 443 (HTTPS), and 2,083 (cPanel) indicate **web-facing services with exploitable attack surface**. The cPanel presence (port 2,083) is particularly concerning, suggesting compromised hosting infrastructure that could facilitate domain hijacking or DNS manipulation.\n\n**TLD and Registrar Patterns:**\n- Sample domains show heavy use of short, generic TLDs (.com, .net, .ru, .xyz, .org) and country-code TLDs (.pl, .ax, .rs, .to, .de). The .ru and .rs presence aligns with historical Eastern European threat actor infrastructure preferences.\n- **Registrar Obfuscation:** The \"Unknown\" (796) and \"Not Found\" (275) registrar categories totaling 1,071 domains (60% of confirmed typosquats) represent a **critical visibility gap**. This suggests either WHOIS privacy service abuse or domains registered through reseller chains that obscure the authoritative registrar.\n\n**Infrastructure Pivot Gap:**\nZero new domains discovered via WHOIS pivoting indicates either: (a) threat actors are using unique registration data per domain, or (b) privacy services are effectively blocking pivot analysis. Recommend enhanced pivot techniques including nameserver clustering and SSL certificate correlation.",
-  "campaign_highlights": "**Active Campaign Tracking and Investigation Status:**\n\n**Campaign IP Intelligence:**\n- **114 tracked campaign IPs** distributed across **17 countries** indicates a geographically dispersed threat actor infrastructure. This distribution is consistent with use of VPS providers, compromised hosts, or CDN abuse to mask origin infrastructure.\n- **6 active hunt queries** suggests ongoing investigative efforts, but the absence of specific campaign narratives in the provided data indicates either: (a) campaigns are in early reconnaissance phases, or (b) intelligence collection is outpacing analytical capacity.\n\n**OpenClaw Shadow AI Exposure:**\n- **321 exposed instances** classified as MEDIUM risk represent a **significant attack surface** for adversary reconnaissance. Shadow AI deployments (unauthorized or unmanaged AI/ML services) can leak sensitive organizational data, provide adversary insight into defensive capabilities, or serve as initial access vectors.\n- **Risk Assessment:** While currently classified as MEDIUM, the volume of exposures (321) suggests **systemic shadow IT governance failures**. If these instances are processing customer data or have network access to production environments, the risk escalates to HIGH.\n- **Recommended Action:** Immediate inventory and risk assessment of all 321 instances, with priority shutdown of any instances processing regulated data (PII, PCI, PHI).\n\n**Investigation Recommendations:**\nGiven the absence of detailed campaign narratives, we recommend prioritizing investigation efforts on:\n1. **TP-0019 Cluster (246 domains):** High-confidence typosquats with clear brand impersonation (amzon.com, aetne.com, ad0be.com). These domains represent **immediate phishing risk** and should be prioritized for takedown.\n2. **TP-0008 Cluster (68 domains):** Cryptocurrency exchange typosquats (btget.com, btiget.com) targeting high-value fraud opportunities. Recommend coordination with exchange security teams for user alerting.\n3. **Regulatory-Linked Threat Paths:** TP-0055, TP-0044, TP-0045 warrant immediate investigation given their association with 17,967, 14,019, and 13,525 OFAC alerts respectively. These clusters may represent **sanctions evasion infrastructure** requiring law enforcement coordination.",
-  "risk_signal_analysis": "**Risk Signal Taxonomy and Adversary Intent Assessment:**\n\nThe distribution of risk signals provides insight into adversary operational phases and intent:\n\n**Phase 1 - Infrastructure Preparation (78% of signals):**\n- **HighRisk:NoMX (3,414 domains, 78%):** The overwhelming majority of flagged domains lack mail exchange records, indicating they are **not yet configured for email-based phishing**. This suggests domains are in warehousing, redirection, or malware distribution configurations. Adversaries are building infrastructure capacity ahead of campaign activation.\n\n**Phase 2 - Monetization Holding Pattern (18% of signals):**\n- **HighRisk:ParkingPage (797 domains, 18%):** These domains display parking pages, often generating click-through revenue while awaiting campaign deployment. This represents **passive monetization** of typosquat traffic. Some parking pages may also serve as **legitimacy facades** to avoid early detection.\n\n**Phase 3 - Active Exploitation (15% of signals):**\n- **HighRisk:PrivateIP (659 domains, 15%):** Domains resolving to private IP space indicate active use of proxy/VPN infrastructure or misconfiguration. This signal correlates with **operational campaigns** where adversaries are masking true hosting locations.\n\n**Phase 4 - High-Fidelity Phishing (3% of signals):**\n- **HighRisk:SuspiciousTitle (112 domains, 3%):** These represent the **highest-confidence phishing sites** with page content designed to deceive users. Despite being only 3% of signals, these domains pose **disproportionate risk** due to their operational readiness.\n\n**Adversary Intent Assessment:**\nThe signal distribution indicates a **multi-phase adversary strategy**:\n1. **Bulk Registration:** Acquire large volumes of typosquat domains (HighRisk:NoMX majority).\n2. **Passive Monetization:** Generate revenue from parking pages while domains age and avoid detection (HighRisk:ParkingPage).\n3. **Selective Activation:** Deploy a small percentage of domains for active phishing campaigns (HighRisk:SuspiciousTitle).\n4. **Infrastructure Rotation:** Use private IP space and proxy infrastructure to complicate attribution and extend campaign longevity (HighRisk:PrivateIP).\n\nThis pattern is consistent with **professional fraud operations** or **organized cybercrime groups** with established infrastructure management practices. The low percentage of actively weaponized domains (3%) suggests adversaries are **risk-managing their infrastructure** to avoid bulk takedowns.",
-  "registrar_risk_outlook": "**High-Risk Registrar Ecosystem Assessment:**\n\nThe concentration of malicious domains within specific registrar ecosystems represents a **systemic vulnerability** in the domain registration supply chain.\n\n**Tier 1 - Critical Risk Registrars:**\n- **Gname (1,006 domains, 57% of high-risk registrar total):** This registrar's dominance in the high-risk category indicates either: (a) insufficient abuse monitoring, (b) deliberate tolerance of malicious registrations, or (c) compromised registrar infrastructure. The volume (1,006 domains) suggests **industrial-scale abuse** rather than opportunistic exploitation. **Assessment:** Gname represents the **single highest-impact intervention point** for domain threat surface reduction. Recommend immediate engagement with Gname abuse team and escalation to ICANN if unresponsive.\n\n**Tier 2 - Elevated Risk Registrars:**\n- **Nicenic (145 domains, 8%):** Consistent presence in threat reporting indicates **persistent abuse patterns**. Historical intelligence suggests Nicenic has been slow to respond to abuse complaints, making it attractive to threat actors seeking registration longevity.\n- **Dominet (92 domains, 5%):** Moderate volume suggests either emerging abuse or selective use by specific threat actor groups.\n\n**Tier 3 - Emerging Risk Registrars:**\n- **Aceville (18 domains, 1%):** Low volume but presence on watchlist indicates prior abuse history. Monitor for growth trends.\n\n**Obfuscated Registration Ecosystem (Critical Intelligence Gap):**\n- **Unknown Registrar (796 domains, 45% of confirmed typosquats):** This category represents the **most significant visibility challenge**. Domains with obfuscated or unavailable registrar data cannot be effectively reported for takedown through standard abuse channels.\n- **Not Found Registrar (275 domains, 16%):** Similar to \"Unknown,\" these domains may represent expired registrations, WHOIS data errors, or deliberate obfuscation.\n\n**Combined Impact:** The \"Unknown\" and \"Not Found\" categories total 1,071 domains (60% of confirmed typosquats), indicating that **the majority of malicious infrastructure is operating outside standard registrar accountability mechanisms**.\n\n**Strategic Implications:**\n1. **Takedown Efficacy:** Current takedown processes are only effective against the 40% of typosquats with identifiable registrars.\n2. **Adversary Adaptation:** The high percentage of obfuscated registrations suggests threat actors have adapted to registrar-based takedown strategies by investing in privacy services and registration obfuscation.\n3. **Regulatory Leverage:** The concentration of identifiable malicious domains within Gname (1,006) provides a **high-impact regulatory pressure point**. ICANN accreditation review or law enforcement engagement could disrupt a significant portion of the threat surface.\n\n**Recommended Registrar Engagement Strategy:**\n1. **Immediate:** Bulk abuse report to Gname (1,006 domains) with 72-hour response deadline.\n2. **Short-term:** Escalate Nicenic (145 domains) and Dominet (92 domains) to ICANN compliance if abuse reports are ignored.\n3. **Medium-term:** Develop alternative takedown strategies for \"Unknown\" registrar domains, including hosting provider engagement and DNS infrastructure targeting.",
-  "regulatory_landscape": "**Regulatory Enforcement Convergence with Threat Infrastructure:**\n\nThe regulatory alert volume (18,933 total, 99.4% high severity) represents an **unprecedented enforcement posture**, with significant implications for threat intelligence operations.\n\n**OFAC Sanctions Dominance (98.8% of alerts):**\n- **18,707 OFAC alerts** indicate either: (a) a major sanctions designation event, (b) expanded enforcement against sanctions evasion networks, or (c) systematic review of existing sanctions lists against domain infrastructure.\n- **Critical Correlation:** The concentration of OFAC alerts within specific FLAME Threat Paths (TP-0055: 17,967 alerts, TP-0044: 14,019 alerts, TP-0045: 13,525 alerts) suggests these threat paths contain **sanctioned entity infrastructure or sanctions evasion networks**.\n\n**Threat Path - Regulatory Alert Correlation Analysis:**\n\n**TP-0055 (17,967 OFAC alerts):**\n- **Assessment:** This threat path is **highly likely** associated with sanctioned jurisdictions or entities. The alert volume (95% of all TP-0055 activity) indicates near-total overlap between threat path domains and OFAC sanctions lists.\n- **Implication:** Any financial transactions, service provision, or business relationships with TP-0055 infrastructure may constitute **sanctions violations** with significant legal and reputational risk.\n\n**TP-0044 (14,019 OFAC alerts) and TP-0045 (13,525 OFAC alerts):**\n- **Assessment:** Similar to TP-0055, these threat paths show **extreme regulatory risk concentration**. The alert volumes suggest these paths represent **sanctions evasion infrastructure** or domains operated by designated entities.\n- **Implication:** These threat paths should be treated as **legally prohibited infrastructure** rather than standard cybersecurity threats. Engagement requires legal counsel review and potential law enforcement coordination.\n\n**Secondary Regulatory Sources:**\n- **SEC (100 alerts):** Securities fraud or investment scam infrastructure, likely targeting retail investors.\n- **CFPB (100 alerts):** Consumer financial protection violations, possibly related to predatory lending or debt collection scams.\n- **FinCEN (15 alerts):** Money laundering or Bank Secrecy Act violations, indicating financial crime infrastructure.\n- **FBI IC3 (6 alerts):** Internet Crime Complaint Center reports, representing victim-reported fraud.\n- **OCC (5 alerts):** Banking regulatory violations, possibly related to unauthorized banking services.\n\n**Strategic Implications:**\n\n1. **Legal Risk Escalation:** The OFAC alert concentration transforms certain threat paths from cybersecurity issues to **sanctions compliance matters**. Any interaction with TP-0055, TP-0044, or TP-0045 infrastructure (including defensive reconnaissance, takedown attempts, or threat intelligence collection) may require **OFAC license approval**.\n\n2. **Intelligence Collection Constraints:** Sanctions-linked infrastructure may be subject to **legal restrictions on intelligence collection activities**. Recommend immediate legal review of current intelligence collection practices against TP-0055, TP-0044, and TP-0045.\n\n3. **Law Enforcement Coordination Requirement:** The regulatory alert volume suggests **ongoing law enforcement investigations**. Recommend coordination with FBI, FinCEN, and OFAC to ensure threat intelligence activities do not compromise active investigations.\n\n4. **Customer Impact Assessment:** If any monitored domains in TP-0055, TP-0044, or TP-0045 have been accessed by customers or employees, immediate legal review is required to assess potential sanctions exposure.\n\n**Recommended Regulatory Response:**\n1. **Immediate:** Legal review of all TP-0055, TP-0044, TP-0045 domains for sanctions compliance.\n2. **Short-term:** Establish information-sharing agreement with OFAC and FinCEN for real-time sanctions list updates.\n3. **Medium-term:** Develop automated sanctions screening for all newly identified threat infrastructure to prevent inadvertent violations.",
-  "evidence_pipeline": "**FLAME Evidence Submission Recommendations:**\n\nBased on confidence levels, domain volumes, and strategic impact, the following threat path clusters should be prioritized for FLAME framework evidence submission:\n\n**Tier 1 - Immediate Submission (High Confidence, High Volume, High Impact):**\n\n1. **TP-0019 (246 domains, High Confidence):**\n   - **Rationale:** Clear brand impersonation (amzon.com, aetne.com, ad0be.com) with high victim impact potential. Sample domains show obvious typosquatting patterns that will strengthen FLAME pattern recognition.\n   - **Evidence Quality:** High-fidelity examples with clear malicious intent.\n   - **Recommended Submission:** Full cluster (246 domains) with annotated brand mapping.\n\n2. **TP-0001 (547 domains, High Confidence):**\n   - **Rationale:** Largest high-confidence cluster, providing statistical significance for pattern validation.\n   - **Evidence Quality:** Volume enables robust pattern analysis and false positive rate assessment.\n   - **Recommended Submission:** Representative sample (100 domains) plus full metadata for pattern extraction.\n\n3. **TP-0012 (178 domains, High Confidence):**\n   - **Rationale:** Diverse sample set (2.pl, bkkk.ru, geic.com) indicating multiple threat actor groups or campaign types.\n   - **Evidence Quality:** Diversity strengthens FLAME's cross-campaign pattern recognition.\n   - **Recommended Submission:** Full cluster (178 domains) with campaign attribution notes.\n\n**Tier 2 - Secondary Submission (High Confidence, Moderate Volume):**\n\n4. **TP-0015 (144 domains, High Confidence):**\n   - **Rationale:** Contains cryptocurrency and technology brand typosquats (applw.com), representing high-value fraud targets.\n   - **Recommended Submission:** Full cluster (144 domains).\n\n5. **TP-0036 (136 domains, High Confidence):**\n   - **Rationale:** E-commerce focus (amaon.com) with direct financial fraud implications.\n   - **Recommended Submission:** Full cluster (136 domains).\n\n**Tier 3 - Investigative Submission (Medium Confidence, Requires Validation):**\n\n6. **TP-0002 (28 domains, Medium Confidence):**\n   - **Rationale:** Contains enterprise software typosquats (aslack.com, clhase.com) targeting corporate environments.\n   - **Evidence Quality:** Medium confidence requires human validation before submission.\n   - **Recommended Submission:** Validated subset (15-20 domains) after analyst review.\n\n7. **TP-0067 (14 domains, Medium Confidence):**\n   - **Rationale:** Associated with 255 OFAC alerts, indicating potential sanctions evasion infrastructure.\n   - **Evidence Quality:** Regulatory correlation adds strategic value despite medium confidence.\n   - **Recommended Submission:** Full cluster (14 domains) with regulatory alert context.\n\n**Submission Prioritization Criteria:**\n- **Confidence Level:** High-confidence clusters submitted first to establish FLAME baseline accuracy.\n- **Volume:** Larger clusters provide better statistical validation of pattern detection algorithms.\n- **Brand Impact:** Clusters targeting financial institutions and high-value brands prioritized for business impact.\n- **Regulatory Correlation:** Clusters with regulatory alerts flagged for legal review before submission.\n\n**Evidence Submission Timeline:**\n- **Week 1:** TP-0019, TP-0001 (immediate submission, highest confidence/impact).\n- **Week 2:** TP-0012, TP-0015, TP-0036 (secondary high-confidence clusters).\n- **Week 3:** TP-0002, TP-0067 (post-validation submission).\n\n**Expected FLAME Framework Benefits:**\n- **Pattern Library Expansion:** Submission of 1,000+ high-confidence domains will significantly enhance FLAME's typosquat detection patterns.\n- **False Positive Reduction:** Diverse sample set will help FLAME distinguish between malicious typosquats and legitimate domain variations.\n- **Regulatory Integration:** Submission of regulatory-correlated clusters (TP-0067) will enable FLAME to incorporate sanctions screening into threat detection workflows.",
+  "date": "2026-04-02",
+  "headline": "Domain Threat Surface Contracts 0.35% While Typosquat Concentration Intensifies - High-Confidence FLAME Clusters Signal Coordinated Brand Impersonation Campaign",
+  "executive_summary": "The monitored domain corpus contracted marginally to 283,058 domains (+143 net growth, -863 live domains), indicating infrastructure churn consistent with short-lifecycle fraud operations. AI analysis of a 0.35% sample (approximately 1,000 domains) identified 1,780 confirmed typosquats with heavy concentration on Google/Gmail and cryptocurrency exchange brands (Coinbase/Binance). FLAME threat path analysis reveals 11 high-confidence clusters (TP-0001 through TP-0041) encompassing 2,054 domains, suggesting coordinated adversary infrastructure rather than opportunistic registration. Regulatory enforcement pressure remains elevated with 18,933 active alerts (99.4% high severity), predominantly OFAC-sourced, creating compliance surface area that adversaries may exploit through jurisdictional arbitrage. The 380 exposed OpenClaw instances (all MEDIUM risk) represent a persistent shadow AI attack surface requiring immediate remediation.",
+  "strategic_assessment": "**Threat Landscape Trajectory: Stable with Tactical Sophistication Indicators**\n\nThe -0.35% contraction in live domains against +0.06% total growth suggests adversaries are cycling infrastructure faster than our detection cadence, likely in response to takedown velocity or preemptive operational security measures. This is **Roughly Even Chance** indicative of a maturing threat actor ecosystem employing automated domain generation and rapid burn tactics.\n\n**Key Strategic Observations:**\n\n- **Typosquat Density Anomaly:** 1,780 confirmed typosquats from a 0.35% sample extrapolates to a potential 508,571 typosquats across the full corpus (assuming uniform distribution). While sampling bias likely inflates this projection, the concentration is **Highly Likely** (85-95% confidence) indicative of industrial-scale brand abuse infrastructure.\n\n- **FLAME Cluster Maturity:** The presence of 11 high-confidence threat paths (TP-0001, TP-0019, TP-0012, TP-0042, TP-0015, TP-0036, TP-0017, TP-0043, TP-0041, TP-0008, TP-0013) with 2,054 domains demonstrates adversary investment in persistent infrastructure. TP-0001's 565-domain footprint alone represents a 31.7% share of confirmed typosquats, suggesting either a single sophisticated actor or a shared infrastructure-as-a-service platform.\n\n- **Regulatory-Threat Convergence:** The 18,933 regulatory alerts (18,828 high severity) concentrated in OFAC enforcement create a compliance burden that adversaries exploit. TP-0055, TP-0044, and TP-0045 collectively account for 45,511 alert associations, indicating these threat paths intersect with sanctioned entities or jurisdictions - a **Likely** (65-85% confidence) indicator of state-nexus or organized crime group (OCG) activity.\n\n- **Growth Rate Analysis:** The +143 domain net growth (+0.06%) against -863 live domain attrition (-1.16%) yields a -1.10% net operational contraction. This inverse relationship is **Highly Likely** driven by accelerated takedown operations or adversary infrastructure abandonment following detection, rather than reduced threat actor activity.",
+  "operational_intelligence": "**Technical Observations & Infrastructure Patterns:**\n\n- **TLD Distribution Shift:** Sample domains (2.pl, a1.ax, 9ya.de, bkkk.ru, 32.rs, 15h.ru, 3xk.xyz) indicate heavy reliance on ccTLDs (.pl, .ax, .de, .ru, .rs) and alternative TLDs (.xyz, .one, .pw). This represents a tactical shift away from traditional .com/.net infrastructure, likely to evade legacy detection rules and exploit lax registrar oversight in emerging TLD namespaces.\n\n- **Shodan Infrastructure Exposure:** 4,991 vulnerabilities detected across monitored infrastructure, with port concentration on 80 (HTTP), 443 (HTTPS), and 2083 (cPanel). The cPanel exposure (port 2083) is **Highly Likely** indicative of compromised hosting infrastructure being repurposed for phishing/C2 operations. Cross-referencing these IPs against campaign tracking (119 tracked IPs across 17 countries) reveals **no explicit overlap documented**, suggesting either operational security compartmentalization or incomplete telemetry integration.\n\n- **ASN & Tor Infrastructure:** 2,949 malicious ASNs and 2,096 Tor exit nodes mapped represent a 1.04% and 0.74% share of total domains respectively. The Tor footprint is consistent with C2 infrastructure (749 suspected C2 panels identified), supporting the hypothesis of dual-use infrastructure for both phishing delivery and post-compromise command channels.\n\n- **Risk Signal Proportions:** The 4,696 HighRisk:NoMX domains (83.5% of risk signals) indicate parking/shell domain infrastructure awaiting activation. Only 920 HighRisk:ParkingPage detections (16.4%) suggest many NoMX domains are not yet resolving to content, representing a **latent threat reservoir** that could activate within 24-72 hours of campaign launch.\n\n- **Whois Pivot Failure:** Zero new domains discovered via Whois pivoting indicates either (a) adversaries are employing privacy protection services universally, or (b) our pivot logic requires recalibration. Recommend expanding pivot criteria to include nameserver clustering and registrant email hash matching.",
+  "campaign_highlights": "**Active Campaign Tracking & OpenClaw Exposure:**\n\n**Campaign IP Intelligence:**\nTracking 119 campaign IPs across 17 countries with no documented correlation to the 1,780 confirmed typosquats in this sample. This disconnect is **Unlikely** (15-35% confidence) to represent true operational separation - more probable explanations include:\n\n1. **Temporal Lag:** Typosquats registered but not yet weaponized with phishing content\n2. **Infrastructure Compartmentalization:** Separate registration and hosting infrastructure\n3. **Telemetry Gap:** Campaign IP tracking focused on active phishing, missing dormant infrastructure\n\n**Recommendation:** Initiate retroactive correlation analysis between typosquat registration timestamps and campaign IP first-seen dates to identify activation timelines.\n\n**OpenClaw Shadow AI Exposure:**\n380 exposed instances (100% MEDIUM risk) represent a **persistent attack surface** for adversarial prompt injection, data exfiltration, and model poisoning. The uniform MEDIUM risk classification suggests these are likely development/staging environments rather than production systems, but the volume indicates inadequate access controls across the enterprise.\n\n**Critical Gap:** No active hunt queries are documented as targeting the intersection of typosquat domains and OpenClaw exposure. Given the 1,155 phishing sites identified, adversaries could weaponize exposed AI instances for dynamic phishing content generation or credential harvesting automation.\n\n**Investigation Lead Prioritization:**\n1. **TP-0001 (565 domains):** Largest cluster warrants dedicated investigation team\n2. **TP-0019 (258 domains):** Amazon/Adobe/Aetna typosquats suggest financial services targeting\n3. **TP-0008 (73 domains):** Cryptocurrency exchange focus (btget.com, btiget.com) aligns with current fraud trends\n\n**Active Hunt Query Deficit:** Only 6 active hunt queries against 40 documented threat paths represents a 15% coverage rate. Recommend immediate expansion to cover all high-confidence clusters (TP-0001 through TP-0013).",
+  "risk_signal_analysis": "**Risk Signal Distribution & Attacker Intent Assessment:**\n\nThe 5,999 total risk signals break down as follows:\n\n- **HighRisk:NoMX (4,696 - 78.3%):** Dominant signal indicating shell domain infrastructure. The absence of mail exchange records suggests these domains are not intended for email-based phishing (which would require MX records for reply-to functionality), but rather for:\n  - **Landing page phishing** (redirect victims to credential harvesting forms)\n  - **Malware distribution** (direct download links)\n  - **Future activation reservoir** (registered in bulk, awaiting campaign deployment)\n\n- **HighRisk:ParkingPage (920 - 15.3%):** Parking pages often serve as temporary placeholders while adversaries build out phishing infrastructure. The 4.7:1 ratio of NoMX to ParkingPage domains suggests **Likely** (65-85% confidence) that the majority of NoMX domains have not yet resolved to any content, representing **pre-operational infrastructure**.\n\n- **HighRisk:PrivateIP (210 - 3.5%):** Domains resolving to RFC1918 private IP space indicate either:\n  - **Misconfigured DNS** (legitimate but broken domains)\n  - **Sinkholed infrastructure** (domains seized and redirected to monitoring infrastructure)\n  - **Internal testing domains** (adversary development environments accidentally exposed)\n\n  Cross-referencing these 210 domains against the 749 suspected C2 panels would clarify intent. If overlap exists, these are **Highly Likely** C2 infrastructure in development.\n\n- **HighRisk:SuspiciousTitle (173 - 2.9%):** Lowest signal volume but highest fidelity. These domains have active content with titles matching known phishing patterns (e.g., \"Secure Login\", \"Verify Account\", \"Urgent Action Required\"). These represent **immediate operational threats** and should be prioritized for takedown.\n\n**Attacker Intent Synthesis:**\nThe risk signal proportions indicate a **two-phase adversary strategy**:\n1. **Phase 1 (Current):** Bulk domain registration and infrastructure staging (NoMX + ParkingPage = 93.6% of signals)\n2. **Phase 2 (Imminent):** Selective activation of highest-value targets (SuspiciousTitle domains already operational)\n\nThe 1,155 confirmed phishing sites against 5,999 risk signals (19.3% activation rate) suggests adversaries are **Highly Likely** (85-95% confidence) conducting A/B testing or selective targeting rather than mass-activation campaigns.",
+  "registrar_risk_outlook": "**High-Risk Registrar Threat Contribution Analysis:**\n\nThe registrar concentration data reveals significant oversight gaps:\n\n**Tier 1 - Critical Risk Registrars:**\n- **Gname (1,016 domains - 57.1% of typosquats):** Dominant registrar for adversary infrastructure. The 1,016-domain footprint represents a **systemic abuse problem** rather than isolated incidents. Gname's presence across multiple FLAME threat paths (likely TP-0001, TP-0019, TP-0012 based on volume) indicates either:\n  - **Inadequate abuse controls** (reactive rather than proactive enforcement)\n  - **Adversary preference** (low-cost, minimal verification requirements)\n  - **Jurisdictional arbitrage** (registration in permissive regulatory environment)\n\n**Tier 2 - Elevated Risk Registrars:**\n- **Dynadot Inc (400 domains - 22.5%):** Second-largest contributor. Dynadot's US-based operations suggest adversaries are not solely relying on offshore registrars, indicating confidence in evading domestic enforcement.\n- **Unknown (796 domains - 44.7%):** The largest single category. This represents a **critical intelligence gap** - nearly half of typosquats have unattributed registrars, preventing targeted abuse reporting and takedown coordination.\n\n**Tier 3 - Watchlist Registrars:**\n- **Nicenic (148 domains - 8.3%):** Known for lax verification, frequently appears in fraud infrastructure\n- **Dominet (93 domains - 5.2%):** Eastern European registrar with history of abuse tolerance\n- **Aceville (18 domains - 1.0%):** Smaller footprint but 100% correlation with high-risk activity when present\n\n**Strategic Registrar Risk Assessment:**\nThe concentration of 57.1% of typosquats under a single registrar (Gname) creates a **high-impact takedown opportunity** but also a **single point of failure risk**. If Gname implements stricter controls, adversaries will migrate to alternative registrars (likely Dynadot or Nicenic based on current secondary usage), requiring continuous monitoring of registrar ecosystem shifts.\n\n**Recommended Registrar Engagement Strategy:**\n1. **Immediate:** Escalate Gname abuse reports to executive level, request bulk domain review\n2. **Short-term:** Establish direct abuse reporting channels with Dynadot, Nicenic, Dominet\n3. **Long-term:** Advocate for ICANN policy changes requiring enhanced registrant verification for high-risk TLDs (.xyz, .pw, .top)",
   "key_risks": [
-    "**Brand Erosion and Customer Trust Impact:** 1,773 confirmed typosquats impersonating Google, Gmail, and cryptocurrency platforms create persistent customer confusion and brand dilution. Victims of phishing attacks may attribute security failures to legitimate brands, eroding customer trust and increasing support costs.",
-    "**Credential Harvesting at Scale:** 1,127 identified phishing sites (from 0.35% sample) suggest 300,000+ potential phishing sites across the full dataset. High-volume credential theft enables account takeover attacks, fraudulent transactions, and secondary attacks against customers and employees.",
-    "**Sanctions Compliance Exposure:** 18,707 OFAC alerts correlated with specific threat paths (TP-0055, TP-0044, TP-0045) indicate potential sanctions violations if any business operations, threat intelligence collection, or defensive actions interact with sanctioned infrastructure. Legal and reputational risk is CRITICAL.",
-    "**Registrar Ecosystem Failure:** 60% of confirmed typosquats (1,071 domains) have obfuscated or unknown registrar data, rendering standard takedown processes ineffective. This represents a systemic failure in domain registration accountability that enables persistent threat actor infrastructure.",
-    "**Shadow AI Attack Surface:** 321 exposed shadow AI instances represent unauthorized data processing and potential adversary reconnaissance vectors. If these instances process customer data or have production network access, they constitute HIGH-risk data breach pathways.",
-    "**C2 Infrastructure Proliferation:** 730 suspected command-and-control panels indicate active malware campaigns or botnet operations. Compromised customer or employee devices may be communicating with this infrastructure, enabling data exfiltration, ransomware deployment, or lateral movement attacks.",
-    "**Infrastructure Visibility Gap:** Zero WHOIS pivot discoveries indicate threat actors have successfully implemented anti-analysis techniques (unique registration data, privacy services, reseller chains). This visibility gap prevents proactive threat hunting and infrastructure mapping.",
-    "**Cryptocurrency Fraud Concentration:** Persistent targeting of Coinbase/Binance indicates organized fraud campaigns against high-value cryptocurrency users. Successful attacks enable irreversible financial theft with limited recovery options, creating significant customer impact and potential regulatory scrutiny."
+    "**Brand Erosion & Customer Trust Degradation:** 1,780 confirmed typosquats (extrapolated to 508,571 potential across full corpus) targeting Google/Gmail and cryptocurrency exchanges create persistent customer confusion and erode trust in legitimate brand communications. Each successful phishing incident compounds reputational damage.",
+    "**Credential Harvesting at Scale:** 1,155 active phishing sites with 749 suspected C2 panels indicate adversaries are operating full-spectrum credential theft infrastructure. Harvested credentials likely feed into account takeover (ATO) attacks against financial services platforms.",
+    "**Regulatory Compliance Surface Expansion:** 18,933 active regulatory alerts (99.4% high severity) concentrated in OFAC enforcement create a compliance burden. Adversaries exploiting sanctioned jurisdictions (TP-0055, TP-0044, TP-0045 with 45,511 alert associations) expose the institution to secondary sanctions risk if customer funds interact with these domains.",
+    "**Shadow AI Attack Surface:** 380 exposed OpenClaw instances represent a **persistent vulnerability** for adversarial AI exploitation. Threat actors could weaponize these for automated phishing content generation, social engineering at scale, or internal reconnaissance.",
+    "**Latent Infrastructure Activation Risk:** 4,696 HighRisk:NoMX domains (78.3% of risk signals) represent a **dormant threat reservoir** that could activate within 24-72 hours. Current 19.3% activation rate could surge to 50%+ during coordinated campaign launch.",
+    "**Registrar Concentration Risk:** 57.1% of typosquats under single registrar (Gname) creates takedown efficiency but also adversary migration risk. Loss of this intelligence visibility would blind threat detection capabilities.",
+    "**Infrastructure Churn Outpacing Detection:** -1.16% live domain attrition against +0.06% total growth indicates adversaries are cycling infrastructure faster than detection/takedown cadence, reducing effectiveness of reactive controls."
   ],
   "action_items": [
-    "**IMMEDIATE (24-48 hours) - Sanctions Compliance Review:** Engage General Counsel and Compliance teams to conduct legal review of all threat intelligence activities involving TP-0055 (17,967 OFAC alerts), TP-0044 (14,019 alerts), and TP-0045 (13,525 alerts). Determine if OFAC license is required for continued intelligence collection or defensive operations. CRITICAL PRIORITY.",
-    "**IMMEDIATE (24-48 hours) - High-Fidelity Phishing Takedown:** Submit emergency takedown requests for all 112 HighRisk:SuspiciousTitle domains (highest-confidence active phishing sites). Coordinate with brand protection team for expedited registrar and hosting provider engagement. Include TP-0019 cluster (246 domains) in bulk takedown request to Gname, Nicenic, and Dynadot.",
-    "**IMMEDIATE (48-72 hours) - Shadow AI Exposure Remediation:** Initiate emergency inventory and risk assessment of all 321 exposed shadow AI instances. Priority shutdown of any instances processing regulated data (PII, PCI, PHI) or with production network access. Coordinate with CISO office for enterprise-wide shadow IT governance review.",
-    "**SHORT-TERM (Week 1) - Gname Registrar Escalation:** Submit bulk abuse report to Gname covering 1,006 confirmed malicious domains with 72-hour response deadline. If unresponsive, escalate to ICANN compliance and consider public disclosure of abuse tolerance. Gname represents 57% of high-risk registrar threat surface and is the highest-impact intervention point.",
-    "**SHORT-TERM (Week 1) - FLAME Evidence Pipeline Activation:** Submit TP-0019 (246 domains) and TP-0001 (547 domains) to FLAME framework as Tier 1 evidence. These high-confidence, high-volume clusters will significantly enhance FLAME's pattern detection capabilities and reduce future false positive rates.",
-    "**SHORT-TERM (Week 1) - Cryptocurrency Exchange Coordination:** Notify Coinbase and Binance security teams of active typosquat campaigns (TP-0008: 68 domains including btget.com, btiget.com). Request coordinated user alerting and domain blacklisting. Establish information-sharing agreement for real-time threat intelligence exchange.",
-    "**SHORT-TERM (Week 2) - Enhanced WHOIS Pivot Techniques:** Deploy alternative infrastructure correlation methods (nameserver clustering, SSL certificate analysis, IP co-location mapping) to overcome privacy service obfuscation. Current zero-pivot result indicates adversary anti-analysis success; alternative techniques required to restore visibility.",
-    "**MEDIUM-TERM (Weeks 2-3) - Regulatory Information Sharing:** Establish formal information-sharing agreements with OFAC, FinCEN, and FBI IC3 for real-time sanctions list updates and coordinated threat intelligence. Request guidance on legal boundaries for intelligence collection against sanctions-linked infrastructure.",
-    "**MEDIUM-TERM (Weeks 2-4) - Full Dataset AI Analysis:** Current 0.35% sample analysis identified 1,773 typosquats and 1,127 phishing sites. Extrapolating to full dataset suggests 500,000+ malicious domains. Allocate resources for comprehensive AI analysis of remaining 99.65% of dataset (282,000 domains) to quantify true threat surface.",
-    "**MEDIUM-TERM (Month 1) - Registrar Accountability Campaign:** Develop multi-stakeholder initiative (ICANN, law enforcement, industry partners) to address the 60% of typosquats with obfuscated registrar data. Propose policy changes requiring registrar transparency for abuse reporting and advocate for sanctions against non-compliant registrars.",
-    "**MEDIUM-TERM (Month 1-2) - C2 Infrastructure Disruption:** Coordinate with law enforcement and ISPs to disrupt 730 suspected C2 panels. Prioritize panels associated with high-volume threat paths (TP-0001, TP-0019) and regulatory-linked infrastructure (TP-0055, TP-0044, TP-0045). Request sinkholing or takedown of command infrastructure.",
-    "**LONG-TERM (Quarter 2) - Defensive Domain Registration:** Implement proactive typosquat domain registration program covering high-value brand variations. Current 1,773 confirmed typosquats indicate adversaries are systematically registering predictable variations; defensive registration will reduce available attack surface.",
-    "**LONG-TERM (Quarter 2) - Threat Intelligence Platform Enhancement:** Integrate automated sanctions screening into threat intelligence workflows to prevent inadvertent OFAC violations. Develop real-time alerting for newly identified domains matching sanctions entity patterns. Current manual review process cannot scale to 18,933 regulatory alerts.",
-    "**STRATEGIC (Ongoing) - Executive Stakeholder Briefing:** Present findings to CISO, Heads of Fraud, and Global Threat Intelligence Council with emphasis on sanctions compliance risk (18,707 OFAC alerts), registrar ecosystem failure (60% obfuscated registrations), and shadow AI exposure (321 instances). Request executive sponsorship for registrar accountability initiative and increased threat intelligence resourcing."
+    "**[IMMEDIATE - 24hrs] Emergency Takedown Coordination:** Initiate bulk abuse reports to Gname (1,016 domains), Dynadot (400 domains), and Nicenic (148 domains) with executive escalation. Request expedited review of all domains matching confirmed typosquat patterns. Prioritize 173 HighRisk:SuspiciousTitle domains for immediate suspension.",
+    "**[IMMEDIATE - 24hrs] OpenClaw Exposure Remediation:** Deploy emergency access controls to 380 exposed OpenClaw instances. Implement IP whitelisting, API key rotation, and audit logging. Conduct forensic review to determine if adversarial access has already occurred.",
+    "**[URGENT - 48hrs] FLAME Evidence Pipeline Activation:** Submit TP-0001 (565 domains), TP-0019 (258 domains), and TP-0012 (181 domains) as operational evidence to FLAME framework for cross-industry correlation. These high-confidence clusters likely represent shared adversary infrastructure visible to other financial institutions.",
+    "**[URGENT - 48hrs] Campaign IP Correlation Analysis:** Retroactively correlate 119 tracked campaign IPs against 1,780 typosquat registration timestamps to identify infrastructure activation timelines. Map IP geolocation (17 countries) against registrar jurisdictions to identify operational patterns.",
+    "**[URGENT - 72hrs] Hunt Query Expansion:** Increase active hunt queries from 6 to minimum 15, covering all high-confidence FLAME threat paths (TP-0001 through TP-0013). Prioritize cryptocurrency exchange typosquats (TP-0008: btget.com, btiget.com) given current fraud trends.",
+    "**[HIGH - 1 week] Registrar Attribution Gap Closure:** Investigate 796 'Unknown' registrar domains through passive DNS, Whois history, and nameserver clustering. This 44.7% intelligence gap prevents effective abuse reporting and adversary profiling.",
+    "**[HIGH - 1 week] Shodan-Campaign IP Cross-Reference:** Correlate 4,991 Shodan vulnerabilities (ports 80, 443, 2083) against 119 campaign IPs to identify compromised hosting infrastructure. Port 2083 (cPanel) exposure is high-priority for identifying adversary staging servers.",
+    "**[MEDIUM - 2 weeks] Whois Pivot Logic Recalibration:** Current 0 new domain discoveries via Whois pivoting indicates detection gap. Expand pivot criteria to include nameserver clustering, registrant email hash matching, and SSL certificate common name analysis.",
+    "**[MEDIUM - 2 weeks] Regulatory-Threat Convergence Assessment:** Conduct deep-dive analysis of TP-0055, TP-0044, TP-0045 (45,511 OFAC alert associations) to determine if these threat paths represent state-nexus actors or OCGs exploiting sanctioned jurisdictions. Coordinate with OFAC for intelligence sharing.",
+    "**[STRATEGIC - 30 days] Predictive Infrastructure Modeling:** Develop machine learning model to predict domain activation timelines based on registration patterns, registrar selection, and risk signal evolution. Current 19.3% activation rate provides training data for forecasting campaign launch windows.",
+    "**[STRATEGIC - 30 days] ICANN Policy Advocacy:** Leverage 57.1% registrar concentration data (Gname) to advocate for enhanced registrant verification requirements in high-risk TLD namespaces (.xyz, .pw, .top). Coordinate with industry peers through FS-ISAC for collective policy pressure.",
+    "**[STRATEGIC - Ongoing] Threat Intelligence Council Briefing:** Present FLAME cluster analysis (11 high-confidence threat paths, 2,054 domains) to Global Threat Intelligence Council. Recommend establishment of dedicated investigation team for TP-0001 (565 domains) given its 31.7% share of confirmed typosquats."
   ],
   "model_used": "shared_llm_client",
-  "summary": "The threat landscape remains elevated with 1,773 confirmed typosquats actively impersonating Google, Gmail, and cryptocurrency exchanges (Coinbase/Binance). Analysis of a 0.35% sample (approximately 1,000 domains) reveals 1,127 phishing sites and 730 suspected C2 panels, indicating persistent adversary infrastructure development. Regulatory enforcement activity has surged to 18,933 alerts (99.4% high severity), predominantly OFAC sanctions-related, with significant correlation to FLAME Threat Paths TP-0055, TP-0044, and TP-0045. High-risk registrars (Gname: 1,006 domains, Nicenic: 145 domains) continue to facilitate threat actor domain registration at scale. Infrastructure exposure analysis identifies 321 shadow AI instances and 4,259 Shodan-detected vulnerabilities, creating exploitable attack surface across 2,947 malicious ASNs.",
+  "summary": "The monitored domain corpus contracted marginally to 283,058 domains (+143 net growth, -863 live domains), indicating infrastructure churn consistent with short-lifecycle fraud operations. AI analysis of a 0.35% sample (approximately 1,000 domains) identified 1,780 confirmed typosquats with heavy concentration on Google/Gmail and cryptocurrency exchange brands (Coinbase/Binance). FLAME threat path analysis reveals 11 high-confidence clusters (TP-0001 through TP-0041) encompassing 2,054 domains, suggesting coordinated adversary infrastructure rather than opportunistic registration. Regulatory enforcement pressure remains elevated with 18,933 active alerts (99.4% high severity), predominantly OFAC-sourced, creating compliance surface area that adversaries may exploit through jurisdictional arbitrage. The 380 exposed OpenClaw instances (all MEDIUM risk) represent a persistent shadow AI attack surface requiring immediate remediation.",
   "evidence_candidates": [
     {
       "tp_id": "TP-0001",
-      "domain_count": 547,
+      "domain_count": 565,
       "sample_domains": [
         "2.pl",
         "a1.ax",
@@ -49,11 +44,11 @@
         "ano.to"
       ],
       "confidence": "High",
-      "recommendation": "Submit evidence package for TP-0001 (547 domains)"
+      "recommendation": "Submit evidence package for TP-0001 (565 domains)"
     },
     {
       "tp_id": "TP-0019",
-      "domain_count": 246,
+      "domain_count": 258,
       "sample_domains": [
         "amzon.com",
         "aetne.com",
@@ -62,11 +57,11 @@
         "adkbe.com"
       ],
       "confidence": "High",
-      "recommendation": "Submit evidence package for TP-0019 (246 domains)"
+      "recommendation": "Submit evidence package for TP-0019 (258 domains)"
     },
     {
       "tp_id": "TP-0012",
-      "domain_count": 178,
+      "domain_count": 181,
       "sample_domains": [
         "2.pl",
         "bkkk.ru",
@@ -75,7 +70,20 @@
         "geicn.com"
       ],
       "confidence": "High",
-      "recommendation": "Submit evidence package for TP-0012 (178 domains)"
+      "recommendation": "Submit evidence package for TP-0012 (181 domains)"
+    },
+    {
+      "tp_id": "TP-0042",
+      "domain_count": 150,
+      "sample_domains": [
+        "32.rs",
+        "15h.ru",
+        "3xk.xyz",
+        "563.com",
+        "53y.com"
+      ],
+      "confidence": "High",
+      "recommendation": "Submit evidence package for TP-0042 (150 domains)"
     },
     {
       "tp_id": "TP-0015",
@@ -91,21 +99,8 @@
       "recommendation": "Submit evidence package for TP-0015 (144 domains)"
     },
     {
-      "tp_id": "TP-0042",
-      "domain_count": 142,
-      "sample_domains": [
-        "32.rs",
-        "15h.ru",
-        "3xk.xyz",
-        "563.com",
-        "53y.com"
-      ],
-      "confidence": "High",
-      "recommendation": "Submit evidence package for TP-0042 (142 domains)"
-    },
-    {
       "tp_id": "TP-0036",
-      "domain_count": 136,
+      "domain_count": 141,
       "sample_domains": [
         "4k5.net",
         "26pg.com",
@@ -114,7 +109,7 @@
         "22ccf.com"
       ],
       "confidence": "High",
-      "recommendation": "Submit evidence package for TP-0036 (136 domains)"
+      "recommendation": "Submit evidence package for TP-0036 (141 domains)"
     },
     {
       "tp_id": "TP-0017",
@@ -131,7 +126,7 @@
     },
     {
       "tp_id": "TP-0043",
-      "domain_count": 88,
+      "domain_count": 90,
       "sample_domains": [
         "ano.to",
         "5-mod.ru",
@@ -140,7 +135,7 @@
         "aimer.dev"
       ],
       "confidence": "High",
-      "recommendation": "Submit evidence package for TP-0043 (88 domains)"
+      "recommendation": "Submit evidence package for TP-0043 (90 domains)"
     },
     {
       "tp_id": "TP-0041",
@@ -157,7 +152,7 @@
     },
     {
       "tp_id": "TP-0008",
-      "domain_count": 68,
+      "domain_count": 73,
       "sample_domains": [
         "0kx.com",
         "btget.com",
@@ -166,7 +161,7 @@
         "bybita.com"
       ],
       "confidence": "High",
-      "recommendation": "Submit evidence package for TP-0008 (68 domains)"
+      "recommendation": "Submit evidence package for TP-0008 (73 domains)"
     },
     {
       "tp_id": "TP-0013",
@@ -182,21 +177,8 @@
       "recommendation": "Submit evidence package for TP-0013 (54 domains)"
     },
     {
-      "tp_id": "TP-0002",
-      "domain_count": 28,
-      "sample_domains": [
-        "buybm.one",
-        "aslack.com",
-        "clhase.com",
-        "gamail.com",
-        "ch13sv.com"
-      ],
-      "confidence": "Medium",
-      "recommendation": "Submit evidence package for TP-0002 (28 domains)"
-    },
-    {
       "tp_id": "TP-0048",
-      "domain_count": 28,
+      "domain_count": 35,
       "sample_domains": [
         "azame.pw",
         "27384.com",
@@ -205,11 +187,24 @@
         "acucre.com"
       ],
       "confidence": "Medium",
-      "recommendation": "Submit evidence package for TP-0048 (28 domains)"
+      "recommendation": "Submit evidence package for TP-0048 (35 domains)"
+    },
+    {
+      "tp_id": "TP-0002",
+      "domain_count": 29,
+      "sample_domains": [
+        "buybm.one",
+        "aslack.com",
+        "clhase.com",
+        "gamail.com",
+        "ch13sv.com"
+      ],
+      "confidence": "Medium",
+      "recommendation": "Submit evidence package for TP-0002 (29 domains)"
     },
     {
       "tp_id": "TP-0054",
-      "domain_count": 24,
+      "domain_count": 27,
       "sample_domains": [
         "4k5.net",
         "26pg.com",
@@ -218,24 +213,37 @@
         "500qf.com"
       ],
       "confidence": "Medium",
-      "recommendation": "Submit evidence package for TP-0054 (24 domains)"
+      "recommendation": "Submit evidence package for TP-0054 (27 domains)"
+    },
+    {
+      "tp_id": "TP-0032",
+      "domain_count": 17,
+      "sample_domains": [
+        "0kx.com",
+        "byvit.com",
+        "bybit8.com",
+        "dev.r13.org",
+        "0phemex.com"
+      ],
+      "confidence": "Medium",
+      "recommendation": "Submit evidence package for TP-0032 (17 domains)"
     },
     {
       "tp_id": "TP-0067",
-      "domain_count": 14,
+      "domain_count": 16,
       "sample_domains": [
+        "bzmoe.com",
         "canfga.org",
         "card.zp.ua",
         "520572.xyz",
-        "adcobe.com",
-        "aflassian.com"
+        "adcobe.com"
       ],
       "confidence": "Medium",
-      "recommendation": "Submit evidence package for TP-0067 (14 domains)"
+      "recommendation": "Submit evidence package for TP-0067 (16 domains)"
     },
     {
       "tp_id": "TP-0058",
-      "domain_count": 14,
+      "domain_count": 15,
       "sample_domains": [
         "7f777.info",
         "456win.info",
@@ -244,20 +252,7 @@
         "888pgvip.net"
       ],
       "confidence": "Medium",
-      "recommendation": "Submit evidence package for TP-0058 (14 domains)"
-    },
-    {
-      "tp_id": "TP-0032",
-      "domain_count": 11,
-      "sample_domains": [
-        "0kx.com",
-        "dev.r13.org",
-        "0phemex.com",
-        "bknance.com",
-        "c0inbase.com"
-      ],
-      "confidence": "Medium",
-      "recommendation": "Submit evidence package for TP-0032 (11 domains)"
+      "recommendation": "Submit evidence package for TP-0058 (15 domains)"
     },
     {
       "tp_id": "TP-0060",
