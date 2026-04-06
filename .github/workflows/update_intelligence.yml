@@ -29,6 +29,7 @@ jobs:
       - name: Proactive Campaign Hunt
         env:
           SHODAN_API_KEY: ${{ secrets.SHODAN_API_KEY }}
+          ALIENVAULT_OTX_API_KEY: ${{ secrets.ALIENVAULT_OTX_API_KEY }}
         run: python scripts/hunt_campaign.py
 
       - name: Run CT Discovery
@@ -45,6 +46,7 @@ jobs:
             data/potential_typosquats.csv
             data/discovered_certs.csv
             data/campaign_hunt_history.csv
+            data/campaign_pivot_findings.csv
           retention-days: 7
 
   setup:
