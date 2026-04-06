@@ -275,6 +275,25 @@ def collect_discovery_domains(targets: Set[str]) -> Dict[str, Set[str]]:
         except Exception as e:
             log(f"  [!] Failed to read {manual_file}: {e}")
 
+    # 5. Campaign pivot discoveries (Shodan hunt -> OTX passive DNS)
+    pivot_file = "data/campaign_pivot_findings.csv"
+    if os.path.exists(pivot_file):
+        try:
+            pivots = set()
+            with open(pivot_file, "r", encoding="utf-8") as f:
+                reader = csv.DictReader(f)
+                for row in reader:
+                    d = normalize_domain(row.get("discovered_domain", ""))
+                    if d in targets:
+                        continue
+                    if is_valid_domain(d):
+                        pivots.add(d)
+            if pivots:
+                log(f"  [+] {'campaign_pivot':28s} {len(pivots):7d} domains  (local, targets excluded)")
+                discovery["campaign_pivot"] = pivots
+        except Exception as e:
+            log(f"  [!] Failed to read {pivot_file}: {e}")
+
     return discovery
 
 
