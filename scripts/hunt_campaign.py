@@ -92,94 +92,131 @@ def log_new_hit(ip, query, match_data):
             sanitize_csv_value(match_data.get('location', {}).get('country_name', 'n/a'))
         ])
 
+PIVOTED_IPS_FILE = Path("data/.pivoted_ips.txt")
+
+
+def load_pivoted_ips():
+    """Load IPs that have already been successfully OTX-pivoted."""
+    if not PIVOTED_IPS_FILE.exists():
+        return set()
+    with open(PIVOTED_IPS_FILE, 'r', encoding='utf-8') as f:
+        return {line.strip() for line in f if line.strip()}
+
+
+def mark_pivoted(ip):
+    """Record that an IP has been OTX-pivoted (even if no results)."""
+    with open(PIVOTED_IPS_FILE, 'a', encoding='utf-8') as f:
+        f.write(ip + '\n')
+
+
+def pivot_ip(ip, label, pivot_file):
+    """Query OTX passive DNS for an IP and append results to pivot_file.
+
+    Returns the number of domains found.
+    """
+    print(f"::group:: [Auto-Pivot] Pivoting on IP {ip}...")
+    found = 0
+    try:
+        pivot_domains = query_otx_passive_dns(ip)
+        if pivot_domains:
+            print(f"::notice:: [Pivot] Found {len(pivot_domains)} domains on {ip}!")
+            file_exists = pivot_file.exists()
+            with open(pivot_file, 'a', newline='', encoding='utf-8') as f:
+                headers = ['pivot_selector', 'pivot_ip', 'discovered_domain', 'source']
+                writer = csv.DictWriter(f, fieldnames=headers)
+                if not file_exists:
+                    writer.writeheader()
+                for d in pivot_domains:
+                    writer.writerow({
+                        'pivot_selector': label,
+                        'pivot_ip': ip,
+                        'discovered_domain': sanitize_csv_value(d),
+                        'source': 'AlienVault_OTX'
+                    })
+            found = len(pivot_domains)
+        else:
+            print(f"  - No passive DNS records found.")
+    except Exception as e:
+        print(f"  [!] Pivot failed: {e}")
+    print("::endgroup::")
+    mark_pivoted(ip)
+    return found
+
+
 def main():
     print("--- Automated Campaign Hunt ---")
-    
+
     # 1. Setup Budget
     budget = CreditBudget()
     budget.set_budget(BUDGET_LIMIT)
-    
+
     # 2. Load Baselines
     known_ips = load_known_ips()
     history_ips = load_history_ips()
+    pivoted_ips = load_pivoted_ips()
     print(f"Loaded {len(known_ips)} manual baseline IPs.")
     print(f"Loaded {len(history_ips)} previously hunted IPs.")
-    
+    print(f"Loaded {len(pivoted_ips)} previously pivoted IPs.")
+
     api = shodan.Shodan(SHODAN_API_KEY)
-    
+    pivot_file = Path("data/campaign_pivot_findings.csv")
+
     # We track session findings to avoid duplicates within the same run loop
     session_found_ips = set()
     new_hits_count = 0
-    
+
     print(f"Executing {len(QUERIES)} queries...")
-    
+
     for query in QUERIES:
         try:
             budget.spend(1)
             print(f"Querying: {query}")
             results = api.search(query)
-            
+
             for m in results['matches']:
                 ip = m['ip_str']
                 session_found_ips.add(ip)
-                
+
                 # Check if it's truly new (not in manual baseline AND not in history)
                 if ip not in known_ips and ip not in history_ips:
-                    
+
                     # Mark as seen in history immediately so we don't double log in the same run
                     history_ips.add(ip)
                     new_hits_count += 1
-                    
+
                     # GitHub Actions Annotation
                     print(f"::warning:: [NEW FINDING] {ip} added to history.")
                     print(f"  Details: {m.get('org', 'n/a')} | {m.get('location', {}).get('country_name', 'n/a')}")
-                    
+
                     # Log it
                     log_new_hit(ip, query, m)
 
                     # --- Automated OTX Pivot ---
-                    print(f"::group:: [Auto-Pivot] Pivoting on new IP {ip}...")
-                    try:
-                        pivot_domains = query_otx_passive_dns(ip)
-                        if pivot_domains:
-                            print(f"::notice:: [Pivot] Found {len(pivot_domains)} domains on {ip}!")
-                            
-                            # Append to campaign_pivot_findings.csv
-                            pivot_file = Path("data/campaign_pivot_findings.csv")
-                            file_exists = pivot_file.exists()
-                            
-                            with open(pivot_file, 'a', newline='', encoding='utf-8') as f:
-                                headers = ['pivot_selector', 'pivot_ip', 'discovered_domain', 'source']
-                                writer = csv.DictWriter(f, fieldnames=headers)
-                                if not file_exists:
-                                    writer.writeheader()
-                                
-                                for d in pivot_domains:
-                                    writer.writerow({
-                                        'pivot_selector': f"Hunt:{query}",
-                                        'pivot_ip': ip,
-                                        'discovered_domain': sanitize_csv_value(d),
-                                        'source': 'AlienVault_OTX'
-                                    })
-                        else:
-                            print(f"  - No passive DNS records found.")
-                    except Exception as e:
-                        print(f"  [!] Pivot failed: {e}")
-                    print("::endgroup::")
-                    
+                    if ip not in pivoted_ips:
+                        pivot_ip(ip, f"Hunt:{query}", pivot_file)
+                        pivoted_ips.add(ip)
+
         except Exception as e:
             print(f"Error executing query '{query}': {e}")
-            
-    # 3. Report
+
+    # 3. Backfill: pivot historical IPs that were never OTX-queried
+    unpivoted = (history_ips - known_ips - pivoted_ips)
+    if unpivoted:
+        print(f"\n--- Backfill: {len(unpivoted)} historical IPs never pivoted ---")
+        for ip in sorted(unpivoted):
+            pivot_ip(ip, "Backfill", pivot_file)
+            pivoted_ips.add(ip)
+
+    # 4. Report
     print("\n--- Hunt Results ---")
     print(f"Total Unique IPs Found (Session): {len(session_found_ips)}")
     print(f"New Findings Logged: {new_hits_count}")
-    
+
     if new_hits_count > 0:
         print(f"\n[INFO] {new_hits_count} new IPs were added to {HISTORY_FILE}.")
     else:
         print("\n[INFO] No new infrastructure detected.")
-    
+
     # ALWAYS exit 0 so we don't break the build.
     # The warning annotation will still be visible in GitHub UI.
     sys.exit(0)

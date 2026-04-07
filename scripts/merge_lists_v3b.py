@@ -294,6 +294,46 @@ def collect_discovery_domains(targets: Set[str]) -> Dict[str, Set[str]]:
         except Exception as e:
             log(f"  [!] Failed to read {pivot_file}: {e}")
 
+    # 6. OTX passive DNS pivot results (manual pivot_otx.py runs)
+    otx_file = "data/pivot_otx_results.csv"
+    if os.path.exists(otx_file):
+        try:
+            otx_pivots = set()
+            with open(otx_file, "r", encoding="utf-8") as f:
+                reader = csv.DictReader(f)
+                for row in reader:
+                    d = normalize_domain(row.get("discovered_domain", ""))
+                    if d in targets:
+                        continue
+                    if is_valid_domain(d):
+                        otx_pivots.add(d)
+            if otx_pivots:
+                log(f"  [+] {'otx_pivot':28s} {len(otx_pivots):7d} domains  (local, targets excluded)")
+                discovery["otx_pivot"] = otx_pivots
+        except Exception as e:
+            log(f"  [!] Failed to read {otx_file}: {e}")
+
+    # 7. Shodan favicon pivot results (shodan_pivot.py -> infrastructure sharing)
+    shodan_file = "data/shodan_pivots.csv"
+    if os.path.exists(shodan_file):
+        try:
+            shodan_pivots = set()
+            with open(shodan_file, "r", encoding="utf-8") as f:
+                reader = csv.DictReader(f)
+                for row in reader:
+                    domains_raw = row.get("domains", "")
+                    for d in domains_raw.split(";"):
+                        d = normalize_domain(d)
+                        if d in targets:
+                            continue
+                        if is_valid_domain(d):
+                            shodan_pivots.add(d)
+            if shodan_pivots:
+                log(f"  [+] {'shodan_pivot':28s} {len(shodan_pivots):7d} domains  (local, targets excluded)")
+                discovery["shodan_pivot"] = shodan_pivots
+        except Exception as e:
+            log(f"  [!] Failed to read {shodan_file}: {e}")
+
     return discovery
 
 

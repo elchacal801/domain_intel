@@ -47,6 +47,7 @@ jobs:
             data/discovered_certs.csv
             data/campaign_hunt_history.csv
             data/campaign_pivot_findings.csv
+            data/.pivoted_ips.txt
           retention-days: 7
 
   setup:
@@ -260,6 +261,16 @@ jobs:
           cp data/visual_hashes.csv docs/data/ || true
           mkdir -p docs/data/screenshots
           cp -r data/screenshots/* docs/data/screenshots/ || true
+
+      - name: Shodan Favicon Pivot
+        timeout-minutes: 20
+        continue-on-error: true
+        env:
+          SHODAN_API_KEY: ${{ secrets.SHODAN_API_KEY }}
+        run: |
+          if [ -n "$SHODAN_API_KEY" ]; then
+             python scripts/shodan_pivot.py --budget 10
+          fi
 
       - name: Triage Domains
         run: python scripts/triage_domains.py
