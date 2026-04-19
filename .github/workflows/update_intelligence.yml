@@ -216,6 +216,8 @@ jobs:
           python scripts/asn_intel.py
           python scripts/vpn_intel.py
           python scripts/tor_intel.py
+          python scripts/vpn_ip_intel.py
+        continue-on-error: true
 
       - name: Data Hygiene & Enrichment (Clean Data)
         run: |

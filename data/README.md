@@ -110,6 +110,23 @@ The data flow moves from **Inputs** &rarr; **Discovery** &rarr; **Enrichment** &
 | **`tor_asns.csv`** | `tor_intel.py` | **Tor ASNs**. Networks that run a high density of Tor nodes. |
 | **`vpn_asns.csv`** | `vpn_intel.py` | **VPN/Proxy Networks**. ASNs belonging to commercial VPNs (NordVPN, ExpressVPN). Useful for detecting masked traffic. |
 
+### VPN Exit IP Intelligence
+
+| File | Description |
+|------|-------------|
+| `vpn_exit_ips.csv` | Combined VPN exit node IPs from all providers. Columns: ip, provider, confidence, country, city, server_type, asn, asn_name, source, source_date, hostname |
+| `vpn_exit_ips/mullvad.csv` | Mullvad VPN servers (from public API) |
+| `vpn_exit_ips/astrill.csv` | Astrill VPN IPs (Spur seed + RDAP validation + Shodan org) |
+| `vpn_exit_ips/nordvpn.csv` | NordVPN servers (from public API) |
+| `vpn_exit_ips/protonvpn.csv` | ProtonVPN servers (from public API) |
+| `vpn_seeds/spur_astrill_2024.txt` | Static Astrill IP seed list from Spur (published 2024-12-19) |
+
+**Confidence levels:**
+- `confirmed`: IP is in a block registered to the VPN provider (RDAP) or comes from the provider's own API
+- `high`: IP attributed to the provider by Shodan org search
+- `medium`: IP in the Spur seed list but not in a confirmed RDAP block
+- `low`: Static/community-sourced, unvalidated
+
 ---
 
 ## 8. Visual Forensics
