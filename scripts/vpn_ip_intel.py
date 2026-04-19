@@ -79,10 +79,91 @@ class MullvadProvider(BaseProvider):
         return nodes
 
 
+class NordVPNProvider(BaseProvider):
+    """NordVPN — public server recommendations API."""
+    name = "nordvpn"
+    display_name = "NordVPN"
+    API_URL = "https://api.nordvpn.com/v1/servers?limit=99999"
+
+    def fetch(self) -> List[Dict]:
+        logger.info(f"Fetching {self.display_name} server list...")
+        resp = requests.get(self.API_URL, timeout=60,
+                            headers={"User-Agent": "DomainIntel-VPN/1.0"})
+        resp.raise_for_status()
+        servers = resp.json()
+
+        nodes = []
+        for s in servers:
+            ip = s.get("station")
+            if not ip or s.get("status") != "online":
+                continue
+            country = ""
+            city = ""
+            locs = s.get("locations", [])
+            if locs:
+                country = locs[0].get("country", {}).get("code", "")
+                city = locs[0].get("country", {}).get("city", {}).get("name", "")
+            nodes.append({
+                "ip": ip,
+                "provider": self.name,
+                "confidence": "confirmed",
+                "country": country,
+                "city": city,
+                "server_type": "wireguard",
+                "asn": "",
+                "asn_name": "",
+                "source": "nordvpn_api",
+                "source_date": TODAY,
+                "hostname": s.get("hostname", ""),
+            })
+        logger.info(f"  {self.display_name}: {len(nodes)} online servers")
+        return nodes
+
+
+class ProtonVPNProvider(BaseProvider):
+    """ProtonVPN — public logicals API (used by open-source client)."""
+    name = "protonvpn"
+    display_name = "ProtonVPN"
+    API_URL = "https://api.protonvpn.ch/vpn/logicals"
+
+    def fetch(self) -> List[Dict]:
+        logger.info(f"Fetching {self.display_name} server list...")
+        resp = requests.get(self.API_URL, timeout=30,
+                            headers={"User-Agent": "DomainIntel-VPN/1.0"})
+        resp.raise_for_status()
+        data = resp.json()
+
+        nodes = []
+        for logical in data.get("LogicalServers", []):
+            if logical.get("Status") != 1:
+                continue
+            for server in logical.get("Servers", []):
+                ip = server.get("ExitIP")
+                if not ip or server.get("Status") != 1:
+                    continue
+                nodes.append({
+                    "ip": ip,
+                    "provider": self.name,
+                    "confidence": "confirmed",
+                    "country": logical.get("ExitCountry", ""),
+                    "city": logical.get("City", ""),
+                    "server_type": "wireguard",
+                    "asn": "",
+                    "asn_name": "",
+                    "source": "protonvpn_api",
+                    "source_date": TODAY,
+                    "hostname": logical.get("Name", ""),
+                })
+        logger.info(f"  {self.display_name}: {len(nodes)} online servers")
+        return nodes
+
+
 # --- Provider Registry ---
 
 PROVIDERS: List[BaseProvider] = [
     MullvadProvider(),
+    NordVPNProvider(),
+    ProtonVPNProvider(),
 ]
 
 

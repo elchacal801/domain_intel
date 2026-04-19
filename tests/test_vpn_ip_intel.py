@@ -9,7 +9,7 @@ sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', 'scripts'))
 
 from unittest.mock import patch, MagicMock
 
-from vpn_ip_intel import MullvadProvider, BaseProvider
+from vpn_ip_intel import MullvadProvider, NordVPNProvider, ProtonVPNProvider, BaseProvider
 
 
 class TestMullvadProvider:
@@ -107,3 +107,88 @@ class TestMullvadProvider:
             mock_requests.get.return_value = mock_resp
             nodes = provider.fetch()
         assert len(nodes) == 0
+
+
+class TestNordVPNProvider:
+    SAMPLE_API_RESPONSE = [
+        {
+            "id": 1,
+            "hostname": "us1234.nordvpn.com",
+            "station": "198.44.136.1",
+            "status": "online",
+            "locations": [
+                {"country": {"code": "US", "city": {"name": "New York"}}}
+            ],
+            "technologies": [
+                {"id": 35, "name": "Wireguard"},
+                {"id": 3, "name": "OpenVPN UDP"},
+            ],
+        },
+        {
+            "id": 2,
+            "hostname": "de5678.nordvpn.com",
+            "station": "194.233.96.2",
+            "status": "offline",
+            "locations": [
+                {"country": {"code": "DE", "city": {"name": "Berlin"}}}
+            ],
+            "technologies": [{"id": 35, "name": "Wireguard"}],
+        },
+    ]
+
+    def test_parse_online_servers_only(self):
+        provider = NordVPNProvider()
+        with patch("vpn_ip_intel.requests") as mock_requests:
+            mock_resp = MagicMock()
+            mock_resp.json.return_value = self.SAMPLE_API_RESPONSE
+            mock_resp.raise_for_status = MagicMock()
+            mock_requests.get.return_value = mock_resp
+            nodes = provider.fetch()
+        assert len(nodes) == 1
+        assert nodes[0]["ip"] == "198.44.136.1"
+        assert nodes[0]["provider"] == "nordvpn"
+        assert nodes[0]["country"] == "US"
+        assert nodes[0]["hostname"] == "us1234.nordvpn.com"
+
+
+class TestProtonVPNProvider:
+    SAMPLE_API_RESPONSE = {
+        "Code": 1000,
+        "LogicalServers": [
+            {
+                "Name": "CH#1",
+                "EntryCountry": "CH",
+                "ExitCountry": "CH",
+                "City": "Zurich",
+                "Status": 1,
+                "Servers": [
+                    {"EntryIP": "185.159.157.1", "ExitIP": "185.159.157.2", "Status": 1}
+                ],
+                "Features": 0,
+            },
+            {
+                "Name": "JP#5",
+                "EntryCountry": "JP",
+                "ExitCountry": "JP",
+                "City": "Tokyo",
+                "Status": 0,
+                "Servers": [
+                    {"EntryIP": "138.199.0.1", "ExitIP": "138.199.0.2", "Status": 0}
+                ],
+                "Features": 0,
+            },
+        ],
+    }
+
+    def test_parse_online_servers_only(self):
+        provider = ProtonVPNProvider()
+        with patch("vpn_ip_intel.requests") as mock_requests:
+            mock_resp = MagicMock()
+            mock_resp.json.return_value = self.SAMPLE_API_RESPONSE
+            mock_resp.raise_for_status = MagicMock()
+            mock_requests.get.return_value = mock_resp
+            nodes = provider.fetch()
+        assert len(nodes) == 1
+        assert nodes[0]["ip"] == "185.159.157.2"
+        assert nodes[0]["provider"] == "protonvpn"
+        assert nodes[0]["country"] == "CH"
