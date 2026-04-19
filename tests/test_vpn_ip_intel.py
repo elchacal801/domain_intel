@@ -9,7 +9,7 @@ sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', 'scripts'))
 
 from unittest.mock import patch, MagicMock
 
-from vpn_ip_intel import MullvadProvider, NordVPNProvider, ProtonVPNProvider, BaseProvider
+from vpn_ip_intel import MullvadProvider, NordVPNProvider, ProtonVPNProvider, AstrillProvider, BaseProvider
 
 
 class TestMullvadProvider:
@@ -192,3 +192,35 @@ class TestProtonVPNProvider:
         assert nodes[0]["ip"] == "185.159.157.2"
         assert nodes[0]["provider"] == "protonvpn"
         assert nodes[0]["country"] == "CH"
+
+
+class TestAstrillProvider:
+    def test_load_seed_file(self, tmp_path):
+        seed = tmp_path / "seed.txt"
+        seed.write_text("1.2.3.4\n5.6.7.8\n\n9.10.11.12\n")
+
+        provider = AstrillProvider(seed_path=str(seed))
+        with patch.object(provider, "_rdap_validate", return_value={"1.2.3.4"}), \
+             patch.object(provider, "_shodan_org_search", return_value={"99.99.99.99"}):
+            nodes = provider.fetch()
+
+        assert len(nodes) == 4  # 3 from seed + 1 from Shodan
+        confirmed = [n for n in nodes if n["confidence"] == "confirmed"]
+        assert len(confirmed) == 1
+        assert confirmed[0]["ip"] == "1.2.3.4"
+
+    def test_shodan_new_ips_added(self, tmp_path):
+        seed = tmp_path / "seed.txt"
+        seed.write_text("1.1.1.1\n")
+
+        provider = AstrillProvider(seed_path=str(seed))
+        with patch.object(provider, "_rdap_validate", return_value=set()), \
+             patch.object(provider, "_shodan_org_search", return_value={"2.2.2.2", "3.3.3.3"}):
+            nodes = provider.fetch()
+
+        ips = {n["ip"] for n in nodes}
+        assert "2.2.2.2" in ips
+        assert "3.3.3.3" in ips
+        shodan_nodes = [n for n in nodes if n["source"] == "shodan_org"]
+        assert len(shodan_nodes) == 2
+        assert all(n["confidence"] == "high" for n in shodan_nodes)

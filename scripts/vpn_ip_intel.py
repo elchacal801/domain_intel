@@ -15,6 +15,7 @@ import csv
 import json
 import logging
 import os
+import subprocess
 import requests
 from abc import ABC, abstractmethod
 from concurrent.futures import ThreadPoolExecutor
@@ -22,6 +23,7 @@ from datetime import date
 from typing import Dict, List
 from tqdm import tqdm
 from shared.cymru_resolver import CymruResolver
+from shared.rdap_client import RDAPClient
 
 logging.basicConfig(level=logging.INFO, format='[%(levelname)s] %(message)s')
 logger = logging.getLogger(__name__)
@@ -158,10 +160,98 @@ class ProtonVPNProvider(BaseProvider):
         return nodes
 
 
+class AstrillProvider(BaseProvider):
+    """Astrill VPN — Spur seed list + RDAP validation + Shodan org search."""
+    name = "astrill"
+    display_name = "Astrill VPN"
+    DEFAULT_SEED = "data/vpn_seeds/spur_astrill_2024.txt"
+
+    def __init__(self, seed_path: str = None):
+        self.seed_path = seed_path or self.DEFAULT_SEED
+        self.rdap = RDAPClient()
+
+    def _load_seed(self) -> list:
+        if not os.path.exists(self.seed_path):
+            logger.warning(f"Astrill seed not found: {self.seed_path}")
+            return []
+        with open(self.seed_path) as f:
+            return [line.strip() for line in f if line.strip()]
+
+    def _rdap_validate(self, ips: list) -> set:
+        return self.rdap.validate_astrill_blocks(ips)
+
+    def _shodan_org_search(self, org_name: str) -> set:
+        """Use Shodan CLI search (free query) to find IPs attributed to an org."""
+        try:
+            result = subprocess.run(
+                ["shodan", "search", "--fields", "ip_str",
+                 f'org:"{org_name}"', "--limit", "1000"],
+                capture_output=True, text=True, timeout=60
+            )
+            ips = set()
+            for line in result.stdout.splitlines():
+                ip = line.strip().split("\t")[0] if "\t" in line else line.strip()
+                if ip and ip[0].isdigit():
+                    ips.add(ip)
+            logger.info(f"  Shodan org:{org_name}: {len(ips)} IPs")
+            return ips
+        except (FileNotFoundError, subprocess.TimeoutExpired) as e:
+            logger.warning(f"Shodan CLI not available or timed out: {e}")
+            return set()
+
+    def fetch(self) -> List[Dict]:
+        logger.info(f"Fetching {self.display_name} IPs...")
+        seed_ips = self._load_seed()
+        logger.info(f"  Seed: {len(seed_ips)} IPs from {self.seed_path}")
+
+        rdap_confirmed = self._rdap_validate(seed_ips)
+        logger.info(f"  RDAP confirmed: {len(rdap_confirmed)} IPs")
+
+        shodan_ips = self._shodan_org_search("Astrill Systems Corp")
+
+        nodes = []
+        seed_set = set(seed_ips)
+
+        for ip in seed_ips:
+            confidence = "confirmed" if ip in rdap_confirmed else "medium"
+            nodes.append({
+                "ip": ip,
+                "provider": self.name,
+                "confidence": confidence,
+                "country": "",
+                "city": "",
+                "server_type": "exit",
+                "asn": "",
+                "asn_name": "",
+                "source": "spur_2024+rdap" if ip in rdap_confirmed else "spur_2024",
+                "source_date": TODAY,
+                "hostname": "",
+            })
+
+        for ip in shodan_ips - seed_set:
+            nodes.append({
+                "ip": ip,
+                "provider": self.name,
+                "confidence": "high",
+                "country": "",
+                "city": "",
+                "server_type": "exit",
+                "asn": "",
+                "asn_name": "",
+                "source": "shodan_org",
+                "source_date": TODAY,
+                "hostname": "",
+            })
+
+        logger.info(f"  {self.display_name}: {len(nodes)} total IPs")
+        return nodes
+
+
 # --- Provider Registry ---
 
 PROVIDERS: List[BaseProvider] = [
     MullvadProvider(),
+    AstrillProvider(),
     NordVPNProvider(),
     ProtonVPNProvider(),
 ]
