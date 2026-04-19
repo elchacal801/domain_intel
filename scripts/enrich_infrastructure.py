@@ -21,12 +21,16 @@ import sys
 import os
 from typing import Dict, List, Tuple
 from tqdm.asyncio import tqdm_asyncio
+from vpn_ip_intel import load_vpn_lookup
 
 # Constants
 CYMRU_ASN_SUFFIX = "origin.asn.cymru.com"
 DEFAULT_TIMEOUT = 4.0
 DEFAULT_LIFETIME = 8.0
 MAX_CONCURRENCY = 200 # Default connections
+
+# VPN exit IP lookup for risk tagging
+_vpn_lookup = load_vpn_lookup()
 
 class AsyncResolver:
     def __init__(self, nameservers: List[str] = None):
@@ -153,6 +157,12 @@ async def process_domain(sem: asyncio.Semaphore, resolver: AsyncResolver, domain
                 if a_asn:
                     result["a_record_asn"] = a_asn
                     result["a_record_asn_name"] = await resolver.resolve_asn_name(a_asn)
+
+                # VPN exit node tagging
+                if a_ip in _vpn_lookup:
+                    vpn_tag = f"VPN:{_vpn_lookup[a_ip]['provider'].title()}"
+                    existing = result.get("risk_tags", "")
+                    result["risk_tags"] = f"{existing};{vpn_tag}" if existing else vpn_tag
 
             # 3. Resolve MX
             mxs = await resolver.resolve_mx(domain)

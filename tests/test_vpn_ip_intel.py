@@ -9,7 +9,7 @@ sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', 'scripts'))
 
 from unittest.mock import patch, MagicMock
 
-from vpn_ip_intel import MullvadProvider, NordVPNProvider, ProtonVPNProvider, AstrillProvider, BaseProvider
+from vpn_ip_intel import MullvadProvider, NordVPNProvider, ProtonVPNProvider, AstrillProvider, BaseProvider, load_vpn_lookup
 
 
 class TestMullvadProvider:
@@ -224,3 +224,29 @@ class TestAstrillProvider:
         shodan_nodes = [n for n in nodes if n["source"] == "shodan_org"]
         assert len(shodan_nodes) == 2
         assert all(n["confidence"] == "high" for n in shodan_nodes)
+
+
+class TestVPNRiskTagging:
+    def test_load_vpn_lookup(self, tmp_path):
+        csv_path = tmp_path / "vpn_exit_ips.csv"
+        csv_path.write_text(
+            "ip,provider,confidence,country,city,server_type,asn,asn_name,source,source_date,hostname\n"
+            "1.2.3.4,mullvad,confirmed,se,Gothenburg,wireguard,AS39351,ESAB,mullvad_api,2026-04-19,se-got-wg-001\n"
+            "5.6.7.8,astrill,medium,us,,exit,AS62240,Clouvider,spur_2024,2026-04-19,\n"
+        )
+        lookup = load_vpn_lookup(str(csv_path))
+        assert "1.2.3.4" in lookup
+        assert lookup["1.2.3.4"]["provider"] == "mullvad"
+        assert "5.6.7.8" in lookup
+        assert lookup["5.6.7.8"]["provider"] == "astrill"
+        assert "9.9.9.9" not in lookup
+
+    def test_risk_tag_format(self, tmp_path):
+        csv_path = tmp_path / "vpn_exit_ips.csv"
+        csv_path.write_text(
+            "ip,provider,confidence,country,city,server_type,asn,asn_name,source,source_date,hostname\n"
+            "1.2.3.4,mullvad,confirmed,se,Gothenburg,wireguard,AS39351,ESAB,mullvad_api,2026-04-19,\n"
+        )
+        lookup = load_vpn_lookup(str(csv_path))
+        tag = f"VPN:{lookup['1.2.3.4']['provider'].title()}"
+        assert tag == "VPN:Mullvad"

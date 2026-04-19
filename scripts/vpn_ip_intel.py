@@ -247,6 +247,21 @@ class AstrillProvider(BaseProvider):
         return nodes
 
 
+def load_vpn_lookup(csv_path: str = "data/vpn_exit_ips.csv") -> Dict[str, Dict]:
+    """Load VPN exit IPs into a lookup dict keyed by IP address.
+
+    Used by enrich_infrastructure.py to add VPN:Provider risk tags.
+    Returns empty dict if file doesn't exist.
+    """
+    if not os.path.exists(csv_path):
+        return {}
+    lookup = {}
+    with open(csv_path, encoding="utf-8") as f:
+        for row in csv.DictReader(f):
+            lookup[row["ip"]] = row
+    return lookup
+
+
 # --- Provider Registry ---
 
 PROVIDERS: List[BaseProvider] = [
