@@ -123,15 +123,35 @@ class NordVPNProvider(BaseProvider):
 
 
 class ProtonVPNProvider(BaseProvider):
-    """ProtonVPN — public logicals API (used by open-source client)."""
+    """ProtonVPN — authenticated logicals API.
+
+    Requires a ProtonVPN access token (SRP auth, not simple password).
+    Pass via PROTONVPN_TOKEN env var or --proton-token CLI flag.
+    Skips gracefully if no token is available.
+
+    To get a token: log into account.protonvpn.com, open browser DevTools,
+    find any API request, copy the Authorization header value (without "Bearer ").
+    """
     name = "protonvpn"
     display_name = "ProtonVPN"
     API_URL = "https://api.protonvpn.ch/vpn/logicals"
 
+    def __init__(self, token: str = None):
+        self.token = token or os.environ.get("PROTONVPN_TOKEN", "")
+
     def fetch(self) -> List[Dict]:
+        if not self.token:
+            logger.info(f"Skipping {self.display_name}: no token (set PROTONVPN_TOKEN or use --proton-token)")
+            return []
+
         logger.info(f"Fetching {self.display_name} server list...")
-        resp = requests.get(self.API_URL, timeout=30,
-                            headers={"User-Agent": "DomainIntel-VPN/1.0"})
+        headers = {
+            "User-Agent": "ProtonVPN",
+            "x-pm-appversion": "LinuxVPN_4.7.0",
+            "x-pm-apiversion": "3",
+            "Authorization": f"Bearer {self.token}",
+        }
+        resp = requests.get(self.API_URL, timeout=30, headers=headers)
         resp.raise_for_status()
         data = resp.json()
 
@@ -361,7 +381,14 @@ def main():
     parser.add_argument("--output-dir", default="data/vpn_exit_ips", help="Per-provider output directory")
     parser.add_argument("--workers", type=int, default=20, help="Team Cymru DNS workers")
     parser.add_argument("--providers", nargs="*", default=[], help="Run specific providers only (e.g., mullvad astrill)")
+    parser.add_argument("--proton-token", default="", help="ProtonVPN access token (or set PROTONVPN_TOKEN env var)")
     args = parser.parse_args()
+
+    # Pass token to ProtonVPN provider if provided
+    if args.proton_token:
+        for prov in PROVIDERS:
+            if isinstance(prov, ProtonVPNProvider):
+                prov.token = args.proton_token
 
     run(args.output, args.output_dir, args.workers, args.providers)
 

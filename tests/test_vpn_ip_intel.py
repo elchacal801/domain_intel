@@ -181,7 +181,7 @@ class TestProtonVPNProvider:
     }
 
     def test_parse_online_servers_only(self):
-        provider = ProtonVPNProvider()
+        provider = ProtonVPNProvider(token="test-token")
         with patch("vpn_ip_intel.requests") as mock_requests:
             mock_resp = MagicMock()
             mock_resp.json.return_value = self.SAMPLE_API_RESPONSE
