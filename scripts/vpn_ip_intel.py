@@ -33,6 +33,7 @@ TODAY = date.today().isoformat()
 FIELDS = [
     "ip", "provider", "confidence", "country", "city", "server_type",
     "asn", "asn_name", "source", "source_date", "hostname",
+    "collection_method", "threat_relevance",
 ]
 
 
@@ -40,6 +41,8 @@ class BaseProvider(ABC):
     """Abstract base for VPN IP providers."""
     name: str = ""
     display_name: str = ""
+    collection_method: str = ""
+    threat_relevance: str = ""
 
     @abstractmethod
     def fetch(self) -> List[Dict]:
@@ -51,6 +54,8 @@ class MullvadProvider(BaseProvider):
     """Mullvad VPN — public relay API."""
     name = "mullvad"
     display_name = "Mullvad VPN"
+    collection_method = "Public API"
+    threat_relevance = "Verified no-logs (2023 Swedish police raid); privacy-focused"
     API_URL = "https://api.mullvad.net/www/relays/all/"
 
     def fetch(self) -> List[Dict]:
@@ -85,6 +90,8 @@ class NordVPNProvider(BaseProvider):
     """NordVPN — public server recommendations API."""
     name = "nordvpn"
     display_name = "NordVPN"
+    collection_method = "Public API"
+    threat_relevance = "DPRK confirmed (Mandiant: UNC4899 JumpCloud attack, secondary VPN)"
     API_URL = "https://api.nordvpn.com/v1/servers?limit=99999"
 
     def fetch(self) -> List[Dict]:
@@ -126,6 +133,8 @@ class SurfsharkProvider(BaseProvider):
     """Surfshark — public cluster API + DNS resolution."""
     name = "surfshark"
     display_name = "Surfshark"
+    collection_method = "Public API + DNS"
+    threat_relevance = "General VPN coverage"
     API_URL = "https://api.surfshark.com/v4/server/clusters"
 
     def fetch(self) -> List[Dict]:
@@ -244,6 +253,8 @@ class PIAProvider(BaseProvider):
     """Private Internet Access — public server list API."""
     name = "pia"
     display_name = "Private Internet Access"
+    collection_method = "Public API"
+    threat_relevance = "Court-proven no-logs (3 FBI subpoenas returned no data)"
     API_URL = "https://serverlist.piaservers.net/vpninfo/servers/v6"
 
     def fetch(self) -> List[Dict]:
@@ -291,6 +302,8 @@ class CyberGhostProvider(DNSEnumProvider):
     """CyberGhost — DNS enumeration of N-CC.cg-dialup.net hostnames."""
     name = "cyberghost"
     display_name = "CyberGhost"
+    collection_method = "DNS enumeration"
+    threat_relevance = "General VPN coverage"
 
     COUNTRIES = [
         "us", "de", "uk", "gb", "fr", "nl", "ro", "ca", "au", "jp", "se", "ch", "at",
@@ -313,6 +326,8 @@ class TorGuardProvider(DNSEnumProvider):
     """TorGuard — DNS enumeration of CC.torguard.org and CC.secureconnect.me."""
     name = "torguard"
     display_name = "TorGuard"
+    collection_method = "DNS enumeration"
+    threat_relevance = "DPRK confirmed (Mandiant: UNC4899 JumpCloud attack, secondary VPN)"
 
     COUNTRIES = [
         "us", "uk", "ca", "au", "de", "fr", "nl", "se", "ch", "no", "dk", "fi", "es",
@@ -337,6 +352,8 @@ class WindscribeProvider(DNSEnumProvider):
     """Windscribe — DNS enumeration of REGION-NNN.windscribe.com hostnames."""
     name = "windscribe"
     display_name = "Windscribe"
+    collection_method = "DNS enumeration"
+    threat_relevance = "General VPN coverage; open-source client"
 
     REGIONS = {
         "us-east": 60, "us-central": 35, "us-west": 20,
@@ -373,6 +390,8 @@ class ProtonVPNProvider(BaseProvider):
     """
     name = "protonvpn"
     display_name = "ProtonVPN"
+    collection_method = "Local client cache"
+    threat_relevance = "Verified no-logs (2023 Swedish police raid); privacy-focused"
 
     def __init__(self, cache_path: str = None):
         self.cache_path = cache_path
@@ -490,6 +509,8 @@ class AstrillProvider(BaseProvider):
     """Astrill VPN — Spur seed list + RDAP validation + Shodan org search."""
     name = "astrill"
     display_name = "Astrill VPN"
+    collection_method = "Spur seed + RDAP validation + Shodan org"
+    threat_relevance = "PRIMARY DPRK (Mandiant, Microsoft, Spur, Unit 42, SecurityScorecard: UNC5267 + Lazarus)"
     DEFAULT_SEED = "data/vpn_seeds/spur_astrill_2024.txt"
 
     def __init__(self, seed_path: str = None):
@@ -649,6 +670,10 @@ def run(output: str, output_dir: str, workers: int, providers: List[str]):
             continue
         try:
             nodes = prov.fetch()
+            # Inject provider-level metadata
+            for n in nodes:
+                n["collection_method"] = prov.collection_method
+                n["threat_relevance"] = prov.threat_relevance
             all_nodes.extend(nodes)
         except Exception as e:
             logger.error(f"Provider {prov.display_name} failed: {e}")
