@@ -122,6 +122,242 @@ class NordVPNProvider(BaseProvider):
         return nodes
 
 
+class SurfsharkProvider(BaseProvider):
+    """Surfshark — public cluster API + DNS resolution."""
+    name = "surfshark"
+    display_name = "Surfshark"
+    API_URL = "https://api.surfshark.com/v4/server/clusters"
+
+    def fetch(self) -> List[Dict]:
+        import subprocess as _sp
+
+        logger.info(f"Fetching {self.display_name} cluster list...")
+        resp = requests.get(self.API_URL, timeout=30,
+                            headers={"User-Agent": "DomainIntel-VPN/1.0"})
+        resp.raise_for_status()
+        clusters = resp.json()
+
+        logger.info(f"  {len(clusters)} clusters, resolving hostnames via DNS...")
+        nodes = []
+        seen_ips = set()
+
+        for cluster in clusters:
+            hostname = cluster.get("connectionName", "")
+            if not hostname:
+                continue
+            cc = cluster.get("countryCode", "")
+            city = cluster.get("location", "")
+
+            # Resolve hostname to IPs
+            try:
+                result = _sp.run(
+                    ["dig", "+short", hostname],
+                    capture_output=True, text=True, timeout=5
+                )
+                ips = [ip.strip() for ip in result.stdout.strip().split("\n")
+                       if ip.strip() and ip.strip()[0].isdigit()]
+            except Exception:
+                ips = []
+
+            for ip in ips:
+                if ip in seen_ips:
+                    continue
+                seen_ips.add(ip)
+                nodes.append({
+                    "ip": ip,
+                    "provider": self.name,
+                    "confidence": "confirmed",
+                    "country": cc,
+                    "city": city,
+                    "server_type": "wireguard",
+                    "asn": "",
+                    "asn_name": "",
+                    "source": "surfshark_api+dns",
+                    "source_date": TODAY,
+                    "hostname": hostname,
+                })
+
+        logger.info(f"  {self.display_name}: {len(nodes)} IPs from {len(clusters)} clusters")
+        return nodes
+
+
+class DNSEnumProvider(BaseProvider):
+    """Base class for providers enumerated via DNS hostname resolution.
+
+    Subclasses define hostname patterns and country lists. This base handles
+    the DNS resolution and deduplication.
+    """
+    name = ""
+    display_name = ""
+    # List of (hostname_template, country_code) tuples
+    # Template uses {n:03d} for numbered servers, {cc} for country codes
+    _hostnames: List[tuple] = []
+
+    def _generate_hostnames(self) -> List[tuple]:
+        """Override to generate (hostname, country_code) pairs."""
+        return self._hostnames
+
+    def fetch(self) -> List[Dict]:
+        import subprocess as _sp
+
+        hostnames = self._generate_hostnames()
+        if not hostnames:
+            logger.warning(f"{self.display_name}: no hostnames to resolve")
+            return []
+
+        logger.info(f"Resolving {len(hostnames)} {self.display_name} hostnames via DNS...")
+        nodes = []
+        seen_ips = set()
+
+        for hostname, cc in hostnames:
+            try:
+                r = _sp.run(["dig", "+short", hostname],
+                            capture_output=True, text=True, timeout=3)
+                ips = [ip.strip() for ip in r.stdout.strip().split("\n")
+                       if ip.strip() and ip.strip()[0].isdigit()]
+            except Exception:
+                ips = []
+
+            for ip in ips:
+                if ip in seen_ips:
+                    continue
+                seen_ips.add(ip)
+                nodes.append({
+                    "ip": ip,
+                    "provider": self.name,
+                    "confidence": "confirmed",
+                    "country": cc.upper() if cc else "",
+                    "city": "",
+                    "server_type": "wireguard",
+                    "asn": "",
+                    "asn_name": "",
+                    "source": f"{self.name}_dns",
+                    "source_date": TODAY,
+                    "hostname": hostname,
+                })
+
+        logger.info(f"  {self.display_name}: {len(nodes)} IPs")
+        return nodes
+
+
+class PIAProvider(BaseProvider):
+    """Private Internet Access — public server list API."""
+    name = "pia"
+    display_name = "Private Internet Access"
+    API_URL = "https://serverlist.piaservers.net/vpninfo/servers/v6"
+
+    def fetch(self) -> List[Dict]:
+        logger.info(f"Fetching {self.display_name} server list...")
+        resp = requests.get(self.API_URL, timeout=30)
+        resp.raise_for_status()
+
+        # Response is JSON on first line + RSA signature on remaining lines
+        first_line = resp.text.split("\n")[0]
+        import json as _json
+        data = _json.loads(first_line)
+
+        nodes = []
+        seen_ips = set()
+        for region in data.get("regions", []):
+            if region.get("offline"):
+                continue
+            cc = region.get("country", "")
+            name = region.get("name", "")
+            for proto, server_list in region.get("servers", {}).items():
+                for s in server_list:
+                    ip = s.get("ip")
+                    if not ip or ip in seen_ips:
+                        continue
+                    seen_ips.add(ip)
+                    nodes.append({
+                        "ip": ip,
+                        "provider": self.name,
+                        "confidence": "confirmed",
+                        "country": cc,
+                        "city": name,
+                        "server_type": proto,
+                        "asn": "",
+                        "asn_name": "",
+                        "source": "pia_api",
+                        "source_date": TODAY,
+                        "hostname": s.get("cn", ""),
+                    })
+
+        logger.info(f"  {self.display_name}: {len(nodes)} IPs from {len(data.get('regions', []))} regions")
+        return nodes
+
+
+class CyberGhostProvider(DNSEnumProvider):
+    """CyberGhost — DNS enumeration of N-CC.cg-dialup.net hostnames."""
+    name = "cyberghost"
+    display_name = "CyberGhost"
+
+    COUNTRIES = [
+        "us", "de", "uk", "gb", "fr", "nl", "ro", "ca", "au", "jp", "se", "ch", "at",
+        "no", "dk", "fi", "es", "it", "pt", "pl", "cz", "be", "hu", "bg", "hr", "ie",
+        "lu", "lv", "lt", "ee", "sg", "hk", "kr", "in", "br", "mx", "ar", "cl", "co",
+        "za", "il", "tr", "ua", "ru", "kz", "th", "vn", "my", "ph", "id", "nz", "tw",
+        "cn", "pk", "ng", "ke", "eg", "ma", "al", "ba", "cy", "ge", "gr", "is", "md",
+        "me", "mk", "mt", "rs", "si", "sk", "pa", "cr", "py", "uy", "ve", "pe", "ec", "do",
+    ]
+
+    def _generate_hostnames(self):
+        pairs = []
+        for cc in self.COUNTRIES:
+            for n in range(1, 51):
+                pairs.append((f"{n}-{cc}.cg-dialup.net", cc))
+        return pairs
+
+
+class TorGuardProvider(DNSEnumProvider):
+    """TorGuard — DNS enumeration of CC.torguard.org and CC.secureconnect.me."""
+    name = "torguard"
+    display_name = "TorGuard"
+
+    COUNTRIES = [
+        "us", "uk", "ca", "au", "de", "fr", "nl", "se", "ch", "no", "dk", "fi", "es",
+        "it", "pt", "pl", "cz", "at", "be", "hu", "bg", "ro", "hr", "ie", "lu", "lv",
+        "lt", "ee", "sg", "hk", "jp", "kr", "in", "br", "mx", "ar", "za", "il", "tr",
+        "ua", "ru", "nz", "th", "vn", "my", "ph", "id", "tw", "gr", "is", "cy", "pa", "cr",
+    ]
+    US_CITIES = ["ny", "la", "chi", "dal", "mia", "atl", "sea", "den", "lv", "sf", "dc"]
+
+    def _generate_hostnames(self):
+        pairs = []
+        for cc in self.COUNTRIES:
+            pairs.append((f"{cc}.torguard.org", cc))
+            pairs.append((f"{cc}.secureconnect.me", cc))
+        for city in self.US_CITIES:
+            pairs.append((f"us-{city}.torguard.org", "us"))
+            pairs.append((f"us-{city}.secureconnect.me", "us"))
+        return pairs
+
+
+class WindscribeProvider(DNSEnumProvider):
+    """Windscribe — DNS enumeration of REGION-NNN.windscribe.com hostnames."""
+    name = "windscribe"
+    display_name = "Windscribe"
+
+    REGIONS = {
+        "us-east": 60, "us-central": 35, "us-west": 20,
+        "ca": 20, "ca-west": 10,
+        "uk": 55, "fr": 10, "de": 10, "nl": 10, "se": 10,
+        "no": 5, "dk": 5, "fi": 5, "ch": 5, "es": 5, "it": 5, "pt": 5,
+        "ie": 5, "ro": 5, "bg": 5, "pl": 5, "cz": 5, "gr": 5, "tr": 5,
+        "ru": 10, "ua": 5, "md": 5, "ee": 5, "lv": 5, "hr": 5, "lu": 5,
+        "jp": 5, "sg": 10, "au": 10, "nz": 5, "hk": 5, "in": 5,
+        "br": 5, "za": 5, "ar": 5, "my": 5, "th": 5, "vn": 5, "tw": 5, "id": 5,
+    }
+
+    def _generate_hostnames(self):
+        pairs = []
+        for region, max_n in self.REGIONS.items():
+            cc = region.split("-")[0]  # us-east -> us
+            for n in range(1, max_n + 1):
+                pairs.append((f"{region}-{n:03d}.windscribe.com", cc))
+        return pairs
+
+
 class ProtonVPNProvider(BaseProvider):
     """ProtonVPN — reads server list from local ProtonVPN client cache.
 
@@ -356,9 +592,14 @@ def load_vpn_lookup(csv_path: str = "data/vpn_exit_ips.csv") -> Dict[str, Dict]:
 
 PROVIDERS: List[BaseProvider] = [
     MullvadProvider(),
-    AstrillProvider(),
     NordVPNProvider(),
+    PIAProvider(),
+    SurfsharkProvider(),
     ProtonVPNProvider(),
+    AstrillProvider(),
+    CyberGhostProvider(),
+    TorGuardProvider(),
+    WindscribeProvider(),
 ]
 
 
