@@ -123,60 +123,130 @@ class NordVPNProvider(BaseProvider):
 
 
 class ProtonVPNProvider(BaseProvider):
-    """ProtonVPN — authenticated logicals API.
+    """ProtonVPN — reads server list from local ProtonVPN client cache.
 
-    Requires a ProtonVPN access token (SRP auth, not simple password).
-    Pass via PROTONVPN_TOKEN env var or --proton-token CLI flag.
-    Skips gracefully if no token is available.
+    The ProtonVPN Windows/Linux client stores its server list as a protobuf
+    binary in local app storage. This provider reads that cache directly,
+    avoiding the need for API authentication (which requires SRP auth).
 
-    To get a token: log into account.protonvpn.com, open browser DevTools,
-    find any API request, copy the Authorization header value (without "Bearer ").
+    Falls back to a static seed file if the local cache isn't found.
+    The cache is refreshed automatically by the ProtonVPN client app.
+
+    Cache location (Windows):
+        %LOCALAPPDATA%/Proton/Proton VPN/Storage/Servers.*.bin
     """
     name = "protonvpn"
     display_name = "ProtonVPN"
-    API_URL = "https://api.protonvpn.ch/vpn/logicals"
 
-    def __init__(self, token: str = None):
-        self.token = token or os.environ.get("PROTONVPN_TOKEN", "")
+    def __init__(self, cache_path: str = None):
+        self.cache_path = cache_path
 
-    def fetch(self) -> List[Dict]:
-        if not self.token:
-            logger.info(f"Skipping {self.display_name}: no token (set PROTONVPN_TOKEN or use --proton-token)")
-            return []
+    def _find_cache(self) -> str:
+        """Find the ProtonVPN Servers.*.bin cache file."""
+        if self.cache_path and os.path.exists(self.cache_path):
+            return self.cache_path
 
-        logger.info(f"Fetching {self.display_name} server list...")
-        headers = {
-            "User-Agent": "ProtonVPN",
-            "x-pm-appversion": "LinuxVPN_4.7.0",
-            "x-pm-apiversion": "3",
-            "Authorization": f"Bearer {self.token}",
-        }
-        resp = requests.get(self.API_URL, timeout=30, headers=headers)
-        resp.raise_for_status()
-        data = resp.json()
+        # Windows: %LOCALAPPDATA%/Proton/Proton VPN/Storage/
+        local_appdata = os.environ.get("LOCALAPPDATA", "")
+        if local_appdata:
+            storage_dir = os.path.join(local_appdata, "Proton", "Proton VPN", "Storage")
+            if os.path.isdir(storage_dir):
+                import glob
+                matches = glob.glob(os.path.join(storage_dir, "Servers.*.bin"))
+                if matches:
+                    return matches[0]
+
+        # Linux: ~/.local/share/protonvpn/ (varies by client)
+        home = os.path.expanduser("~")
+        for candidate in [
+            os.path.join(home, ".local", "share", "protonvpn"),
+            os.path.join(home, ".config", "protonvpn"),
+        ]:
+            if os.path.isdir(candidate):
+                import glob
+                matches = glob.glob(os.path.join(candidate, "**/Servers.*.bin"), recursive=True)
+                if matches:
+                    return matches[0]
+
+        return ""
+
+    def _parse_cache(self, path: str) -> List[Dict]:
+        """Parse IPs and hostnames from protobuf binary cache."""
+        import re
+
+        with open(path, "rb") as f:
+            data = f.read()
+
+        # Pattern: IP followed by node-XX-NN.protonvpn.net hostname
+        ip_host_pattern = re.compile(
+            rb"(\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3})\x00{0,2}.{0,4}"
+            rb"(node-[a-z]{2}-\d+\.protonvpn\.net)"
+        )
+        all_ip_pattern = re.compile(rb"(\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3})")
 
         nodes = []
-        for logical in data.get("LogicalServers", []):
-            if logical.get("Status") != 1:
+        seen_ips = set()
+
+        # First pass: IPs with hostnames
+        for match in ip_host_pattern.finditer(data):
+            ip = match.group(1).decode()
+            hostname = match.group(2).decode()
+            parts = ip.split(".")
+            if not all(0 <= int(p) <= 255 for p in parts):
                 continue
-            for server in logical.get("Servers", []):
-                ip = server.get("ExitIP")
-                if not ip or server.get("Status") != 1:
-                    continue
-                nodes.append({
-                    "ip": ip,
-                    "provider": self.name,
-                    "confidence": "confirmed",
-                    "country": logical.get("ExitCountry", ""),
-                    "city": logical.get("City", ""),
-                    "server_type": "wireguard",
-                    "asn": "",
-                    "asn_name": "",
-                    "source": "protonvpn_api",
-                    "source_date": TODAY,
-                    "hostname": logical.get("Name", ""),
-                })
-        logger.info(f"  {self.display_name}: {len(nodes)} online servers")
+            if ip in seen_ips:
+                continue
+            seen_ips.add(ip)
+            country = hostname.split("-")[1].upper()
+            nodes.append({
+                "ip": ip,
+                "provider": self.name,
+                "confidence": "confirmed",
+                "country": country,
+                "city": "",
+                "server_type": "wireguard",
+                "asn": "",
+                "asn_name": "",
+                "source": "protonvpn_local_cache",
+                "source_date": TODAY,
+                "hostname": hostname,
+            })
+
+        # Second pass: IPs without hostnames
+        for match in all_ip_pattern.finditer(data):
+            ip = match.group(1).decode()
+            parts = ip.split(".")
+            if not all(0 <= int(p) <= 255 for p in parts):
+                continue
+            if ip in seen_ips:
+                continue
+            seen_ips.add(ip)
+            nodes.append({
+                "ip": ip,
+                "provider": self.name,
+                "confidence": "confirmed",
+                "country": "",
+                "city": "",
+                "server_type": "wireguard",
+                "asn": "",
+                "asn_name": "",
+                "source": "protonvpn_local_cache",
+                "source_date": TODAY,
+                "hostname": "",
+            })
+
+        return nodes
+
+    def fetch(self) -> List[Dict]:
+        cache = self._find_cache()
+        if not cache:
+            logger.info(f"Skipping {self.display_name}: no local client cache found "
+                        f"(install ProtonVPN client or set cache path)")
+            return []
+
+        logger.info(f"Reading {self.display_name} server list from local cache: {cache}")
+        nodes = self._parse_cache(cache)
+        logger.info(f"  {self.display_name}: {len(nodes)} servers ({sum(1 for n in nodes if n['hostname'])} with hostnames)")
         return nodes
 
 
@@ -381,14 +451,7 @@ def main():
     parser.add_argument("--output-dir", default="data/vpn_exit_ips", help="Per-provider output directory")
     parser.add_argument("--workers", type=int, default=20, help="Team Cymru DNS workers")
     parser.add_argument("--providers", nargs="*", default=[], help="Run specific providers only (e.g., mullvad astrill)")
-    parser.add_argument("--proton-token", default="", help="ProtonVPN access token (or set PROTONVPN_TOKEN env var)")
     args = parser.parse_args()
-
-    # Pass token to ProtonVPN provider if provided
-    if args.proton_token:
-        for prov in PROVIDERS:
-            if isinstance(prov, ProtonVPNProvider):
-                prov.token = args.proton_token
 
     run(args.output, args.output_dir, args.workers, args.providers)
 

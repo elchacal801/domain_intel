@@ -152,46 +152,26 @@ class TestNordVPNProvider:
 
 
 class TestProtonVPNProvider:
-    SAMPLE_API_RESPONSE = {
-        "Code": 1000,
-        "LogicalServers": [
-            {
-                "Name": "CH#1",
-                "EntryCountry": "CH",
-                "ExitCountry": "CH",
-                "City": "Zurich",
-                "Status": 1,
-                "Servers": [
-                    {"EntryIP": "185.159.157.1", "ExitIP": "185.159.157.2", "Status": 1}
-                ],
-                "Features": 0,
-            },
-            {
-                "Name": "JP#5",
-                "EntryCountry": "JP",
-                "ExitCountry": "JP",
-                "City": "Tokyo",
-                "Status": 0,
-                "Servers": [
-                    {"EntryIP": "138.199.0.1", "ExitIP": "138.199.0.2", "Status": 0}
-                ],
-                "Features": 0,
-            },
-        ],
-    }
+    def test_parse_cache_binary(self, tmp_path):
+        """Test parsing IPs and hostnames from a mock protobuf cache."""
+        # Build a minimal binary with the patterns the parser expects
+        cache = tmp_path / "Servers.test.bin"
+        content = (
+            b"\x00\x00185.159.157.2\x00\x00\x22\x00node-ch-01.protonvpn.net"
+            b"\x00\x00138.199.0.1\x00\x00\x22\x00node-jp-05.protonvpn.net"
+        )
+        cache.write_bytes(content)
 
-    def test_parse_online_servers_only(self):
-        provider = ProtonVPNProvider(token="test-token")
-        with patch("vpn_ip_intel.requests") as mock_requests:
-            mock_resp = MagicMock()
-            mock_resp.json.return_value = self.SAMPLE_API_RESPONSE
-            mock_resp.raise_for_status = MagicMock()
-            mock_requests.get.return_value = mock_resp
-            nodes = provider.fetch()
-        assert len(nodes) == 1
+        provider = ProtonVPNProvider(cache_path=str(cache))
+        nodes = provider.fetch()
+
+        assert len(nodes) == 2
         assert nodes[0]["ip"] == "185.159.157.2"
         assert nodes[0]["provider"] == "protonvpn"
         assert nodes[0]["country"] == "CH"
+        assert nodes[0]["hostname"] == "node-ch-01.protonvpn.net"
+        assert nodes[1]["ip"] == "138.199.0.1"
+        assert nodes[1]["country"] == "JP"
 
 
 class TestAstrillProvider:
