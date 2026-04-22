@@ -9,7 +9,11 @@ sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', 'scripts'))
 
 from unittest.mock import patch, MagicMock
 
-from vpn_ip_intel import MullvadProvider, NordVPNProvider, ProtonVPNProvider, AstrillProvider, BaseProvider, load_vpn_lookup
+from vpn_ip_intel import (
+    MullvadProvider, NordVPNProvider, ProtonVPNProvider, AstrillProvider,
+    BaseProvider, load_vpn_lookup, normalize_node, compute_prefix_inferred_rows,
+    SHARED_HOSTING_ASNS, _COUNTRY_ALIASES, _SERVER_TYPE_ALIASES, TODAY,
+)
 
 
 class TestMullvadProvider:
@@ -230,3 +234,292 @@ class TestVPNRiskTagging:
         lookup = load_vpn_lookup(str(csv_path))
         tag = f"VPN:{lookup['1.2.3.4']['provider'].title()}"
         assert tag == "VPN:Mullvad"
+
+    def test_load_vpn_lookup_skips_empty_ip(self, tmp_path):
+        csv_path = tmp_path / "vpn_relay_ips.csv"
+        csv_path.write_text(
+            "ip,provider,confidence,country,city,server_type,asn,asn_name,source,source_date,hostname,collection_method,threat_relevance,ip_role,prefix\n"
+            "1.2.3.4,mullvad,confirmed,SE,,wireguard,,,mullvad_api,2026-04-19,,,ingress,\n"
+            ",mullvad,medium,SE,,wireguard,AS1234,Test,prefix_inferred_from_5_ips,2026-04-19,,,prefix-inferred,1.2.3.0/24\n"
+        )
+        lookup = load_vpn_lookup(str(csv_path))
+        assert "1.2.3.4" in lookup
+        assert "" not in lookup
+        assert len(lookup) == 1
+
+    def test_load_vpn_lookup_default_path(self):
+        import inspect
+        sig = inspect.signature(load_vpn_lookup)
+        assert sig.parameters["csv_path"].default == "data/vpn_relay_ips.csv"
+
+
+# === New tests: normalize_node ===
+
+class TestNormalizeNode:
+    @pytest.mark.parametrize("input_cc,expected", [
+        ("se", "SE"),
+        ("US", "US"),
+        ("", ""),
+        ("uk", "GB"),
+        ("UK", "GB"),
+        ("Gb", "GB"),
+    ])
+    def test_country_normalization(self, input_cc, expected):
+        node = {"country": input_cc, "server_type": "wireguard", "hostname": "",
+                "confidence": "confirmed"}
+        normalize_node(node)
+        assert node["country"] == expected
+
+    @pytest.mark.parametrize("input_st,expected", [
+        ("wg", "wireguard"),
+        ("wireguard", "wireguard"),
+        ("openvpn_udp", "openvpn"),
+        ("openvpn_tcp", "openvpn"),
+        ("exit", "exit"),
+        ("bridge", "bridge"),
+        ("WireGuard", "wireguard"),
+    ])
+    def test_server_type_normalization(self, input_st, expected):
+        node = {"country": "", "server_type": input_st, "hostname": "",
+                "confidence": "confirmed"}
+        normalize_node(node)
+        assert node["server_type"] == expected
+
+    def test_hostname_lowercase(self):
+        node = {"country": "", "server_type": "", "hostname": "US-NYC-WG-301.MULLVAD.NET",
+                "confidence": "confirmed"}
+        normalize_node(node)
+        assert node["hostname"] == "us-nyc-wg-301.mullvad.net"
+
+    @pytest.mark.parametrize("input_conf,expected", [
+        ("confirmed", "confirmed"),
+        ("high", "high"),
+        ("medium", "medium"),
+        ("low", "low"),
+        ("bogus", "low"),
+        ("CONFIRMED", "confirmed"),
+        ("", "low"),
+    ])
+    def test_confidence_clamping(self, input_conf, expected):
+        node = {"country": "", "server_type": "", "hostname": "",
+                "confidence": input_conf}
+        normalize_node(node)
+        assert node["confidence"] == expected
+
+    def test_idempotent(self):
+        node = {"country": "uk", "server_type": "wg", "hostname": "TEST.COM",
+                "confidence": "high", "ip_role": "ingress", "prefix": ""}
+        normalize_node(node)
+        first = dict(node)
+        normalize_node(node)
+        assert node == first
+
+    def test_defaults_ip_role_and_prefix(self):
+        node = {"country": "", "server_type": "", "hostname": "", "confidence": "confirmed"}
+        normalize_node(node)
+        assert node["ip_role"] == "unknown"
+        assert node["prefix"] == ""
+
+    def test_preserves_existing_ip_role(self):
+        node = {"country": "", "server_type": "", "hostname": "", "confidence": "confirmed",
+                "ip_role": "egress", "prefix": ""}
+        normalize_node(node)
+        assert node["ip_role"] == "egress"
+
+
+# === New tests: Astrill seed date ===
+
+class TestSeedDate:
+    def test_seed_date_parses_year(self, tmp_path):
+        seed = tmp_path / "spur_astrill_2024.txt"
+        seed.write_text("1.2.3.4\n")
+        provider = AstrillProvider(seed_path=str(seed))
+        assert provider._seed_date() == "2024-01-01"
+
+    def test_seed_date_no_year(self, tmp_path):
+        seed = tmp_path / "astrill.txt"
+        seed.write_text("1.2.3.4\n")
+        provider = AstrillProvider(seed_path=str(seed))
+        assert provider._seed_date() == TODAY
+
+    def test_stale_seed_warning(self, tmp_path, caplog):
+        import logging
+        seed = tmp_path / "spur_astrill_2024.txt"
+        seed.write_text("1.2.3.4\n")
+        provider = AstrillProvider(seed_path=str(seed))
+        with patch.object(provider, "_rdap_validate", return_value=set()), \
+             patch.object(provider, "_shodan_org_search", return_value=set()), \
+             caplog.at_level(logging.WARNING):
+            provider.fetch()
+        assert any("days old" in r.message for r in caplog.records)
+
+
+# === New tests: Astrill egress tagging ===
+
+class TestAstrillEgress:
+    def test_seed_ips_tagged_egress(self, tmp_path):
+        seed = tmp_path / "spur_astrill_2024.txt"
+        seed.write_text("1.2.3.4\n5.6.7.8\n")
+        provider = AstrillProvider(seed_path=str(seed))
+        with patch.object(provider, "_rdap_validate", return_value=set()), \
+             patch.object(provider, "_shodan_org_search", return_value=set()):
+            nodes = provider.fetch()
+        assert all(n["ip_role"] == "egress" for n in nodes)
+
+    def test_shodan_ips_tagged_egress(self, tmp_path):
+        seed = tmp_path / "spur_astrill_2024.txt"
+        seed.write_text("1.2.3.4\n")
+        provider = AstrillProvider(seed_path=str(seed))
+        with patch.object(provider, "_rdap_validate", return_value=set()), \
+             patch.object(provider, "_shodan_org_search", return_value={"9.9.9.9"}):
+            nodes = provider.fetch()
+        shodan_nodes = [n for n in nodes if n["source"] == "shodan_org"]
+        assert len(shodan_nodes) == 1
+        assert shodan_nodes[0]["ip_role"] == "egress"
+
+    def test_seed_date_applied_to_seed_rows(self, tmp_path):
+        seed = tmp_path / "spur_astrill_2024.txt"
+        seed.write_text("1.2.3.4\n")
+        provider = AstrillProvider(seed_path=str(seed))
+        with patch.object(provider, "_rdap_validate", return_value=set()), \
+             patch.object(provider, "_shodan_org_search", return_value={"9.9.9.9"}):
+            nodes = provider.fetch()
+        seed_node = [n for n in nodes if n["ip"] == "1.2.3.4"][0]
+        shodan_node = [n for n in nodes if n["ip"] == "9.9.9.9"][0]
+        assert seed_node["source_date"] == "2024-01-01"
+        assert shodan_node["source_date"] == TODAY
+
+
+# === New tests: ProtonVPN cache fallback ===
+
+class TestProtonCacheFallback:
+    def test_find_cache_repo_local(self, tmp_path, monkeypatch):
+        # Create a mock repo structure
+        scripts_dir = tmp_path / "scripts"
+        scripts_dir.mkdir()
+        seed_dir = tmp_path / "data" / "vpn_seeds" / "protonvpn"
+        seed_dir.mkdir(parents=True)
+        cache = seed_dir / "Servers.abc123.bin"
+        cache.write_bytes(b"\x00" * 10)
+
+        import vpn_ip_intel
+        monkeypatch.setattr(vpn_ip_intel, "__file__", str(scripts_dir / "vpn_ip_intel.py"))
+        monkeypatch.delenv("LOCALAPPDATA", raising=False)
+        provider = ProtonVPNProvider()
+        result = provider._find_cache()
+        assert "Servers.abc123.bin" in result
+
+    def test_find_cache_prefers_current(self, tmp_path, monkeypatch):
+        scripts_dir = tmp_path / "scripts"
+        scripts_dir.mkdir()
+        seed_dir = tmp_path / "data" / "vpn_seeds" / "protonvpn"
+        seed_dir.mkdir(parents=True)
+        (seed_dir / "Servers.abc123.bin").write_bytes(b"\x00")
+        (seed_dir / "Servers.current.bin").write_bytes(b"\x00")
+
+        import vpn_ip_intel
+        original = vpn_ip_intel.__file__
+        monkeypatch.setattr(vpn_ip_intel, "__file__", str(scripts_dir / "vpn_ip_intel.py"))
+        provider = ProtonVPNProvider()
+        result = provider._find_cache()
+        monkeypatch.setattr(vpn_ip_intel, "__file__", original)
+        assert "Servers.current.bin" in result
+
+    def test_missing_cache_warning(self, tmp_path, caplog, monkeypatch):
+        import logging
+        import vpn_ip_intel
+        # Point to empty dir so no cache found
+        scripts_dir = tmp_path / "scripts"
+        scripts_dir.mkdir()
+        original = vpn_ip_intel.__file__
+        monkeypatch.setattr(vpn_ip_intel, "__file__", str(scripts_dir / "vpn_ip_intel.py"))
+        monkeypatch.delenv("LOCALAPPDATA", raising=False)
+
+        provider = ProtonVPNProvider()
+        with caplog.at_level(logging.WARNING):
+            nodes = provider.fetch()
+        monkeypatch.setattr(vpn_ip_intel, "__file__", original)
+        assert len(nodes) == 0
+        assert any("no local client cache found" in r.message for r in caplog.records)
+
+
+# === New tests: Prefix inference ===
+
+class TestPrefixInferred:
+    def _make_nodes(self, ips, provider="mullvad", asn="AS1234"):
+        return [
+            {"ip": ip, "provider": provider, "confidence": "confirmed",
+             "country": "SE", "city": "", "server_type": "wireguard",
+             "asn": asn, "asn_name": "TestASN", "source": "test",
+             "source_date": TODAY, "hostname": "", "collection_method": "test",
+             "threat_relevance": "test", "ip_role": "ingress", "prefix": ""}
+            for ip in ips
+        ]
+
+    def test_prefix_widening_threshold(self):
+        nodes = self._make_nodes(["10.0.0.1", "10.0.0.2", "10.0.0.3", "10.0.0.4"])
+        result = compute_prefix_inferred_rows(nodes)
+        assert len(result) == 1
+        assert result[0]["ip_role"] == "prefix-inferred"
+        assert result[0]["prefix"] == "10.0.0.0/24"
+        assert result[0]["ip"] == ""
+        assert result[0]["confidence"] == "medium"
+
+    def test_prefix_below_threshold(self):
+        nodes = self._make_nodes(["10.0.0.1", "10.0.0.2", "10.0.0.3"])
+        result = compute_prefix_inferred_rows(nodes)
+        assert len(result) == 0
+
+    def test_shared_asn_skip(self):
+        nodes = self._make_nodes(
+            ["10.0.0.1", "10.0.0.2", "10.0.0.3", "10.0.0.4"],
+            asn="AS16509"  # AWS
+        )
+        result = compute_prefix_inferred_rows(nodes)
+        assert len(result) == 0
+
+    def test_empty_asn_skip(self):
+        nodes = self._make_nodes(
+            ["10.0.0.1", "10.0.0.2", "10.0.0.3", "10.0.0.4"],
+            asn=""
+        )
+        result = compute_prefix_inferred_rows(nodes)
+        assert len(result) == 0
+
+    def test_mixed_providers_grouped_separately(self):
+        nodes_a = self._make_nodes(
+            ["10.0.0.1", "10.0.0.2", "10.0.0.3", "10.0.0.4"],
+            provider="mullvad"
+        )
+        nodes_b = self._make_nodes(
+            ["10.0.0.5", "10.0.0.6", "10.0.0.7", "10.0.0.8"],
+            provider="nordvpn"
+        )
+        result = compute_prefix_inferred_rows(nodes_a + nodes_b)
+        # Both providers have >=4 in same /24 but different groups
+        assert len(result) == 2
+        providers = {r["provider"] for r in result}
+        assert providers == {"mullvad", "nordvpn"}
+
+
+# === New test: Explicit 104.36.50.32 coverage ===
+
+class TestExplicitIP:
+    def test_104_36_50_32_coverage(self, tmp_path):
+        """The IP that originally prompted this feature gets prefix-inferred coverage."""
+        # Simulate 4 Astrill IPs in the same /24 as 104.36.50.32
+        nodes = [
+            {"ip": f"104.36.50.{i}", "provider": "astrill", "confidence": "medium",
+             "country": "", "city": "", "server_type": "exit",
+             "asn": "AS62240", "asn_name": "Clouvider", "source": "spur_2024",
+             "source_date": "2024-01-01", "hostname": "", "collection_method": "test",
+             "threat_relevance": "test", "ip_role": "egress", "prefix": ""}
+            for i in [10, 20, 30, 40]
+        ]
+        prefix_rows = compute_prefix_inferred_rows(nodes)
+        assert len(prefix_rows) == 1
+        assert prefix_rows[0]["prefix"] == "104.36.50.0/24"
+        # 104.36.50.32 falls within this prefix
+        import ipaddress
+        net = ipaddress.ip_network(prefix_rows[0]["prefix"])
+        assert ipaddress.ip_address("104.36.50.32") in net

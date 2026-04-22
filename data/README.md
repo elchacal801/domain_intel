@@ -110,21 +110,31 @@ The data flow moves from **Inputs** &rarr; **Discovery** &rarr; **Enrichment** &
 | **`tor_asns.csv`** | `tor_intel.py` | **Tor ASNs**. Networks that run a high density of Tor nodes. |
 | **`vpn_asns.csv`** | `vpn_intel.py` | **VPN/Proxy Networks**. ASNs belonging to commercial VPNs (NordVPN, ExpressVPN). Useful for detecting masked traffic. |
 
-### VPN Exit IP Intelligence
+### VPN Relay IP Intelligence
 
 | File | Description |
 |------|-------------|
-| `vpn_exit_ips.csv` | Combined VPN exit node IPs from all providers. Columns: ip, provider, confidence, country, city, server_type, asn, asn_name, source, source_date, hostname |
+| `vpn_relay_ips.csv` | Combined VPN relay IPs from all providers, including prefix-inferred rows. Primary output. |
+| `vpn_exit_ips.csv` | Legacy compat copy (single-IP rows only, no prefix-inferred). |
 | `vpn_exit_ips/mullvad.csv` | Mullvad VPN servers (from public API) |
 | `vpn_exit_ips/astrill.csv` | Astrill VPN IPs (Spur seed + RDAP validation + Shodan org) |
 | `vpn_exit_ips/nordvpn.csv` | NordVPN servers (from public API) |
-| `vpn_exit_ips/protonvpn.csv` | ProtonVPN servers (from public API) |
+| `vpn_exit_ips/protonvpn.csv` | ProtonVPN servers (from local client cache) |
 | `vpn_seeds/spur_astrill_2024.txt` | Static Astrill IP seed list from Spur (published 2024-12-19) |
+| `vpn_seeds/protonvpn/` | ProtonVPN client cache drop directory (see README inside) |
+
+**Columns:** ip, provider, confidence, country, city, server_type, asn, asn_name, source, source_date, hostname, collection_method, threat_relevance, ip_role, prefix
+
+**ip_role values:**
+- `ingress`: Entry point IP (e.g., Mullvad `ipv4_addr_in`, DNS-enumerated servers)
+- `egress`: Exit point IP (e.g., Astrill Spur feed)
+- `prefix-inferred`: Synthetic /24 row inferred from >= 4 observed IPs in same (provider, ASN) block
+- `unknown`: API doesn't distinguish ingress vs egress (NordVPN, Surfshark, PIA, ProtonVPN)
 
 **Confidence levels:**
 - `confirmed`: IP is in a block registered to the VPN provider (RDAP) or comes from the provider's own API
 - `high`: IP attributed to the provider by Shodan org search
-- `medium`: IP in the Spur seed list but not in a confirmed RDAP block
+- `medium`: IP in the Spur seed list but not in a confirmed RDAP block, or prefix-inferred
 - `low`: Static/community-sourced, unvalidated
 
 ---

@@ -2,24 +2,27 @@
 """
 vpn_ip_intel.py
 
-Collects VPN exit node IPs from major commercial providers.
-Each provider implements a fetch() method returning a unified schema.
-Enriches with Team Cymru ASN data and outputs combined + per-provider CSVs.
+Collects VPN relay IPs from major commercial providers.
+Each provider implements a fetch() method returning a unified schema with ip_role tagging.
+Enriches with Team Cymru ASN data, infers /24 prefix blocks, and outputs combined + per-provider CSVs.
 
 Usage:
-  python vpn_ip_intel.py --output data/vpn_exit_ips.csv --output-dir data/vpn_exit_ips/
+  python vpn_ip_intel.py --output data/vpn_relay_ips.csv --output-dir data/vpn_exit_ips/
 """
 
 import argparse
 import csv
+import ipaddress
 import json
 import logging
 import os
+import re
 import subprocess
 import requests
 from abc import ABC, abstractmethod
+from collections import defaultdict
 from concurrent.futures import ThreadPoolExecutor
-from datetime import date
+from datetime import date, datetime
 from typing import Dict, List
 from tqdm import tqdm
 from shared.cymru_resolver import CymruResolver
@@ -33,8 +36,39 @@ TODAY = date.today().isoformat()
 FIELDS = [
     "ip", "provider", "confidence", "country", "city", "server_type",
     "asn", "asn_name", "source", "source_date", "hostname",
-    "collection_method", "threat_relevance",
+    "collection_method", "threat_relevance", "ip_role", "prefix",
 ]
+
+IP_ROLES = {"ingress", "egress", "prefix-inferred", "unknown"}
+
+SHARED_HOSTING_ASNS = {
+    "AS16509",   # AWS
+    "AS8075",    # Microsoft/Azure
+    "AS15169",   # Google Cloud
+    "AS14061",   # DigitalOcean
+    "AS20473",   # Vultr
+    "AS63949",   # Linode/Akamai
+    "AS13335",   # Cloudflare
+    "AS36351",   # SoftLayer/IBM
+}
+
+_COUNTRY_ALIASES = {"UK": "GB"}
+_SERVER_TYPE_ALIASES = {"wg": "wireguard", "openvpn_udp": "openvpn", "openvpn_tcp": "openvpn"}
+_VALID_CONFIDENCES = {"confirmed", "high", "medium", "low"}
+
+
+def normalize_node(node: dict) -> dict:
+    """Idempotent canonical normalization of a VPN node dict. Mutates in place."""
+    cc = node.get("country", "").upper()
+    node["country"] = _COUNTRY_ALIASES.get(cc, cc)
+    st = node.get("server_type", "").lower()
+    node["server_type"] = _SERVER_TYPE_ALIASES.get(st, st)
+    node["hostname"] = node.get("hostname", "").lower()
+    conf = node.get("confidence", "").lower()
+    node["confidence"] = conf if conf in _VALID_CONFIDENCES else "low"
+    node.setdefault("ip_role", "unknown")
+    node.setdefault("prefix", "")
+    return node
 
 
 class BaseProvider(ABC):
@@ -80,6 +114,8 @@ class MullvadProvider(BaseProvider):
                 "source": "mullvad_api",
                 "source_date": TODAY,
                 "hostname": s.get("hostname", ""),
+                "ip_role": "ingress",
+                "prefix": "",
             })
 
         logger.info(f"  {self.display_name}: {len(nodes)} active servers")
@@ -124,6 +160,8 @@ class NordVPNProvider(BaseProvider):
                 "source": "nordvpn_api",
                 "source_date": TODAY,
                 "hostname": s.get("hostname", ""),
+                "ip_role": "unknown",
+                "prefix": "",
             })
         logger.info(f"  {self.display_name}: {len(nodes)} online servers")
         return nodes
@@ -184,6 +222,8 @@ class SurfsharkProvider(BaseProvider):
                     "source": "surfshark_api+dns",
                     "source_date": TODAY,
                     "hostname": hostname,
+                    "ip_role": "unknown",
+                    "prefix": "",
                 })
 
         logger.info(f"  {self.display_name}: {len(nodes)} IPs from {len(clusters)} clusters")
@@ -243,6 +283,8 @@ class DNSEnumProvider(BaseProvider):
                     "source": f"{self.name}_dns",
                     "source_date": TODAY,
                     "hostname": hostname,
+                    "ip_role": "ingress",
+                    "prefix": "",
                 })
 
         logger.info(f"  {self.display_name}: {len(nodes)} IPs")
@@ -292,6 +334,8 @@ class PIAProvider(BaseProvider):
                         "source": "pia_api",
                         "source_date": TODAY,
                         "hostname": s.get("cn", ""),
+                        "ip_role": "unknown",
+                        "prefix": "",
                     })
 
         logger.info(f"  {self.display_name}: {len(nodes)} IPs from {len(data.get('regions', []))} regions")
@@ -401,6 +445,18 @@ class ProtonVPNProvider(BaseProvider):
         if self.cache_path and os.path.exists(self.cache_path):
             return self.cache_path
 
+        # Repo-local seed directory (for CI or manual drops)
+        import glob as _glob
+        repo_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+        seed_dir = os.path.join(repo_root, "data", "vpn_seeds", "protonvpn")
+        if os.path.isdir(seed_dir):
+            current = os.path.join(seed_dir, "Servers.current.bin")
+            if os.path.exists(current):
+                return current
+            matches = _glob.glob(os.path.join(seed_dir, "Servers.*.bin"))
+            if matches:
+                return matches[0]
+
         # Windows: %LOCALAPPDATA%/Proton/Proton VPN/Storage/
         local_appdata = os.environ.get("LOCALAPPDATA", "")
         if local_appdata:
@@ -465,6 +521,8 @@ class ProtonVPNProvider(BaseProvider):
                 "source": "protonvpn_local_cache",
                 "source_date": TODAY,
                 "hostname": hostname,
+                "ip_role": "unknown",
+                "prefix": "",
             })
 
         # Second pass: IPs without hostnames
@@ -488,6 +546,8 @@ class ProtonVPNProvider(BaseProvider):
                 "source": "protonvpn_local_cache",
                 "source_date": TODAY,
                 "hostname": "",
+                "ip_role": "unknown",
+                "prefix": "",
             })
 
         return nodes
@@ -495,8 +555,8 @@ class ProtonVPNProvider(BaseProvider):
     def fetch(self) -> List[Dict]:
         cache = self._find_cache()
         if not cache:
-            logger.info(f"Skipping {self.display_name}: no local client cache found "
-                        f"(install ProtonVPN client or set cache path)")
+            logger.warning(f"Skipping {self.display_name}: no local client cache found "
+                          f"(install ProtonVPN client, drop cache in data/vpn_seeds/protonvpn/, or set cache path)")
             return []
 
         logger.info(f"Reading {self.display_name} server list from local cache: {cache}")
@@ -516,6 +576,14 @@ class AstrillProvider(BaseProvider):
     def __init__(self, seed_path: str = None):
         self.seed_path = seed_path or self.DEFAULT_SEED
         self.rdap = RDAPClient()
+
+    def _seed_date(self) -> str:
+        """Parse vintage from seed filename: spur_astrill_2024.txt -> 2024-01-01"""
+        basename = os.path.basename(self.seed_path)
+        m = re.search(r'(\d{4})', basename)
+        if m:
+            return f"{m.group(1)}-01-01"
+        return TODAY
 
     def _load_seed(self) -> list:
         if not os.path.exists(self.seed_path):
@@ -551,6 +619,12 @@ class AstrillProvider(BaseProvider):
         seed_ips = self._load_seed()
         logger.info(f"  Seed: {len(seed_ips)} IPs from {self.seed_path}")
 
+        seed_dt = self._seed_date()
+        if seed_dt != TODAY:
+            age_days = (datetime.now() - datetime.strptime(seed_dt, "%Y-%m-%d")).days
+            if age_days > 180:
+                logger.warning(f"Astrill seed is {age_days} days old ({self.seed_path}); consider refreshing")
+
         rdap_confirmed = self._rdap_validate(seed_ips)
         logger.info(f"  RDAP confirmed: {len(rdap_confirmed)} IPs")
 
@@ -571,8 +645,10 @@ class AstrillProvider(BaseProvider):
                 "asn": "",
                 "asn_name": "",
                 "source": "spur_2024+rdap" if ip in rdap_confirmed else "spur_2024",
-                "source_date": TODAY,
+                "source_date": seed_dt,
                 "hostname": "",
+                "ip_role": "egress",
+                "prefix": "",
             })
 
         for ip in shodan_ips - seed_set:
@@ -588,24 +664,27 @@ class AstrillProvider(BaseProvider):
                 "source": "shodan_org",
                 "source_date": TODAY,
                 "hostname": "",
+                "ip_role": "egress",
+                "prefix": "",
             })
 
         logger.info(f"  {self.display_name}: {len(nodes)} total IPs")
         return nodes
 
 
-def load_vpn_lookup(csv_path: str = "data/vpn_exit_ips.csv") -> Dict[str, Dict]:
-    """Load VPN exit IPs into a lookup dict keyed by IP address.
+def load_vpn_lookup(csv_path: str = "data/vpn_relay_ips.csv") -> Dict[str, Dict]:
+    """Load VPN relay IPs into a lookup dict keyed by IP address.
 
     Used by enrich_infrastructure.py to add VPN:Provider risk tags.
-    Returns empty dict if file doesn't exist.
+    Skips prefix-inferred rows (empty ip). Returns empty dict if file doesn't exist.
     """
     if not os.path.exists(csv_path):
         return {}
     lookup = {}
     with open(csv_path, encoding="utf-8") as f:
         for row in csv.DictReader(f):
-            lookup[row["ip"]] = row
+            if row.get("ip"):
+                lookup[row["ip"]] = row
     return lookup
 
 
@@ -651,6 +730,46 @@ def enrich_asns(nodes: List[Dict], workers: int = 20) -> None:
                 node["country"] = asn_data["country"]
 
 
+def compute_prefix_inferred_rows(nodes: List[Dict], threshold: int = 4) -> List[Dict]:
+    """Emit synthetic /24 prefix rows for (provider, ASN) groups with >= threshold IPs."""
+    groups = defaultdict(list)
+    for n in nodes:
+        asn = n.get("asn", "")
+        if not asn or asn in SHARED_HOSTING_ASNS:
+            continue
+        try:
+            net24 = ipaddress.ip_network(f"{n['ip']}/24", strict=False)
+        except ValueError:
+            continue
+        groups[(n["provider"], asn, str(net24))].append(n)
+
+    synthetic = []
+    for (provider, asn, prefix), members in groups.items():
+        if len(members) < threshold:
+            continue
+        tmpl = members[0]
+        synthetic.append({
+            "ip": "",
+            "provider": provider,
+            "confidence": "medium",
+            "country": tmpl.get("country", ""),
+            "city": "",
+            "server_type": tmpl.get("server_type", ""),
+            "asn": asn,
+            "asn_name": tmpl.get("asn_name", ""),
+            "source": f"prefix_inferred_from_{len(members)}_ips",
+            "source_date": TODAY,
+            "hostname": "",
+            "collection_method": tmpl.get("collection_method", ""),
+            "threat_relevance": tmpl.get("threat_relevance", ""),
+            "ip_role": "prefix-inferred",
+            "prefix": prefix,
+        })
+
+    logger.info(f"Prefix inference: {len(synthetic)} /24 blocks from {len(groups)} groups (threshold={threshold})")
+    return synthetic
+
+
 def write_csv(nodes: List[Dict], path: str) -> None:
     """Write nodes to CSV."""
     os.makedirs(os.path.dirname(path) or ".", exist_ok=True)
@@ -683,6 +802,10 @@ def run(output: str, output_dir: str, workers: int, providers: List[str]):
         logger.warning("No VPN IPs collected from any provider.")
         return
 
+    # Normalize all nodes
+    for n in all_nodes:
+        normalize_node(n)
+
     # Deduplicate on (ip, provider)
     seen = set()
     deduped = []
@@ -696,10 +819,20 @@ def run(output: str, output_dir: str, workers: int, providers: List[str]):
     # Enrich ASNs
     enrich_asns(all_nodes, workers=workers)
 
-    # Write combined CSV
-    write_csv(all_nodes, output)
+    # Prefix inference: emit synthetic /24 rows
+    prefix_rows = compute_prefix_inferred_rows(all_nodes)
+    all_nodes_with_prefix = all_nodes + prefix_rows
 
-    # Write per-provider CSVs
+    # Write primary CSV (all rows including prefix-inferred)
+    write_csv(all_nodes_with_prefix, output)
+
+    # Write legacy compat CSV (single-IP rows only, no prefix-inferred)
+    if "vpn_relay_ips" in output:
+        legacy_path = output.replace("vpn_relay_ips", "vpn_exit_ips")
+        legacy_rows = [n for n in all_nodes_with_prefix if n.get("ip")]
+        write_csv(legacy_rows, legacy_path)
+
+    # Write per-provider CSVs (IP rows only)
     if output_dir:
         os.makedirs(output_dir, exist_ok=True)
         by_provider = {}
@@ -708,12 +841,12 @@ def run(output: str, output_dir: str, workers: int, providers: List[str]):
         for prov_name, nodes in by_provider.items():
             write_csv(nodes, os.path.join(output_dir, f"{prov_name}.csv"))
 
-    logger.info(f"Total: {len(all_nodes)} VPN exit IPs from {len(by_provider)} providers")
+    logger.info(f"Total: {len(all_nodes)} VPN relay IPs + {len(prefix_rows)} prefix-inferred from {len(by_provider)} providers")
 
 
 def main():
     parser = argparse.ArgumentParser(description="VPN Exit IP Intelligence Collection")
-    parser.add_argument("--output", default="data/vpn_exit_ips.csv", help="Combined output CSV")
+    parser.add_argument("--output", default="data/vpn_relay_ips.csv", help="Combined output CSV")
     parser.add_argument("--output-dir", default="data/vpn_exit_ips", help="Per-provider output directory")
     parser.add_argument("--workers", type=int, default=20, help="Team Cymru DNS workers")
     parser.add_argument("--providers", nargs="*", default=[], help="Run specific providers only (e.g., mullvad astrill)")
