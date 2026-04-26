@@ -1,5 +1,331 @@
 [
   {
+    "date": "2026-04-26",
+    "headline": "Strategic Threat Briefing: Convergence of Crypto-Targeted Typosquatting and High-Volume OFAC Regulatory Alerts",
+    "executive_summary": "Analysis of the April 26, 2026 telemetry reveals a highly likely coordinated effort targeting cryptocurrency and major technology brands via typosquatting. We observe a significant intersection between active threat infrastructure and a massive surge in OFAC regulatory alerts, suggesting potential overlap with sanctioned entities. Furthermore, the detection of 916 suspected C2 panels and 6,763 infrastructure vulnerabilities indicates robust adversary staging, heavily concentrated within the Gname registrar ecosystem.",
+    "strategic_assessment": "The threat landscape is currently dominated by financial fraud and credential harvesting campaigns, with a roughly even chance that these are orchestrated by sophisticated cybercriminal syndicates leveraging highly permissive registrars. While the volume of live domains decreased slightly (-863), the high concentration of regulatory alerts indicates that the infrastructure we are monitoring is under intense federal scrutiny. \n\n**Regulatory Landscape**\nThe regulatory pulse is exceptionally active, with 18,933 total alerts, driven almost entirely by OFAC (18,707 alerts). These alerts are heavily correlated with specific threat paths, most notably TP-0055 (17,967 alerts) and TP-0044 (14,019 alerts). It is highly likely that threat actors operating within these paths are utilizing infrastructure tied to sanctioned entities or state-sponsored financial crime operations, elevating the compliance risk for any inadvertent corporate interaction.",
+    "operational_intelligence": "Based on the 0.35% AI-analyzed sample and broader telemetry, we identified 1,827 confirmed typosquats predominantly targeting Google, Gmail, Coinbase, and Binance. Infrastructure exposure is significant, with 6,763 Shodan vulnerabilities detected, prominently featuring ports 80, 443, and 2083. The prevalence of port 2083 strongly suggests adversaries are targeting WebHost Manager (WHM) interfaces to deploy the 916 suspected C2 panels and 1,413 phishing sites. Additionally, 2,952 malicious ASNs and 2,126 Tor exit nodes are actively facilitating these operations.",
+    "campaign_highlights": "We are actively tracking 177 campaign IPs distributed across 24 countries, supported by 6 active hunt queries. \n\n**Shadow AI / OpenClaw Exposure**\nWe identified 338 medium-risk OpenClaw instances exposed to the public internet. While not currently weaponized, these present a roughly even chance of corporate data leakage if discovered by opportunistic scanners.\n\n**Evidence Pipeline**\nWe recommend immediate submission of high-confidence FLAME clusters to operational teams for takedown and blocklisting. Priority candidates include TP-0001 (693 domains), TP-0019 (287 domains, including high-value targets like aple.com and amzon.com), and TP-0042 (221 domains).",
+    "risk_signal_analysis": "The risk signal distribution heavily favors staging and web-based attacks. The presence of 3,988 HighRisk:NoMX domains indicates infrastructure that is either parked for future use or dedicated exclusively to web-hosted phishing rather than email spoofing. Furthermore, 1,058 HighRisk:ParkingPage signals suggest adversaries are stockpiling domains to age them, a highly likely tactic to bypass newly-registered-domain (NRD) security filters. The 685 HighRisk:PrivateIP signals point to misconfigured or deliberately obfuscated backend routing.",
+    "registrar_risk_outlook": "The registrar threat surface is highly concentrated and presents a significant operational bottleneck. Gname represents a critical risk vector, hosting 1,117 domains on our high-risk watchlist. Dynadot Inc is also a significant contributor with 401 confirmed typosquats. It is highly likely that threat actors are deliberately selecting these registrars for their permissive registration policies, bulk-registration APIs, and delayed abuse desk response times.",
+    "key_risks": [
+      "Brand Erosion & Credential Theft: High-volume typosquatting targeting Coinbase, Binance, and Google presents a severe risk of credential harvesting and subsequent financial fraud.",
+      "Sanctions Compliance Exposure: The massive spike in OFAC alerts (18,707) linked to monitored threat paths (TP-0055, TP-0044) introduces severe regulatory and compliance risks if corporate assets interact with this infrastructure.",
+      "Infrastructure Hijacking: The exposure of 6,763 vulnerabilities, particularly on cPanel/WHM ports (2083), indicates a high risk of infrastructure co-optation for C2 hosting.",
+      "Shadow AI Data Leakage: 338 exposed OpenClaw instances create a persistent, medium-level risk of proprietary data exfiltration."
+    ],
+    "action_items": [
+      "Tactical: Initiate immediate takedown requests for the 1,827 confirmed typosquats, prioritizing those hosted on Gname and Dynadot that target Coinbase and Binance.",
+      "Tactical: Block all 177 tracked campaign IPs and the 2,126 mapped Tor exit nodes at the perimeter firewall and Secure Web Gateway.",
+      "Strategic: Cross-reference internal network logs against the infrastructure flagged in TP-0055 and TP-0044 to ensure zero interaction with OFAC-sanctioned entities.",
+      "Strategic: Audit the 338 exposed OpenClaw/Shadow AI instances to enforce authentication and prevent unauthorized access to internal models.",
+      "Strategic: Submit high-confidence FLAME Evidence Candidates (TP-0001, TP-0019, TP-0042) to the Global Threat Intelligence Council for broader industry syndication."
+    ],
+    "model_used": "shared_llm_client",
+    "summary": "Analysis of the April 26, 2026 telemetry reveals a highly likely coordinated effort targeting cryptocurrency and major technology brands via typosquatting. We observe a significant intersection between active threat infrastructure and a massive surge in OFAC regulatory alerts, suggesting potential overlap with sanctioned entities. Furthermore, the detection of 916 suspected C2 panels and 6,763 infrastructure vulnerabilities indicates robust adversary staging, heavily concentrated within the Gname registrar ecosystem.",
+    "evidence_candidates": [
+      {
+        "tp_id": "TP-0001",
+        "domain_count": 693,
+        "sample_domains": [
+          "2.pl",
+          "a1.ax",
+          "9ya.de",
+          "c3x.ai",
+          "ano.to"
+        ],
+        "confidence": "High",
+        "recommendation": "Submit evidence package for TP-0001 (693 domains)"
+      },
+      {
+        "tp_id": "TP-0019",
+        "domain_count": 287,
+        "sample_domains": [
+          "aple.com",
+          "amzon.com",
+          "aetne.com",
+          "ad0be.com",
+          "ad9be.com"
+        ],
+        "confidence": "High",
+        "recommendation": "Submit evidence package for TP-0019 (287 domains)"
+      },
+      {
+        "tp_id": "TP-0042",
+        "domain_count": 221,
+        "sample_domains": [
+          "32.rs",
+          "15h.ru",
+          "3xk.xyz",
+          "563.com",
+          "53y.com"
+        ],
+        "confidence": "High",
+        "recommendation": "Submit evidence package for TP-0042 (221 domains)"
+      },
+      {
+        "tp_id": "TP-0012",
+        "domain_count": 209,
+        "sample_domains": [
+          "2.pl",
+          "bkkk.ru",
+          "geic.com",
+          "gecio.com",
+          "geicn.com"
+        ],
+        "confidence": "High",
+        "recommendation": "Submit evidence package for TP-0012 (209 domains)"
+      },
+      {
+        "tp_id": "TP-0036",
+        "domain_count": 197,
+        "sample_domains": [
+          "4k5.net",
+          "ben.bet",
+          "26pg.com",
+          "63jl.net",
+          "amaon.com"
+        ],
+        "confidence": "High",
+        "recommendation": "Submit evidence package for TP-0036 (197 domains)"
+      },
+      {
+        "tp_id": "TP-0015",
+        "domain_count": 167,
+        "sample_domains": [
+          "a1.ax",
+          "aple.com",
+          "buybm.one",
+          "applw.com",
+          "aetne.com"
+        ],
+        "confidence": "High",
+        "recommendation": "Submit evidence package for TP-0015 (167 domains)"
+      },
+      {
+        "tp_id": "TP-0079",
+        "domain_count": 130,
+        "sample_domains": [
+          "br88.fun",
+          "cucku.cf",
+          "2233.xyz",
+          "biance.us",
+          "bitly.lol"
+        ],
+        "confidence": "High",
+        "recommendation": "Submit evidence package for TP-0079 (130 domains)"
+      },
+      {
+        "tp_id": "TP-0017",
+        "domain_count": 129,
+        "sample_domains": [
+          "ben.bet",
+          "67z8.com",
+          "93ki.com",
+          "40az.com",
+          "9080.info"
+        ],
+        "confidence": "High",
+        "recommendation": "Submit evidence package for TP-0017 (129 domains)"
+      },
+      {
+        "tp_id": "TP-0041",
+        "domain_count": 127,
+        "sample_domains": [
+          "32.rs",
+          "15h.ru",
+          "3xk.xyz",
+          "563.com",
+          "53y.com"
+        ],
+        "confidence": "High",
+        "recommendation": "Submit evidence package for TP-0041 (127 domains)"
+      },
+      {
+        "tp_id": "TP-0032",
+        "domain_count": 113,
+        "sample_domains": [
+          "0kx.com",
+          "63jl.net",
+          "byvit.com",
+          "biance.us",
+          "binace.us"
+        ],
+        "confidence": "High",
+        "recommendation": "Submit evidence package for TP-0032 (113 domains)"
+      },
+      {
+        "tp_id": "TP-0043",
+        "domain_count": 102,
+        "sample_domains": [
+          "ano.to",
+          "5-mod.ru",
+          "4057.com",
+          "blnqx.com",
+          "aimer.dev"
+        ],
+        "confidence": "High",
+        "recommendation": "Submit evidence package for TP-0043 (102 domains)"
+      },
+      {
+        "tp_id": "TP-0008",
+        "domain_count": 77,
+        "sample_domains": [
+          "0kx.com",
+          "btget.com",
+          "btiget.com",
+          "bunance.us",
+          "bybita.com"
+        ],
+        "confidence": "High",
+        "recommendation": "Submit evidence package for TP-0008 (77 domains)"
+      },
+      {
+        "tp_id": "TP-0013",
+        "domain_count": 56,
+        "sample_domains": [
+          "67z8.com",
+          "dult.org",
+          "gamil.com",
+          "66br88.com",
+          "bybit4.com"
+        ],
+        "confidence": "High",
+        "recommendation": "Submit evidence package for TP-0013 (56 domains)"
+      },
+      {
+        "tp_id": "TP-0048",
+        "domain_count": 45,
+        "sample_domains": [
+          "azame.pw",
+          "27384.com",
+          "adtna.com",
+          "0hdear.com",
+          "acucre.com"
+        ],
+        "confidence": "Medium",
+        "recommendation": "Submit evidence package for TP-0048 (45 domains)"
+      },
+      {
+        "tp_id": "TP-0067",
+        "domain_count": 39,
+        "sample_domains": [
+          "beo.com",
+          "bzmoe.com",
+          "bintx.com",
+          "39jl.info",
+          "canfga.org"
+        ],
+        "confidence": "Medium",
+        "recommendation": "Submit evidence package for TP-0067 (39 domains)"
+      },
+      {
+        "tp_id": "TP-0054",
+        "domain_count": 33,
+        "sample_domains": [
+          "4k5.net",
+          "26pg.com",
+          "22ccf.com",
+          "26564.xyz",
+          "500qf.com"
+        ],
+        "confidence": "Medium",
+        "recommendation": "Submit evidence package for TP-0054 (33 domains)"
+      },
+      {
+        "tp_id": "TP-0002",
+        "domain_count": 32,
+        "sample_domains": [
+          "buybm.one",
+          "aslack.com",
+          "clhase.com",
+          "gamail.com",
+          "ch13sv.com"
+        ],
+        "confidence": "Medium",
+        "recommendation": "Submit evidence package for TP-0002 (32 domains)"
+      },
+      {
+        "tp_id": "TP-0063",
+        "domain_count": 22,
+        "sample_domains": [
+          "agasj.com",
+          "23vn.info",
+          "206534.com",
+          "agen45.com",
+          "22-bet.org"
+        ],
+        "confidence": "Medium",
+        "recommendation": "Submit evidence package for TP-0063 (22 domains)"
+      },
+      {
+        "tp_id": "TP-0026",
+        "domain_count": 17,
+        "sample_domains": [
+          "40az.com",
+          "4abet.info",
+          "ai-trader.io",
+          "4777cxapk.com",
+          "betiforex.com"
+        ],
+        "confidence": "Medium",
+        "recommendation": "Submit evidence package for TP-0026 (17 domains)"
+      },
+      {
+        "tp_id": "TP-0058",
+        "domain_count": 16,
+        "sample_domains": [
+          "7f777.info",
+          "456win.info",
+          "456bet1.org",
+          "888win9.net",
+          "bhbh.online"
+        ],
+        "confidence": "Medium",
+        "recommendation": "Submit evidence package for TP-0058 (16 domains)"
+      },
+      {
+        "tp_id": "TP-0060",
+        "domain_count": 11,
+        "sample_domains": [
+          "blm7.net",
+          "470qs.com",
+          "845457.com",
+          "149837.com",
+          "amellux.com"
+        ],
+        "confidence": "Medium",
+        "recommendation": "Submit evidence package for TP-0060 (11 domains)"
+      },
+      {
+        "tp_id": "TP-0011",
+        "domain_count": 10,
+        "sample_domains": [
+          "caca69.com",
+          "cado68.com",
+          "755gmail.com",
+          "abouse.space",
+          "cacingnaga.net"
+        ],
+        "confidence": "Medium",
+        "recommendation": "Submit evidence package for TP-0011 (10 domains)"
+      },
+      {
+        "tp_id": "TP-0022",
+        "domain_count": 10,
+        "sample_domains": [
+          "decd.site",
+          "getcalfresh.org",
+          "disabilityaps.com",
+          "bharti-axagi.co.in",
+          "applyfordisability.ws"
+        ],
+        "confidence": "Medium",
+        "recommendation": "Submit evidence package for TP-0022 (10 domains)"
+      }
+    ]
+  },
+  {
     "date": "2026-04-25",
     "headline": "Domain Infrastructure Growth Stabilizes Amid Persistent Typosquat Campaign; OFAC-Linked Threat Paths Demand Immediate Escalation",
     "executive_summary": "The monitored domain corpus expanded to 285,526 assets (+143 net growth), while live infrastructure contracted by 863 domains, suggesting defensive takedowns or natural attrition outpacing new registrations. Analysis of a 0.35% AI-sampled subset (approximately 1,000 domains) identified 1,827 confirmed typosquats targeting high-value brands (Google, Gmail, Coinbase/Binance), with 1,413 active phishing sites and 916 suspected C2 panels. Critical regulatory correlation: Three FLAME Threat Paths (TP-0055, TP-0044, TP-0045) collectively account for 45,511 OFAC high-severity alerts, indicating state-nexus or sanctions-evasion infrastructure embedded within our monitored threat surface. The 330 exposed Shadow AI instances (all MEDIUM risk) and 5,588 Shodan-detected vulnerabilities across ports 80/443/2083 create exploitable attack surface for credential harvesting and lateral movement. Registrar concentration risk remains acute, with Gname (1,117 domains) and \"Unknown\" registrars (800 typosquats) representing opacity gaps in attribution chains.",
