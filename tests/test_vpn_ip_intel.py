@@ -11,7 +11,9 @@ from unittest.mock import patch, MagicMock
 
 from vpn_ip_intel import (
     MullvadProvider, NordVPNProvider, ProtonVPNProvider, AstrillProvider,
+    UrbanVPNProvider,
     BaseProvider, load_vpn_lookup, normalize_node, compute_prefix_inferred_rows,
+    load_scores, join_scores, FIELDS, SCORE_FIELDS,
     SHARED_HOSTING_ASNS, _COUNTRY_ALIASES, _SERVER_TYPE_ALIASES, TODAY,
 )
 
@@ -185,7 +187,7 @@ class TestAstrillProvider:
 
         provider = AstrillProvider(seed_path=str(seed))
         with patch.object(provider, "_rdap_validate", return_value={"1.2.3.4"}), \
-             patch.object(provider, "_shodan_org_search", return_value={"99.99.99.99"}):
+             patch("vpn_ip_intel.BaseProvider.shodan_org_search", return_value={"99.99.99.99"}):
             nodes = provider.fetch()
 
         assert len(nodes) == 4  # 3 from seed + 1 from Shodan
@@ -199,7 +201,7 @@ class TestAstrillProvider:
 
         provider = AstrillProvider(seed_path=str(seed))
         with patch.object(provider, "_rdap_validate", return_value=set()), \
-             patch.object(provider, "_shodan_org_search", return_value={"2.2.2.2", "3.3.3.3"}):
+             patch("vpn_ip_intel.BaseProvider.shodan_org_search", return_value={"2.2.2.2", "3.3.3.3"}):
             nodes = provider.fetch()
 
         ips = {n["ip"] for n in nodes}
@@ -348,7 +350,7 @@ class TestSeedDate:
         seed.write_text("1.2.3.4\n")
         provider = AstrillProvider(seed_path=str(seed))
         with patch.object(provider, "_rdap_validate", return_value=set()), \
-             patch.object(provider, "_shodan_org_search", return_value=set()), \
+             patch("vpn_ip_intel.BaseProvider.shodan_org_search", return_value=set()), \
              caplog.at_level(logging.WARNING):
             provider.fetch()
         assert any("days old" in r.message for r in caplog.records)
@@ -362,7 +364,7 @@ class TestAstrillEgress:
         seed.write_text("1.2.3.4\n5.6.7.8\n")
         provider = AstrillProvider(seed_path=str(seed))
         with patch.object(provider, "_rdap_validate", return_value=set()), \
-             patch.object(provider, "_shodan_org_search", return_value=set()):
+             patch("vpn_ip_intel.BaseProvider.shodan_org_search", return_value=set()):
             nodes = provider.fetch()
         assert all(n["ip_role"] == "egress" for n in nodes)
 
@@ -371,7 +373,7 @@ class TestAstrillEgress:
         seed.write_text("1.2.3.4\n")
         provider = AstrillProvider(seed_path=str(seed))
         with patch.object(provider, "_rdap_validate", return_value=set()), \
-             patch.object(provider, "_shodan_org_search", return_value={"9.9.9.9"}):
+             patch("vpn_ip_intel.BaseProvider.shodan_org_search", return_value={"9.9.9.9"}):
             nodes = provider.fetch()
         shodan_nodes = [n for n in nodes if n["source"] == "shodan_org"]
         assert len(shodan_nodes) == 1
@@ -382,7 +384,7 @@ class TestAstrillEgress:
         seed.write_text("1.2.3.4\n")
         provider = AstrillProvider(seed_path=str(seed))
         with patch.object(provider, "_rdap_validate", return_value=set()), \
-             patch.object(provider, "_shodan_org_search", return_value={"9.9.9.9"}):
+             patch("vpn_ip_intel.BaseProvider.shodan_org_search", return_value={"9.9.9.9"}):
             nodes = provider.fetch()
         seed_node = [n for n in nodes if n["ip"] == "1.2.3.4"][0]
         shodan_node = [n for n in nodes if n["ip"] == "9.9.9.9"][0]
@@ -523,3 +525,118 @@ class TestExplicitIP:
         import ipaddress
         net = ipaddress.ip_network(prefix_rows[0]["prefix"])
         assert ipaddress.ip_address("104.36.50.32") in net
+
+
+# === UrbanVPN Provider Tests ===
+
+class TestUrbanVPN:
+    """Test Urban VPN provider."""
+
+    @patch("vpn_ip_intel.BaseProvider.shodan_org_search")
+    def test_fetch_returns_correct_nodes(self, mock_shodan):
+        mock_shodan.return_value = {"1.2.3.4", "5.6.7.8"}
+        prov = UrbanVPNProvider()
+        nodes = prov.fetch()
+        assert len(nodes) == 2
+        ips = {n["ip"] for n in nodes}
+        assert ips == {"1.2.3.4", "5.6.7.8"}
+        for n in nodes:
+            assert n["provider"] == "urbanvpn"
+            assert n["confidence"] == "high"
+            assert n["ip_role"] == "unknown"
+            assert n["source"] == "shodan_org"
+            assert n["source_date"] == TODAY
+            assert n["server_type"] == "exit"
+        mock_shodan.assert_called_once_with("Urban VPN")
+
+    @patch("vpn_ip_intel.BaseProvider.shodan_org_search")
+    def test_fetch_empty_when_shodan_unavailable(self, mock_shodan):
+        mock_shodan.return_value = set()
+        prov = UrbanVPNProvider()
+        nodes = prov.fetch()
+        assert nodes == []
+
+    def test_provider_attributes(self):
+        prov = UrbanVPNProvider()
+        assert prov.name == "urbanvpn"
+        assert prov.display_name == "Urban VPN"
+        assert prov.collection_method == "Shodan org search"
+        assert "DPRK" in prov.threat_relevance
+
+
+# === Score Join Tests ===
+
+class TestScoreJoin:
+    """Test provider score join logic."""
+
+    def _write_scores_csv(self, tmp_path):
+        """Write a minimal scores CSV for testing."""
+        path = tmp_path / "vpn_provider_scores.csv"
+        path.write_text(
+            "provider,confidence,score_prehire,tier_prehire,score_posthire,tier_posthire,indicator_id\n"
+            "astrill,confirmed,25,anchor,30,anchor,VPN-001\n"
+            "astrill,medium,20,strong,20,strong,VPN-002\n"
+            "urbanvpn,high,10,contextual,15,strong,VPN-019\n"
+        )
+        return str(path)
+
+    def test_load_scores(self, tmp_path):
+        path = self._write_scores_csv(tmp_path)
+        scores = load_scores(path)
+        assert ("astrill", "confirmed") in scores
+        assert scores[("astrill", "confirmed")]["score_prehire"] == "25"
+        assert scores[("astrill", "confirmed")]["indicator_id"] == "VPN-001"
+
+    def test_join_scores_matched(self, tmp_path):
+        path = self._write_scores_csv(tmp_path)
+        nodes = [
+            {"ip": "1.2.3.4", "provider": "astrill", "confidence": "confirmed"},
+        ]
+        join_scores(nodes, path)
+        assert nodes[0]["score_prehire"] == "25"
+        assert nodes[0]["tier_prehire"] == "anchor"
+        assert nodes[0]["score_posthire"] == "30"
+        assert nodes[0]["tier_posthire"] == "anchor"
+        assert nodes[0]["indicator_id"] == "VPN-001"
+
+    def test_join_scores_unmatched_defaults(self, tmp_path):
+        path = self._write_scores_csv(tmp_path)
+        nodes = [
+            {"ip": "9.9.9.9", "provider": "unknown_provider", "confidence": "low"},
+        ]
+        join_scores(nodes, path)
+        assert nodes[0]["score_prehire"] == "5"
+        assert nodes[0]["tier_prehire"] == "contextual"
+        assert nodes[0]["score_posthire"] == "5"
+        assert nodes[0]["tier_posthire"] == "contextual"
+        assert nodes[0]["indicator_id"] == ""
+
+    def test_fields_include_score_columns(self):
+        for col in ["score_prehire", "tier_prehire", "score_posthire", "tier_posthire", "indicator_id"]:
+            assert col in FIELDS, f"{col} missing from FIELDS"
+
+    def test_prefix_inferred_inherits_scores(self, tmp_path):
+        """Prefix-inferred rows should carry scores from their template node."""
+        path = self._write_scores_csv(tmp_path)
+        nodes = [
+            {"ip": f"10.0.0.{i}", "provider": "astrill", "confidence": "confirmed",
+             "country": "", "city": "", "server_type": "exit",
+             "asn": "AS12345", "asn_name": "Test", "source": "test",
+             "source_date": TODAY, "hostname": "", "collection_method": "test",
+             "threat_relevance": "test", "ip_role": "egress", "prefix": ""}
+            for i in range(1, 5)
+        ]
+        # Join scores first (like run() does)
+        join_scores(nodes, path)
+        assert nodes[0]["score_prehire"] == "25"
+
+        # Then compute prefix rows
+        prefix_rows = compute_prefix_inferred_rows(nodes)
+        assert len(prefix_rows) == 1
+        assert prefix_rows[0]["score_prehire"] == "25"
+        assert prefix_rows[0]["tier_prehire"] == "anchor"
+        assert prefix_rows[0]["indicator_id"] == "VPN-001"
+
+    def test_load_scores_missing_file(self, tmp_path):
+        scores = load_scores(str(tmp_path / "nonexistent.csv"))
+        assert scores == {}

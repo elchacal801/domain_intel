@@ -37,6 +37,8 @@ FIELDS = [
     "ip", "provider", "confidence", "country", "city", "server_type",
     "asn", "asn_name", "source", "source_date", "hostname",
     "collection_method", "threat_relevance", "ip_role", "prefix",
+    "score_prehire", "tier_prehire", "score_posthire", "tier_posthire",
+    "indicator_id",
 ]
 
 IP_ROLES = {"ingress", "egress", "prefix-inferred", "unknown"}
@@ -82,6 +84,26 @@ class BaseProvider(ABC):
     def fetch(self) -> List[Dict]:
         """Returns list of VPN node dicts matching FIELDS schema."""
         raise NotImplementedError
+
+    @staticmethod
+    def shodan_org_search(org_name: str) -> set:
+        """Use Shodan CLI search (free query) to find IPs attributed to an org."""
+        try:
+            result = subprocess.run(
+                ["shodan", "search", "--fields", "ip_str",
+                 f'org:"{org_name}"', "--limit", "1000"],
+                capture_output=True, text=True, timeout=60
+            )
+            ips = set()
+            for line in result.stdout.splitlines():
+                ip = line.strip().split("\t")[0] if "\t" in line else line.strip()
+                if ip and ip[0].isdigit():
+                    ips.add(ip)
+            logger.info(f"  Shodan org:{org_name}: {len(ips)} IPs")
+            return ips
+        except (FileNotFoundError, subprocess.TimeoutExpired) as e:
+            logger.warning(f"Shodan CLI not available or timed out: {e}")
+            return set()
 
 
 class MullvadProvider(BaseProvider):
@@ -595,25 +617,6 @@ class AstrillProvider(BaseProvider):
     def _rdap_validate(self, ips: list) -> set:
         return self.rdap.validate_astrill_blocks(ips)
 
-    def _shodan_org_search(self, org_name: str) -> set:
-        """Use Shodan CLI search (free query) to find IPs attributed to an org."""
-        try:
-            result = subprocess.run(
-                ["shodan", "search", "--fields", "ip_str",
-                 f'org:"{org_name}"', "--limit", "1000"],
-                capture_output=True, text=True, timeout=60
-            )
-            ips = set()
-            for line in result.stdout.splitlines():
-                ip = line.strip().split("\t")[0] if "\t" in line else line.strip()
-                if ip and ip[0].isdigit():
-                    ips.add(ip)
-            logger.info(f"  Shodan org:{org_name}: {len(ips)} IPs")
-            return ips
-        except (FileNotFoundError, subprocess.TimeoutExpired) as e:
-            logger.warning(f"Shodan CLI not available or timed out: {e}")
-            return set()
-
     def fetch(self) -> List[Dict]:
         logger.info(f"Fetching {self.display_name} IPs...")
         seed_ips = self._load_seed()
@@ -628,7 +631,7 @@ class AstrillProvider(BaseProvider):
         rdap_confirmed = self._rdap_validate(seed_ips)
         logger.info(f"  RDAP confirmed: {len(rdap_confirmed)} IPs")
 
-        shodan_ips = self._shodan_org_search("Astrill Systems Corp")
+        shodan_ips = BaseProvider.shodan_org_search("Astrill Systems Corp")
 
         nodes = []
         seed_set = set(seed_ips)
@@ -672,6 +675,39 @@ class AstrillProvider(BaseProvider):
         return nodes
 
 
+class UrbanVPNProvider(BaseProvider):
+    """Urban VPN — free P2P/residential proxy VPN."""
+    name = "urbanvpn"
+    display_name = "Urban VPN"
+    collection_method = "Shodan org search"
+    threat_relevance = "DPRK tradecraft (imper.ai: multi-hop stacking with CyberGhost); free P2P VPN with residential IP rotation"
+
+    def fetch(self) -> List[Dict]:
+        logger.info(f"Fetching {self.display_name} IPs...")
+        shodan_ips = BaseProvider.shodan_org_search("Urban VPN")
+
+        nodes = []
+        for ip in shodan_ips:
+            nodes.append({
+                "ip": ip,
+                "provider": self.name,
+                "confidence": "high",
+                "country": "",
+                "city": "",
+                "server_type": "exit",
+                "asn": "",
+                "asn_name": "",
+                "source": "shodan_org",
+                "source_date": TODAY,
+                "hostname": "",
+                "ip_role": "unknown",
+                "prefix": "",
+            })
+
+        logger.info(f"  {self.display_name}: {len(nodes)} total IPs")
+        return nodes
+
+
 def load_vpn_lookup(csv_path: str = "data/vpn_relay_ips.csv") -> Dict[str, Dict]:
     """Load VPN relay IPs into a lookup dict keyed by IP address.
 
@@ -700,6 +736,7 @@ PROVIDERS: List[BaseProvider] = [
     CyberGhostProvider(),
     TorGuardProvider(),
     WindscribeProvider(),
+    UrbanVPNProvider(),
 ]
 
 
@@ -730,6 +767,49 @@ def enrich_asns(nodes: List[Dict], workers: int = 20) -> None:
                 node["country"] = asn_data["country"]
 
 
+_DEFAULT_SCORES_PATH = os.path.join(
+    os.path.dirname(__file__), "..", "data", "vpn_provider_scores.csv"
+)
+
+SCORE_FIELDS = ["score_prehire", "tier_prehire", "score_posthire", "tier_posthire", "indicator_id"]
+
+
+def load_scores(csv_path: str = _DEFAULT_SCORES_PATH) -> Dict:
+    """Read vpn_provider_scores.csv into a dict keyed by (provider, confidence)."""
+    scores = {}
+    if not os.path.exists(csv_path):
+        logger.warning(f"Scores file not found: {csv_path}")
+        return scores
+    with open(csv_path, encoding="utf-8") as f:
+        for row in csv.DictReader(f):
+            key = (row["provider"], row["confidence"])
+            scores[key] = {
+                "score_prehire": row["score_prehire"],
+                "tier_prehire": row["tier_prehire"],
+                "score_posthire": row["score_posthire"],
+                "tier_posthire": row["tier_posthire"],
+                "indicator_id": row["indicator_id"],
+            }
+    return scores
+
+
+def join_scores(nodes: List[Dict], scores_path: str = _DEFAULT_SCORES_PATH) -> None:
+    """Merge provider scores onto nodes. Mutates in place."""
+    scores = load_scores(scores_path)
+    for node in nodes:
+        key = (node.get("provider", ""), node.get("confidence", ""))
+        match = scores.get(key)
+        if match:
+            for field in SCORE_FIELDS:
+                node[field] = match[field]
+        else:
+            node["score_prehire"] = "5"
+            node["tier_prehire"] = "contextual"
+            node["score_posthire"] = "5"
+            node["tier_posthire"] = "contextual"
+            node["indicator_id"] = ""
+
+
 def compute_prefix_inferred_rows(nodes: List[Dict], threshold: int = 4) -> List[Dict]:
     """Emit synthetic /24 prefix rows for (provider, ASN) groups with >= threshold IPs."""
     groups = defaultdict(list)
@@ -748,7 +828,7 @@ def compute_prefix_inferred_rows(nodes: List[Dict], threshold: int = 4) -> List[
         if len(members) < threshold:
             continue
         tmpl = members[0]
-        synthetic.append({
+        row = {
             "ip": "",
             "provider": provider,
             "confidence": "medium",
@@ -764,7 +844,10 @@ def compute_prefix_inferred_rows(nodes: List[Dict], threshold: int = 4) -> List[
             "threat_relevance": tmpl.get("threat_relevance", ""),
             "ip_role": "prefix-inferred",
             "prefix": prefix,
-        })
+        }
+        for sf in SCORE_FIELDS:
+            row[sf] = tmpl.get(sf, "")
+        synthetic.append(row)
 
     logger.info(f"Prefix inference: {len(synthetic)} /24 blocks from {len(groups)} groups (threshold={threshold})")
     return synthetic
@@ -818,6 +901,9 @@ def run(output: str, output_dir: str, workers: int, providers: List[str]):
 
     # Enrich ASNs
     enrich_asns(all_nodes, workers=workers)
+
+    # Join provider risk scores (before prefix inference so templates carry scores)
+    join_scores(all_nodes)
 
     # Prefix inference: emit synthetic /24 rows
     prefix_rows = compute_prefix_inferred_rows(all_nodes)
