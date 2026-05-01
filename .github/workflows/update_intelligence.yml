@@ -36,7 +36,14 @@ jobs:
         env:
           CENSYS_API_KEY: ${{ secrets.CENSYS_API_KEY }}
         run: python scripts/discover_ct.py
-        
+
+      - name: MX Pivot Discovery (pickelhost/eye-mail actor)
+        timeout-minutes: 15
+        continue-on-error: true
+        env:
+          ALIENVAULT_OTX_API_KEY: ${{ secrets.ALIENVAULT_OTX_API_KEY }}
+        run: python scripts/discover_mx_pivot.py --output data/mx_pivot_findings.csv
+
       - name: Upload Discovery Intel
         uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f  # v7.0.0
         with:
@@ -47,6 +54,7 @@ jobs:
             data/discovered_certs.csv
             data/campaign_hunt_history.csv
             data/campaign_pivot_findings.csv
+            data/mx_pivot_findings.csv
             data/.pivoted_ips.txt
           retention-days: 7
 
@@ -244,6 +252,11 @@ jobs:
         timeout-minutes: 10
         continue-on-error: true
         run: python scripts/enrich_dnstwist.py
+
+      - name: SPF/TXT Enrichment (ULA actor detection)
+        timeout-minutes: 45
+        continue-on-error: true
+        run: python scripts/enrich_spf.py -i data/dea_domains_probed.csv -o data/dea_domains_probed.csv -c 200
 
       - name: Infrastructure Fingerprinting
         run: python scripts/match_fingerprints.py

@@ -1,0 +1,88 @@
+id: "FP-0008"
+name: "pickelhost/eye-mail ULA SPF Phishing Platform"
+description: >
+  Domains using mail.pickelhost.com or mail.eye-mail.net as MX, typically with
+  ULA IPv6 SPF records (fd00::/8 range). This fingerprint identifies a large-scale
+  phishing-as-a-service operation targeting US military, defense contractors,
+  financial services, insurance companies, and tech brands. The actor operates
+  two disposable email services and has ~74K estimated domains in their infrastructure.
+  Connected to the Okta-reported vishing campaign (Jan 2026). Investigation origin:
+  FS-ISAC shared indicator (mysecurepasskey.com, Apr 2026).
+version: 1
+
+indicators:
+  - field: primary_mx
+    match_type: contains
+    value: "pickelhost.com"
+    required: false
+  - field: primary_mx
+    match_type: contains
+    value: "eye-mail.net"
+    required: false
+
+confidence_base: 75
+
+confidence_modifiers:
+  - field: primary_mx
+    match_type: contains
+    value: "pickelhost.com"
+    delta: 15
+  - field: primary_mx
+    match_type: contains
+    value: "eye-mail.net"
+    delta: 15
+  - field: spf_ula_match
+    match_type: exact
+    value: "True"
+    delta: 15
+  - field: a_record_asn_name
+    match_type: contains
+    value: "SEDO"
+    delta: 5
+  - field: nameservers
+    match_type: contains
+    value: "name.com"
+    delta: 5
+  - field: dnstwist_match
+    match_type: exact
+    value: "TRUE"
+    delta: 10
+  - field: registrant_mismatch
+    match_type: exact
+    value: "TRUE"
+    delta: 10
+  - field: ssl_present
+    match_type: exact
+    value: "True"
+    delta: 5
+  - field: nameservers
+    match_type: contains
+    value: "cloudflare.com"
+    delta: 5
+  - field: gleif_status
+    match_type: exact
+    value: "ACTIVE"
+    delta: -20
+
+flame_tp_ids:
+  - "TP-0001"
+
+ttl_days: 90
+
+tags:
+  - "pickelhost-cluster"
+  - "ula-spf"
+  - "vishing-platform"
+  - "credential-harvesting"
+  - "fs-isac"
+  - "okta-vishing-campaign"
+
+known_ula_ranges:
+  - "fd68:85f0:7c72::/48"
+  - "fdcf:abda:4154::/48"
+  - "fd96:1c8a:43ad::/48"
+  - "fdec:ae16:fda7::/48"
+  - "fd92:59f3:510e::/48"
+  - "fd38:d927:389a::/48"
+  - "fdd6:e8ab:4e1e::/48"
+  - "fd1b:212c:a5f9::/48"

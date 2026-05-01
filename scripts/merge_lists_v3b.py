@@ -313,7 +313,45 @@ def collect_discovery_domains(targets: Set[str]) -> Dict[str, Set[str]]:
         except Exception as e:
             log(f"  [!] Failed to read {otx_file}: {e}")
 
-    # 7. Shodan favicon pivot results (shodan_pivot.py -> infrastructure sharing)
+    # 7. Pickelhost/eye-mail actor MX pivot (investigation_06 findings)
+    pkl_file = "data/pickelhost_actor_domains.csv"
+    if os.path.exists(pkl_file):
+        try:
+            pkl_domains = set()
+            with open(pkl_file, "r", encoding="utf-8") as f:
+                reader = csv.DictReader(f)
+                for row in reader:
+                    d = normalize_domain(row.get("discovered_domain", ""))
+                    if d in targets:
+                        continue
+                    if is_valid_domain(d):
+                        pkl_domains.add(d)
+            if pkl_domains:
+                log(f"  [+] {'pickelhost_actor_pivot':28s} {len(pkl_domains):7d} domains  (local, targets excluded)")
+                discovery["pickelhost_actor_pivot"] = pkl_domains
+        except Exception as e:
+            log(f"  [!] Failed to read {pkl_file}: {e}")
+
+    # 7b. MX pivot discovery (discover_mx_pivot.py -> new domains on known-bad MX)
+    mx_pivot_file = "data/mx_pivot_findings.csv"
+    if os.path.exists(mx_pivot_file):
+        try:
+            mx_pivots = set()
+            with open(mx_pivot_file, "r", encoding="utf-8") as f:
+                reader = csv.DictReader(f)
+                for row in reader:
+                    d = normalize_domain(row.get("discovered_domain", ""))
+                    if d in targets:
+                        continue
+                    if is_valid_domain(d):
+                        mx_pivots.add(d)
+            if mx_pivots:
+                log(f"  [+] {'mx_pivot':28s} {len(mx_pivots):7d} domains  (local, targets excluded)")
+                discovery["mx_pivot"] = mx_pivots
+        except Exception as e:
+            log(f"  [!] Failed to read {mx_pivot_file}: {e}")
+
+    # 8. Shodan favicon pivot results (shodan_pivot.py -> infrastructure sharing)
     shodan_file = "data/shodan_pivots.csv"
     if os.path.exists(shodan_file):
         try:
