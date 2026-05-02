@@ -1,14 +1,13 @@
 id: "FP-0008"
 name: "pickelhost/eye-mail ULA SPF Phishing Platform"
 description: >
-  Domains using mail.pickelhost.com or mail.eye-mail.net as MX, typically with
-  ULA IPv6 SPF records (fd00::/8 range). This fingerprint identifies a large-scale
-  phishing-as-a-service operation targeting US military, defense contractors,
-  financial services, insurance companies, and tech brands. The actor operates
-  two disposable email services and has ~74K estimated domains in their infrastructure.
-  Connected to the Okta-reported vishing campaign (Jan 2026). Investigation origin:
-  FS-ISAC shared indicator (mysecurepasskey.com, Apr 2026).
-version: 1
+  Domains using any of 18+ confirmed actor-operated disposable email services as MX,
+  typically with ULA IPv6 SPF records (fd00::/8 range). This fingerprint identifies
+  a large-scale phishing-as-a-service operation with 40+ mail server IPs, 200K+
+  estimated domains, targeting US military, defense contractors, financial services,
+  insurance companies, and tech brands. Connected to the Okta-reported vishing
+  campaign (Jan 2026). Investigation origin: FS-ISAC (mysecurepasskey.com, Apr 2026).
+version: 2
 
 indicators:
   - field: primary_mx
@@ -18,6 +17,70 @@ indicators:
   - field: primary_mx
     match_type: contains
     value: "eye-mail.net"
+    required: false
+  - field: primary_mx
+    match_type: contains
+    value: "h-email.net"
+    required: false
+  - field: primary_mx
+    match_type: contains
+    value: "happyisp.com"
+    required: false
+  - field: primary_mx
+    match_type: contains
+    value: "hope-mail.com"
+    required: false
+  - field: primary_mx
+    match_type: contains
+    value: "mailerhost.net"
+    required: false
+  - field: primary_mx
+    match_type: contains
+    value: "mailer-host.com"
+    required: false
+  - field: primary_mx
+    match_type: contains
+    value: "nickstel.com"
+    required: false
+  - field: primary_mx
+    match_type: contains
+    value: "yurtmail.com"
+    required: false
+  - field: primary_mx
+    match_type: contains
+    value: "emailofsteel.com"
+    required: false
+  - field: primary_mx
+    match_type: contains
+    value: "wallywatts.com"
+    required: false
+  - field: primary_mx
+    match_type: contains
+    value: "flip-mail.com"
+    required: false
+  - field: primary_mx
+    match_type: contains
+    value: "post-host.net"
+    required: false
+  - field: primary_mx
+    match_type: contains
+    value: "mxproc.com"
+    required: false
+  - field: primary_mx
+    match_type: contains
+    value: "mxhoppr.com"
+    required: false
+  - field: primary_mx
+    match_type: contains
+    value: "mx-host.net"
+    required: false
+  - field: primary_mx
+    match_type: contains
+    value: "skrimple.com"
+    required: false
+  - field: primary_mx
+    match_type: contains
+    value: "b-io.co"
     required: false
 
 confidence_base: 75

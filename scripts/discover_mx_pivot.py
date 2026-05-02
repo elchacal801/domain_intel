@@ -28,10 +28,26 @@ from pathlib import Path
 import dns.asyncresolver
 import dns.resolver
 
-# Actor MX servers
+# Actor MX servers (18 confirmed + 1 third-party)
 ACTOR_MX_SERVERS = {
     "mail.pickelhost.com",
     "mail.eye-mail.net",
+    "mail.h-email.net",
+    "mail.happyisp.com",
+    "mail.hope-mail.com",
+    "mail.mailerhost.net",
+    "mail.mailer-host.com",
+    "mail.nickstel.com",
+    "mail.yurtmail.com",
+    "mail.emailofsteel.com",
+    "mail.wallywatts.com",
+    "mail.flip-mail.com",
+    "mail.post-host.net",
+    "mail.mxproc.com",
+    "mail.mxhoppr.com",
+    "mail.mx-host.net",
+    "mail.skrimple.com",
+    "mail.b-io.co",
     "park-mx.above.com",
 }
 
