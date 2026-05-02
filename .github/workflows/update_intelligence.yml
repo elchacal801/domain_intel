@@ -254,9 +254,21 @@ jobs:
         run: python scripts/enrich_dnstwist.py
 
       - name: SPF/TXT Enrichment (ULA actor detection)
-        timeout-minutes: 45
+        timeout-minutes: 15
         continue-on-error: true
-        run: python scripts/enrich_spf.py -i data/dea_domains_probed.csv -o data/dea_domains_probed.csv -c 200
+        run: |
+          # Extract actor-MX domains only, scan those for SPF, then merge back
+          python -c "
+          import csv
+          actor_mx = ['pickelhost.com','eye-mail.net','h-email.net','happyisp.com','hope-mail.com','mailerhost.net','mailer-host.com','nickstel.com','yurtmail.com','emailofsteel.com','wallywatts.com','flip-mail.com','post-host.net','mxproc.com','mxhoppr.com','mx-host.net','skrimple.com','b-io.co']
+          with open('data/dea_domains_probed.csv','r',encoding='utf-8',errors='replace') as f:
+              reader = csv.DictReader(f)
+              domains = [r['domain'] for r in reader if any(mx in (r.get('primary_mx','') or '').lower() for mx in actor_mx)]
+          with open('/tmp/actor_mx_domains.txt','w') as f:
+              f.write('\n'.join(domains))
+          print(f'Extracted {len(domains)} actor-MX domains for SPF scan')
+          "
+          python scripts/enrich_spf.py -i /tmp/actor_mx_domains.txt -o data/spf_enrichment.csv -c 200
 
       - name: Infrastructure Fingerprinting
         run: python scripts/match_fingerprints.py
