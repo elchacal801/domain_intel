@@ -897,6 +897,98 @@ def compute_prefix_inferred_rows(nodes: List[Dict], threshold: int = 4) -> List[
     return synthetic
 
 
+def compute_rdap_egress_rows(nodes: List[Dict], rdap: "RDAPClient" = None) -> List[Dict]:
+    """Infer egress /24 prefixes by querying RDAP for allocated blocks.
+
+    For each (provider, ASN, /24) group with ingress IPs, checks RDAP for the
+    allocated block. Any /24 within that block that does NOT already have confirmed
+    IPs gets an egress-inferred row.
+
+    Only processes nodes with ip_role='ingress'. Skips SHARED_HOSTING_ASNS.
+    """
+    import time as _time
+
+    if rdap is None:
+        rdap = RDAPClient()
+
+    ingress_nodes = [n for n in nodes if n.get("ip_role") == "ingress"]
+    if not ingress_nodes:
+        return []
+
+    groups = defaultdict(list)
+    for n in ingress_nodes:
+        asn = n.get("asn", "")
+        if not asn or asn in SHARED_HOSTING_ASNS:
+            continue
+        try:
+            net24 = ipaddress.ip_network(f"{n['ip']}/24", strict=False)
+        except ValueError:
+            continue
+        groups[(n["provider"], asn, str(net24))].append(n)
+
+    covered_24s = set()
+    for n in nodes:
+        if n.get("ip"):
+            try:
+                covered_24s.add(str(ipaddress.ip_network(f"{n['ip']}/24", strict=False)))
+            except ValueError:
+                pass
+
+    checked = {}
+    synthetic = []
+
+    for (provider, asn, net24_str), members in groups.items():
+        pa_key = (provider, asn)
+        if pa_key not in checked:
+            sample_ip = members[0]["ip"]
+            name, cidr = rdap.check_block_cidr(sample_ip)
+            checked[pa_key] = (name, cidr)
+            _time.sleep(0.3)
+
+        name, cidr = checked[pa_key]
+        if not cidr:
+            continue
+
+        try:
+            allocated = ipaddress.ip_network(cidr, strict=False)
+        except ValueError:
+            continue
+
+        if allocated.prefixlen < 16:
+            continue
+
+        tmpl = members[0]
+        for subnet in allocated.subnets(new_prefix=24):
+            subnet_str = str(subnet)
+            if subnet_str in covered_24s:
+                continue
+            covered_24s.add(subnet_str)
+
+            row = {
+                "ip": "",
+                "provider": provider,
+                "confidence": "medium",
+                "country": tmpl.get("country", ""),
+                "city": "",
+                "server_type": tmpl.get("server_type", ""),
+                "asn": asn,
+                "asn_name": tmpl.get("asn_name", ""),
+                "source": "rdap_prefix_expansion",
+                "source_date": TODAY,
+                "hostname": "",
+                "collection_method": tmpl.get("collection_method", ""),
+                "threat_relevance": tmpl.get("threat_relevance", ""),
+                "ip_role": "egress-inferred",
+                "prefix": subnet_str,
+            }
+            for sf in SCORE_FIELDS:
+                row[sf] = tmpl.get(sf, "")
+            synthetic.append(row)
+
+    logger.info(f"RDAP egress expansion: {len(synthetic)} inferred /24 blocks from {len(checked)} lookups")
+    return synthetic
+
+
 def write_csv(nodes: List[Dict], path: str) -> None:
     """Write nodes to CSV."""
     os.makedirs(os.path.dirname(path) or ".", exist_ok=True)
@@ -951,7 +1043,11 @@ def run(output: str, output_dir: str, workers: int, providers: List[str]):
 
     # Prefix inference: emit synthetic /24 rows
     prefix_rows = compute_prefix_inferred_rows(all_nodes)
-    all_nodes_with_prefix = all_nodes + prefix_rows
+
+    # RDAP egress expansion: infer adjacent /24s for ingress-only providers
+    egress_rows = compute_rdap_egress_rows(all_nodes)
+
+    all_nodes_with_prefix = all_nodes + prefix_rows + egress_rows
 
     # Write primary CSV (all rows including prefix-inferred)
     write_csv(all_nodes_with_prefix, output)
