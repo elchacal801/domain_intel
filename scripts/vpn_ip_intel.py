@@ -1066,11 +1066,11 @@ def run(output: str, output_dir: str, workers: int, providers: List[str]):
         legacy_rows = [n for n in all_nodes_with_prefix if n.get("ip")]
         write_csv(legacy_rows, legacy_path)
 
-    # Write per-provider CSVs (IP rows only)
+    # Write per-provider CSVs (IP rows + egress-inferred)
     if output_dir:
         os.makedirs(output_dir, exist_ok=True)
         by_provider = {}
-        for n in all_nodes:
+        for n in all_nodes + egress_rows:
             by_provider.setdefault(n["provider"], []).append(n)
         for prov_name, nodes in by_provider.items():
             write_csv(nodes, os.path.join(output_dir, f"{prov_name}.csv"))

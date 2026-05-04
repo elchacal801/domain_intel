@@ -76,7 +76,8 @@ class TestMullvadProvider:
 
     def test_parse_active_servers_only(self):
         provider = MullvadProvider()
-        with patch("vpn_ip_intel.requests") as mock_requests:
+        with patch("vpn_ip_intel.requests") as mock_requests, \
+             patch.object(provider, "load_exit_seeds", return_value=[]):
             mock_resp = MagicMock()
             mock_resp.json.return_value = self.SAMPLE_API_RESPONSE
             mock_resp.status_code = 200
@@ -93,7 +94,8 @@ class TestMullvadProvider:
 
     def test_all_nodes_have_required_fields(self):
         provider = MullvadProvider()
-        with patch("vpn_ip_intel.requests") as mock_requests:
+        with patch("vpn_ip_intel.requests") as mock_requests, \
+             patch.object(provider, "load_exit_seeds", return_value=[]):
             mock_resp = MagicMock()
             mock_resp.json.return_value = self.SAMPLE_API_RESPONSE
             mock_resp.raise_for_status = MagicMock()
@@ -108,7 +110,8 @@ class TestMullvadProvider:
         data = [{"hostname": "test", "active": True, "ipv4_addr_in": None,
                  "country_code": "se", "city_name": "Stockholm", "type": "wireguard"}]
         provider = MullvadProvider()
-        with patch("vpn_ip_intel.requests") as mock_requests:
+        with patch("vpn_ip_intel.requests") as mock_requests, \
+             patch.object(provider, "load_exit_seeds", return_value=[]):
             mock_resp = MagicMock()
             mock_resp.json.return_value = data
             mock_resp.raise_for_status = MagicMock()
