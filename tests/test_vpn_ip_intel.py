@@ -12,11 +12,15 @@ from unittest.mock import patch, MagicMock
 from vpn_ip_intel import (
     MullvadProvider, NordVPNProvider, ProtonVPNProvider, AstrillProvider,
     UrbanVPNProvider,
+    VPNGateProvider, IPVanishProvider, FastVPNProvider, TunnelBearProvider,
+    AirVPNProvider, VyprVPNProvider, ExpressVPNProvider, HotspotShieldProvider,
+    HMAProvider, HolaVPNProvider, PrivadoVPNProvider, FlowVPNProvider, NjallaVPNProvider,
+    OvpnConfigProvider,
     BaseProvider, load_vpn_lookup, normalize_node, compute_prefix_inferred_rows,
     compute_rdap_egress_rows,
     load_scores, join_scores, FIELDS, SCORE_FIELDS,
     SHARED_HOSTING_ASNS, _COUNTRY_ALIASES, _SERVER_TYPE_ALIASES, TODAY,
-    IP_ROLES,
+    IP_ROLES, PROVIDERS,
 )
 
 
@@ -789,3 +793,291 @@ class TestRDAPEgressExpansion:
         result = compute_rdap_egress_rows(nodes, rdap=mock_client)
         assert len(result) == 0
         mock_client.check_block_cidr.assert_not_called()
+
+
+class TestProviderRegistry:
+    """Verify all providers are registered and have required attributes."""
+
+    def test_provider_count(self):
+        assert len(PROVIDERS) == 21  # 23 minus HolaVPN (auth) and HMA (dead endpoint)
+
+    def test_all_providers_have_required_attrs(self):
+        for p in PROVIDERS:
+            assert p.name, f"{p.__class__.__name__} missing name"
+            assert p.display_name, f"{p.__class__.__name__} missing display_name"
+            assert p.collection_method, f"{p.__class__.__name__} missing collection_method"
+            assert p.threat_relevance, f"{p.__class__.__name__} missing threat_relevance"
+
+    def test_unique_provider_names(self):
+        names = [p.name for p in PROVIDERS]
+        assert len(names) == len(set(names)), f"Duplicate names: {[n for n in names if names.count(n) > 1]}"
+
+
+class TestVPNGateProvider:
+    """Test VPN Gate CSV API parsing."""
+
+    SAMPLE_CSV = (
+        "*vpn_servers\n"
+        "HostName,IP,Score,Ping,Speed,CountryLong,CountryShort,NumVpnSessions,Uptime,TotalUsers,TotalTraffic,LogType,Operator,Message,OpenVPN_ConfigData_Base64\n"
+        "vpn123,1.2.3.4,1000,10,50000,Japan,JP,5,100,1000,5000,2weeks,op1,msg1,base64data\n"
+        "vpn456,5.6.7.8,800,20,30000,United States,US,3,200,500,3000,2weeks,op2,msg2,base64data\n"
+        "*vpn_servers\n"
+    )
+
+    def test_parse_csv_response(self):
+        provider = VPNGateProvider()
+        mock_resp = MagicMock()
+        mock_resp.text = self.SAMPLE_CSV
+        mock_resp.raise_for_status = MagicMock()
+        with patch("vpn_ip_intel.requests.get", return_value=mock_resp):
+            nodes = provider.fetch()
+        assert len(nodes) == 2
+        assert nodes[0]["ip"] == "1.2.3.4"
+        assert nodes[0]["country"] == "JP"
+        assert nodes[0]["provider"] == "vpngate"
+        assert nodes[1]["ip"] == "5.6.7.8"
+        assert nodes[1]["country"] == "US"
+
+    def test_skips_duplicate_ips(self):
+        csv = (
+            "*vpn_servers\n"
+            "HostName,IP,Score,Ping,Speed,CountryLong,CountryShort,NumVpnSessions,Uptime,TotalUsers,TotalTraffic,LogType,Operator,Message,OpenVPN_ConfigData_Base64\n"
+            "vpn1,1.2.3.4,1000,10,50000,Japan,JP,5,100,1000,5000,2weeks,op,msg,b64\n"
+            "vpn2,1.2.3.4,800,20,30000,Japan,JP,3,200,500,3000,2weeks,op,msg,b64\n"
+            "*vpn_servers\n"
+        )
+        provider = VPNGateProvider()
+        mock_resp = MagicMock()
+        mock_resp.text = csv
+        mock_resp.raise_for_status = MagicMock()
+        with patch("vpn_ip_intel.requests.get", return_value=mock_resp):
+            nodes = provider.fetch()
+        assert len(nodes) == 1
+
+
+class TestAirVPNProvider:
+    """Test AirVPN JSON API parsing."""
+
+    SAMPLE_RESPONSE = {
+        "servers": [
+            {
+                "public_name": "Achernar",
+                "country_code": "ch",
+                "location": "Zurich",
+                "ip_v4_in1": "185.156.175.170",
+                "ip_v4_in2": "185.156.175.172",
+                "ip_v4_in3": "",
+                "ip_v4_in4": "",
+                "health": "ok",
+            },
+            {
+                "public_name": "Adhara",
+                "country_code": "de",
+                "location": "Frankfurt",
+                "ip_v4_in1": "185.104.184.42",
+                "ip_v4_in2": "",
+                "ip_v4_in3": "",
+                "ip_v4_in4": "",
+                "health": "ok",
+            },
+        ]
+    }
+
+    def test_parse_json_response(self):
+        provider = AirVPNProvider()
+        mock_resp = MagicMock()
+        mock_resp.json.return_value = self.SAMPLE_RESPONSE
+        mock_resp.raise_for_status = MagicMock()
+        with patch("vpn_ip_intel.requests.get", return_value=mock_resp):
+            nodes = provider.fetch()
+        assert len(nodes) == 3  # 2 from Achernar + 1 from Adhara
+        assert nodes[0]["ip"] == "185.156.175.170"
+        assert nodes[0]["country"] == "CH"
+        assert nodes[0]["hostname"] == "Achernar"
+
+
+class TestOvpnConfigProvider:
+    """Test OpenVPN config ZIP parsing base class."""
+
+    def test_parse_country_ipvanish(self):
+        p = IPVanishProvider()
+        assert p._parse_country("ipvanish-US-New-York-nyc-a01.ovpn") == "US"
+
+    def test_parse_country_tunnelbear(self):
+        p = TunnelBearProvider()
+        assert p._parse_country("CACougar.ovpn") == "CA"
+        assert p._parse_country("USGrizzly.ovpn") == "US"
+        assert p._parse_country("GBMonarch.ovpn") == "GB"
+
+    def test_parse_country_fastvpn(self):
+        p = FastVPNProvider()
+        assert p._parse_country("NCVPN-AD-Andorra la Vella-TCP.ovpn") == "AD"
+        assert p._parse_country("NCVPN-US-Miami-UDP.ovpn") == "US"
+
+    def test_parse_country_privadovpn(self):
+        p = PrivadoVPNProvider()
+        assert p._parse_country("lis-010.udp.ovpn") == "PT"
+        assert p._parse_country("yyz-004.tcp.ovpn") == "CA"
+        assert p._parse_country("mia-007.udp.ovpn") == "US"
+
+    def test_make_node_has_required_fields(self):
+        p = IPVanishProvider()
+        node = p._make_node("1.2.3.4", "US", "test.host.com")
+        required = {"ip", "provider", "confidence", "country", "city",
+                    "server_type", "source", "source_date", "hostname",
+                    "ip_role", "prefix"}
+        assert required.issubset(node.keys())
+        assert node["ip"] == "1.2.3.4"
+        assert node["provider"] == "ipvanish"
+        assert node["country"] == "US"
+
+    def test_fetch_parses_zip_with_direct_ips(self):
+        """Test full fetch() flow with mock ZIP containing direct IPs."""
+        import io
+        import zipfile
+
+        buf = io.BytesIO()
+        with zipfile.ZipFile(buf, "w") as zf:
+            zf.writestr("ipvanish-US-test.ovpn",
+                         "client\nremote 1.2.3.4 443\nproto tcp\n")
+            zf.writestr("ipvanish-DE-test.ovpn",
+                         "client\nremote 5.6.7.8 1194\nproto udp\n")
+        zip_bytes = buf.getvalue()
+
+        p = IPVanishProvider()
+        mock_resp = MagicMock()
+        mock_resp.content = zip_bytes
+        mock_resp.raise_for_status = MagicMock()
+        with patch("vpn_ip_intel.requests.get", return_value=mock_resp):
+            nodes = p.fetch()
+        assert len(nodes) == 2
+        ips = {n["ip"] for n in nodes}
+        assert ips == {"1.2.3.4", "5.6.7.8"}
+        countries = {n["country"] for n in nodes}
+        assert "US" in countries
+
+    def test_fetch_resolves_hostnames(self):
+        """Test fetch() resolves hostnames via socket."""
+        import io
+        import zipfile
+
+        buf = io.BytesIO()
+        with zipfile.ZipFile(buf, "w") as zf:
+            zf.writestr("ipvanish-US-test.ovpn",
+                         "client\nremote test.example.com 443\nproto tcp\n")
+        zip_bytes = buf.getvalue()
+
+        p = IPVanishProvider()
+        mock_resp = MagicMock()
+        mock_resp.content = zip_bytes
+        mock_resp.raise_for_status = MagicMock()
+
+        fake_addrinfo = [(2, 1, 6, '', ('93.184.216.34', 0))]
+        with patch("vpn_ip_intel.requests.get", return_value=mock_resp), \
+             patch("socket.getaddrinfo", return_value=fake_addrinfo):
+            nodes = p.fetch()
+        assert len(nodes) == 1
+        assert nodes[0]["ip"] == "93.184.216.34"
+        assert nodes[0]["hostname"] == "test.example.com"
+
+    def test_rejects_oversized_zip(self):
+        """Test that excessively large responses are rejected."""
+        p = IPVanishProvider()
+        mock_resp = MagicMock()
+        mock_resp.content = b"x" * (51 * 1024 * 1024)
+        mock_resp.raise_for_status = MagicMock()
+        with patch("vpn_ip_intel.requests.get", return_value=mock_resp):
+            nodes = p.fetch()
+        assert nodes == []
+
+
+class TestExpressVPNProvider:
+    """Test ExpressVPN seed + Shodan provider."""
+
+    def test_provider_attributes(self):
+        p = ExpressVPNProvider()
+        assert p.name == "expressvpn"
+        assert "DPRK" in p.threat_relevance
+
+    def test_fetch_with_gluetun_data(self):
+        gluetun_resp = {
+            "expressvpn": {
+                "version": 1,
+                "timestamp": 1700000000,
+                "servers": [
+                    {"vpn": "openvpn", "country": "United States", "hostname": "us-1.expressnetw.com",
+                     "ips": ["1.2.3.4", "5.6.7.8"]},
+                    {"vpn": "openvpn", "country": "United Kingdom", "hostname": "uk-1.expressnetw.com",
+                     "ips": ["9.10.11.12"]},
+                ]
+            }
+        }
+        provider = ExpressVPNProvider()
+        mock_resp = MagicMock()
+        mock_resp.json.return_value = gluetun_resp
+        mock_resp.raise_for_status = MagicMock()
+        with patch("vpn_ip_intel.requests.get", return_value=mock_resp), \
+             patch.object(BaseProvider, "shodan_org_search", return_value=set()):
+            nodes = provider.fetch()
+        assert len(nodes) == 3
+        assert nodes[0]["ip"] == "1.2.3.4"
+        assert nodes[0]["confidence"] == "confirmed"
+        assert nodes[0]["source"] == "gluetun"
+        assert nodes[0]["country"] == "US"  # Full name "United States" normalized to "US"
+        assert nodes[2]["country"] == "GB"  # "United Kingdom" -> "GB"
+
+    def test_fetch_falls_back_to_shodan(self):
+        provider = ExpressVPNProvider()
+        provider.SEED_PATH = "/nonexistent/path.json"
+        with patch("vpn_ip_intel.requests.get", side_effect=Exception("network error")), \
+             patch.object(BaseProvider, "shodan_org_search", return_value={"9.9.9.9"}):
+            nodes = provider.fetch()
+        assert len(nodes) == 1
+        assert nodes[0]["ip"] == "9.9.9.9"
+        assert nodes[0]["source"] == "shodan_org"
+
+
+class TestHotspotShieldProvider:
+    """Test Hotspot Shield DNS + Shodan provider."""
+
+    def test_provider_attributes(self):
+        p = HotspotShieldProvider()
+        assert p.name == "hotspotshield"
+        assert "DPRK" in p.threat_relevance
+
+    def test_fetch_dns_only(self):
+        provider = HotspotShieldProvider()
+        mock_run = MagicMock()
+        mock_run.stdout = "1.2.3.4\n5.6.7.8\n"
+        with patch("subprocess.run", return_value=mock_run), \
+             patch.object(BaseProvider, "shodan_org_search", return_value=set()):
+            nodes = provider.fetch()
+        assert len(nodes) >= 1
+        assert nodes[0]["server_type"] == "hydra"
+
+
+class TestDNSEnumNewProviders:
+    """Test new DNS enumeration providers have correct patterns."""
+
+    def test_vyprvpn_generates_hostnames(self):
+        p = VyprVPNProvider()
+        hostnames = p._generate_hostnames()
+        assert len(hostnames) > 100
+        hosts = [h for h, _ in hostnames]
+        assert "us1.vyprvpn.com" in hosts
+        assert "jp1.vyprvpn.com" in hosts
+
+    def test_flowvpn_generates_hostnames(self):
+        p = FlowVPNProvider()
+        hostnames = p._generate_hostnames()
+        hosts = [h for h, _ in hostnames]
+        assert "us.flow.host" in hosts
+        assert "gb.flow.host" in hosts
+
+    def test_njalla_generates_hostnames(self):
+        p = NjallaVPNProvider()
+        hostnames = p._generate_hostnames()
+        assert len(hostnames) == 100
+        hosts = [h for h, _ in hostnames]
+        assert "wg001.njalla.no" in hosts
+        assert "wg100.njalla.no" in hosts

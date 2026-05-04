@@ -353,6 +353,106 @@ class DNSEnumProvider(BaseProvider):
         return nodes
 
 
+class OvpnConfigProvider(BaseProvider):
+    """Base class for providers whose servers are discovered by downloading
+    an OpenVPN config ZIP, extracting .ovpn files, and parsing 'remote'
+    directives into hostnames/IPs.
+
+    Subclasses set config_url and optionally override _parse_country().
+    """
+    config_url: str = ""
+
+    def _parse_country(self, filename: str) -> str:
+        """Extract country code from .ovpn filename. Override for custom patterns."""
+        # Try common patterns: "ipvanish-US-...", "CyberGhost_US_...", "us-...", etc.
+        name = os.path.splitext(os.path.basename(filename))[0]
+        # Look for 2-letter country codes
+        parts = re.split(r'[-_.]', name)
+        for part in parts:
+            if len(part) == 2 and part.isalpha():
+                return part.upper()
+        return ""
+
+    def fetch(self) -> List[Dict]:
+        import io
+        import socket
+        import zipfile
+
+        logger.info(f"Downloading {self.display_name} config archive...")
+        resp = requests.get(self.config_url, timeout=60,
+                            headers={"User-Agent": "DomainIntel-VPN/1.0"})
+        resp.raise_for_status()
+
+        # Reject excessively large responses (>50MB)
+        if len(resp.content) > 50 * 1024 * 1024:
+            logger.warning(f"  {self.display_name}: config archive too large ({len(resp.content)} bytes), skipping")
+            return []
+
+        nodes = []
+        seen_ips = set()
+        remote_re = re.compile(r'^remote\s+(\S+)\s+(\d+)', re.MULTILINE)
+
+        # hostname -> first country code seen
+        hostname_cc = {}
+
+        with zipfile.ZipFile(io.BytesIO(resp.content)) as zf:
+            ovpn_files = [n for n in zf.namelist() if n.endswith('.ovpn')]
+            logger.info(f"  {len(ovpn_files)} .ovpn files in archive")
+
+            for name in ovpn_files:
+                cc = self._parse_country(name)
+                try:
+                    content = zf.read(name).decode("utf-8", errors="ignore")
+                except Exception:
+                    continue
+                for m in remote_re.finditer(content):
+                    host = m.group(1)
+                    if host[0].isdigit():
+                        if host not in seen_ips:
+                            seen_ips.add(host)
+                            nodes.append(self._make_node(host, cc, host))
+                    else:
+                        hostname_cc.setdefault(host, cc)
+
+        # Parallel DNS resolution using socket (much faster than dig subprocesses)
+        def _resolve(host):
+            try:
+                results = socket.getaddrinfo(host, None, socket.AF_INET)
+                return host, list({r[4][0] for r in results})
+            except Exception:
+                return host, []
+
+        unique_hosts = list(hostname_cc.keys())
+        logger.info(f"  Resolving {len(unique_hosts)} unique hostnames...")
+        with ThreadPoolExecutor(max_workers=20) as pool:
+            for host, ips in pool.map(_resolve, unique_hosts):
+                cc = hostname_cc[host]
+                for ip in ips:
+                    if ip not in seen_ips:
+                        seen_ips.add(ip)
+                        nodes.append(self._make_node(ip, cc, host))
+
+        logger.info(f"  {self.display_name}: {len(nodes)} IPs")
+        return nodes
+
+    def _make_node(self, ip: str, cc: str, hostname: str) -> Dict:
+        return {
+            "ip": ip,
+            "provider": self.name,
+            "confidence": "confirmed",
+            "country": cc,
+            "city": "",
+            "server_type": "openvpn",
+            "asn": "",
+            "asn_name": "",
+            "source": f"{self.name}_config",
+            "source_date": TODAY,
+            "hostname": hostname,
+            "ip_role": "unknown",
+            "prefix": "",
+        }
+
+
 class PIAProvider(BaseProvider):
     """Private Internet Access — public server list API."""
     name = "pia"
@@ -748,6 +848,541 @@ class UrbanVPNProvider(BaseProvider):
         return nodes
 
 
+# --- New Providers (Tier 1 + Tier 2) ---
+
+
+class VPNGateProvider(BaseProvider):
+    """VPNGate — University of Tsukuba volunteer VPN relay network."""
+    name = "vpngate"
+    display_name = "VPN Gate"
+    collection_method = "Public CSV API"
+    threat_relevance = "Censorship circumvention; volunteer-run, dynamic IPs"
+    API_URL = "https://www.vpngate.net/api/iphone/"
+
+    def fetch(self) -> List[Dict]:
+        logger.info(f"Fetching {self.display_name} server list...")
+        resp = requests.get(self.API_URL, timeout=30,
+                            headers={"User-Agent": "DomainIntel-VPN/1.0"})
+        resp.raise_for_status()
+
+        # Response is CSV with header/footer comment lines starting with *
+        lines = [l for l in resp.text.splitlines() if l and not l.startswith("*")]
+        nodes = []
+        seen_ips = set()
+
+        reader = csv.DictReader(lines)
+        for row in reader:
+            ip = row.get("IP", "").strip()
+            if not ip or ip in seen_ips:
+                continue
+            seen_ips.add(ip)
+            nodes.append({
+                "ip": ip,
+                "provider": self.name,
+                "confidence": "confirmed",
+                "country": row.get("CountryShort", "").upper(),
+                "city": "",
+                "server_type": "openvpn",
+                "asn": "",
+                "asn_name": "",
+                "source": "vpngate_api",
+                "source_date": TODAY,
+                "hostname": row.get("HostName", ""),
+                "ip_role": "unknown",
+                "prefix": "",
+            })
+
+        logger.info(f"  {self.display_name}: {len(nodes)} active relays")
+        return nodes
+
+
+class IPVanishProvider(OvpnConfigProvider):
+    """IPVanish — OpenVPN config ZIP download."""
+    name = "ipvanish"
+    display_name = "IPVanish"
+    collection_method = "Config archive download"
+    threat_relevance = "General VPN coverage"
+    config_url = "https://configs.ipvanish.com/configs/configs.zip"
+
+    def _parse_country(self, filename: str) -> str:
+        # Filenames: ipvanish-US-New-York-nyc-a01.ovpn
+        name = os.path.basename(filename)
+        m = re.match(r'ipvanish-([A-Z]{2})-', name)
+        return m.group(1) if m else ""
+
+
+class FastVPNProvider(OvpnConfigProvider):
+    """FastVPN (Namecheap) — OpenVPN config ZIP download."""
+    name = "fastvpn"
+    display_name = "FastVPN"
+    collection_method = "Config archive download"
+    threat_relevance = "General VPN coverage"
+    config_url = "https://vpn.ncapi.io/groupedServerList.zip"
+
+    def _parse_country(self, filename: str) -> str:
+        # Filenames: NCVPN-AD-Andorra la Vella-TCP.ovpn
+        name = os.path.basename(filename)
+        m = re.match(r'NCVPN-([A-Z]{2})-', name)
+        return m.group(1) if m else ""
+
+
+class TunnelBearProvider(OvpnConfigProvider):
+    """TunnelBear (McAfee) — OpenVPN config ZIP from S3."""
+    name = "tunnelbear"
+    display_name = "TunnelBear"
+    collection_method = "Config archive download"
+    threat_relevance = "General VPN coverage"
+    config_url = "https://tunnelbear.s3.amazonaws.com/support/linux/openvpn.zip"
+
+    def _parse_country(self, filename: str) -> str:
+        # Filenames: CACougar.ovpn, USGrizzly.ovpn, GBMonarch.ovpn
+        name = os.path.splitext(os.path.basename(filename))[0]
+        # First 2 chars are country code
+        if len(name) >= 2 and name[:2].isalpha():
+            return name[:2].upper()
+        return ""
+
+
+class AirVPNProvider(BaseProvider):
+    """AirVPN — public JSON status API."""
+    name = "airvpn"
+    display_name = "AirVPN"
+    collection_method = "Public API"
+    threat_relevance = "General VPN coverage; privacy-focused"
+    API_URL = "https://airvpn.org/api/status/"
+
+    def fetch(self) -> List[Dict]:
+        logger.info(f"Fetching {self.display_name} server list...")
+        resp = requests.get(self.API_URL, timeout=30,
+                            headers={"User-Agent": "DomainIntel-VPN/1.0"})
+        resp.raise_for_status()
+        data = resp.json()
+
+        nodes = []
+        seen_ips = set()
+
+        for server in data.get("servers", []):
+            # Each server has ip_v4_in1 through ip_v4_in4
+            for key in ["ip_v4_in1", "ip_v4_in2", "ip_v4_in3", "ip_v4_in4"]:
+                ip = server.get(key, "")
+                if not ip or ip in seen_ips:
+                    continue
+                seen_ips.add(ip)
+                nodes.append({
+                    "ip": ip,
+                    "provider": self.name,
+                    "confidence": "confirmed",
+                    "country": server.get("country_code", "").upper(),
+                    "city": server.get("location", ""),
+                    "server_type": "openvpn",
+                    "asn": "",
+                    "asn_name": "",
+                    "source": "airvpn_api",
+                    "source_date": TODAY,
+                    "hostname": server.get("public_name", ""),
+                    "ip_role": "unknown",
+                    "prefix": "",
+                })
+
+        logger.info(f"  {self.display_name}: {len(nodes)} IPs")
+        return nodes
+
+
+class VyprVPNProvider(DNSEnumProvider):
+    """VyprVPN (Certida) — DNS enumeration of {region}{N}.vyprvpn.com."""
+    name = "vyprvpn"
+    display_name = "VyprVPN"
+    collection_method = "DNS enumeration"
+    threat_relevance = "General VPN coverage"
+
+    REGIONS = {
+        "us": 30, "ca": 10, "uk": 10, "de": 10, "fr": 10, "nl": 10, "se": 10,
+        "ch": 10, "no": 5, "dk": 5, "fi": 5, "at": 5, "es": 5, "it": 5,
+        "pt": 5, "pl": 5, "cz": 5, "be": 5, "ie": 5, "ro": 5, "bg": 5,
+        "hu": 5, "lu": 3, "lv": 3, "lt": 3, "ee": 3, "hr": 3, "sk": 3,
+        "si": 3, "gr": 3, "tr": 5, "ru": 5, "ua": 3,
+        "jp": 10, "sg": 10, "au": 10, "nz": 5, "hk": 5, "in": 5, "kr": 5,
+        "br": 5, "mx": 5, "ar": 3, "za": 3, "il": 3, "th": 3, "vn": 3,
+        "my": 3, "ph": 3, "id": 3, "tw": 3, "co": 3,
+    }
+
+    def _generate_hostnames(self):
+        pairs = []
+        for region, max_n in self.REGIONS.items():
+            for n in range(1, max_n + 1):
+                pairs.append((f"{region}{n}.vyprvpn.com", region))
+        return pairs
+
+
+class ExpressVPNProvider(BaseProvider):
+    """ExpressVPN — live fetch from gluetun project + Shodan org search.
+
+    ExpressVPN has no public API. Server data is sourced from the gluetun
+    VPN client project's servers.json on GitHub (updated regularly).
+    Falls back to a local seed file if the fetch fails.
+    DPRK priority: Mandiant confirmed RGB ORB tunnel usage.
+    """
+    name = "expressvpn"
+    display_name = "ExpressVPN"
+    collection_method = "Gluetun mirror + Shodan org"
+    threat_relevance = "DPRK confirmed (Mandiant: RGB ORB tunnels; Recorded Future: 16.1% NK user share)"
+    GLUETUN_URL = "https://raw.githubusercontent.com/qdm12/gluetun/master/internal/storage/servers.json"
+    SEED_PATH = os.path.join(
+        os.path.dirname(__file__), "..", "data", "vpn_seeds", "expressvpn_servers.json"
+    )
+
+    # Gluetun uses full country names; map to ISO 2-letter codes
+    _COUNTRY_CODES = {
+        "albania": "AL", "algeria": "DZ", "andorra": "AD", "argentina": "AR",
+        "armenia": "AM", "australia": "AU", "austria": "AT", "bahamas": "BS",
+        "bangladesh": "BD", "belgium": "BE", "bhutan": "BT", "bolivia": "BO",
+        "bosnia and herzegovina": "BA", "brazil": "BR", "brunei": "BN",
+        "bulgaria": "BG", "cambodia": "KH", "canada": "CA", "chile": "CL",
+        "colombia": "CO", "costa rica": "CR", "croatia": "HR", "cyprus": "CY",
+        "czech republic": "CZ", "denmark": "DK", "ecuador": "EC", "egypt": "EG",
+        "estonia": "EE", "finland": "FI", "france": "FR", "georgia": "GE",
+        "germany": "DE", "greece": "GR", "guatemala": "GT", "hong kong": "HK",
+        "hungary": "HU", "iceland": "IS", "india": "IN", "indonesia": "ID",
+        "ireland": "IE", "isle of man": "IM", "israel": "IL", "italy": "IT",
+        "japan": "JP", "jersey": "JE", "kazakhstan": "KZ", "kenya": "KE",
+        "laos": "LA", "latvia": "LV", "liechtenstein": "LI", "lithuania": "LT",
+        "luxembourg": "LU", "macau": "MO", "malaysia": "MY", "malta": "MT",
+        "mexico": "MX", "moldova": "MD", "monaco": "MC", "mongolia": "MN",
+        "montenegro": "ME", "myanmar": "MM", "nepal": "NP", "netherlands": "NL",
+        "new zealand": "NZ", "north macedonia": "MK", "norway": "NO",
+        "pakistan": "PK", "panama": "PA", "peru": "PE", "philippines": "PH",
+        "poland": "PL", "portugal": "PT", "romania": "RO", "serbia": "RS",
+        "singapore": "SG", "slovakia": "SK", "slovenia": "SI", "south africa": "ZA",
+        "south korea": "KR", "spain": "ES", "sri lanka": "LK", "sweden": "SE",
+        "switzerland": "CH", "taiwan": "TW", "thailand": "TH", "turkey": "TR",
+        "ukraine": "UA", "united arab emirates": "AE", "united kingdom": "GB",
+        "united states": "US", "uruguay": "UY", "uzbekistan": "UZ",
+        "venezuela": "VE", "vietnam": "VN",
+    }
+
+    def _normalize_country(self, name: str) -> str:
+        """Convert full country name to ISO 2-letter code."""
+        if len(name) == 2:
+            return name.upper()
+        return self._COUNTRY_CODES.get(name.lower(), name[:2].upper() if len(name) >= 2 else "")
+
+    def _load_gluetun_servers(self) -> list:
+        """Fetch ExpressVPN servers from gluetun GitHub, fall back to local seed."""
+        # Try live fetch first
+        try:
+            resp = requests.get(self.GLUETUN_URL, timeout=30,
+                                headers={"User-Agent": "DomainIntel-VPN/1.0"})
+            resp.raise_for_status()
+            data = resp.json()
+            evpn = data.get("expressvpn", {})
+            servers = evpn.get("servers", [])
+            if servers:
+                logger.info(f"  Gluetun: {len(servers)} ExpressVPN servers from GitHub")
+                return servers
+        except Exception as e:
+            logger.warning(f"  Gluetun fetch failed: {e}")
+
+        # Fall back to local seed
+        if os.path.exists(self.SEED_PATH):
+            with open(self.SEED_PATH, encoding="utf-8") as f:
+                data = json.load(f)
+            servers = data if isinstance(data, list) else data.get("servers", [])
+            logger.info(f"  Local seed: {len(servers)} servers from {self.SEED_PATH}")
+            return servers
+
+        logger.info(f"  No ExpressVPN data available (gluetun fetch failed, no local seed)")
+        return []
+
+    def fetch(self) -> List[Dict]:
+        logger.info(f"Fetching {self.display_name} IPs...")
+        nodes = []
+        seen_ips = set()
+
+        for s in self._load_gluetun_servers():
+            ips = s.get("ips", [])
+            hostname = s.get("hostname", "")
+            cc = self._normalize_country(s.get("country", ""))
+            for ip in ips:
+                if ip and ip not in seen_ips:
+                    seen_ips.add(ip)
+                    nodes.append({
+                        "ip": ip,
+                        "provider": self.name,
+                        "confidence": "confirmed",
+                        "country": cc,
+                        "city": s.get("city", ""),
+                        "server_type": s.get("vpn", "unknown"),
+                        "asn": "",
+                        "asn_name": "",
+                        "source": "gluetun",
+                        "source_date": TODAY,
+                        "hostname": hostname,
+                        "ip_role": "unknown",
+                        "prefix": "",
+                    })
+
+        # Supplement with Shodan org search
+        shodan_ips = BaseProvider.shodan_org_search("ExpressVPN")
+        for ip in shodan_ips - seen_ips:
+            seen_ips.add(ip)
+            nodes.append({
+                "ip": ip,
+                "provider": self.name,
+                "confidence": "high",
+                "country": "",
+                "city": "",
+                "server_type": "unknown",
+                "asn": "",
+                "asn_name": "",
+                "source": "shodan_org",
+                "source_date": TODAY,
+                "hostname": "",
+                "ip_role": "unknown",
+                "prefix": "",
+            })
+
+        logger.info(f"  {self.display_name}: {len(nodes)} total IPs")
+        return nodes
+
+
+class HotspotShieldProvider(BaseProvider):
+    """Hotspot Shield (Pango/Aura) — DNS resolution + Shodan org search.
+
+    DPRK priority: 63.2% of North Korean VPN users (Recorded Future).
+    Uses proprietary Catapult Hydra protocol, no standard configs available.
+    """
+    name = "hotspotshield"
+    display_name = "Hotspot Shield"
+    collection_method = "DNS + Shodan org"
+    threat_relevance = "DPRK high-usage (Recorded Future: 63.2% NK VPN user share)"
+
+    DNS_HOSTS = ["api.hsselite.com", "api.hotspotshield.com"]
+
+    def fetch(self) -> List[Dict]:
+        import socket
+
+        logger.info(f"Fetching {self.display_name} IPs...")
+        nodes = []
+        seen_ips = set()
+
+        # DNS resolution of known API/server hostnames
+        for host in self.DNS_HOSTS:
+            try:
+                results = socket.getaddrinfo(host, None, socket.AF_INET)
+                ips = list({r[4][0] for r in results})
+                for ip in ips:
+                    if ip not in seen_ips:
+                        seen_ips.add(ip)
+                        nodes.append({
+                            "ip": ip,
+                            "provider": self.name,
+                            "confidence": "confirmed",
+                            "country": "",
+                            "city": "",
+                            "server_type": "hydra",
+                            "asn": "",
+                            "asn_name": "",
+                            "source": f"dns_{host}",
+                            "source_date": TODAY,
+                            "hostname": host,
+                            "ip_role": "unknown",
+                            "prefix": "",
+                        })
+            except Exception:
+                pass
+
+        # Shodan org searches for Pango/Aura infra
+        for org in ["Pango", "Aura Holdings"]:
+            shodan_ips = BaseProvider.shodan_org_search(org)
+            for ip in shodan_ips - seen_ips:
+                seen_ips.add(ip)
+                nodes.append({
+                    "ip": ip,
+                    "provider": self.name,
+                    "confidence": "high",
+                    "country": "",
+                    "city": "",
+                    "server_type": "hydra",
+                    "asn": "",
+                    "asn_name": "",
+                    "source": "shodan_org",
+                    "source_date": TODAY,
+                    "hostname": "",
+                    "ip_role": "unknown",
+                    "prefix": "",
+                })
+
+        logger.info(f"  {self.display_name}: {len(nodes)} total IPs")
+        return nodes
+
+
+class HMAProvider(OvpnConfigProvider):
+    """HideMyAss (Gen Digital/Avast) — OpenVPN config ZIP download.
+    NOTE: Config URL redirects to vpn.hidemyass.com which no longer resolves.
+    Disabled until a working endpoint is found.
+    """
+    name = "hma"
+    display_name = "HideMyAss"
+    collection_method = "Config archive download"
+    threat_relevance = "General VPN coverage"
+    config_url = "https://www.hidemyass.com/vpn-config/vpn-configs.zip"
+
+
+class HolaVPNProvider(BaseProvider):
+    """Hola VPN — P2P residential proxy network (users are exit nodes for Bright Data).
+    NOTE: API requires authenticated client UUID; currently returns empty results.
+    Kept for future implementation if auth method is resolved.
+    """
+    name = "holavpn"
+    display_name = "Hola VPN"
+    collection_method = "Tunnel API enumeration"
+    threat_relevance = "P2P residential proxy; users become exit nodes for Bright Data (Luminati) network"
+    API_URL = "http://client.hola.org/client_cgi/zgettunnels"
+
+    PROBE_COUNTRIES = [
+        "us", "gb", "de", "fr", "nl", "ca", "au", "jp", "sg", "kr",
+        "in", "br", "mx", "se", "ch", "no", "it", "es", "ru", "za",
+        "il", "tr", "hk", "tw", "th", "vn", "pl", "ro", "ua", "cz",
+    ]
+
+    def fetch(self) -> List[Dict]:
+        import time as _time
+
+        logger.info(f"Fetching {self.display_name} tunnel IPs...")
+        nodes = []
+        seen_ips = set()
+
+        for cc in self.PROBE_COUNTRIES:
+            try:
+                resp = requests.get(
+                    self.API_URL,
+                    params={"country": cc, "limit": 20},
+                    timeout=10,
+                    headers={"User-Agent": "Mozilla/5.0"}
+                )
+                if resp.status_code != 200:
+                    continue
+                data = resp.json()
+                # Response contains IP lists under various keys
+                for key, val in data.items():
+                    if isinstance(val, list):
+                        for entry in val:
+                            ip = entry if isinstance(entry, str) else entry.get("ip", "") if isinstance(entry, dict) else ""
+                            if ip and ip not in seen_ips and ip[0].isdigit():
+                                seen_ips.add(ip)
+                                nodes.append({
+                                    "ip": ip,
+                                    "provider": self.name,
+                                    "confidence": "confirmed",
+                                    "country": cc.upper(),
+                                    "city": "",
+                                    "server_type": "proxy",
+                                    "asn": "",
+                                    "asn_name": "",
+                                    "source": "hola_api",
+                                    "source_date": TODAY,
+                                    "hostname": "",
+                                    "ip_role": "egress",
+                                    "prefix": "",
+                                })
+                    elif isinstance(val, dict) and val.get("ip"):
+                        ip = val["ip"]
+                        if ip not in seen_ips:
+                            seen_ips.add(ip)
+                            nodes.append({
+                                "ip": ip,
+                                "provider": self.name,
+                                "confidence": "confirmed",
+                                "country": cc.upper(),
+                                "city": "",
+                                "server_type": "proxy",
+                                "asn": "",
+                                "asn_name": "",
+                                "source": "hola_api",
+                                "source_date": TODAY,
+                                "hostname": "",
+                                "ip_role": "egress",
+                                "prefix": "",
+                            })
+            except Exception as e:
+                logger.debug(f"Hola API failed for {cc}: {e}")
+            _time.sleep(0.5)  # Rate limit
+
+        logger.info(f"  {self.display_name}: {len(nodes)} tunnel IPs from {len(self.PROBE_COUNTRIES)} countries")
+        return nodes
+
+
+class PrivadoVPNProvider(OvpnConfigProvider):
+    """PrivadoVPN — OpenVPN config ZIP download."""
+    name = "privadovpn"
+    display_name = "PrivadoVPN"
+    collection_method = "Config archive download"
+    threat_relevance = "General VPN coverage"
+    config_url = "https://utils.privadovpn.com/share/udp_tcp.zip"
+
+    # IATA airport code -> ISO country code (common PrivadoVPN locations)
+    _IATA_CC = {
+        "atl": "US", "bom": "IN", "bud": "HU", "cph": "DK", "dtw": "US",
+        "dub": "IE", "fra": "DE", "gru": "BR", "hkg": "HK", "iad": "US",
+        "jnb": "ZA", "lax": "US", "lis": "PT", "lhr": "GB", "mad": "ES",
+        "mel": "AU", "mex": "MX", "mia": "US", "nrt": "JP", "ord": "US",
+        "osa": "JP", "scl": "CL", "sea": "US", "sin": "SG", "sof": "BG",
+        "syd": "AU", "tpe": "TW", "vie": "AT", "waw": "PL", "yvr": "CA",
+        "yyz": "CA", "zrh": "CH", "ams": "NL", "arn": "SE", "beg": "RS",
+        "bkk": "TH", "bog": "CO", "bru": "BE", "bts": "SK", "buh": "RO",
+        "hel": "FI", "ist": "TR", "osl": "NO", "prg": "CZ", "rix": "LV",
+        "tll": "EE", "vno": "LT", "zag": "HR", "muc": "DE", "mil": "IT",
+    }
+
+    def _parse_country(self, filename: str) -> str:
+        # Filenames: lis-010.udp.ovpn, yyz-004.tcp.ovpn
+        name = os.path.basename(filename)
+        m = re.match(r'([a-z]{3})-\d+', name)
+        if m:
+            return self._IATA_CC.get(m.group(1), "")
+        return ""
+
+
+class FlowVPNProvider(DNSEnumProvider):
+    """FlowVPN — DNS enumeration of {cc}.flow.host hostnames."""
+    name = "flowvpn"
+    display_name = "FlowVPN"
+    collection_method = "DNS enumeration"
+    threat_relevance = "General VPN coverage"
+
+    # ISO 3166-1 alpha-2 codes for countries where FlowVPN operates
+    COUNTRIES = [
+        "us", "gb", "de", "fr", "nl", "ca", "au", "jp", "sg", "kr",
+        "in", "br", "mx", "se", "ch", "no", "dk", "fi", "at", "it",
+        "es", "pt", "pl", "cz", "be", "hu", "bg", "ro", "hr", "ie",
+        "lu", "lv", "lt", "ee", "sk", "si", "gr", "tr", "ru", "ua",
+        "hk", "tw", "th", "vn", "my", "ph", "id", "nz", "za", "il",
+        "ar", "cl", "co", "pe", "pa", "cr", "eg", "ng", "ke", "ma",
+        "pk", "bd", "kz", "ge", "md", "mk", "mt", "rs", "ba", "al", "cy",
+    ]
+
+    def _generate_hostnames(self):
+        pairs = []
+        for cc in self.COUNTRIES:
+            pairs.append((f"{cc}.flow.host", cc))
+        return pairs
+
+
+class NjallaVPNProvider(DNSEnumProvider):
+    """Njalla VPN — DNS enumeration of wg{NNN}.njalla.no WireGuard endpoints."""
+    name = "njalla"
+    display_name = "Njalla VPN"
+    collection_method = "DNS enumeration"
+    threat_relevance = "Privacy-focused; operated by same org as Njalla domain registrar"
+
+    def _generate_hostnames(self):
+        pairs = []
+        # Probe wg001 through wg100; Njalla operates from Sweden/Norway
+        for n in range(1, 101):
+            pairs.append((f"wg{n:03d}.njalla.no", "no"))
+        return pairs
+
+
 def load_vpn_lookup(csv_path: str = "data/vpn_relay_ips.csv") -> Dict[str, Dict]:
     """Load VPN relay IPs into a lookup dict keyed by IP address.
 
@@ -767,6 +1402,7 @@ def load_vpn_lookup(csv_path: str = "data/vpn_relay_ips.csv") -> Dict[str, Dict]
 # --- Provider Registry ---
 
 PROVIDERS: List[BaseProvider] = [
+    # --- Original providers ---
     MullvadProvider(),
     NordVPNProvider(),
     PIAProvider(),
@@ -777,6 +1413,21 @@ PROVIDERS: List[BaseProvider] = [
     TorGuardProvider(),
     WindscribeProvider(),
     UrbanVPNProvider(),
+    # --- Tier 1: high value / easy collection ---
+    ExpressVPNProvider(),
+    VPNGateProvider(),
+    IPVanishProvider(),
+    FastVPNProvider(),
+    VyprVPNProvider(),
+    TunnelBearProvider(),
+    AirVPNProvider(),
+    HotspotShieldProvider(),
+    # --- Tier 2: moderate value ---
+    # HMAProvider(),  # Config URL redirects to dead host vpn.hidemyass.com
+    # HolaVPNProvider(),  # API requires client auth UUID; returns empty
+    PrivadoVPNProvider(),
+    FlowVPNProvider(),
+    NjallaVPNProvider(),
 ]
 
 
