@@ -1230,14 +1230,20 @@ class HMAProvider(OvpnConfigProvider):
 
 class HolaVPNProvider(BaseProvider):
     """Hola VPN — P2P residential proxy network (users are exit nodes for Bright Data).
-    NOTE: API requires authenticated client UUID; currently returns empty results.
-    Kept for future implementation if auth method is resolved.
+
+    Hola's API requires a registered client UUID and session key.
+    Auth flow: generate UUID -> POST background_init -> use session_key
+    in zgettunnels requests per country.
     """
     name = "holavpn"
     display_name = "Hola VPN"
-    collection_method = "Tunnel API enumeration"
+    collection_method = "Authenticated tunnel API"
     threat_relevance = "P2P residential proxy; users become exit nodes for Bright Data (Luminati) network"
-    API_URL = "http://client.hola.org/client_cgi/zgettunnels"
+
+    INIT_URL = "https://client.hola.org/client_cgi/background_init"
+    TUNNELS_URL = "https://client.hola.org/client_cgi/zgettunnels"
+    EXT_VER = "1.260.637"
+    UA = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/125.0.0.0 Safari/537.36"
 
     PROBE_COUNTRIES = [
         "us", "gb", "de", "fr", "nl", "ca", "au", "jp", "sg", "kr",
@@ -1245,68 +1251,95 @@ class HolaVPNProvider(BaseProvider):
         "il", "tr", "hk", "tw", "th", "vn", "pl", "ro", "ua", "cz",
     ]
 
+    def _register_session(self) -> tuple:
+        """Register a client UUID and get session key. Returns (uuid, session_key)."""
+        import uuid as _uuid
+        client_uuid = str(_uuid.uuid4())
+        resp = requests.post(
+            self.INIT_URL,
+            params={"uuid": client_uuid},
+            data={"login": "1", "ver": self.EXT_VER},
+            headers={"User-Agent": self.UA},
+            timeout=15,
+        )
+        resp.raise_for_status()
+        data = resp.json()
+        if data.get("blocked"):
+            raise RuntimeError(f"Hola blocked UUID {client_uuid}")
+        session_key = data.get("key", "")
+        if not session_key:
+            raise RuntimeError(f"Hola returned no session key: {data}")
+        return client_uuid, session_key
+
+    def _get_tunnels(self, client_uuid: str, session_key, country: str) -> list:
+        """Get tunnel IPs for a specific country. Returns list of IP strings."""
+        import random as _random
+        resp = requests.post(
+            self.TUNNELS_URL,
+            params={
+                "country": country,
+                "limit": 10,
+                "ping_id": str(_random.random()),
+                "ext_ver": self.EXT_VER,
+                "browser": "chrome",
+                "product": "cws",
+                "uuid": client_uuid,
+                "session_key": session_key,
+                "is_premium": "0",
+            },
+            headers={"User-Agent": self.UA},
+            timeout=15,
+        )
+        if resp.status_code != 200:
+            return []
+        data = resp.json()
+        if data.get("blocked"):
+            return []
+        # ip_list is a dict of {ip: identifier}
+        ip_list = data.get("ip_list", {})
+        if isinstance(ip_list, dict):
+            return [ip for ip in ip_list.keys() if ip and ip[0].isdigit()]
+        return []
+
     def fetch(self) -> List[Dict]:
         import time as _time
 
         logger.info(f"Fetching {self.display_name} tunnel IPs...")
+
+        try:
+            client_uuid, session_key = self._register_session()
+            logger.info(f"  Hola session registered (uuid={client_uuid[:8]}...)")
+        except Exception as e:
+            logger.warning(f"  Hola session registration failed: {e}")
+            return []
+
         nodes = []
         seen_ips = set()
 
         for cc in self.PROBE_COUNTRIES:
             try:
-                resp = requests.get(
-                    self.API_URL,
-                    params={"country": cc, "limit": 20},
-                    timeout=10,
-                    headers={"User-Agent": "Mozilla/5.0"}
-                )
-                if resp.status_code != 200:
-                    continue
-                data = resp.json()
-                # Response contains IP lists under various keys
-                for key, val in data.items():
-                    if isinstance(val, list):
-                        for entry in val:
-                            ip = entry if isinstance(entry, str) else entry.get("ip", "") if isinstance(entry, dict) else ""
-                            if ip and ip not in seen_ips and ip[0].isdigit():
-                                seen_ips.add(ip)
-                                nodes.append({
-                                    "ip": ip,
-                                    "provider": self.name,
-                                    "confidence": "confirmed",
-                                    "country": cc.upper(),
-                                    "city": "",
-                                    "server_type": "proxy",
-                                    "asn": "",
-                                    "asn_name": "",
-                                    "source": "hola_api",
-                                    "source_date": TODAY,
-                                    "hostname": "",
-                                    "ip_role": "egress",
-                                    "prefix": "",
-                                })
-                    elif isinstance(val, dict) and val.get("ip"):
-                        ip = val["ip"]
-                        if ip not in seen_ips:
-                            seen_ips.add(ip)
-                            nodes.append({
-                                "ip": ip,
-                                "provider": self.name,
-                                "confidence": "confirmed",
-                                "country": cc.upper(),
-                                "city": "",
-                                "server_type": "proxy",
-                                "asn": "",
-                                "asn_name": "",
-                                "source": "hola_api",
-                                "source_date": TODAY,
-                                "hostname": "",
-                                "ip_role": "egress",
-                                "prefix": "",
-                            })
+                ips = self._get_tunnels(client_uuid, session_key, cc)
+                for ip in ips:
+                    if ip not in seen_ips:
+                        seen_ips.add(ip)
+                        nodes.append({
+                            "ip": ip,
+                            "provider": self.name,
+                            "confidence": "confirmed",
+                            "country": cc.upper(),
+                            "city": "",
+                            "server_type": "proxy",
+                            "asn": "",
+                            "asn_name": "",
+                            "source": "hola_api",
+                            "source_date": TODAY,
+                            "hostname": "",
+                            "ip_role": "egress",
+                            "prefix": "",
+                        })
             except Exception as e:
-                logger.debug(f"Hola API failed for {cc}: {e}")
-            _time.sleep(0.5)  # Rate limit
+                logger.debug(f"Hola tunnels failed for {cc}: {e}")
+            _time.sleep(1.0)  # Rate limit — Hola bans aggressive polling
 
         logger.info(f"  {self.display_name}: {len(nodes)} tunnel IPs from {len(self.PROBE_COUNTRIES)} countries")
         return nodes
@@ -1424,7 +1457,7 @@ PROVIDERS: List[BaseProvider] = [
     HotspotShieldProvider(),
     # --- Tier 2: moderate value ---
     # HMAProvider(),  # Config URL redirects to dead host vpn.hidemyass.com
-    # HolaVPNProvider(),  # API requires client auth UUID; returns empty
+    # HolaVPNProvider(),  # background_init returns 403; likely blocks datacenter/non-residential IPs
     PrivadoVPNProvider(),
     FlowVPNProvider(),
     NjallaVPNProvider(),
