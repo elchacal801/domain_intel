@@ -140,7 +140,51 @@ class MullvadProvider(BaseProvider):
                 "prefix": "",
             })
 
-        logger.info(f"  {self.display_name}: {len(nodes)} active servers")
+        logger.info(f"  {self.display_name}: {len(nodes)} active ingress servers")
+
+        # Merge exit IPs from probe seed file
+        egress_nodes = self.load_exit_seeds()
+        nodes.extend(egress_nodes)
+
+        return nodes
+
+    SEED_PATH = os.path.join(
+        os.path.dirname(__file__), "..", "data", "vpn_seeds", "mullvad_exit_ips.csv"
+    )
+
+    def load_exit_seeds(self) -> List[Dict]:
+        """Load exit IPs from SOCKS5 probe seed CSV if present."""
+        import vpn_ip_intel as _self_module
+        seed_path = os.path.join(
+            os.path.dirname(_self_module.__file__), "..", "data", "vpn_seeds", "mullvad_exit_ips.csv"
+        )
+        if not os.path.exists(seed_path):
+            logger.info("  No Mullvad exit seed file found; skipping egress IPs")
+            return []
+
+        nodes = []
+        with open(seed_path, encoding="utf-8") as f:
+            for row in csv.DictReader(f):
+                exit_ip = row.get("exit_ip", "").strip()
+                if not exit_ip:
+                    continue
+                nodes.append({
+                    "ip": exit_ip,
+                    "provider": self.name,
+                    "confidence": "confirmed",
+                    "country": "",
+                    "city": "",
+                    "server_type": "exit",
+                    "asn": "",
+                    "asn_name": "",
+                    "source": "socks5_probe",
+                    "source_date": row.get("probe_date", TODAY),
+                    "hostname": row.get("relay_hostname", ""),
+                    "ip_role": "egress",
+                    "prefix": "",
+                })
+
+        logger.info(f"  {self.display_name} exit seeds: {len(nodes)} egress IPs")
         return nodes
 
 

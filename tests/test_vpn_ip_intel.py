@@ -115,6 +115,49 @@ class TestMullvadProvider:
             nodes = provider.fetch()
         assert len(nodes) == 0
 
+    def test_load_exit_seeds(self, tmp_path):
+        """MullvadProvider loads exit IPs from seed CSV when present."""
+        seed_dir = tmp_path / "data" / "vpn_seeds"
+        seed_dir.mkdir(parents=True)
+        seed_csv = seed_dir / "mullvad_exit_ips.csv"
+        seed_csv.write_text(
+            "relay_hostname,ingress_ip,exit_ip,probe_date\n"
+            "us-mkc-wg-001,155.2.191.3,155.2.190.72,2026-05-03\n"
+            "se-got-wg-001,185.213.154.68,185.213.154.100,2026-05-03\n"
+        )
+
+        import vpn_ip_intel
+        original = vpn_ip_intel.__file__
+        scripts_dir = tmp_path / "scripts"
+        scripts_dir.mkdir()
+        try:
+            vpn_ip_intel.__file__ = str(scripts_dir / "vpn_ip_intel.py")
+            provider = MullvadProvider()
+            egress_nodes = provider.load_exit_seeds()
+        finally:
+            vpn_ip_intel.__file__ = original
+
+        assert len(egress_nodes) == 2
+        assert egress_nodes[0]["ip"] == "155.2.190.72"
+        assert egress_nodes[0]["ip_role"] == "egress"
+        assert egress_nodes[0]["confidence"] == "confirmed"
+        assert egress_nodes[0]["source"] == "socks5_probe"
+        assert egress_nodes[0]["hostname"] == "us-mkc-wg-001"
+
+    def test_load_exit_seeds_missing_file(self, tmp_path):
+        """Returns empty list when seed file doesn't exist."""
+        import vpn_ip_intel
+        original = vpn_ip_intel.__file__
+        scripts_dir = tmp_path / "scripts"
+        scripts_dir.mkdir()
+        try:
+            vpn_ip_intel.__file__ = str(scripts_dir / "vpn_ip_intel.py")
+            provider = MullvadProvider()
+            egress_nodes = provider.load_exit_seeds()
+        finally:
+            vpn_ip_intel.__file__ = original
+        assert egress_nodes == []
+
 
 class TestNordVPNProvider:
     SAMPLE_API_RESPONSE = [
