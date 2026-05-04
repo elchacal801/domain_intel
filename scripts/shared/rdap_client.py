@@ -79,6 +79,43 @@ class RDAPClient:
                 continue
         return ""
 
+    def check_block_cidr(self, ip: str) -> tuple:
+        """Returns (registration_name, allocated_cidr) for the IP block.
+        Returns ("", "") on failure.
+        """
+        import ipaddress as _ipaddress
+
+        for base_url in RDAP_URLS:
+            try:
+                resp = self.session.get(f"{base_url}{ip}", timeout=10, allow_redirects=True)
+                if resp.status_code != 200:
+                    continue
+                data = resp.json()
+                name = data.get("name", "")
+
+                # Prefer cidr0_cidrs (standard RDAP field)
+                cidr = ""
+                cidr0 = data.get("cidr0_cidrs", [])
+                if cidr0:
+                    entry = cidr0[0]
+                    prefix = entry.get("v4prefix", "")
+                    length = entry.get("length", 0)
+                    if prefix and length:
+                        cidr = f"{prefix}/{length}"
+                elif data.get("startAddress") and data.get("endAddress"):
+                    # Fallback: compute from start/end addresses
+                    start = _ipaddress.ip_address(data["startAddress"])
+                    end = _ipaddress.ip_address(data["endAddress"])
+                    nets = list(_ipaddress.summarize_address_range(start, end))
+                    if nets:
+                        cidr = str(nets[0])
+
+                return (name, cidr)
+            except Exception as e:
+                logger.debug(f"RDAP CIDR lookup failed for {ip} at {base_url}: {e}")
+                continue
+        return ("", "")
+
     def validate_astrill_blocks(self, ips: list) -> set:
         """Check which IPs are in RDAP blocks registered to Astrill.
         Groups by /24, checks one sample per /24, caches results.

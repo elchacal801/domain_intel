@@ -13,8 +13,10 @@ from vpn_ip_intel import (
     MullvadProvider, NordVPNProvider, ProtonVPNProvider, AstrillProvider,
     UrbanVPNProvider,
     BaseProvider, load_vpn_lookup, normalize_node, compute_prefix_inferred_rows,
+    compute_rdap_egress_rows,
     load_scores, join_scores, FIELDS, SCORE_FIELDS,
     SHARED_HOSTING_ASNS, _COUNTRY_ALIASES, _SERVER_TYPE_ALIASES, TODAY,
+    IP_ROLES,
 )
 
 
@@ -113,6 +115,33 @@ class TestMullvadProvider:
             mock_requests.get.return_value = mock_resp
             nodes = provider.fetch()
         assert len(nodes) == 0
+
+    def test_load_exit_seeds(self, tmp_path):
+        """MullvadProvider loads exit IPs from seed CSV when present."""
+        seed_csv = tmp_path / "mullvad_exit_ips.csv"
+        seed_csv.write_text(
+            "relay_hostname,ingress_ip,exit_ip,probe_date\n"
+            "us-mkc-wg-001,155.2.191.3,155.2.190.72,2026-05-03\n"
+            "se-got-wg-001,185.213.154.68,185.213.154.100,2026-05-03\n"
+        )
+
+        provider = MullvadProvider()
+        provider.SEED_PATH = str(seed_csv)
+        egress_nodes = provider.load_exit_seeds()
+
+        assert len(egress_nodes) == 2
+        assert egress_nodes[0]["ip"] == "155.2.190.72"
+        assert egress_nodes[0]["ip_role"] == "egress"
+        assert egress_nodes[0]["confidence"] == "confirmed"
+        assert egress_nodes[0]["source"] == "socks5_probe"
+        assert egress_nodes[0]["hostname"] == "us-mkc-wg-001"
+
+    def test_load_exit_seeds_missing_file(self, tmp_path):
+        """Returns empty list when seed file doesn't exist."""
+        provider = MullvadProvider()
+        provider.SEED_PATH = str(tmp_path / "nonexistent.csv")
+        egress_nodes = provider.load_exit_seeds()
+        assert egress_nodes == []
 
 
 class TestNordVPNProvider:
@@ -640,3 +669,120 @@ class TestScoreJoin:
     def test_load_scores_missing_file(self, tmp_path):
         scores = load_scores(str(tmp_path / "nonexistent.csv"))
         assert scores == {}
+
+
+class TestEgressInferred:
+    """Test egress-inferred role and dedup changes."""
+
+    def test_egress_inferred_in_ip_roles(self):
+        assert "egress-inferred" in IP_ROLES
+
+    def test_dedup_keeps_both_ingress_and_egress(self):
+        """Same IP with different roles should both survive dedup."""
+        nodes = [
+            {"ip": "1.2.3.4", "provider": "mullvad", "ip_role": "ingress"},
+            {"ip": "1.2.3.4", "provider": "mullvad", "ip_role": "egress"},
+        ]
+        seen = set()
+        deduped = []
+        for n in nodes:
+            key = (n["ip"], n["provider"], n["ip_role"])
+            if key not in seen:
+                seen.add(key)
+                deduped.append(n)
+        assert len(deduped) == 2
+
+    def test_dedup_removes_true_duplicates(self):
+        """Same IP, provider, AND role should dedup to one."""
+        nodes = [
+            {"ip": "1.2.3.4", "provider": "mullvad", "ip_role": "ingress"},
+            {"ip": "1.2.3.4", "provider": "mullvad", "ip_role": "ingress"},
+        ]
+        seen = set()
+        deduped = []
+        for n in nodes:
+            key = (n["ip"], n["provider"], n["ip_role"])
+            if key not in seen:
+                seen.add(key)
+                deduped.append(n)
+        assert len(deduped) == 1
+
+
+class TestRDAPEgressExpansion:
+    """Test RDAP-based egress prefix expansion."""
+
+    def _make_ingress_nodes(self, ips, provider="mullvad", asn="AS13213"):
+        return [
+            {"ip": ip, "provider": provider, "confidence": "confirmed",
+             "country": "US", "city": "Kansas City, MO", "server_type": "wireguard",
+             "asn": asn, "asn_name": "UK2NET-AS, GB", "source": "mullvad_api",
+             "source_date": TODAY, "hostname": f"us-mkc-wg-{i:03d}",
+             "collection_method": "Public API",
+             "threat_relevance": "Verified no-logs", "ip_role": "ingress", "prefix": "",
+             "score_prehire": "8", "tier_prehire": "contextual",
+             "score_posthire": "8", "tier_posthire": "contextual",
+             "indicator_id": "VPN-007"}
+            for i, ip in enumerate(ips, 1)
+        ]
+
+    @patch("vpn_ip_intel.RDAPClient")
+    def test_expands_adjacent_prefixes(self, MockRDAP):
+        """If RDAP says 155.2.190.0/23 is one block, and we have IPs in 155.2.191.0/24,
+        then 155.2.190.0/24 should get an egress-inferred row."""
+        mock_client = MockRDAP.return_value
+        mock_client.check_block_cidr.return_value = ("MULLVAD-US-MKC", "155.2.190.0/23")
+
+        nodes = self._make_ingress_nodes([
+            "155.2.191.3", "155.2.191.53", "155.2.191.103", "155.2.191.153"
+        ])
+        result = compute_rdap_egress_rows(nodes, rdap=mock_client)
+
+        assert len(result) == 1
+        assert result[0]["ip"] == ""
+        assert result[0]["prefix"] == "155.2.190.0/24"
+        assert result[0]["ip_role"] == "egress-inferred"
+        assert result[0]["confidence"] == "medium"
+        assert result[0]["source"] == "rdap_prefix_expansion"
+        assert result[0]["provider"] == "mullvad"
+
+    @patch("vpn_ip_intel.RDAPClient")
+    def test_skips_shared_hosting_asns(self, MockRDAP):
+        mock_client = MockRDAP.return_value
+        nodes = self._make_ingress_nodes(
+            ["10.0.0.1", "10.0.0.2", "10.0.0.3", "10.0.0.4"],
+            asn="AS16509"  # AWS
+        )
+        result = compute_rdap_egress_rows(nodes, rdap=mock_client)
+        assert len(result) == 0
+        mock_client.check_block_cidr.assert_not_called()
+
+    @patch("vpn_ip_intel.RDAPClient")
+    def test_skips_prefix_already_covered(self, MockRDAP):
+        """If we already have IPs in a /24, don't emit an egress-inferred row for it."""
+        mock_client = MockRDAP.return_value
+        mock_client.check_block_cidr.return_value = ("BLOCK", "10.0.0.0/23")
+
+        nodes = self._make_ingress_nodes(["10.0.0.1", "10.0.0.2", "10.0.0.3", "10.0.0.4"])
+        nodes.extend(self._make_ingress_nodes(["10.0.1.1", "10.0.1.2", "10.0.1.3", "10.0.1.4"]))
+        result = compute_rdap_egress_rows(nodes, rdap=mock_client)
+        assert len(result) == 0
+
+    @patch("vpn_ip_intel.RDAPClient")
+    def test_no_expansion_when_rdap_fails(self, MockRDAP):
+        mock_client = MockRDAP.return_value
+        mock_client.check_block_cidr.return_value = ("", "")
+
+        nodes = self._make_ingress_nodes(["10.0.0.1", "10.0.0.2", "10.0.0.3", "10.0.0.4"])
+        result = compute_rdap_egress_rows(nodes, rdap=mock_client)
+        assert len(result) == 0
+
+    @patch("vpn_ip_intel.RDAPClient")
+    def test_only_processes_ingress_nodes(self, MockRDAP):
+        """Nodes with ip_role != ingress should not trigger expansion."""
+        mock_client = MockRDAP.return_value
+        nodes = self._make_ingress_nodes(["10.0.0.1", "10.0.0.2", "10.0.0.3", "10.0.0.4"])
+        for n in nodes:
+            n["ip_role"] = "egress"
+        result = compute_rdap_egress_rows(nodes, rdap=mock_client)
+        assert len(result) == 0
+        mock_client.check_block_cidr.assert_not_called()
