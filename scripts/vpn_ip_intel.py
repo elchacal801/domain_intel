@@ -1015,20 +1015,25 @@ class VyprVPNProvider(DNSEnumProvider):
 
 
 class ExpressVPNProvider(BaseProvider):
-    """ExpressVPN — live fetch from gluetun project + Shodan org search.
+    """ExpressVPN — local app cache + gluetun mirror + Shodan org search.
 
-    ExpressVPN has no public API. Server data is sourced from the gluetun
-    VPN client project's servers.json on GitHub (updated regularly).
-    Falls back to a local seed file if the fetch fails.
+    Collects IPs from three sources (merged, deduplicated):
+    1. Local ExpressVPN app cache (data.json) — highest coverage (~1000 IPs)
+    2. Gluetun project's servers.json on GitHub (~390 IPs)
+    3. Shodan org search for "ExpressVPN"
+
     DPRK priority: Mandiant confirmed RGB ORB tunnel usage.
     """
     name = "expressvpn"
     display_name = "ExpressVPN"
-    collection_method = "Gluetun mirror + Shodan org"
+    collection_method = "Local cache + Gluetun mirror + Shodan org"
     threat_relevance = "DPRK confirmed (Mandiant: RGB ORB tunnels; Recorded Future: 16.1% NK user share)"
     GLUETUN_URL = "https://raw.githubusercontent.com/qdm12/gluetun/master/internal/storage/servers.json"
     SEED_PATH = os.path.join(
         os.path.dirname(__file__), "..", "data", "vpn_seeds", "expressvpn_servers.json"
+    )
+    LOCAL_CACHE = os.path.join(
+        os.path.dirname(__file__), "..", "data", "vpn_seeds", "expressvpn_data.json"
     )
 
     # Gluetun uses full country names; map to ISO 2-letter codes
@@ -1066,6 +1071,42 @@ class ExpressVPNProvider(BaseProvider):
             return name.upper()
         return self._COUNTRY_CODES.get(name.lower(), name[:2].upper() if len(name) >= 2 else "")
 
+    def _load_local_cache(self, seen_ips: set) -> List[Dict]:
+        """Load IPs from the local ExpressVPN app cache (data.json)."""
+        if not os.path.exists(self.LOCAL_CACHE):
+            return []
+        try:
+            with open(self.LOCAL_CACHE, encoding="utf-8") as f:
+                data = json.load(f)
+            regions = data.get("cachedModernRegionsList", {}).get("regions", [])
+            nodes = []
+            for r in regions:
+                cc = r.get("country", "")
+                name = r.get("name", "")
+                for ip in r.get("test_ips", []):
+                    if ip and ip not in seen_ips:
+                        seen_ips.add(ip)
+                        nodes.append({
+                            "ip": ip,
+                            "provider": self.name,
+                            "confidence": "confirmed",
+                            "country": cc,
+                            "city": "",
+                            "server_type": "lightway",
+                            "asn": "",
+                            "asn_name": "",
+                            "source": "expressvpn_local_cache",
+                            "source_date": TODAY,
+                            "hostname": "",
+                            "ip_role": "unknown",
+                            "prefix": "",
+                        })
+            logger.info(f"  Local cache: {len(nodes)} IPs from {len(regions)} regions")
+            return nodes
+        except Exception as e:
+            logger.warning(f"  Failed to parse local cache: {e}")
+            return []
+
     def _load_gluetun_servers(self) -> list:
         """Fetch ExpressVPN servers from gluetun GitHub, fall back to local seed."""
         # Try live fetch first
@@ -1098,6 +1139,11 @@ class ExpressVPNProvider(BaseProvider):
         nodes = []
         seen_ips = set()
 
+        # Source 1: Local app cache (highest coverage)
+        cache_nodes = self._load_local_cache(seen_ips)
+        nodes.extend(cache_nodes)
+
+        # Source 2: Gluetun GitHub (supplements with hostnames + city info)
         for s in self._load_gluetun_servers():
             ips = s.get("ips", [])
             hostname = s.get("hostname", "")

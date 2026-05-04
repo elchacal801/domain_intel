@@ -1013,6 +1013,7 @@ class TestExpressVPNProvider:
             }
         }
         provider = ExpressVPNProvider()
+        provider.LOCAL_CACHE = "/nonexistent/cache.json"
         mock_resp = MagicMock()
         mock_resp.json.return_value = gluetun_resp
         mock_resp.raise_for_status = MagicMock()
@@ -1028,6 +1029,7 @@ class TestExpressVPNProvider:
 
     def test_fetch_falls_back_to_shodan(self):
         provider = ExpressVPNProvider()
+        provider.LOCAL_CACHE = "/nonexistent/cache.json"
         provider.SEED_PATH = "/nonexistent/path.json"
         with patch("vpn_ip_intel.requests.get", side_effect=Exception("network error")), \
              patch.object(BaseProvider, "shodan_org_search", return_value={"9.9.9.9"}):
@@ -1035,6 +1037,27 @@ class TestExpressVPNProvider:
         assert len(nodes) == 1
         assert nodes[0]["ip"] == "9.9.9.9"
         assert nodes[0]["source"] == "shodan_org"
+
+    def test_fetch_with_local_cache(self, tmp_path):
+        import json
+        cache = tmp_path / "data.json"
+        cache.write_text(json.dumps({
+            "cachedModernRegionsList": {
+                "regions": [
+                    {"country": "US", "name": "USA", "test_ips": ["1.1.1.1", "2.2.2.2"]},
+                    {"country": "GB", "name": "UK", "test_ips": ["3.3.3.3"]},
+                ]
+            }
+        }))
+        provider = ExpressVPNProvider()
+        provider.LOCAL_CACHE = str(cache)
+        provider.SEED_PATH = "/nonexistent"
+        with patch("vpn_ip_intel.requests.get", side_effect=Exception("skip gluetun")), \
+             patch.object(BaseProvider, "shodan_org_search", return_value=set()):
+            nodes = provider.fetch()
+        assert len(nodes) == 3
+        assert nodes[0]["source"] == "expressvpn_local_cache"
+        assert nodes[0]["country"] == "US"
 
 
 class TestHotspotShieldProvider:

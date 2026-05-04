@@ -46,5 +46,9 @@ data/*.json
 docs_new/
 frontend/node_modules/
 
+# VPN local app caches (account-specific, not for repo)
+data/vpn_seeds/expressvpn_data.json
+data/vpn_seeds/expressvpn_sdkcache.json
+
 # Git worktrees
 .worktrees/
