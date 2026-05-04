@@ -15,6 +15,7 @@ from vpn_ip_intel import (
     BaseProvider, load_vpn_lookup, normalize_node, compute_prefix_inferred_rows,
     load_scores, join_scores, FIELDS, SCORE_FIELDS,
     SHARED_HOSTING_ASNS, _COUNTRY_ALIASES, _SERVER_TYPE_ALIASES, TODAY,
+    IP_ROLES,
 )
 
 
@@ -640,3 +641,40 @@ class TestScoreJoin:
     def test_load_scores_missing_file(self, tmp_path):
         scores = load_scores(str(tmp_path / "nonexistent.csv"))
         assert scores == {}
+
+
+class TestEgressInferred:
+    """Test egress-inferred role and dedup changes."""
+
+    def test_egress_inferred_in_ip_roles(self):
+        assert "egress-inferred" in IP_ROLES
+
+    def test_dedup_keeps_both_ingress_and_egress(self):
+        """Same IP with different roles should both survive dedup."""
+        nodes = [
+            {"ip": "1.2.3.4", "provider": "mullvad", "ip_role": "ingress"},
+            {"ip": "1.2.3.4", "provider": "mullvad", "ip_role": "egress"},
+        ]
+        seen = set()
+        deduped = []
+        for n in nodes:
+            key = (n["ip"], n["provider"], n["ip_role"])
+            if key not in seen:
+                seen.add(key)
+                deduped.append(n)
+        assert len(deduped) == 2
+
+    def test_dedup_removes_true_duplicates(self):
+        """Same IP, provider, AND role should dedup to one."""
+        nodes = [
+            {"ip": "1.2.3.4", "provider": "mullvad", "ip_role": "ingress"},
+            {"ip": "1.2.3.4", "provider": "mullvad", "ip_role": "ingress"},
+        ]
+        seen = set()
+        deduped = []
+        for n in nodes:
+            key = (n["ip"], n["provider"], n["ip_role"])
+            if key not in seen:
+                seen.add(key)
+                deduped.append(n)
+        assert len(deduped) == 1

@@ -41,7 +41,7 @@ FIELDS = [
     "indicator_id",
 ]
 
-IP_ROLES = {"ingress", "egress", "prefix-inferred", "unknown"}
+IP_ROLES = {"ingress", "egress", "prefix-inferred", "egress-inferred", "unknown"}
 
 SHARED_HOSTING_ASNS = {
     "AS16509",   # AWS
@@ -889,11 +889,11 @@ def run(output: str, output_dir: str, workers: int, providers: List[str]):
     for n in all_nodes:
         normalize_node(n)
 
-    # Deduplicate on (ip, provider)
+    # Deduplicate on (ip, provider, ip_role)
     seen = set()
     deduped = []
     for n in all_nodes:
-        key = (n["ip"], n["provider"])
+        key = (n["ip"], n["provider"], n.get("ip_role", "unknown"))
         if key not in seen:
             seen.add(key)
             deduped.append(n)
