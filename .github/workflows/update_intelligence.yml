@@ -313,6 +313,14 @@ jobs:
           fi
           cp data/shodan_intelligence.csv docs/data/ || true
 
+      - name: Proxy Detection Enrichment
+        timeout-minutes: 10
+        continue-on-error: true
+        env:
+          PROXYCHECK_API_KEY: ${{ secrets.PROXYCHECK_API_KEY }}
+        run: |
+          python scripts/enrich_proxy_check.py --input data/triage_candidates.csv --output data/triage_candidates.csv --budget 900
+
       - name: VirusTotal Enrichment
         timeout-minutes: 30
         continue-on-error: true
