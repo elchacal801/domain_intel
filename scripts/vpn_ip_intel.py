@@ -154,16 +154,12 @@ class MullvadProvider(BaseProvider):
 
     def load_exit_seeds(self) -> List[Dict]:
         """Load exit IPs from SOCKS5 probe seed CSV if present."""
-        import vpn_ip_intel as _self_module
-        seed_path = os.path.join(
-            os.path.dirname(_self_module.__file__), "..", "data", "vpn_seeds", "mullvad_exit_ips.csv"
-        )
-        if not os.path.exists(seed_path):
+        if not os.path.exists(self.SEED_PATH):
             logger.info("  No Mullvad exit seed file found; skipping egress IPs")
             return []
 
         nodes = []
-        with open(seed_path, encoding="utf-8") as f:
+        with open(self.SEED_PATH, encoding="utf-8") as f:
             for row in csv.DictReader(f):
                 exit_ip = row.get("exit_ip", "").strip()
                 if not exit_ip:
@@ -934,18 +930,29 @@ def compute_rdap_egress_rows(nodes: List[Dict], rdap: "RDAPClient" = None) -> Li
             except ValueError:
                 pass
 
-    checked = {}
+    # Cache RDAP results by /24 to avoid redundant lookups.
+    # Once we know a /24 falls within a larger RDAP block, we cache
+    # all /24s in that block to skip future queries.
+    net24_to_cidr = {}  # net24_str -> (name, cidr)
     synthetic = []
 
     for (provider, asn, net24_str), members in groups.items():
-        pa_key = (provider, asn)
-        if pa_key not in checked:
+        if net24_str not in net24_to_cidr:
             sample_ip = members[0]["ip"]
             name, cidr = rdap.check_block_cidr(sample_ip)
-            checked[pa_key] = (name, cidr)
+            # Cache this /24 and pre-cache all /24s within the returned block
+            net24_to_cidr[net24_str] = (name, cidr)
+            if cidr:
+                try:
+                    block = ipaddress.ip_network(cidr, strict=False)
+                    if 16 <= block.prefixlen <= 24:
+                        for sub in ([block] if block.prefixlen == 24 else block.subnets(new_prefix=24)):
+                            net24_to_cidr.setdefault(str(sub), (name, cidr))
+                except ValueError:
+                    pass
             _time.sleep(0.3)
 
-        name, cidr = checked[pa_key]
+        name, cidr = net24_to_cidr[net24_str]
         if not cidr:
             continue
 
@@ -986,7 +993,7 @@ def compute_rdap_egress_rows(nodes: List[Dict], rdap: "RDAPClient" = None) -> Li
                 row[sf] = tmpl.get(sf, "")
             synthetic.append(row)
 
-    logger.info(f"RDAP egress expansion: {len(synthetic)} inferred /24 blocks from {len(checked)} lookups")
+    logger.info(f"RDAP egress expansion: {len(synthetic)} inferred /24 blocks from {len(net24_to_cidr)} cached entries")
     return synthetic
 
 

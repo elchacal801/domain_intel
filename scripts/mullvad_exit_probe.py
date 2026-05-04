@@ -55,7 +55,6 @@ def fetch_relays() -> List[Dict]:
     return relays
 
 
-@retry(max_attempts=2, backoff_base=2.0, exceptions=(requests.RequestException,))
 def probe_relay(relay: Dict) -> Optional[str]:
     """Probe a single relay's SOCKS5 proxy to discover its exit IP.
     Returns the exit IP string, or None on failure.
@@ -71,7 +70,6 @@ def probe_relay(relay: Dict) -> Optional[str]:
             return exit_ip
     except Exception as e:
         logger.debug(f"Probe failed for {relay['hostname']}: {e}")
-        return None
     return None
 
 
