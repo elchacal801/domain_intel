@@ -954,11 +954,12 @@ def compute_rdap_egress_rows(nodes: List[Dict], rdap: "RDAPClient" = None) -> Li
         except ValueError:
             continue
 
-        if allocated.prefixlen < 16:
+        if allocated.prefixlen < 16 or allocated.prefixlen > 24:
             continue
 
         tmpl = members[0]
-        for subnet in allocated.subnets(new_prefix=24):
+        subnets = [allocated] if allocated.prefixlen == 24 else list(allocated.subnets(new_prefix=24))
+        for subnet in subnets:
             subnet_str = str(subnet)
             if subnet_str in covered_24s:
                 continue
