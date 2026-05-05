@@ -799,7 +799,7 @@ class TestProviderRegistry:
     """Verify all providers are registered and have required attributes."""
 
     def test_provider_count(self):
-        assert len(PROVIDERS) == 21  # HolaVPN (403 from datacenter IPs) and HMA (dead endpoint) disabled
+        assert len(PROVIDERS) == 20  # HolaVPN, HMA, IPVanish disabled
 
     def test_all_providers_have_required_attrs(self):
         for p in PROVIDERS:

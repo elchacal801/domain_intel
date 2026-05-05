@@ -319,7 +319,7 @@ jobs:
         env:
           PROXYCHECK_API_KEY: ${{ secrets.PROXYCHECK_API_KEY }}
         run: |
-          python scripts/enrich_proxy_check.py --input data/triage_candidates.csv --output data/triage_candidates.csv --budget 900
+          python scripts/enrich_proxy_check.py --input data/dea_domains_probed.csv --output data/dea_domains_probed.csv --budget 900
 
       - name: VirusTotal Enrichment
         timeout-minutes: 30
@@ -428,6 +428,10 @@ jobs:
           cp data/openclaw_stix.json docs/data/
           cp data/openclaw_sigma.yml docs/data/
           cp data/fingerprint_matches.csv docs/data/ || true
+          # Compress fingerprint_matches.json if over 100MB (GitHub file size limit)
+          if [ -f docs/data/fingerprint_matches.json ]; then
+            gzip -f docs/data/fingerprint_matches.json
+          fi
           # Remove stale monolithic domains.json (now sharded by build_frontend_data.py)
           rm -f docs/data/domains.json
 

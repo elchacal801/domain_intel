@@ -1495,7 +1495,7 @@ PROVIDERS: List[BaseProvider] = [
     # --- Tier 1: high value / easy collection ---
     ExpressVPNProvider(),
     VPNGateProvider(),
-    IPVanishProvider(),
+    # IPVanishProvider(),  # Config ZIP returns 403 from CI runners (Cloudflare bot protection)
     FastVPNProvider(),
     VyprVPNProvider(),
     TunnelBearProvider(),
