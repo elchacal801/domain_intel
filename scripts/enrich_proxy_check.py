@@ -49,39 +49,23 @@ def load_ipidea_domains() -> set:
 
 
 def check_ips_batch(ips: List[str], api_key: str = "") -> Dict[str, Dict]:
-    """Query proxycheck.io for a batch of IPs. Returns {ip: result_dict}."""
-    params = {
-        "vpn": "1",
-        "asn": "1",
-        "risk": "1",
-        "port": "1",
-    }
-    if api_key:
-        params["key"] = api_key
-
-    # POST with newline-separated IPs
-    try:
-        resp = requests.post(
-            f"{PROXYCHECK_API}",
-            params=params,
-            data="\n".join(ips),
-            headers={"Content-Type": "text/plain"},
-            timeout=30,
-        )
-        if resp.status_code == 429:
-            logger.warning("proxycheck.io rate limited; waiting 60s")
-            time.sleep(60)
-            return {}
-        resp.raise_for_status()
-        data = resp.json()
-
-        if data.get("status") != "ok":
-            logger.warning(f"proxycheck.io error: {data.get('status')} {data.get('message', '')}")
-            return {}
-
-        results = {}
-        for ip in ips:
-            if ip in data:
+    """Query proxycheck.io for a batch of IPs via individual GET requests.
+    Returns {ip: result_dict}."""
+    results = {}
+    for ip in ips:
+        params = {"vpn": "1", "asn": "1", "risk": "1"}
+        if api_key:
+            params["key"] = api_key
+        try:
+            resp = requests.get(f"{PROXYCHECK_API}/{ip}", params=params, timeout=15)
+            if resp.status_code == 429:
+                logger.warning("proxycheck.io rate limited; waiting 60s")
+                time.sleep(60)
+                continue
+            if resp.status_code != 200:
+                continue
+            data = resp.json()
+            if data.get("status") == "ok" and ip in data:
                 entry = data[ip]
                 results[ip] = {
                     "proxy_detected": entry.get("proxy", "no"),
@@ -90,10 +74,9 @@ def check_ips_batch(ips: List[str], api_key: str = "") -> Dict[str, Dict]:
                     "proxy_provider": entry.get("provider", ""),
                     "proxy_asn": entry.get("asn", ""),
                 }
-        return results
-    except Exception as e:
-        logger.warning(f"proxycheck.io batch failed: {e}")
-        return {}
+        except Exception as e:
+            logger.debug(f"proxycheck.io failed for {ip}: {e}")
+    return results
 
 
 def check_single_ip(ip: str, api_key: str = "") -> Dict:
