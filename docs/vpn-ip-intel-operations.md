@@ -2,7 +2,7 @@
 
 ## Overview
 
-- **21 active VPN providers**, automated daily collection
+- **20 active VPN providers**, automated daily collection
 - **Daily Data Update** workflow runs at **07:00 UTC**
 - `vpn_ip_intel.py` called with default args in the finalize stage
 
@@ -22,7 +22,6 @@ These providers pull fresh data every CI run with no manual intervention:
 | TorGuard | DNS enum |
 | Windscribe | DNS enum |
 | VPNGate | Public CSV API |
-| IPVanish | Config ZIP |
 | FastVPN | Config ZIP |
 | TunnelBear | Config ZIP |
 | AirVPN | JSON API |
@@ -109,6 +108,7 @@ gh run view $(gh run list --workflow=update_intelligence.yml --limit 1 --json da
 
 ## Disabled Providers (and Why)
 
+- **IPVanish**: Config ZIP returns 403 from CI runners (Cloudflare bot protection)
 - **HMA/HideMyAss**: Config download URL redirects to dead host `vpn.hidemyass.com`
 - **Hola VPN**: API returns 403 — blocks all non-browser-extension requests
 
