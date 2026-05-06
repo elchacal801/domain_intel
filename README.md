@@ -49,7 +49,7 @@
 | **Automated Pipeline** | Daily GitHub Actions workflow with 10-shard parallel processing, artifact passing, and auto-commit to GitHub Pages |
 | **AI-Powered Analysis** | Multi-model LLM chain (Claude Sonnet 4.5 / Gemini 3 Pro / GPT-4o) with automatic fallback, SQLite caching, and cost tracking |
 | **Infrastructure Clustering** | Groups domains by shared MX hosts, MX IPs, web hosting IPs, and registrar+NS — with confidence scoring that penalizes known shared providers |
-| **Fingerprint Detection** | 7 YAML-driven fingerprint rules with confidence modifiers, entity screening boosts, and FLAME threat-path mapping |
+| **Fingerprint Detection** | 9 YAML-driven fingerprint rules with confidence modifiers, entity screening boosts, and FLAME threat-path mapping |
 | **FLAME Integration** | Maps clusters to [FLAME](https://github.com/elchacal801/flame-fraud) fraud threat paths with evidence package generation |
 | **STIX 2.1 Export** | Full STIX bundle generation for direct ingestion into OpenCTI, MISP, or any CTI platform |
 | **Shadow AI Scanner** | Detects exposed OpenClaw/Moltbot/Gateway AI agents on port 18789 via Shodan with STIX + Sigma rule export |
@@ -68,7 +68,7 @@
 
 > **[https://elchacal801.github.io/domain_intel/](https://elchacal801.github.io/domain_intel/)**
 
-The dashboard provides five investigation views:
+The dashboard provides six investigation views:
 
 | Page | Description |
 |---|---|
@@ -97,6 +97,9 @@ Sharding (split into 10 chunks for parallel processing)
     │
     ▼
 Enrichment (DNS/MX/NS/ASN resolution → reputation → web probing)
+    │
+    ▼
+Infrastructure Intel (ASN abuse, VPN relay IPs, Tor exit nodes)
     │
     ▼
 Advanced Intel (Shodan, VirusTotal, PhishTank, GLEIF, OpenSanctions, ICIJ, Whois)
@@ -155,6 +158,13 @@ graph TD
         BUDGET["shodan_utils.py (Rate Limit)"]
     end
 
+    subgraph "Infrastructure Intel"
+        L --> ASN_INTEL["ASN Abuse Intel"]
+        L --> VPN_INTEL["VPN Provider Intel"]
+        L --> TOR_INTEL["Tor Exit Nodes"]
+        L --> VPN_IP["VPN Relay IP Intel (20 providers)"]
+    end
+
     subgraph "Detection & Scoring"
         L --> FP["Fingerprint Matching (YAML)"]
         FP --> CLUSTER["Infrastructure Clustering"]
@@ -183,6 +193,8 @@ graph TD
         PIVOT & PIVOT_OTX --> DISCOVERY((New Domain Discovery))
         DISCOVERY -.->|Feed Back| F
 
+        VPN_IP -->|"first_seen/last_seen tracking"| VPN_CSV["VPN Relay IPs CSV (SIEM Lookup)"]
+
         DASH_BUILD --> Q[GitHub Pages Dashboard]
     end
 
@@ -196,6 +208,11 @@ graph TD
     style SHARED fill:#a855f7,stroke:#333,stroke-width:2px,color:white
     style FP fill:#a855f7,stroke:#333,stroke-width:2px,color:white
     style DASH_BUILD fill:#58a6ff,stroke:#333,stroke-width:2px,color:black
+    style ASN_INTEL fill:#f0883e,stroke:#333,stroke-width:2px,color:black
+    style VPN_INTEL fill:#f0883e,stroke:#333,stroke-width:2px,color:black
+    style TOR_INTEL fill:#f0883e,stroke:#333,stroke-width:2px,color:black
+    style VPN_IP fill:#f0883e,stroke:#333,stroke-width:2px,color:black
+    style VPN_CSV fill:#f0883e,stroke:#333,stroke-width:1px,color:black
     style RETRY fill:#2d333b,stroke:#555,stroke-width:1px,color:#8b97a8
     style CYMRU fill:#2d333b,stroke:#555,stroke-width:1px,color:#8b97a8
     style LLM fill:#2d333b,stroke:#555,stroke-width:1px,color:#8b97a8
@@ -225,6 +242,7 @@ graph TD
 | `data/campaign_hunt_history.csv` | Infrastructure discovered by automated Shodan campaign hunts |
 | `data/shodan_intelligence.csv` | Shodan enrichment for triaged candidates (ports, services, vulns) |
 | `data/enriched_candidates.csv` | Technical enrichment with DNS/SSL history and pivot selectors |
+| `data/vpn_relay_ips.csv` | VPN relay IPs from 20 providers with temporal tracking (`first_seen`/`last_seen`/`active`) for SIEM lookup tables |
 | `data/openclaw_exposed.csv` | Exposed Shadow AI agents (OpenClaw/Moltbot) with IPs and ports |
 
 ### For Engineering & DevOps
@@ -407,7 +425,7 @@ All responses are cached in SQLite (`data/.llm_cache/`) with 7-day TTL. Per-call
 
 #### Fingerprint Matching (`match_fingerprints.py`)
 
-Seven YAML-defined fingerprint rules in `config/fingerprints/` match domains against known abuse infrastructure patterns:
+Nine YAML-defined fingerprint rules in `config/fingerprints/` match domains against known abuse infrastructure patterns:
 
 | ID | Name | Key Indicators |
 |---|---|---|
@@ -418,6 +436,8 @@ Seven YAML-defined fingerprint rules in `config/fingerprints/` match domains aga
 | FP-0005 | GoDaddy Bulk Registration Pattern | Bulk GoDaddy registrations with common abuse signals |
 | FP-0006 | Coordinated Shell Domain Network (MX Clustering) | Shared MX cluster patterns indicating coordinated registration |
 | FP-0007 | Typosquat Evasion Infrastructure | Infrastructure patterns used to evade typosquatting detection |
+| FP-0008 | Pickelhost/Eye-Mail ULA SPF Phishing Platform | 18+ actor-operated DEA services as MX + ULA IPv6 SPF records |
+| FP-0009 | IPIDEA Residential Proxy Network Infrastructure | C2/SDK domains for ~9M-device residential proxy network (disrupted by Google GTIG Jan 2026) |
 
 Each fingerprint has a `confidence_base` score modified by entity screening results (GLEIF, OpenSanctions, ICIJ, VirusTotal, PhishTank, SecurityTrails history), producing a final confidence score per domain.
 
@@ -522,8 +542,8 @@ domain_intel/
 │   ├── package.json             # React 19, Vite 7, Tailwind CSS 4
 │   └── vite.config.js
 │
-├── scripts/                     # Python intelligence pipeline (~40 scripts)
-│   ├── shared/                  # 7 shared utilities
+├── scripts/                     # Python intelligence pipeline (~60 scripts)
+│   ├── shared/                  # 10 shared utilities
 │   │   ├── llm_client.py        #   LLM wrapper with model chain + caching + cost tracking
 │   │   ├── flame_client.py      #   FLAME threat-path index client with caching
 │   │   ├── cymru_resolver.py    #   Team Cymru DNS-based ASN resolution
@@ -531,6 +551,7 @@ domain_intel/
 │   │   ├── shodan_utils.py      #   Shodan credit budgeting + rate limiting
 │   │   ├── otx_client.py        #   AlienVault OTX passive DNS client
 │   │   ├── api_budget.py        #   Generic API budget tracking
+│   │   ├── rdap_client.py        #   RDAP query client for network registration data
 │   │   ├── config.py            #   YAML config loader with dot-notation access
 │   │   └── sanitize.py          #   Input sanitization utilities
 │   ├── merge_lists_v3b.py       # Source aggregation and deduplication
@@ -556,12 +577,12 @@ domain_intel/
 ├── config/                      # Pipeline configuration
 │   ├── defaults.yaml            # Model chains, budgets, rate limits, paths
 │   ├── shared_infrastructure.yaml # 25+ shared provider definitions
-│   ├── fingerprints/            # 7 YAML fingerprint detection rules
+│   ├── fingerprints/            # 9 YAML fingerprint detection rules
 │   ├── seads_keywords.txt       # Ad scanning keywords
 │   ├── targets.txt              # High-value targets for typosquat generation
 │   └── openclaw_targets.txt     # OpenClaw scanning targets
 │
-├── tests/                       # 20 pytest test modules
+├── tests/                       # 37 pytest test modules
 ├── data/                        # Generated intelligence outputs
 ├── docs/                        # GitHub Pages deployment (built from frontend/)
 ├── .github/workflows/           # 2 GitHub Actions workflows
@@ -613,7 +634,7 @@ pytest
 pytest tests/test_llm_client.py -v
 ```
 
-The test suite covers 20 modules:
+The test suite covers 37 modules. Key test areas:
 
 | Test Module | Coverage |
 |---|---|

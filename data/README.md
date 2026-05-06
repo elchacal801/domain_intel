@@ -123,7 +123,7 @@ The data flow moves from **Inputs** &rarr; **Discovery** &rarr; **Enrichment** &
 | `vpn_seeds/spur_astrill_2024.txt` | Static Astrill IP seed list from Spur (published 2024-12-19) |
 | `vpn_seeds/protonvpn/` | ProtonVPN client cache drop directory (see README inside) |
 
-**Columns:** ip, provider, confidence, country, city, server_type, asn, asn_name, source, source_date, hostname, collection_method, threat_relevance, ip_role, prefix
+**Columns:** ip, provider, confidence, country, city, server_type, asn, asn_name, source, source_date, hostname, collection_method, threat_relevance, ip_role, prefix, score_prehire, tier_prehire, score_posthire, tier_posthire, indicator_id, first_seen, last_seen, active
 
 **ip_role values:**
 - `ingress`: Entry point IP (e.g., Mullvad `ipv4_addr_in`, DNS-enumerated servers)
@@ -136,6 +136,13 @@ The data flow moves from **Inputs** &rarr; **Discovery** &rarr; **Enrichment** &
 - `high`: IP attributed to the provider by Shodan org search
 - `medium`: IP in the Spur seed list but not in a confirmed RDAP block, or prefix-inferred
 - `low`: Static/community-sourced, unvalidated
+
+**Temporal tracking:**
+- `first_seen`: Date the pipeline first observed this IP (ISO 8601, e.g. `2026-05-06`)
+- `last_seen`: Date the pipeline last observed this IP (ISO 8601)
+- `active`: `"true"` if fetched in the latest run, `"false"` if the IP is no longer in the provider's pool (historical record preserved for investigation context)
+
+> **Note:** Legacy `vpn_exit_ips.csv` and per-provider CSVs contain active rows only. The primary `vpn_relay_ips.csv` includes both active and historical IPs.
 
 ---
 
