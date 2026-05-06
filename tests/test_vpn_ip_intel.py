@@ -21,6 +21,7 @@ from vpn_ip_intel import (
     load_scores, join_scores, FIELDS, SCORE_FIELDS,
     SHARED_HOSTING_ASNS, _COUNTRY_ALIASES, _SERVER_TYPE_ALIASES, TODAY,
     IP_ROLES, PROVIDERS,
+    load_existing_csv, merge_with_existing,
 )
 
 
@@ -1104,3 +1105,154 @@ class TestDNSEnumNewProviders:
         hosts = [h for h, _ in hostnames]
         assert "wg001.njalla.no" in hosts
         assert "wg100.njalla.no" in hosts
+
+
+import csv
+
+
+def _write_test_csv(path, rows):
+    """Helper to write a CSV file for testing."""
+    with open(path, "w", newline="", encoding="utf-8") as f:
+        writer = csv.DictWriter(f, fieldnames=FIELDS, extrasaction="ignore")
+        writer.writeheader()
+        writer.writerows(rows)
+
+
+def _make_row(ip="1.2.3.4", provider="mullvad", ip_role="ingress", **overrides):
+    """Helper to create a minimal row dict."""
+    row = {"ip": ip, "provider": provider, "ip_role": ip_role}
+    row.update(overrides)
+    return row
+
+
+class TestTemporalTracking:
+    """Tests for first_seen/last_seen/active temporal tracking."""
+
+    def test_fields_include_temporal_columns(self):
+        assert "first_seen" in FIELDS
+        assert "last_seen" in FIELDS
+        assert "active" in FIELDS
+
+    def test_load_existing_csv_missing_file(self, tmp_path):
+        result = load_existing_csv(str(tmp_path / "nonexistent.csv"))
+        assert result == {}
+
+    def test_load_existing_csv_reads_rows(self, tmp_path):
+        csv_path = str(tmp_path / "test.csv")
+        _write_test_csv(csv_path, [
+            _make_row("1.1.1.1", "mullvad", "ingress", first_seen="2026-01-01"),
+            _make_row("2.2.2.2", "nord", "egress", first_seen="2026-02-01"),
+        ])
+        result = load_existing_csv(csv_path)
+        assert len(result) == 2
+        assert ("1.1.1.1", "mullvad", "ingress") in result
+        assert ("2.2.2.2", "nord", "egress") in result
+
+    def test_first_run_no_existing_csv(self, tmp_path):
+        csv_path = str(tmp_path / "out.csv")
+        fresh = [_make_row("1.1.1.1"), _make_row("2.2.2.2", provider="nord")]
+        merged = merge_with_existing(fresh, csv_path, today="2026-05-06")
+        assert len(merged) == 2
+        for row in merged:
+            assert row["first_seen"] == "2026-05-06"
+            assert row["last_seen"] == "2026-05-06"
+            assert row["active"] == "true"
+
+    def test_existing_ip_preserves_first_seen(self, tmp_path):
+        csv_path = str(tmp_path / "out.csv")
+        _write_test_csv(csv_path, [
+            _make_row("1.1.1.1", first_seen="2026-01-01", last_seen="2026-05-05", active="true"),
+        ])
+        fresh = [_make_row("1.1.1.1")]
+        merged = merge_with_existing(fresh, csv_path, today="2026-05-06")
+        assert len(merged) == 1
+        assert merged[0]["first_seen"] == "2026-01-01"
+        assert merged[0]["last_seen"] == "2026-05-06"
+        assert merged[0]["active"] == "true"
+
+    def test_disappeared_ip_retained(self, tmp_path):
+        csv_path = str(tmp_path / "out.csv")
+        _write_test_csv(csv_path, [
+            _make_row("1.1.1.1", first_seen="2026-01-01", last_seen="2026-05-05", active="true"),
+            _make_row("9.9.9.9", first_seen="2026-03-01", last_seen="2026-05-05", active="true"),
+        ])
+        fresh = [_make_row("1.1.1.1")]  # 9.9.9.9 disappeared
+        merged = merge_with_existing(fresh, csv_path, today="2026-05-06")
+        assert len(merged) == 2
+        by_ip = {r["ip"]: r for r in merged}
+        assert by_ip["1.1.1.1"]["active"] == "true"
+        assert by_ip["9.9.9.9"]["active"] == "false"
+        assert by_ip["9.9.9.9"]["first_seen"] == "2026-03-01"
+        assert by_ip["9.9.9.9"]["last_seen"] == "2026-05-05"
+
+    def test_new_ip_gets_today(self, tmp_path):
+        csv_path = str(tmp_path / "out.csv")
+        _write_test_csv(csv_path, [
+            _make_row("1.1.1.1", first_seen="2026-01-01", last_seen="2026-05-05"),
+        ])
+        fresh = [_make_row("1.1.1.1"), _make_row("3.3.3.3")]
+        merged = merge_with_existing(fresh, csv_path, today="2026-05-06")
+        by_ip = {r["ip"]: r for r in merged}
+        assert by_ip["3.3.3.3"]["first_seen"] == "2026-05-06"
+        assert by_ip["3.3.3.3"]["last_seen"] == "2026-05-06"
+        assert by_ip["3.3.3.3"]["active"] == "true"
+
+    def test_merge_respects_dedup_key(self, tmp_path):
+        csv_path = str(tmp_path / "out.csv")
+        _write_test_csv(csv_path, [
+            _make_row("1.1.1.1", ip_role="ingress", first_seen="2026-01-01", last_seen="2026-05-05"),
+            _make_row("1.1.1.1", ip_role="egress", first_seen="2026-02-01", last_seen="2026-05-05"),
+        ])
+        fresh = [_make_row("1.1.1.1", ip_role="ingress")]  # egress role disappeared
+        merged = merge_with_existing(fresh, csv_path, today="2026-05-06")
+        assert len(merged) == 2
+        by_role = {r["ip_role"]: r for r in merged}
+        assert by_role["ingress"]["active"] == "true"
+        assert by_role["ingress"]["first_seen"] == "2026-01-01"
+        assert by_role["egress"]["active"] == "false"
+        assert by_role["egress"]["first_seen"] == "2026-02-01"
+
+    def test_historical_row_preserves_metadata(self, tmp_path):
+        csv_path = str(tmp_path / "out.csv")
+        _write_test_csv(csv_path, [
+            _make_row("9.9.9.9", asn="AS1234", asn_name="TestASN",
+                       first_seen="2026-01-01", last_seen="2026-05-05", active="true"),
+        ])
+        fresh = []  # IP disappeared
+        merged = merge_with_existing(fresh, csv_path, today="2026-05-06")
+        assert len(merged) == 1
+        assert merged[0]["asn"] == "AS1234"
+        assert merged[0]["asn_name"] == "TestASN"
+        assert merged[0]["active"] == "false"
+
+    def test_reappearing_ip(self, tmp_path):
+        csv_path = str(tmp_path / "out.csv")
+        _write_test_csv(csv_path, [
+            _make_row("1.1.1.1", first_seen="2026-01-01", last_seen="2026-04-01", active="false"),
+        ])
+        fresh = [_make_row("1.1.1.1")]
+        merged = merge_with_existing(fresh, csv_path, today="2026-05-06")
+        assert len(merged) == 1
+        assert merged[0]["active"] == "true"
+        assert merged[0]["first_seen"] == "2026-01-01"
+        assert merged[0]["last_seen"] == "2026-05-06"
+
+    def test_backfill_on_upgrade(self, tmp_path):
+        """Old CSV without temporal columns gets backfilled cleanly."""
+        csv_path = str(tmp_path / "out.csv")
+        # Write CSV without first_seen/last_seen columns (simulates pre-upgrade data)
+        _write_test_csv(csv_path, [_make_row("1.1.1.1")])
+        fresh = [_make_row("1.1.1.1")]
+        merged = merge_with_existing(fresh, csv_path, today="2026-05-06")
+        assert merged[0]["first_seen"] == "2026-05-06"
+        assert merged[0]["last_seen"] == "2026-05-06"
+
+    def test_backfill_disappeared_on_upgrade(self, tmp_path):
+        """Disappeared IP from pre-upgrade CSV gets backfilled."""
+        csv_path = str(tmp_path / "out.csv")
+        _write_test_csv(csv_path, [_make_row("9.9.9.9")])
+        fresh = []
+        merged = merge_with_existing(fresh, csv_path, today="2026-05-06")
+        assert merged[0]["first_seen"] == "2026-05-06"
+        assert merged[0]["last_seen"] == "2026-05-06"
+        assert merged[0]["active"] == "false"

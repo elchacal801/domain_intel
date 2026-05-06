@@ -39,6 +39,7 @@ FIELDS = [
     "collection_method", "threat_relevance", "ip_role", "prefix",
     "score_prehire", "tier_prehire", "score_posthire", "tier_posthire",
     "indicator_id",
+    "first_seen", "last_seen", "active",
 ]
 
 IP_ROLES = {"ingress", "egress", "prefix-inferred", "egress-inferred", "unknown"}
@@ -1727,6 +1728,60 @@ def compute_rdap_egress_rows(nodes: List[Dict], rdap: "RDAPClient" = None) -> Li
     return synthetic
 
 
+def load_existing_csv(path: str) -> Dict[tuple, Dict]:
+    """Load existing CSV into a dict keyed by (ip, provider, ip_role)."""
+    if not os.path.exists(path):
+        return {}
+    existing = {}
+    with open(path, encoding="utf-8") as f:
+        for row in csv.DictReader(f):
+            key = (row.get("ip", ""), row.get("provider", ""), row.get("ip_role", "unknown"))
+            existing[key] = row
+    return existing
+
+
+def merge_with_existing(
+    fresh_rows: List[Dict],
+    existing_csv_path: str,
+    today: str = TODAY,
+) -> List[Dict]:
+    """Merge freshly-fetched rows with existing CSV to preserve temporal history.
+
+    - New IPs: first_seen = last_seen = today, active = true
+    - Still-present IPs: preserve first_seen, last_seen = today, active = true
+    - Disappeared IPs: preserve first_seen and last_seen, active = false
+    """
+    old = load_existing_csv(existing_csv_path)
+
+    fresh_keys = set()
+    merged = []
+
+    for row in fresh_rows:
+        key = (row["ip"], row["provider"], row.get("ip_role", "unknown"))
+        fresh_keys.add(key)
+
+        prev = old.get(key)
+        if prev and prev.get("first_seen"):
+            row["first_seen"] = prev["first_seen"]
+        else:
+            row["first_seen"] = today
+        row["last_seen"] = today
+        row["active"] = "true"
+        merged.append(row)
+
+    # Carry forward historical rows no longer in fresh data
+    for key, prev_row in old.items():
+        if key not in fresh_keys:
+            prev_row["active"] = "false"
+            if not prev_row.get("first_seen"):
+                prev_row["first_seen"] = prev_row.get("last_seen") or today
+            if not prev_row.get("last_seen"):
+                prev_row["last_seen"] = today
+            merged.append(prev_row)
+
+    return merged
+
+
 def write_csv(nodes: List[Dict], path: str) -> None:
     """Write nodes to CSV."""
     os.makedirs(os.path.dirname(path) or ".", exist_ok=True)
@@ -1787,20 +1842,26 @@ def run(output: str, output_dir: str, workers: int, providers: List[str]):
 
     all_nodes_with_prefix = all_nodes + prefix_rows + egress_rows
 
-    # Write primary CSV (all rows including prefix-inferred)
+    # Merge with existing CSV to preserve temporal history
+    all_nodes_with_prefix = merge_with_existing(all_nodes_with_prefix, output)
+
+    # Active-only subset for legacy and per-provider CSVs
+    active_rows = [n for n in all_nodes_with_prefix if n.get("active") == "true"]
+
+    # Write primary CSV (all rows including historical)
     write_csv(all_nodes_with_prefix, output)
 
-    # Write legacy compat CSV (single-IP rows only, no prefix-inferred)
+    # Write legacy compat CSV (active single-IP rows only)
     if "vpn_relay_ips" in output:
         legacy_path = output.replace("vpn_relay_ips", "vpn_exit_ips")
-        legacy_rows = [n for n in all_nodes_with_prefix if n.get("ip")]
+        legacy_rows = [n for n in active_rows if n.get("ip")]
         write_csv(legacy_rows, legacy_path)
 
-    # Write per-provider CSVs (IP rows + egress-inferred)
+    # Write per-provider CSVs (active rows only)
     if output_dir:
         os.makedirs(output_dir, exist_ok=True)
         by_provider = {}
-        for n in all_nodes + egress_rows:
+        for n in active_rows:
             by_provider.setdefault(n["provider"], []).append(n)
         for prov_name, nodes in by_provider.items():
             write_csv(nodes, os.path.join(output_dir, f"{prov_name}.csv"))
