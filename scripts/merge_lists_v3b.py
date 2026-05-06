@@ -42,7 +42,7 @@ DOMAIN_RE = re.compile(
     r"^(?=.{1,253}$)(?!-)[a-z0-9-]{1,63}(?<!-)(\.(?!-)[a-z0-9-]{1,63}(?<!-))*\.[a-z]{2,63}$"
 )
 
-UA = {"User-Agent": "unum-dea-merge/3b"}
+UA = {"User-Agent": "domain-intel-merge/3b"}
 
 
 def log(msg: str) -> None:
