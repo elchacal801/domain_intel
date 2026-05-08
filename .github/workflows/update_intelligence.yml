@@ -143,11 +143,11 @@ jobs:
           path: data
 
       - name: 'Shard ${{ matrix.shard }}: Enrich Infrastructure'
-        timeout-minutes: 10
+        timeout-minutes: 15
         run: |
           PART_FILE="data/dea_part_${{ matrix.shard }}.csv"
           echo "Processing $PART_FILE..."
-          python scripts/enrich_infrastructure.py --input "$PART_FILE" --output start_temp.csv --workers 200
+          python scripts/enrich_infrastructure.py --input "$PART_FILE" --output start_temp.csv --workers 200 --timeout-minutes 8
 
       - name: 'Shard ${{ matrix.shard }}: Enrich Reputation'
         timeout-minutes: 20

@@ -19,6 +19,7 @@ import dns.resolver
 import dns.reversename
 import sys
 import os
+import time
 from typing import Dict, List, Tuple
 from tqdm.asyncio import tqdm_asyncio
 from vpn_ip_intel import load_vpn_lookup
@@ -28,6 +29,8 @@ CYMRU_ASN_SUFFIX = "origin.asn.cymru.com"
 DEFAULT_TIMEOUT = 4.0
 DEFAULT_LIFETIME = 8.0
 MAX_CONCURRENCY = 200 # Default connections
+
+_DEADLINE = None  # Global deadline timestamp (set by main via --timeout-minutes)
 
 # VPN exit IP lookup for risk tagging
 _vpn_lookup = load_vpn_lookup()
@@ -230,6 +233,9 @@ async def runner(input_file: str, output_file: str, concurrency: int, limit: int
     for f in tqdm_asyncio.as_completed(tasks, total=len(tasks), unit="dom"):
         res = await f
         results.append(res)
+        if _DEADLINE is not None and time.time() > _DEADLINE:
+            print(f"\n[!] Timeout reached. Processed {len(results)}/{len(tasks)} domains. Writing partial results.")
+            break
         
     # Write output
     print(f"[*] Writing results to {output_file}...")
@@ -251,9 +257,16 @@ def main():
     parser.add_argument("--output", default="data/dea_domains_enriched.csv")
     parser.add_argument("--workers", type=int, default=MAX_CONCURRENCY, help="Async concurrency limit (default 1000)")
     parser.add_argument("--limit", type=int, default=0)
-    
+    parser.add_argument("--timeout-minutes", type=int, default=0,
+                        help="Global time budget in minutes. 0 = unlimited (default).")
+
     args = parser.parse_args()
-    
+
+    global _DEADLINE
+    if args.timeout_minutes > 0:
+        _DEADLINE = time.time() + args.timeout_minutes * 60
+        print(f"[*] Global timeout set to {args.timeout_minutes} minutes.")
+
     if sys.platform == 'win32':
         asyncio.set_event_loop_policy(asyncio.WindowsSelectorEventLoopPolicy())
         
