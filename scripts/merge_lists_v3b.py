@@ -26,12 +26,14 @@ Usage:
 
 import argparse
 import csv
+import io
 import logging
 import os
 import requests
 import json
 import re
 import time
+import zipfile
 from typing import Callable, Dict, Iterable, List, Set, Tuple
 from urllib.request import Request, urlopen
 from urllib.error import URLError, HTTPError
@@ -395,6 +397,12 @@ def main() -> None:
     # CHANGED: allowlist filtering is now ON by default
     ap.add_argument("--no-filter-allowlist", action="store_true",
                     help="Disable allowlist subtraction from DEA output (filtering is ON by default)")
+    ap.add_argument("--local-allowlist", default="data/dea_allowlist_local.conf",
+                    help="Path to local allowlist file (always loaded as fallback)")
+    ap.add_argument("--tranco-top-n", type=int, default=10000,
+                    help="Subtract Tranco top-N domains from DEA (default: 10000, 0 to disable)")
+    ap.add_argument("--no-filter-tranco", action="store_true",
+                    help="Disable Tranco top-N subtraction from DEA output")
 
     args = ap.parse_args()
 
@@ -440,8 +448,8 @@ def main() -> None:
          parse_line_list),
     ]
 
-    # ---- Allowlist source ----
-    allowlist_url = "https://raw.githubusercontent.com/disposable-email-domains/disposable-email-domains/main/allowlist.conf"
+    # ---- Allowlist source (upstream removed allowlist.conf; local file is primary) ----
+    allowlist_url = None  # upstream no longer available
 
     # ---- High-abuse sources (opt-in, separate signal) ----
     high_sources: List[Tuple[str, str, Callable[[str], Set[str]]]] = []
@@ -491,11 +499,31 @@ def main() -> None:
     log(f"[*] DEA merged total (pre-allowlist): {len(dea)}")
 
     # ════════════════════════════════════════════════════════════
-    # PHASE 2: Fetch and apply allowlist
+    # PHASE 2: Fetch and apply allowlist + Tranco top-N
     # ════════════════════════════════════════════════════════════
-    log("[*] Fetching DEA allowlist...")
+
+    # --- 2a: Load local allowlist (always loaded) ---
     allow: Set[str] = set()
-    allow, err = safe_fetch_parse("dea_allowlist_conf", allowlist_url, parse_line_list, args.timeout)
+    local_allow_path = args.local_allowlist
+    if os.path.isfile(local_allow_path):
+        with open(local_allow_path, encoding="utf-8") as f:
+            for line in f:
+                line = line.strip()
+                if line and not line.startswith("#"):
+                    d = normalize_domain(line)
+                    if d:
+                        allow.add(d)
+        log(f"  [+] {'local_allowlist':28s} {len(allow):7d} domains  ({local_allow_path})")
+    else:
+        log(f"  [!] Local allowlist not found: {local_allow_path}")
+
+    # --- 2b: Fetch upstream allowlist (if URL configured) ---
+    if allowlist_url:
+        remote_allow, err = safe_fetch_parse("dea_allowlist_remote", allowlist_url, parse_line_list, args.timeout)
+        allow |= remote_allow
+    else:
+        log(f"  [~] {'dea_allowlist_remote':28s} skipped  (upstream URL removed)")
+
     log(f"[*] Allowlist total: {len(allow)}")
     write_csv(allow, args.allow_out)
     log(f"[*] Wrote allowlist CSV: {args.allow_out}")
@@ -507,6 +535,35 @@ def main() -> None:
         log(f"[*] DEA after allowlist filter: {len(dea)}  (removed {dea_before - len(dea)})")
     else:
         log("[*] WARNING: Allowlist filtering disabled via --no-filter-allowlist")
+
+    # --- 2c: Tranco top-N filter (defense in depth) ---
+    if not args.no_filter_tranco and args.tranco_top_n > 0:
+        log(f"[*] Fetching Tranco top-{args.tranco_top_n} list...")
+        tranco: Set[str] = set()
+        try:
+            req = Request("https://tranco-list.eu/top-1m.csv.zip", headers=UA)
+            with urlopen(req, timeout=60) as resp:
+                zip_bytes = resp.read()
+            with zipfile.ZipFile(io.BytesIO(zip_bytes)) as zf:
+                csv_name = zf.namelist()[0]
+                with zf.open(csv_name) as cf:
+                    reader = csv.reader(io.TextIOWrapper(cf, encoding="utf-8"))
+                    for row in reader:
+                        if len(row) >= 2:
+                            rank = int(row[0])
+                            if rank > args.tranco_top_n:
+                                break
+                            d = normalize_domain(row[1].strip())
+                            if d:
+                                tranco.add(d)
+            log(f"  [+] {'tranco_top_n':28s} {len(tranco):7d} domains  (top-{args.tranco_top_n})")
+            dea_before = len(dea)
+            dea -= tranco
+            log(f"[*] DEA after Tranco filter: {len(dea)}  (removed {dea_before - len(dea)})")
+        except Exception as e:
+            log(f"  [!] {'tranco_top_n':28s} FAILED  ({type(e).__name__}: {e})")
+    elif args.no_filter_tranco:
+        log("[*] Tranco filtering disabled via --no-filter-tranco")
 
     # Also exclude target brands from DEA (defense in depth)
     dea_before = len(dea)
