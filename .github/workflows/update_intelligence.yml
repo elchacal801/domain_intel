@@ -1,0 +1,447 @@
+name: Daily Data Update
+
+on:
+  schedule:
+    # Run at 07:00 UTC (2:00 AM EST / 12:00 AM MST) daily
+    - cron: '0 7 * * *'
+  workflow_dispatch:
+
+jobs:
+  discovery:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # v6.0.2
+      - name: Set up Python
+        uses: actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405  # v6.2.0
+        with:
+          python-version: '3.10'
+          cache: 'pip'
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+      
+      - name: Seads Ad Scan
+        timeout-minutes: 20
+        run: python scripts/run_seads.py
+        
+      - name: Dnstwist Proactive Hunt
+        run: python scripts/generate_permutations.py
+
+      - name: Proactive Campaign Hunt
+        env:
+          SHODAN_API_KEY: ${{ secrets.SHODAN_API_KEY }}
+          ALIENVAULT_OTX_API_KEY: ${{ secrets.ALIENVAULT_OTX_API_KEY }}
+        run: python scripts/hunt_campaign.py
+
+      - name: Run CT Discovery
+        env:
+          CENSYS_API_KEY: ${{ secrets.CENSYS_API_KEY }}
+        run: python scripts/discover_ct.py
+
+      - name: MX Pivot Discovery (pickelhost/eye-mail actor)
+        timeout-minutes: 15
+        continue-on-error: true
+        env:
+          ALIENVAULT_OTX_API_KEY: ${{ secrets.ALIENVAULT_OTX_API_KEY }}
+        run: python scripts/discover_mx_pivot.py --output data/mx_pivot_findings.csv
+
+      - name: Upload Discovery Intel
+        uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f  # v7.0.0
+        with:
+          name: discovery-intel
+          path: |
+            data/discovered_ads.csv
+            data/potential_typosquats.csv
+            data/discovered_certs.csv
+            data/campaign_hunt_history.csv
+            data/campaign_pivot_findings.csv
+            data/mx_pivot_findings.csv
+            data/.pivoted_ips.txt
+          retention-days: 7
+
+  setup:
+    needs: discovery
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # v6.0.2
+
+      - name: Set up Python
+        uses: actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405  # v6.2.0
+        with:
+          python-version: '3.10'
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
+
+      - name: Download Discovery Intel
+        # We download the artifacts so merge_lists_v3b.py can pick them up locally
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c  # v8.0.1
+        with:
+          name: discovery-intel
+          path: data
+        continue-on-error: true # Don't fail if discovery didn't produce anything or failed
+
+      - name: 1. Update & Merge Sources
+        run: python scripts/merge_lists_v3b.py --include-stopforumspam
+
+      - name: 2. Split Data (Sharding)
+        run: |
+          # Split into 10 chunks
+          python scripts/split_data.py --input data/pipeline_input.csv --chunks 10 --output-prefix data/dea_part
+
+      - name: Upload Shards
+        uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f  # v7.0.0
+        with:
+          name: shards
+          path: data/dea_part_*.csv
+          retention-days: 1
+
+      - name: Upload Raw Lists
+        uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f  # v7.0.0
+        with:
+          name: raw-lists
+          path: |
+            data/dea_domains.csv
+            data/high_abuse_domains.csv
+            data/dea_allowlist.csv
+            data/discovered_ads.csv
+            data/potential_typosquats.csv
+            data/discovery_domains.csv
+            data/pipeline_input.csv
+          retention-days: 1
+
+  process_shard:
+    needs: setup
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        shard: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]
+      fail-fast: false
+    permissions:
+        contents: read
+
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # v6.0.2
+
+      - name: Set up Python
+        uses: actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405  # v6.2.0
+        with:
+          python-version: '3.10'
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
+
+      - name: Download Shards
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c  # v8.0.1
+        with:
+          name: shards
+          path: data
+
+      - name: 'Shard ${{ matrix.shard }}: Enrich Infrastructure'
+        timeout-minutes: 15
+        run: |
+          PART_FILE="data/dea_part_${{ matrix.shard }}.csv"
+          echo "Processing $PART_FILE..."
+          python scripts/enrich_infrastructure.py --input "$PART_FILE" --output start_temp.csv --workers 200 --timeout-minutes 8
+
+      - name: 'Shard ${{ matrix.shard }}: Enrich Reputation'
+        timeout-minutes: 20
+        env:
+          ALIENVAULT_OTX_API_KEY: ${{ secrets.ALIENVAULT_OTX_API_KEY }}
+        run: |
+          python scripts/enrich_reputation.py --input start_temp.csv --output reputation_temp.csv --timeout-minutes 18
+
+      - name: 'Shard ${{ matrix.shard }}: Web Probe'
+        timeout-minutes: 35
+        run: |
+          OUT_FILE="data/result_part_${{ matrix.shard }}.csv"
+          python scripts/probe_web.py --input reputation_temp.csv --output "$OUT_FILE" --workers 50
+          rm -f start_temp.csv reputation_temp.csv
+
+      - name: Upload Result Shard
+        uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f  # v7.0.0
+        with:
+          name: result-shard-${{ matrix.shard }}
+          path: data/result_part_${{ matrix.shard }}.csv
+          retention-days: 1
+
+  finalize:
+    needs: process_shard
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # v6.0.2
+
+      - name: Set up Python
+        uses: actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405  # v6.2.0
+        with:
+          python-version: '3.10'
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
+
+      - name: Download Results
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c  # v8.0.1
+        with:
+          pattern: result-shard-*
+          merge-multiple: true
+          path: data
+
+      - name: Download Discovery Intel
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c  # v8.0.1
+        with:
+          name: discovery-intel
+          path: data
+        continue-on-error: true
+
+      - name: Download Raw Lists
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c  # v8.0.1
+        with:
+          name: raw-lists
+          path: data
+
+      - name: Merge Results
+        run: |
+          # Merges all result_part_*.csv into dea_domains_probed.csv
+          python scripts/merge_results.py --pattern "data/result_part_*.csv" --output data/dea_domains_probed.csv
+
+          # Shodan enrichment moved to AFTER triage to save time/credits.
+          # Was causing 3+ hour runtimes on full dataset.
+
+          # Was causing 3+ hour runtimes on full dataset.
+
+      - name: Infrastructure Intel (ASN/VPN/Tor)
+        run: |
+          python scripts/asn_intel.py
+          python scripts/vpn_intel.py
+          python scripts/tor_intel.py
+          python scripts/vpn_ip_intel.py
+        continue-on-error: true
+
+      - name: Data Hygiene & Enrichment (Clean Data)
+        run: |
+           # Running clean_data.py last to clean the merged big file
+           python scripts/clean_data.py
+           python scripts/enrich_asns.py
+
+      - name: GLEIF Entity Verification
+        timeout-minutes: 30
+        continue-on-error: true
+        run: python scripts/enrich_gleif.py
+
+      - name: OpenSanctions Entity Screening
+        timeout-minutes: 30
+        continue-on-error: true
+        run: python scripts/enrich_opensanctions.py
+
+      - name: ICIJ OffshoreLeaks Screening
+        timeout-minutes: 30
+        continue-on-error: true
+        run: python scripts/enrich_icij.py
+
+      - name: dnstwist Cross-Reference Enrichment
+        timeout-minutes: 10
+        continue-on-error: true
+        run: python scripts/enrich_dnstwist.py
+
+      - name: SPF/TXT Enrichment (ULA actor detection)
+        timeout-minutes: 15
+        continue-on-error: true
+        run: |
+          # Extract actor-MX domains only, scan those for SPF, then merge back
+          python -c "
+          import csv
+          actor_mx = ['pickelhost.com','eye-mail.net','h-email.net','happyisp.com','hope-mail.com','mailerhost.net','mailer-host.com','nickstel.com','yurtmail.com','emailofsteel.com','wallywatts.com','flip-mail.com','post-host.net','mxproc.com','mxhoppr.com','mx-host.net','skrimple.com','b-io.co']
+          with open('data/dea_domains_probed.csv','r',encoding='utf-8',errors='replace') as f:
+              reader = csv.DictReader(f)
+              domains = [r['domain'] for r in reader if any(mx in (r.get('primary_mx','') or '').lower() for mx in actor_mx)]
+          with open('/tmp/actor_mx_domains.txt','w') as f:
+              f.write('\n'.join(domains))
+          print(f'Extracted {len(domains)} actor-MX domains for SPF scan')
+          "
+          python scripts/enrich_spf.py -i /tmp/actor_mx_domains.txt -o data/spf_enrichment.csv -c 200
+
+      - name: Infrastructure Fingerprinting
+        run: python scripts/match_fingerprints.py
+
+      - name: Build Frontend Data
+        run: python scripts/build_frontend_data.py
+
+      - name: Visual Fingerprinting (Optional)
+        timeout-minutes: 30
+        run: |
+          # Install browser dependencies
+          python -m playwright install chromium
+          # Run visual analysis on top 200 interesting domains
+          python scripts/visual_fingerprint.py --limit 1000
+          # Sync artifacts
+          cp data/visual_clusters.json docs/data/ || true
+          cp data/visual_hashes.csv docs/data/ || true
+          mkdir -p docs/data/screenshots
+          cp -r data/screenshots/* docs/data/screenshots/ || true
+
+      - name: Shodan Favicon Pivot
+        timeout-minutes: 20
+        continue-on-error: true
+        env:
+          SHODAN_API_KEY: ${{ secrets.SHODAN_API_KEY }}
+        run: |
+          if [ -n "$SHODAN_API_KEY" ]; then
+             python scripts/shodan_pivot.py --budget 10
+          fi
+
+      - name: Triage Domains
+        run: python scripts/triage_domains.py
+
+      - name: Shodan Enrichment
+        timeout-minutes: 40
+        continue-on-error: true
+        env:
+          SHODAN_API_KEY: ${{ secrets.SHODAN_API_KEY }}
+        run: |
+          if [ -n "$SHODAN_API_KEY" ]; then
+             python scripts/enrich_shodan.py --input data/triage_candidates.csv --output data/shodan_intelligence.csv --budget 2500 --limit 2000
+          fi
+          cp data/shodan_intelligence.csv docs/data/ || true
+
+      - name: Proxy Detection Enrichment
+        timeout-minutes: 10
+        continue-on-error: true
+        env:
+          PROXYCHECK_API_KEY: ${{ secrets.PROXYCHECK_API_KEY }}
+        run: |
+          python scripts/enrich_proxy_check.py --input data/dea_domains_probed.csv --output data/dea_domains_probed.csv --budget 900
+
+      - name: VirusTotal Enrichment
+        timeout-minutes: 30
+        continue-on-error: true
+        env:
+          VT_API_KEY: ${{ secrets.VT_API_Key }}
+        run: |
+          if [ -n "$VT_API_KEY" ]; then
+             python scripts/enrich_virustotal.py --input data/triage_candidates.csv \
+               --output data/virustotal_intelligence.csv --budget 100 --limit 100
+          fi
+          cp data/virustotal_intelligence.csv docs/data/ || true
+
+      - name: PhishTank & URLhaus Feed Matching
+        timeout-minutes: 30
+        continue-on-error: true
+        run: |
+          python scripts/enrich_phishtank.py --input data/dea_domains.csv \
+            --output data/phishtank_matches.csv
+          cp data/phishtank_matches.csv docs/data/ || true
+
+      - name: Technical & Pivot Enrichment
+        timeout-minutes: 20
+        continue-on-error: true
+        env:
+          WHOXY_API_KEY: ${{ secrets.WHOXY_API_KEY }}
+        run: |
+          if [ -n "$WHOXY_API_KEY" ]; then
+             python scripts/enrich_technical.py --limit 5000 --workers 50
+             python scripts/enrich_pivot.py
+          fi
+          cp data/enriched_candidates.csv docs/data/ || true
+
+      - name: Shadow AI Analysis (OpenClaw)
+        env:
+          SHODAN_API_KEY: ${{ secrets.SHODAN_API_KEY }}
+        run: |
+          if [ -n "$SHODAN_API_KEY" ]; then
+             python scripts/openclaw_scan.py --budget 500
+             # STIX generation is called internally by scan.py, but we can run it explicitly if needed
+             # python scripts/openclaw_stix.py
+          fi
+          # Backup artifacts
+          cp data/openclaw_exposed.csv docs/data/ || true
+          cp data/openclaw_history.csv docs/data/ || true
+          cp data/openclaw_stix.json docs/data/ || true
+          cp data/openclaw_sigma.yml docs/data/ || true
+
+      - name: AI Analysis (Optional)
+        timeout-minutes: 40
+        env:
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          SHODAN_API_KEY: ${{ secrets.SHODAN_API_KEY }}
+          ALIENVAULT_OTX_API_KEY: ${{ secrets.ALIENVAULT_OTX_API_KEY }}
+        run: |
+          if [ -n "$GEMINI_API_KEY" ] || [ -n "$OPENAI_API_KEY" ] || [ -n "$ANTHROPIC_API_KEY" ]; then
+            # Analysis (Limit strictly to fit in 40m)
+            python scripts/ai_typosquat.py --limit 2000 --batch-size 100 --input data/triage_candidates.csv
+            python scripts/ai_classify_web.py --limit 2000 --batch-size 50 --input data/dea_domains_probed.csv
+            # Briefing runs last to capture Shodan/Infrastructure stats
+            python scripts/ai_briefing.py
+          fi
+          # Sync artifacts
+          cp data/daily_briefing.json docs/data/ || true
+          cp data/ai_typosquats.csv docs/data/ || true
+          cp data/ai_classifications.csv docs/data/ || true
+
+      - name: Generate Pivots & Stats
+        run: |
+          # Now runs AFTER all enrichment to reflect accurate High Risk counts
+          python scripts/generate_pivots.py --input data/dea_domains_probed.csv
+          python scripts/track_history.py
+
+      - name: Export STIX
+        run: python scripts/export_stix.py --input data/dea_domains_probed.csv
+
+      - name: Cleanup Shards
+        run: rm data/*_part_*.csv
+
+      - name: Set up Node.js
+        uses: actions/setup-node@53b83947a5a98c8d113130e565377fae1a50d02f  # v6.3.0
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Build Dashboard Frontend
+        timeout-minutes: 5
+        run: |
+          cd frontend
+          npm ci
+          npm run build
+
+      - name: Commit and Push changes
+        run: |
+          git config --global user.name 'github-actions[bot]'
+          git config --global user.email 'github-actions[bot]@users.noreply.github.com'
+          
+          mkdir -p docs/data
+          touch docs/.nojekyll
+          cp data/*.csv docs/data/
+          gzip -f data/domain_intel_bundle.json
+          cp data/*.json.gz docs/data/
+          cp data/openclaw_stix.json docs/data/
+          cp data/openclaw_sigma.yml docs/data/
+          cp data/fingerprint_matches.csv docs/data/ || true
+          # Compress fingerprint_matches.json if over 100MB (GitHub file size limit)
+          if [ -f docs/data/fingerprint_matches.json ]; then
+            gzip -f docs/data/fingerprint_matches.json
+          fi
+          # Remove stale monolithic domains.json (now sharded by build_frontend_data.py)
+          rm -f docs/data/domains.json
+
+          git add data docs
+
+          if git diff --staged --quiet; then
+            echo "No changes to commit"
+          else
+            git commit -m "Automated Map Shard Update: $(date +'%Y-%m-%d')"
+            # Use -X theirs to prioritize the workflow's fresh generated data over concurrent remote changes
+            git pull --rebase -X theirs origin main
+            git push
+          fi

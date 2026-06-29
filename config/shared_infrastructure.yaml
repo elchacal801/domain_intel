@@ -1,0 +1,170 @@
+version: 1
+
+confidence_thresholds:
+  high: 70
+  medium: 40
+
+size_penalties:
+  - { above: 100, penalty: 40 }
+  - { above: 50,  penalty: 30 }
+  - { above: 20,  penalty: 20 }
+  - { above: 10,  penalty: 10 }
+
+a_record_size_bonuses:
+  - { above: 100, bonus: 30 }
+  - { above: 50,  bonus: 20 }
+  - { above: 20,  bonus: 15 }
+  - { above: 10,  bonus: 10 }
+  - { above: 5,   bonus: 5  }
+
+providers:
+  cloudflare_email_routing:
+    label: "Cloudflare Email Routing"
+    category: "email"
+    mx_patterns:
+      - "route*.mx.cloudflare.net"
+    ip_ranges:
+      - "162.159.205.0/24"
+
+  google_workspace:
+    label: "Google Workspace"
+    category: "email"
+    mx_patterns:
+      - "aspmx.l.google.com"
+      - "alt*.aspmx.l.google.com"
+      - "*.googlemail.com"
+
+  microsoft_365:
+    label: "Microsoft 365"
+    category: "email"
+    mx_patterns:
+      - "*.mail.protection.outlook.com"
+
+  zoho:
+    label: "Zoho Mail"
+    category: "email"
+    mx_patterns:
+      - "mx.zoho.com"
+      - "mx2.zoho.com"
+      - "mx3.zoho.com"
+
+  protonmail:
+    label: "ProtonMail"
+    category: "email"
+    mx_patterns:
+      - "mail.protonmail.ch"
+      - "mailsec.protonmail.ch"
+
+  fastmail:
+    label: "Fastmail"
+    category: "email"
+    mx_patterns:
+      - "in*-smtp.messagingengine.com"
+
+  migadu:
+    label: "Migadu"
+    category: "email"
+    mx_patterns:
+      - "aspmx1.migadu.com"
+      - "aspmx2.migadu.com"
+
+  improvmx:
+    label: "ImprovMX"
+    category: "email"
+    mx_patterns:
+      - "mx1.improvmx.com"
+      - "mx2.improvmx.com"
+
+  forwardemail:
+    label: "Forward Email"
+    category: "email"
+    mx_patterns:
+      - "mx1.forwardemail.net"
+      - "mx2.forwardemail.net"
+
+  mxroute:
+    label: "MXRoute"
+    category: "email"
+    mx_patterns:
+      - "*.mxrouting.net"
+
+  rackspace:
+    label: "Rackspace Email"
+    category: "email"
+    mx_patterns:
+      - "mx*.emailsrvr.com"
+
+  cloudflare_ns:
+    label: "Cloudflare DNS"
+    category: "dns"
+    ns_patterns:
+      - "*.ns.cloudflare.com"
+
+  aws_route53:
+    label: "AWS Route 53"
+    category: "dns"
+    ns_patterns:
+      - "ns-*.awsdns-*"
+
+  google_cloud_dns:
+    label: "Google Cloud DNS"
+    category: "dns"
+    ns_patterns:
+      - "ns-cloud-*.googledomains.com"
+
+  digitalocean_dns:
+    label: "DigitalOcean DNS"
+    category: "dns"
+    ns_patterns:
+      - "ns*.digitalocean.com"
+
+  # Web Hosting / CDN Providers
+  cloudflare_cdn:
+    label: "Cloudflare CDN"
+    category: "web_hosting"
+    asn_list: ["13335"]
+
+  aws_hosting:
+    label: "AWS"
+    category: "web_hosting"
+    asn_list: ["16509", "14618"]
+
+  google_cloud:
+    label: "Google Cloud"
+    category: "web_hosting"
+    asn_list: ["15169", "396982"]
+
+  akamai:
+    label: "Akamai"
+    category: "web_hosting"
+    asn_list: ["20940", "16625"]
+
+  fastly:
+    label: "Fastly"
+    category: "web_hosting"
+    asn_list: ["54113"]
+
+  azure:
+    label: "Microsoft Azure"
+    category: "web_hosting"
+    asn_list: ["8075"]
+
+  digitalocean:
+    label: "DigitalOcean"
+    category: "web_hosting"
+    asn_list: ["14061"]
+
+  ovh:
+    label: "OVH"
+    category: "web_hosting"
+    asn_list: ["16276"]
+
+  hetzner:
+    label: "Hetzner"
+    category: "web_hosting"
+    asn_list: ["24940"]
+
+  godaddy_hosting:
+    label: "GoDaddy Hosting"
+    category: "web_hosting"
+    asn_list: ["26496"]

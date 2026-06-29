@@ -1,0 +1,54 @@
+﻿# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.env
+venv/
+env/
+
+# Project Data
+# We exclude the large enriched files or temporary outputs if desired, 
+# but keep the core CSVs if they are part of the 'public' repo intent.
+# Ignoring only verification/test artifacts.
+test_*.csv
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Large target lists
+targets.simple.csv
+
+# Sharding Artifacts
+*_part_*.csv
+
+# Binaries and Temp
+seads.exe
+seads
+temp_seads_*.yaml
+temp_dnstwist_*.json
+data/seads_raw.json
+data/.shodan_budget.json
+data/.shodan_cache/
+data/.gleif_cache/
+data/.opensanctions_cache/
+data/.icij_cache/
+data/.vt_cache/
+data/.phishtank_cache/
+data/.securitytrails_cache/
+data/.llm_cache/
+data/llm_cost_log.csv
+
+data/*.json
+
+# Frontend build artifacts
+docs_new/
+frontend/node_modules/
+
+# VPN local app caches (account-specific, not for repo)
+data/vpn_seeds/expressvpn_data.json
+data/vpn_seeds/expressvpn_sdkcache.json
+
+# Git worktrees
+.worktrees/

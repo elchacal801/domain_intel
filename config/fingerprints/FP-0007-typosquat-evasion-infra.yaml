@@ -1,0 +1,62 @@
+id: "FP-0007"
+name: "Typosquat Evasion Infrastructure"
+description: >
+  Domains confirmed as typosquats (via dnstwist) exhibiting evasion
+  behaviors: strategic redirects to brand, active MX, registrant
+  mismatch, or sanctions matches.
+version: 2
+
+indicators:
+  - field: dnstwist_match
+    match_type: exact
+    value: "True"
+    required: true
+
+confidence_base: 45
+
+confidence_modifiers:
+  - field: redirects_to_brand
+    match_type: exact
+    value: "True"
+    delta: 30
+  - field: primary_mx
+    match_type: contains
+    value: "."
+    delta: 20
+  - field: registrant_mismatch
+    match_type: exact
+    value: "True"
+    delta: 15
+  - field: http_title
+    match_type: regex
+    value: "(?i)(parked|for sale|buy this|domain for sale)"
+    delta: 10
+  - field: os_match_score
+    match_type: range
+    value: "70-100"
+    delta: 20
+  - field: ssl_present
+    match_type: exact
+    value: "True"
+    delta: 5
+  - field: vt_malicious_count
+    match_type: range
+    value: "3-100"
+    delta: 20
+  - field: phishtank_match
+    match_type: exact
+    value: "True"
+    delta: 15
+  - field: st_registrar_changes
+    match_type: range
+    value: "3-100"
+    delta: 10
+  - field: st_dns_history_count
+    match_type: range
+    value: "10-1000"
+    delta: 5
+
+flame_tp_ids:
+  - "TP-0012"
+
+ttl_days: 30

@@ -1,0 +1,57 @@
+id: "FP-0006"
+name: "Coordinated Shell Domain Network (MX Clustering)"
+description: >
+  Domains sharing non-standard MX infrastructure with no web content
+  and short registration age, indicating coordinated shell domain networks.
+version: 1
+
+indicators:
+  - field: http_status
+    match_type: exact
+    value: "0"
+    required: true
+  - field: mx
+    match_type: contains
+    value: "."
+    required: true
+
+confidence_base: 60
+
+confidence_modifiers:
+  - field: age_days
+    match_type: range
+    value: "0-90"
+    delta: 15
+  - field: risk_tags
+    match_type: contains
+    value: "HighRisk"
+    delta: 10
+  - field: gleif_status
+    match_type: exact
+    value: "ACTIVE"
+    delta: -15
+  - field: gleif_lei
+    match_type: exact
+    value: ""
+    delta: 10
+  - field: os_match_score
+    match_type: range
+    value: "70-100"
+    delta: 20
+  - field: icij_entity_match
+    match_type: exact
+    value: "True"
+    delta: 15
+  - field: vt_malicious_count
+    match_type: range
+    value: "3-100"
+    delta: 20
+  - field: phishtank_match
+    match_type: exact
+    value: "True"
+    delta: 15
+
+flame_tp_ids:
+  - "TP-0003"
+
+ttl_days: 14

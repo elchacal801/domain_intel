@@ -1,0 +1,57 @@
+id: "FP-0003"
+name: "Crypto/Finance Fraud Co-hosting"
+description: >
+  Domains with financial/crypto keywords in titles hosted alongside
+  DEA-pattern MX, common for investment scam infrastructure.
+version: 1
+
+indicators:
+  - field: title
+    match_type: regex
+    value: "(crypto|bitcoin|wallet|defi|trading|forex|invest)"
+    required: true
+  - field: mx
+    match_type: contains
+    value: "mail"
+    required: true
+
+confidence_base: 60
+
+confidence_modifiers:
+  - field: asn
+    match_type: range
+    value: "45100-45200"
+    delta: 10
+  - field: cc
+    match_type: exact
+    value: "CN"
+    delta: 10
+  - field: gleif_status
+    match_type: exact
+    value: "ACTIVE"
+    delta: -15
+  - field: gleif_lei
+    match_type: exact
+    value: ""
+    delta: 10
+  - field: os_match_score
+    match_type: range
+    value: "70-100"
+    delta: 20
+  - field: icij_entity_match
+    match_type: exact
+    value: "True"
+    delta: 15
+  - field: vt_malicious_count
+    match_type: range
+    value: "3-100"
+    delta: 20
+  - field: phishtank_match
+    match_type: exact
+    value: "True"
+    delta: 15
+
+flame_tp_ids:
+  - "TP-0017"
+
+ttl_days: 30

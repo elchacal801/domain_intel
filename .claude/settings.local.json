@@ -1,0 +1,29 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(cd /c/Users/anon/Documents/anon/repos/domain_intel && gh project list --owner elchacal801 2>&1)",
+      "Bash(cd:*)",
+      "Bash(cd /c/Users/anon/Documents/anon/repos/domain_intel && gh project list --owner elchacal801 --format json 2>&1)",
+      "Bash(cd C:/Users/anon/Documents/anon/repos/domain_intel && python -m pytest tests/test_fingerprints.py -v 2>&1)",
+      "Bash(cd C:/Users/anon/Documents/anon/repos/domain_intel && python -m pytest tests/ -v --timeout=30 2>&1)",
+      "Bash(cd C:/Users/anon/Documents/anon/repos/domain_intel && python -m pytest tests/ -v 2>&1)",
+      "Bash(tail:*)",
+      "Bash(cd /c/Users/anon/Documents/anon/repos/domain_intel && python -m pytest tests/test_fingerprints.py -v 2>&1)",
+      "Bash(grep:*)",
+      "WebSearch",
+      "WebFetch(domain:docs.securitytrails.com)",
+      "Bash(python:*)",
+      "Bash(git:*)",
+      "Bash(ls:*)",
+      "Bash(find:*)",
+      "WebFetch(domain:elchacal801.github.io)",
+      "Bash(curl:*)",
+      "Bash(PYTHONPATH=scripts python:*)",
+      "Bash(pip install:*)",
+      "Bash(python3:*)",
+      "Bash(npm run:*)",
+      "Bash(npx vite build)",
+      "Bash(npm install)"
+    ]
+  }
+}

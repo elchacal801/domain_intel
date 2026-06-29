@@ -1,0 +1,139 @@
+id: "FP-0009"
+name: "IPIDEA Residential Proxy Network Infrastructure"
+description: >
+  Domains associated with the IPIDEA residential proxy network, the world's
+  largest at ~9M compromised devices. Disrupted by Google GTIG in January 2026.
+  550+ threat groups including DPRK, China, Iran, and Russia observed using
+  IPIDEA exit nodes. Brands include 360 Proxy, 922 Proxy, ABC Proxy, Cherry Proxy,
+  IP2World, Luna Proxy, PIA S5 Proxy, PyProxy, and others. SDKs (Packet SDK,
+  Hex SDK, Castar SDK, Earn SDK) are distributed via Android apps and Windows
+  binaries to recruit residential exit nodes.
+  Source: Google GTIG (Jan 2026), SecurityScorecard Operation Phantom Circuit.
+version: 1
+
+indicators:
+  # C2 SDK domains
+  - field: domain
+    match_type: contains
+    value: "packetsdk"
+    required: false
+  - field: domain
+    match_type: contains
+    value: "hexsdk.com"
+    required: false
+  - field: domain
+    match_type: contains
+    value: "castarsdk.com"
+    required: false
+  - field: domain
+    match_type: contains
+    value: "holadns.com"
+    required: false
+  - field: domain
+    match_type: contains
+    value: "martianinc.co"
+    required: false
+  - field: domain
+    match_type: contains
+    value: "okamiboss.com"
+    required: false
+  # Proxy brand domains
+  - field: domain
+    match_type: contains
+    value: "ipidea.io"
+    required: false
+  - field: domain
+    match_type: contains
+    value: "922proxy.com"
+    required: false
+  - field: domain
+    match_type: contains
+    value: "abcproxy.com"
+    required: false
+  - field: domain
+    match_type: contains
+    value: "ip2world.com"
+    required: false
+  - field: domain
+    match_type: contains
+    value: "lunaproxy.com"
+    required: false
+  - field: domain
+    match_type: contains
+    value: "piaproxy.com"
+    required: false
+  - field: domain
+    match_type: contains
+    value: "pyproxy.com"
+    required: false
+  - field: domain
+    match_type: contains
+    value: "360proxy.com"
+    required: false
+  - field: domain
+    match_type: contains
+    value: "radishvpn.com"
+    required: false
+  - field: domain
+    match_type: contains
+    value: "tabproxy.com"
+    required: false
+  # Enrichment-based detection
+  - field: ipidea_domain_match
+    match_type: exact
+    value: "TRUE"
+    required: false
+  - field: proxy_detected
+    match_type: exact
+    value: "yes"
+    required: false
+
+confidence_base: 70
+
+confidence_modifiers:
+  # SDK C2 domains are high-confidence
+  - field: domain
+    match_type: contains
+    value: "packetsdk"
+    delta: 20
+  - field: domain
+    match_type: contains
+    value: "hexsdk.com"
+    delta: 20
+  - field: domain
+    match_type: contains
+    value: "castarsdk.com"
+    delta: 20
+  # IPIDEA brand domains
+  - field: domain
+    match_type: contains
+    value: "ipidea.io"
+    delta: 15
+  # Proxy detection from proxycheck.io
+  - field: proxy_detected
+    match_type: exact
+    value: "yes"
+    delta: 10
+  - field: proxy_type
+    match_type: contains
+    value: "Residential"
+    delta: 15
+  # IPIDEA domain IOC match from enrichment
+  - field: ipidea_domain_match
+    match_type: exact
+    value: "TRUE"
+    delta: 20
+  # Known legitimate entity reduces confidence
+  - field: gleif_status
+    match_type: exact
+    value: "ACTIVE"
+    delta: -25
+
+ttl_days: 180
+
+tags:
+  - "ipidea"
+  - "residential-proxy"
+  - "dprk-infrastructure"
+  - "google-gtig-disruption"
+  - "proxy-as-a-service"

@@ -1,0 +1,143 @@
+{
+  "date": "2026-02-24",
+  "headline": "Strategic Threat Brief: Elevated Typosquatting Activity Correlated with High-Volume Registrar Abuse",
+  "executive_summary": "Intelligence telemetry for February 24, 2026, indicates a notable divergence between total domain volume (-341) and active live infrastructure (+1,328), suggesting adversaries are activating previously dormant assets. Analysis of the sample set reveals 1,370 confirmed typosquats targeting major technology brands, with a significant concentration of high-risk indicators including 393 confirmed phishing sites and 213 suspected C2 panels. FLAME framework analysis highlights TP-0001 and TP-0002 as the dominant threat paths, accounting for nearly 75% of categorized threats. While no new infrastructure pivots were discovered via Whois, the persistence of 2,950 malicious ASNs and 1,822 Shodan-verified vulnerabilities points to a resilient and entrenched adversary infrastructure.",
+  "strategic_assessment": "The threat landscape is currently characterized by 'High Confidence' indicators of organized credential harvesting and brand impersonation campaigns. The sharp increase in 'Live Domains' (+1,328) despite a net decrease in total monitored domains strongly suggests a shift from acquisition to operationalization; adversaries are likely moving from the 'parking' phase to active deployment. The dominance of TP-0001 (likely generic phishing/harvesting) and TP-0002 (likely mobile/app-focused fraud given the '.app' TLD prevalence in samples) indicates a bifurcated strategy targeting both desktop and mobile vectors. The absence of new Whois pivots suggests attackers are employing privacy shielding or utilizing bulletproof hosting providers effectively to sever attribution links.",
+  "operational_intelligence": "Operational analysis reveals a distinct preference for short, alphanumeric domain structures (e.g., '1bmo.com', '11yh.app') likely designed for SMS-based phishing (smishing) where URL truncation is common. Infrastructure scanning via Shodan identified 1,822 vulnerabilities, with a concentration on ports 80, 443, and 2083 (cPanel), indicating compromised legitimate hosting is a primary vector for staging attacks. The detection of 213 suspected C2 panels within the sample set represents a critical operational risk, potentially signaling the staging phase of a malware distribution campaign. High-risk registrar 'Gname' accounts for 502 domains, representing a disproportionate share of the threat surface relative to its market share.",
+  "campaign_highlights": "Active tracking is monitoring 21 campaign IPs across 8 countries. While no new campaigns were formally attributed today, the FLAME pipeline has identified significant clustering in TP-0001 (362 domains) and TP-0002 (100 domains). The TP-0002 cluster specifically utilizes '.app' and '.com' TLDs with numeric prefixes (e.g., '12-m.com'), highly characteristic of high-volume, automated smishing infrastructure. OpenClaw telemetry detected 222 exposed 'Shadow AI' instances, all classified as MEDIUM risk; while not critical immediately, these represent potential data leakage vectors if internal LLM endpoints are being exposed without authentication.",
+  "risk_signal_analysis": "Risk signal distribution remains heavily skewed towards 'HighRisk:NoMX' (5,323) and 'HighRisk:ParkingPage' (1,336). This ratio (approx. 4:1) suggests that the majority of the suspicious infrastructure is currently staged for web-based attacks (phishing/redirects) rather than Business Email Compromise (BEC), as MX records are absent. However, the presence of 170 'SuspiciousTitle' signals warrants immediate manual review, as these often correlate with high-fidelity brand impersonation pages that have bypassed automated takedowns.",
+  "registrar_risk_outlook": "Registrar abuse remains a primary facilitator of the current threat landscape. 'Gname' is assessed as a Critical Risk, hosting 502 domains within the watchlist, significantly outpacing other high-risk providers like 'Nicenic' (70) and 'Dominet' (51). The high volume of 'Unknown' registrars (891) for confirmed typosquats indicates a potential blind spot in Whois parsing or the use of obscure resellers to obfuscate ownership. Immediate blocklisting of newly observed domains from 'Gname' with low reputation scores is recommended.",
+  "key_risks": [
+    "Brand Erosion & Fraud: 1,370 confirmed typosquats targeting Google, Apple, and Facebook create a high probability of credential theft affecting employee and customer accounts.",
+    "Mobile Vector Expansion: The prevalence of short, numeric domains in TP-0002 suggests a targeted smishing campaign which may bypass traditional email gateways.",
+    "C2 Infrastructure Staging: 213 suspected C2 panels indicate a likely precursor to a malware or ransomware distribution wave.",
+    "Shadow AI Exposure: 222 exposed instances present a moderate risk of intellectual property leakage or unauthorized model access."
+  ],
+  "action_items": [
+    "Strategic: Initiate a targeted takedown request wave against the 502 high-risk domains registered via 'Gname' citing terms of service violations.",
+    "Tactical: Update perimeter firewalls and web proxy blocklists to ingest the 213 suspected C2 panel IPs and the 393 identified phishing URLs immediately.",
+    "Operational: Submit the TP-0002 domain cluster (100 domains) to the FLAME evidence pipeline for deeper forensic analysis of the underlying kit.",
+    "Investigation: Conduct manual verification of the 170 domains flagged with 'SuspiciousTitle' to identify and neutralize high-quality spoofing pages."
+  ],
+  "model_used": "shared_llm_client",
+  "summary": "Intelligence telemetry for February 24, 2026, indicates a notable divergence between total domain volume (-341) and active live infrastructure (+1,328), suggesting adversaries are activating previously dormant assets. Analysis of the sample set reveals 1,370 confirmed typosquats targeting major technology brands, with a significant concentration of high-risk indicators including 393 confirmed phishing sites and 213 suspected C2 panels. FLAME framework analysis highlights TP-0001 and TP-0002 as the dominant threat paths, accounting for nearly 75% of categorized threats. While no new infrastructure pivots were discovered via Whois, the persistence of 2,950 malicious ASNs and 1,822 Shodan-verified vulnerabilities points to a resilient and entrenched adversary infrastructure.",
+  "evidence_candidates": [
+    {
+      "tp_id": "TP-0001",
+      "domain_count": 362,
+      "sample_domains": [
+        "54.mk",
+        "1bmo.com",
+        "79q.info",
+        "7go.info",
+        "adkbe.com"
+      ],
+      "confidence": "High",
+      "recommendation": "Submit evidence package for TP-0001 (362 domains)"
+    },
+    {
+      "tp_id": "TP-0002",
+      "domain_count": 100,
+      "sample_domains": [
+        "12-m.com",
+        "11yh.app",
+        "11hg.app",
+        "11hg.bet",
+        "3drc.com"
+      ],
+      "confidence": "High",
+      "recommendation": "Submit evidence package for TP-0002 (100 domains)"
+    },
+    {
+      "tp_id": "TP-0004",
+      "domain_count": 47,
+      "sample_domains": [
+        "1ti.ru",
+        "1676.ru",
+        "afsf.de",
+        "1uno.com",
+        "7saa.com"
+      ],
+      "confidence": "Medium",
+      "recommendation": "Submit evidence package for TP-0004 (47 domains)"
+    },
+    {
+      "tp_id": "TP-0007",
+      "domain_count": 40,
+      "sample_domains": [
+        "1s.fr",
+        "4se.us",
+        "4rfv.ru",
+        "adobr.com",
+        "24cafe.ru"
+      ],
+      "confidence": "Medium",
+      "recommendation": "Submit evidence package for TP-0007 (40 domains)"
+    },
+    {
+      "tp_id": "TP-0006",
+      "domain_count": 20,
+      "sample_domains": [
+        "1t-ml.com",
+        "1slate.com",
+        "1tware.com",
+        "1trick.net",
+        "agesong.com"
+      ],
+      "confidence": "Medium",
+      "recommendation": "Submit evidence package for TP-0006 (20 domains)"
+    },
+    {
+      "tp_id": "TP-0003",
+      "domain_count": 16,
+      "sample_domains": [
+        "3dhsng.com",
+        "allcards.su",
+        "alonetry.com",
+        "alpstate.com",
+        "3doggrafx.com"
+      ],
+      "confidence": "Medium",
+      "recommendation": "Submit evidence package for TP-0003 (16 domains)"
+    },
+    {
+      "tp_id": "TP-0015",
+      "domain_count": 12,
+      "sample_domains": [
+        "99.com",
+        "98hg.app",
+        "98hg.bet",
+        "006o.com",
+        "9827k.com"
+      ],
+      "confidence": "Medium",
+      "recommendation": "Submit evidence package for TP-0015 (12 domains)"
+    },
+    {
+      "tp_id": "TP-0005",
+      "domain_count": 11,
+      "sample_domains": [
+        "1vt.com",
+        "1tml.com",
+        "1vbuy.com",
+        "1win.hair",
+        "002046.xyz"
+      ],
+      "confidence": "Medium",
+      "recommendation": "Submit evidence package for TP-0005 (11 domains)"
+    },
+    {
+      "tp_id": "TP-0008",
+      "domain_count": 10,
+      "sample_domains": [
+        "55206.cc",
+        "26564.xyz",
+        "555uh.com",
+        "267918.com",
+        "angka69.com"
+      ],
+      "confidence": "Medium",
+      "recommendation": "Submit evidence package for TP-0008 (10 domains)"
+    }
+  ]
+}

@@ -1,0 +1,17 @@
+title: Detect OpenClaw Shadow AI Traffic
+id: 12345678-1234-5678-1234-567812345678
+status: experimental
+description: Detects network traffic to default OpenClaw port 18789.
+author: Domain Intel
+date: 2026-02-11
+logsource:
+    category: firewall
+detection:
+    selection:
+        dst_port: 18789
+        protocol: tcp
+    condition: selection
+level: high
+tags:
+    - attack.command_and_control
+    - attack.t1071

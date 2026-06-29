@@ -1,0 +1,49 @@
+# config/defaults.yaml
+# Centralised defaults for domain_intel scripts.
+# Overridable via environment variables where noted.
+
+flame:
+  index_url: "https://elchacal801.github.io/flame-fraud/database/flame-index.json"
+  stix_bundle_url: "https://elchacal801.github.io/flame-fraud/database/flame_stix_bundle.json"
+  detection_rules_url: "https://elchacal801.github.io/flame-fraud/database/flame_detection_rules.json"
+  regulatory_alerts_url: "https://elchacal801.github.io/flame-fraud/database/regulatory-alerts.json"
+  cache_ttl_hours: 24
+
+ai:
+  batch_size: 100
+  max_domains: 2000
+  briefing:
+    model_chain:
+      - "anthropic/claude-sonnet-4-5-20250929"
+      - "gemini/gemini-3-pro-preview"
+      - "gpt-4o"
+      - "gemini/gemini-flash-latest"
+  classification:
+    model_chain:
+      - "anthropic/claude-haiku-4-5-20251001"
+      - "gemini/gemini-flash-latest"
+      - "gpt-4o"
+  typosquat:
+    model_chain:
+      - "anthropic/claude-haiku-4-5-20251001"
+      - "gemini/gemini-flash-latest"
+      - "gpt-4o"
+
+shodan:
+  budget_default: 20
+  rate_limit_rps: 1
+
+virustotal:
+  budget_default: 500
+  rate_limit_rpm: 4
+  cache_ttl_days: 7
+
+paths:
+  classification_file: "data/ai_classifications.csv"
+  briefing_file: "data/daily_briefing.json"
+  probed_file: "data/dea_domains_probed.csv"
+  triage_output: "data/triage_candidates.csv"
+
+securitytrails:
+  max_queries_30d: 50
+  cache_ttl_days: 30

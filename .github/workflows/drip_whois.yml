@@ -1,0 +1,39 @@
+name: Slow Drip Whois
+
+on:
+  schedule:
+    # Run every 4 hours (6 runs/day for faster backlog processing)
+    - cron: '0 */4 * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  whois_enrichment:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # v6.0.2
+
+      - name: Set up Python
+        uses: actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405  # v6.2.0
+        with:
+          python-version: '3.10'
+
+      - name: Install Dependencies
+        run: |
+          # No heavy deps needed for this script, uses standard lib + socket
+          # If we needed requests/pandas etc we would install them here
+          echo "No external deps required for drip_whois.py"
+
+      - name: Run Drip Whois
+        run: |
+          python scripts/drip_whois.py
+
+      - name: Commit Registrar Updates
+        run: |
+          git config --local user.email "action@github.com"
+          git config --local user.name "GitHub Action"
+          git add data/domain_registrars.csv
+          git diff --quiet && git diff --staged --quiet || (git commit -m "Automated Whois Update: $(date +'%Y-%m-%d')" && git pull --rebase origin main && git push)
