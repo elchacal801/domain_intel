@@ -242,7 +242,8 @@ graph TD
 | `data/campaign_hunt_history.csv` | Infrastructure discovered by automated Shodan campaign hunts |
 | `data/shodan_intelligence.csv` | Shodan enrichment for triaged candidates (ports, services, vulns) |
 | `data/enriched_candidates.csv` | Technical enrichment with DNS/SSL history and pivot selectors |
-| `data/vpn_relay_ips.csv` | VPN relay IPs from 20 providers with temporal tracking (`first_seen`/`last_seen`/`active`) for SIEM lookup tables |
+| `data/vpn_relay_ips.csv` | VPN relay IPs from 20 providers with temporal tracking (`first_seen`/`last_seen`/`active`) — full master dataset |
+| `data/vpn_relay_lookup.csv` | Lean <10 MB projection of the relay master, for CrowdStrike LogScale / SIEM lookup-table upload |
 | `data/openclaw_exposed.csv` | Exposed Shadow AI agents (OpenClaw/Moltbot) with IPs and ports |
 
 ### For Engineering & DevOps
