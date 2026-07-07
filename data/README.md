@@ -114,7 +114,8 @@ The data flow moves from **Inputs** &rarr; **Discovery** &rarr; **Enrichment** &
 
 | File | Description |
 |------|-------------|
-| `vpn_relay_ips.csv` | Combined VPN relay IPs from all providers, including prefix-inferred rows. Primary output. |
+| `vpn_relay_ips.csv` | Combined VPN relay IPs from all providers, including prefix-inferred rows. Full master output. |
+| `vpn_relay_lookup.csv` | Lean 13-column projection of the master (all rows: exact-IP + CIDR + inactive), kept <10 MB for CrowdStrike LogScale lookup upload. |
 | `vpn_exit_ips.csv` | Legacy compat copy (single-IP rows only, no prefix-inferred). |
 | `vpn_exit_ips/mullvad.csv` | Mullvad VPN servers (from public API) |
 | `vpn_exit_ips/astrill.csv` | Astrill VPN IPs (Spur seed + RDAP validation + Shodan org) |
