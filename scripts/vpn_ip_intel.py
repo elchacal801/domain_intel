@@ -42,6 +42,17 @@ FIELDS = [
     "first_seen", "last_seen", "active",
 ]
 
+# Lean projection of FIELDS for the LogScale lookup file (data/vpn_relay_lookup.csv).
+# Each row keys on `ip` (exact) or `prefix` (CIDR) — never both.
+LOOKUP_FIELDS = [
+    "ip", "prefix", "provider", "asn", "asn_name", "source_date",
+    "score_prehire", "tier_prehire", "score_posthire", "tier_posthire",
+    "first_seen", "last_seen", "active",
+]
+
+# Warn when the lookup approaches LogScale's 10 MB upload limit.
+LOOKUP_WARN_BYTES = 9_000_000
+
 IP_ROLES = {"ingress", "egress", "prefix-inferred", "egress-inferred", "unknown"}
 
 SHARED_HOSTING_ASNS = {
