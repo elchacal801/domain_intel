@@ -22,6 +22,7 @@ from vpn_ip_intel import (
     SHARED_HOSTING_ASNS, _COUNTRY_ALIASES, _SERVER_TYPE_ALIASES, TODAY,
     IP_ROLES, PROVIDERS,
     load_existing_csv, merge_with_existing,
+    LOOKUP_FIELDS, LOOKUP_WARN_BYTES,
 )
 
 
@@ -1256,3 +1257,22 @@ class TestTemporalTracking:
         assert merged[0]["first_seen"] == "2026-05-06"
         assert merged[0]["last_seen"] == "2026-05-06"
         assert merged[0]["active"] == "false"
+
+
+class TestLogScaleLookup:
+    """Lean vpn_relay_lookup.csv projection for LogScale upload."""
+
+    def test_lookup_fields_exact_order(self):
+        assert LOOKUP_FIELDS == [
+            "ip", "prefix", "provider", "asn", "asn_name", "source_date",
+            "score_prehire", "tier_prehire", "score_posthire", "tier_posthire",
+            "first_seen", "last_seen", "active",
+        ]
+
+    def test_lookup_fields_are_subset_of_master(self):
+        # Projection must never invent columns absent from the master schema.
+        assert set(LOOKUP_FIELDS).issubset(set(FIELDS))
+
+    def test_lookup_warn_threshold_under_limit(self):
+        # Warn threshold must sit below the 10 MB hard limit.
+        assert 0 < LOOKUP_WARN_BYTES < 10_000_000
