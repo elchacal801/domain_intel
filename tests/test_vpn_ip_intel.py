@@ -1276,3 +1276,37 @@ class TestLogScaleLookup:
     def test_lookup_warn_threshold_under_limit(self):
         # Warn threshold must sit below the 10 MB hard limit.
         assert 0 < LOOKUP_WARN_BYTES < 10_000_000
+
+    def test_write_csv_projects_and_drops_extra_columns(self, tmp_path):
+        import csv as _csv
+        from vpn_ip_intel import write_csv
+        # A node carrying verbose master-only columns that must be dropped.
+        node = {
+            "ip": "1.2.3.4", "prefix": "", "provider": "mullvad", "asn": "AS1",
+            "asn_name": "Example, US", "source_date": "2026-07-07",
+            "score_prehire": "8", "tier_prehire": "contextual",
+            "score_posthire": "8", "tier_posthire": "contextual",
+            "first_seen": "2026-06-01", "last_seen": "2026-07-07", "active": "true",
+            # extras that must NOT appear in the lookup:
+            "threat_relevance": "long verbose text", "hostname": "x-wg-001",
+            "collection_method": "Public API", "city": "NYC",
+        }
+        out = tmp_path / "vpn_relay_lookup.csv"
+        write_csv([node], str(out), fields=LOOKUP_FIELDS)
+        with open(out, newline="", encoding="utf-8") as f:
+            reader = _csv.reader(f)
+            header = next(reader)
+            rows = list(reader)
+        assert header == LOOKUP_FIELDS
+        assert len(rows) == 1
+        assert rows[0][0] == "1.2.3.4"
+        assert "threat_relevance" not in header and "hostname" not in header
+
+    def test_write_csv_default_fields_unchanged(self, tmp_path):
+        import csv as _csv
+        from vpn_ip_intel import write_csv
+        out = tmp_path / "master.csv"
+        write_csv([{"ip": "1.2.3.4"}], str(out))
+        with open(out, newline="", encoding="utf-8") as f:
+            header = next(_csv.reader(f))
+        assert header == FIELDS  # default still writes the full master schema

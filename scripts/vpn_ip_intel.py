@@ -1793,11 +1793,12 @@ def merge_with_existing(
     return merged
 
 
-def write_csv(nodes: List[Dict], path: str) -> None:
-    """Write nodes to CSV."""
+def write_csv(nodes: List[Dict], path: str, fields: List[str] = FIELDS) -> None:
+    """Write nodes to CSV. `fields` selects and orders the columns; keys in a
+    node dict that are not in `fields` are ignored (pure projection)."""
     os.makedirs(os.path.dirname(path) or ".", exist_ok=True)
     with open(path, "w", newline="", encoding="utf-8") as f:
-        writer = csv.DictWriter(f, fieldnames=FIELDS, extrasaction="ignore")
+        writer = csv.DictWriter(f, fieldnames=fields, extrasaction="ignore")
         writer.writeheader()
         writer.writerows(nodes)
     logger.info(f"Wrote {len(nodes)} rows to {path}")
