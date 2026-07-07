@@ -22,7 +22,7 @@ from vpn_ip_intel import (
     SHARED_HOSTING_ASNS, _COUNTRY_ALIASES, _SERVER_TYPE_ALIASES, TODAY,
     IP_ROLES, PROVIDERS,
     load_existing_csv, merge_with_existing,
-    LOOKUP_FIELDS, LOOKUP_WARN_BYTES,
+    LOOKUP_FIELDS, LOOKUP_WARN_BYTES, write_lookup_csv,
 )
 
 
@@ -1310,3 +1310,41 @@ class TestLogScaleLookup:
         with open(out, newline="", encoding="utf-8") as f:
             header = next(_csv.reader(f))
         assert header == FIELDS  # default still writes the full master schema
+
+    def _sample_nodes(self):
+        # Mixed: exact-IP active, exact-IP inactive, CIDR (empty ip, has prefix).
+        base = {
+            "provider": "mullvad", "asn": "AS1", "asn_name": "Ex, US",
+            "source_date": "2026-07-07", "score_prehire": "8", "tier_prehire": "contextual",
+            "score_posthire": "8", "tier_posthire": "contextual",
+            "first_seen": "2026-06-01", "last_seen": "2026-07-07",
+        }
+        return [
+            {**base, "ip": "1.2.3.4", "prefix": "", "active": "true"},
+            {**base, "ip": "5.6.7.8", "prefix": "", "active": "false"},
+            {**base, "ip": "", "prefix": "9.9.9.0/24", "active": "true"},
+        ]
+
+    def test_write_lookup_derives_path_and_keeps_all_rows(self, tmp_path):
+        import csv as _csv
+        out = tmp_path / "vpn_relay_ips.csv"
+        result = write_lookup_csv(self._sample_nodes(), str(out))
+        expected = tmp_path / "vpn_relay_lookup.csv"
+        assert result == str(expected)
+        assert expected.exists()
+        with open(expected, newline="", encoding="utf-8") as f:
+            rows = list(_csv.reader(f))
+        assert rows[0] == LOOKUP_FIELDS
+        assert len(rows) - 1 == 3  # all rows incl. inactive + CIDR
+
+    def test_write_lookup_noop_for_unrelated_output(self, tmp_path):
+        out = tmp_path / "something_else.csv"
+        assert write_lookup_csv(self._sample_nodes(), str(out)) is None
+
+    def test_write_lookup_warns_when_large(self, tmp_path, caplog, monkeypatch):
+        import logging
+        monkeypatch.setattr("vpn_ip_intel.LOOKUP_WARN_BYTES", 1)  # force the warning
+        out = tmp_path / "vpn_relay_ips.csv"
+        with caplog.at_level(logging.WARNING):
+            write_lookup_csv(self._sample_nodes(), str(out))
+        assert any("10 MB" in r.message for r in caplog.records)

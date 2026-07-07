@@ -23,7 +23,7 @@ from abc import ABC, abstractmethod
 from collections import defaultdict
 from concurrent.futures import ThreadPoolExecutor
 from datetime import date, datetime
-from typing import Dict, List
+from typing import Dict, List, Optional
 from tqdm import tqdm
 from shared.cymru_resolver import CymruResolver
 from shared.rdap_client import RDAPClient
@@ -1804,6 +1804,23 @@ def write_csv(nodes: List[Dict], path: str, fields: List[str] = FIELDS) -> None:
     logger.info(f"Wrote {len(nodes)} rows to {path}")
 
 
+def write_lookup_csv(nodes: List[Dict], output: str) -> Optional[str]:
+    """Write the lean LogScale lookup next to the master CSV, mirroring the
+    legacy vpn_exit_ips derivation. Writes ALL rows (exact-IP + CIDR + inactive).
+    Returns the lookup path, or None if `output` is not the master CSV."""
+    if "vpn_relay_ips" not in output:
+        return None
+    lookup_path = output.replace("vpn_relay_ips", "vpn_relay_lookup")
+    write_csv(nodes, lookup_path, fields=LOOKUP_FIELDS)
+    size = os.path.getsize(lookup_path)
+    if size > LOOKUP_WARN_BYTES:
+        logger.warning(
+            f"{lookup_path} is {size / 1e6:.1f} MB — approaching the 10 MB "
+            f"LogScale limit; consider a retention cap on inactive rows."
+        )
+    return lookup_path
+
+
 def run(output: str, output_dir: str, workers: int, providers: List[str]):
     """Main orchestration."""
     all_nodes = []
@@ -1862,6 +1879,9 @@ def run(output: str, output_dir: str, workers: int, providers: List[str]):
 
     # Write primary CSV (all rows including historical)
     write_csv(all_nodes_with_prefix, output)
+
+    # Write the lean LogScale lookup (all rows, incl. CIDR + inactive)
+    write_lookup_csv(all_nodes_with_prefix, output)
 
     # Write legacy compat CSV (active single-IP rows only)
     if "vpn_relay_ips" in output:
