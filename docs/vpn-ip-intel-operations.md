@@ -40,16 +40,20 @@ These providers pull fresh data every CI run with no manual intervention:
 
 ### ExpressVPN Local Cache
 
+The cache file is **gitignored** (`.gitignore` excludes `data/vpn_seeds/expressvpn_data.json`), so refreshing it does **not** produce a commit. Its extra IPs reach the repo only when the pipeline is next run locally and the regenerated `data/vpn_relay_ips.csv` is committed. Reading the source requires an **elevated** shell.
+
 ```powershell
 # Run in elevated PowerShell
 Copy-Item "C:\Program Files\ExpressVPN\data\data.json" "data\vpn_seeds\expressvpn_data.json"
-git add data/vpn_seeds/expressvpn_data.json && git commit -m "data: refresh ExpressVPN local cache" && git push
 ```
 
 ### ProtonVPN Cache
 
+The client stores servers as `Servers.<hash>.bin`, where the hash changes between client versions — glob for it rather than hard-coding the name. Unlike ExpressVPN, this seed **is** tracked and committed.
+
 ```powershell
-Copy-Item "$env:LOCALAPPDATA\Proton\Proton VPN\Storage\Servers.current.bin" "data\vpn_seeds\protonvpn\Servers.current.bin"
+$src = Get-ChildItem "$env:LOCALAPPDATA\Proton\Proton VPN\Storage\Servers.*.bin" | Select-Object -First 1
+Copy-Item $src.FullName "data\vpn_seeds\protonvpn\Servers.current.bin"
 git add data/vpn_seeds/protonvpn/ && git commit -m "data: refresh ProtonVPN cache" && git push
 ```
 
@@ -88,6 +92,7 @@ gh run view $(gh run list --workflow=update_intelligence.yml --limit 1 --json da
 | File | Contents | Updated |
 |------|----------|---------|
 | `data/vpn_relay_ips.csv` | Master sheet (all IPs + prefix-inferred + egress-inferred) | Daily (auto) |
+| `data/vpn_relay_lookup.csv` | Lean 13-col LogScale lookup — all rows (exact-IP + CIDR + inactive), <10 MB | Daily (auto) |
 | `data/vpn_exit_ips.csv` | Legacy compat (IP rows only, no prefix rows) | Daily (auto) |
 | `data/vpn_exit_ips/{provider}.csv` | Per-provider breakdowns | Daily (auto) |
 | `data/vpn_provider_scores.csv` | Risk scoring tiers | Manual (when providers change) |
