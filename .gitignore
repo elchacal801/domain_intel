@@ -41,6 +41,8 @@ data/.llm_cache/
 data/llm_cost_log.csv
 
 data/*.json
+# vpn_relay_lookup.json is committed for CrowdStrike Fusion SOAR to pull via raw URL
+!data/vpn_relay_lookup.json
 
 # Frontend build artifacts
 docs_new/

@@ -22,7 +22,7 @@ from vpn_ip_intel import (
     SHARED_HOSTING_ASNS, _COUNTRY_ALIASES, _SERVER_TYPE_ALIASES, TODAY,
     IP_ROLES, PROVIDERS,
     load_existing_csv, merge_with_existing,
-    LOOKUP_FIELDS, LOOKUP_WARN_BYTES, write_lookup_csv,
+    LOOKUP_FIELDS, LOOKUP_WARN_BYTES, write_lookup_csv, write_lookup_json,
 )
 
 
@@ -1348,3 +1348,42 @@ class TestLogScaleLookup:
         with caplog.at_level(logging.WARNING):
             write_lookup_csv(self._sample_nodes(), str(out))
         assert any("10 MB" in r.message for r in caplog.records)
+
+    # --- JSON lookup (Fusion SOAR): active-only array of objects ---
+
+    def _mixed_active_nodes(self):
+        # active exact-IP, inactive exact-IP, active CIDR, inactive CIDR.
+        base = {k: "x" for k in LOOKUP_FIELDS}
+        return [
+            {**base, "ip": "1.2.3.4", "prefix": "", "active": "true",
+             "threat_relevance": "verbose extra that must be dropped"},
+            {**base, "ip": "5.6.7.8", "prefix": "", "active": "false"},
+            {**base, "ip": "", "prefix": "9.9.9.0/24", "active": "true"},
+            {**base, "ip": "", "prefix": "8.8.8.0/24", "active": "false"},
+        ]
+
+    def test_write_lookup_json_active_only_projected_array(self, tmp_path):
+        import json as _json
+        out = tmp_path / "vpn_relay_ips.csv"
+        result = write_lookup_json(self._mixed_active_nodes(), str(out))
+        expected = tmp_path / "vpn_relay_lookup.json"
+        assert result == str(expected)
+        data = _json.loads(expected.read_text(encoding="utf-8"))
+        assert isinstance(data, list)
+        # only the 2 active rows (exact-IP + active CIDR); inactive dropped
+        assert len(data) == 2
+        assert {d["ip"] for d in data} == {"1.2.3.4", ""}
+        # each object carries exactly the 13 LOOKUP_FIELDS, extras dropped
+        assert all(set(obj.keys()) == set(LOOKUP_FIELDS) for obj in data)
+        assert all("threat_relevance" not in obj for obj in data)
+
+    def test_write_lookup_json_noop_for_unrelated_output(self, tmp_path):
+        out = tmp_path / "something_else.csv"
+        assert write_lookup_json(self._mixed_active_nodes(), str(out)) is None
+
+    def test_write_lookup_json_is_compact(self, tmp_path):
+        out = tmp_path / "vpn_relay_ips.csv"
+        path = write_lookup_json(self._mixed_active_nodes(), str(out))
+        text = open(path, encoding="utf-8").read()
+        # compact separators -> no ", " or ": " whitespace
+        assert ", " not in text and ": " not in text
