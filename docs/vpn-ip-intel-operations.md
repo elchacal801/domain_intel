@@ -93,6 +93,7 @@ gh run view $(gh run list --workflow=update_intelligence.yml --limit 1 --json da
 |------|----------|---------|
 | `data/vpn_relay_ips.csv` | Master sheet (all IPs + prefix-inferred + egress-inferred) | Daily (auto) |
 | `data/vpn_relay_lookup.csv` | Lean 13-col LogScale lookup — all rows (exact-IP + CIDR + inactive), <10 MB | Daily (auto) |
+| `data/vpn_relay_lookup.json` | Same 13 cols as a compact JSON array, **active rows only** (~8 MB), for CrowdStrike Fusion SOAR HTTP-action pulls (JSONPath-parseable). Un-ignored in `.gitignore` so CI commits it. | Daily (auto) |
 | `data/vpn_exit_ips.csv` | Legacy compat (IP rows only, no prefix rows) | Daily (auto) |
 | `data/vpn_exit_ips/{provider}.csv` | Per-provider breakdowns | Daily (auto) |
 | `data/vpn_provider_scores.csv` | Risk scoring tiers | Manual (when providers change) |

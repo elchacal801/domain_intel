@@ -1821,6 +1821,33 @@ def write_lookup_csv(nodes: List[Dict], output: str) -> Optional[str]:
     return lookup_path
 
 
+def write_lookup_json(nodes: List[Dict], output: str) -> Optional[str]:
+    """Write the active-only Fusion SOAR lookup as a compact JSON array next to
+    the master CSV. Includes only active rows (exact-IP + active CIDR), each
+    projected to LOOKUP_FIELDS — a shape CrowdStrike Fusion parses into fields
+    via JSONPath (a raw CSV lands as an unparseable blob). Returns the JSON path,
+    or None if `output` is not the master CSV."""
+    if "vpn_relay_ips" not in output:
+        return None
+    lookup_path = output.replace("vpn_relay_ips", "vpn_relay_lookup").replace(".csv", ".json")
+    records = [
+        {field: node.get(field, "") for field in LOOKUP_FIELDS}
+        for node in nodes
+        if node.get("active") == "true"
+    ]
+    os.makedirs(os.path.dirname(lookup_path) or ".", exist_ok=True)
+    with open(lookup_path, "w", encoding="utf-8") as f:
+        json.dump(records, f, separators=(",", ":"), ensure_ascii=False)
+    size = os.path.getsize(lookup_path)
+    if size > LOOKUP_WARN_BYTES:
+        logger.warning(
+            f"{lookup_path} is {size / 1e6:.1f} MB — approaching typical SOAR "
+            f"HTTP-response limits; consider a leaner column set."
+        )
+    logger.info(f"Wrote {len(records)} active rows to {lookup_path}")
+    return lookup_path
+
+
 def run(output: str, output_dir: str, workers: int, providers: List[str]):
     """Main orchestration."""
     all_nodes = []
@@ -1882,6 +1909,9 @@ def run(output: str, output_dir: str, workers: int, providers: List[str]):
 
     # Write the lean LogScale lookup (all rows, incl. CIDR + inactive)
     write_lookup_csv(all_nodes_with_prefix, output)
+
+    # Write the active-only JSON lookup for CrowdStrike Fusion SOAR
+    write_lookup_json(all_nodes_with_prefix, output)
 
     # Write legacy compat CSV (active single-IP rows only)
     if "vpn_relay_ips" in output:
