@@ -15,6 +15,7 @@ import argparse
 import logging
 import os
 import csv
+import sys
 import dns.resolver
 import dns.exception
 import requests
@@ -24,6 +25,7 @@ from concurrent.futures import ThreadPoolExecutor
 from typing import Dict, List, Optional
 from tqdm import tqdm
 from shared.sanitize import sanitize_csv_value
+from shared.rowutil import append_error
 
 logger = logging.getLogger(__name__)
 
@@ -268,8 +270,10 @@ _DEADLINE = None  # Global deadline timestamp (set by main via --timeout-minutes
 
 
 def process_one(row: Dict) -> Dict:
-    # If we've exceeded the time budget, return the row unprocessed
+    # If we've exceeded the time budget, return the row unprocessed but
+    # annotated, so downstream consumers can tell "not enriched" from "empty".
     if _DEADLINE is not None and time.time() > _DEADLINE:
+        append_error(row, "reputation:deadline_exceeded")
         return row
 
     resolver = dns.resolver.Resolver()
@@ -330,6 +334,8 @@ def main():
     for c in new_cols:
         if c not in fieldnames:
             fieldnames.append(c)
+    if "error" not in fieldnames:
+        fieldnames.append("error")
 
     print(f"[*] Processing {len(rows)} domains for reputation/age with {args.workers} workers...")
 
@@ -346,16 +352,32 @@ def main():
             results.append(res)
             if _DEADLINE is not None and time.time() > _DEADLINE:
                 print(f"\n[!] Timeout reached. Processed {len(results)}/{len(rows)} domains. Writing partial results.")
-                # Append remaining unprocessed rows as-is
+                # Append remaining unprocessed rows, annotated so the skip is visible
                 remaining_rows = rows[len(results):]
+                for r in remaining_rows:
+                    append_error(r, "reputation:deadline_exceeded")
                 results.extend(remaining_rows)
                 break
+
+    # Reconcile: this stage must never drop or invent rows.
+    in_domains = {r.get("domain", "") for r in rows}
+    out_domains = {r.get("domain", "") for r in results}
+    if len(results) != len(rows) or in_domains != out_domains:
+        missing = sorted(in_domains - out_domains)
+        print(f"[RECONCILE] FAIL (enrich_reputation): output {len(results)} rows vs "
+              f"input {len(rows)} rows. Sample missing: {missing[:10]}")
+        sys.exit(1)
+    print(f"[RECONCILE] OK (enrich_reputation): {len(results)} rows out == {len(rows)} rows in")
 
     with open(args.output, "w", newline="", encoding="utf-8") as f:
         writer = csv.DictWriter(f, fieldnames=fieldnames)
         writer.writeheader()
         writer.writerows(results)
 
+    n_skipped = sum(1 for r in results
+                    if "reputation:deadline_exceeded" in (r.get("error") or ""))
+    print(f"[SUMMARY] input={len(rows)} output={len(results)} "
+          f"enriched={len(results) - n_skipped} deadline_passthrough={n_skipped}")
     print(f"[*] Done. Saved to {args.output}")
 
 if __name__ == "__main__":

@@ -211,8 +211,10 @@ jobs:
 
       - name: Merge Results
         run: |
-          # Merges all result_part_*.csv into dea_domains_probed.csv
-          python scripts/merge_results.py --pattern "data/result_part_*.csv" --output data/dea_domains_probed.csv
+          # Merges all result_part_*.csv into dea_domains_probed.csv and
+          # reconciles the merged domain set against the pipeline input —
+          # fails the run loudly if any shard silently lost domains.
+          python scripts/merge_results.py --pattern "data/result_part_*.csv" --output data/dea_domains_probed.csv --expect-input data/pipeline_input.csv
 
           # Shodan enrichment moved to AFTER triage to save time/credits.
           # Was causing 3+ hour runtimes on full dataset.
