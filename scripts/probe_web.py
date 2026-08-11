@@ -15,6 +15,8 @@ import aiohttp
 import sys
 from typing import Dict, Any, List
 
+from shared.rowutil import append_error
+
 # Explicit Research User-Agent (Best Practice)
 USER_AGENT = "DomainIntelResearch/1.0 (+https://github.com/elchacal801/domain_intel; contact: open-issue-on-repo)"
 
@@ -69,7 +71,8 @@ async def fetch(session: aiohttp.ClientSession, url: str, proxy: str = None) -> 
         
     return result
 
-async def worker(queue: asyncio.Queue, session: aiohttp.ClientSession, proxy: str):
+async def worker(queue: asyncio.Queue, session: aiohttp.ClientSession, proxy: str,
+                 processed_ids: set):
     while True:
         row = await queue.get()
         try:
@@ -82,9 +85,15 @@ async def worker(queue: asyncio.Queue, session: aiohttp.ClientSession, proxy: st
                         timeout=15
                     )
                 except asyncio.TimeoutError:
-                    pass  # Skip this domain, move on
-        except Exception:
-            pass
+                    # Row is kept either way — record why the probe columns are empty
+                    append_error(row, "probe:timeout")
+                except asyncio.CancelledError:
+                    append_error(row, "probe:deadline_exceeded")
+                    raise
+            processed_ids.add(id(row))
+        except Exception as e:
+            append_error(row, f"probe:{type(e).__name__}")
+            processed_ids.add(id(row))
         finally:
             queue.task_done()
 
@@ -102,7 +111,8 @@ async def _probe_domain(row: dict, domain: str, session: aiohttp.ClientSession, 
     row["http_redirect_status"] = res_http["redirect_status"]
     row["http_redirect_target"] = res_http["redirect_target"]
 
-async def prober(input_file: str, output_file: str, max_workers: int, proxy: str, limit: int = 0):
+async def prober(input_file: str, output_file: str, max_workers: int, proxy: str,
+                 limit: int = 0, timeout_minutes: int = 30):
     rows = []
     fieldnames = []
     
@@ -127,6 +137,8 @@ async def prober(input_file: str, output_file: str, max_workers: int, proxy: str
     for c in new_cols:
         if c not in fieldnames:
             fieldnames.append(c)
+    if "error" not in fieldnames:
+        fieldnames.append("error")
             
     print(f"[*] Probing {len(rows)} domains with {max_workers} workers...")
     
@@ -138,17 +150,19 @@ async def prober(input_file: str, output_file: str, max_workers: int, proxy: str
         
     # Connector tuning
     connector = aiohttp.TCPConnector(limit=0, ttl_dns_cache=300, force_close=False)
-    
+
     # Global deadline: write partial results instead of hanging in CI
-    global_timeout_secs = 30 * 60  # 30 minutes
+    global_timeout_secs = timeout_minutes * 60
+
+    processed_ids: set = set()
 
     async with aiohttp.ClientSession(connector=connector) as session:
         # Create workers
         workers = []
         for _ in range(max_workers):
-            task = asyncio.create_task(worker(queue, session, proxy))
+            task = asyncio.create_task(worker(queue, session, proxy, processed_ids))
             workers.append(task)
-            
+
         # Wait for queue to process (with hard deadline)
         try:
             async def _drain():
@@ -161,18 +175,42 @@ async def prober(input_file: str, output_file: str, max_workers: int, proxy: str
             await asyncio.wait_for(_drain(), timeout=global_timeout_secs)
         except asyncio.TimeoutError:
             remaining = queue.qsize()
-            print(f"\n[!] Global timeout reached. {remaining} domains skipped. Writing partial results.")
-        
+            print(f"\n[!] Global timeout reached. {remaining} domains not probed; "
+                  f"their rows are kept and annotated.")
+
         # Cancel workers
         for w in workers:
             w.cancel()
-            
+
+    # Rows never picked up (or cancelled mid-probe) are kept, with the reason recorded.
+    for r in rows:
+        if id(r) not in processed_ids:
+            append_error(r, "probe:deadline_exceeded")
+
     print(f"\n[*] Writing results to {output_file}...")
     with open(output_file, "w", newline="", encoding="utf-8") as f:
         writer = csv.DictWriter(f, fieldnames=fieldnames)
         writer.writeheader()
         writer.writerows(rows)
-    
+
+    # Reconcile what landed on disk against the input rows.
+    written = set()
+    with open(output_file, "r", newline="", encoding="utf-8") as f:
+        for row in csv.DictReader(f):
+            written.add(row.get("domain", ""))
+    expected = {r.get("domain", "") for r in rows}
+    if written != expected:
+        missing = sorted(expected - written)
+        print(f"[RECONCILE] FAIL (probe_web): {len(missing)} input domains missing "
+              f"from output. Sample: {missing[:10]}")
+        sys.exit(1)
+    print(f"[RECONCILE] OK (probe_web): {len(rows)} rows out == {len(rows)} rows in")
+
+    n_timeout = sum(1 for r in rows if "probe:timeout" in (r.get("error") or ""))
+    n_deadline = sum(1 for r in rows if "probe:deadline_exceeded" in (r.get("error") or ""))
+    print(f"[SUMMARY] input={len(rows)} output={len(rows)} "
+          f"probed={len(rows) - n_timeout - n_deadline} "
+          f"probe_timeout={n_timeout} deadline_unattempted={n_deadline}")
     print("[*] Done.")
 
 def main():
@@ -182,14 +220,17 @@ def main():
     ap.add_argument("--workers", type=int, default=50, help="Concurrency limit. Default 50 (Reasonable for public scanning).") 
     ap.add_argument("--proxy", help="Proxy URL (e.g. http://localhost:8080)")
     ap.add_argument("--limit", type=int, default=0, help="Max domains to scan (for testing).")
-    
+    ap.add_argument("--timeout-minutes", type=int, default=30,
+                    help="Global time budget in minutes (default 30). Unprobed rows are kept and annotated.")
+
     args = ap.parse_args()
-    
+
     # Windows SelectorPolicy fix for asyncio
     if sys.platform == 'win32':
         asyncio.set_event_loop_policy(asyncio.WindowsSelectorEventLoopPolicy())
-        
-    asyncio.run(prober(args.input, args.output, args.workers, args.proxy, args.limit))
+
+    asyncio.run(prober(args.input, args.output, args.workers, args.proxy, args.limit,
+                       args.timeout_minutes))
 
 if __name__ == "__main__":
     main()
