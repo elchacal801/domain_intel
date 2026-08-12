@@ -37,8 +37,8 @@ class FakeClock:
 
 def _install_fakes(monkeypatch, seconds_per_keyword):
     """Replace run_seads' time and subprocess module references (namespace-local,
-    no global patching). Returns (clock, calls) where calls collects the keyword
-    scanned by each fake subprocess invocation."""
+    no global patching). Returns (clock, calls) where calls collects the full
+    command list of each fake subprocess invocation."""
     clock = FakeClock()
     calls = []
 
@@ -56,7 +56,7 @@ def _install_fakes(monkeypatch, seconds_per_keyword):
     return clock, calls
 
 
-def test_stops_cleanly_when_budget_cannot_cover_next_keyword(monkeypatch, tmp_path, caplog):
+def test_stops_cleanly_when_budget_cannot_cover_next_keyword(monkeypatch, tmp_path):
     monkeypatch.chdir(tmp_path)
     _clock, calls = _install_fakes(monkeypatch, seconds_per_keyword=100)
     keywords = [f"kw{i}" for i in range(10)]
@@ -81,6 +81,19 @@ def test_logs_skipped_keywords(monkeypatch, tmp_path, caplog):
     assert "4/10" in log_text
     for kw in keywords[4:]:
         assert kw in log_text
+
+
+def test_budget_smaller_than_one_keyword_skips_everything(monkeypatch, tmp_path, caplog):
+    monkeypatch.chdir(tmp_path)
+    _clock, calls = _install_fakes(monkeypatch, seconds_per_keyword=100)
+    keywords = [f"kw{i}" for i in range(3)]
+
+    with caplog.at_level("WARNING"):
+        skipped = run_seads.scan_keywords(keywords, "seads", budget_seconds=60)
+
+    assert calls == []
+    assert skipped == keywords
+    assert "0/3" in caplog.text
 
 
 def test_no_budget_scans_all_keywords(monkeypatch, tmp_path):
