@@ -16,6 +16,7 @@ import json
 import csv
 import platform
 import logging
+import time
 import requests
 import zipfile
 import tarfile
@@ -32,6 +33,7 @@ BINARY_NAME = "seads.exe" if platform.system() == "Windows" else "seads"
 KEYWORDS_FILE = "config/seads_keywords.txt"
 OUTPUT_JSON = "data/seads_raw.json"
 OUTPUT_CSV = "data/discovered_ads.csv"
+PER_KEYWORD_TIMEOUT_SECONDS = 120
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
@@ -150,14 +152,73 @@ def parse_seads_output(current_keyword=""):
     else:
         logging.warning(f"Parsed 0 ads from {len(findings)} raw items. Check JSON keys: {findings[0].keys() if findings else '[]'}")
 
+def scan_keywords(keywords, seads_bin, budget_seconds=None):
+    """Scan each keyword with SEADS, stopping cleanly if the wall-clock budget
+    cannot cover another worst-case keyword. Returns the list of skipped keywords."""
+    start = time.monotonic()
+
+    for i, keyword in enumerate(keywords):
+        if budget_seconds is not None:
+            elapsed = time.monotonic() - start
+            if elapsed + PER_KEYWORD_TIMEOUT_SECONDS > budget_seconds:
+                skipped = keywords[i:]
+                logging.warning(
+                    f"Wall-clock budget exhausted after {i}/{len(keywords)} keywords "
+                    f"({elapsed:.0f}s elapsed of {budget_seconds}s budget). "
+                    f"Skipping {len(skipped)} keywords: {skipped}"
+                )
+                return skipped
+
+        logging.info(f"[{i+1}/{len(keywords)}] Scanning for: '{keyword}'")
+
+        # Create temp config for just this keyword
+        config_data = {
+            "queries": [{"query": keyword}],
+            "concurrency": 1, # Strict Serial to save RAM
+        }
+
+        import yaml
+        temp_config = f"temp_seads_{i}.yaml"
+        with open(temp_config, 'w') as f:
+            yaml.dump(config_data, f)
+
+        cmd = [
+            seads_bin,
+            "-config", temp_config,
+            "-out", OUTPUT_JSON,  # This will be overwritten each time
+            "-screenshot", "",
+            "-noredirect"
+        ]
+
+        try:
+            subprocess.run(cmd, check=False, timeout=PER_KEYWORD_TIMEOUT_SECONDS)
+            # Parse immediately and append
+            parse_seads_output(keyword)
+        except subprocess.TimeoutExpired:
+            logging.error(f"Timeout expired for keyword '{keyword}'. Skipping...")
+        except Exception as e:
+            logging.error(f"Error running seads for '{keyword}': {e}")
+        finally:
+            if os.path.exists(temp_config):
+                os.remove(temp_config)
+            # Clean up json output to avoid duplicates
+            if os.path.exists(OUTPUT_JSON):
+                os.remove(OUTPUT_JSON)
+
+    return []
+
+
 def main():
     seads_bin = install_seads()
-    
+
     # SEADS Refactor: Run iteratively per keyword to prevent OOM/Hang
     # This allows us to kill the process if a specific keyword hangs (like 'secure' on Yahoo)
-    
+
     parser = argparse.ArgumentParser()
     parser.add_argument("--keywords", help="Comma-separated list of keywords to scan (overrides file)")
+    parser.add_argument("--budget-seconds", type=int, default=None,
+                        help="Wall-clock budget; stop starting new keywords when the "
+                             "remaining budget cannot cover one worst-case keyword")
     args = parser.parse_args()
 
     if args.keywords:
@@ -165,7 +226,7 @@ def main():
         logging.info(f"Using manual keywords: {keywords}")
     else:
         all_keywords = load_keywords()
-        # Random sample of 10 to prevent OOM/Timeouts on Github Actions
+        # Random sample of 30 to bound runtime on Github Actions
         # In a real full run, you might want all.
         import random
         keywords = random.sample(all_keywords, min(len(all_keywords), 30))
@@ -179,43 +240,7 @@ def main():
             writer = csv.DictWriter(f, fieldnames=['query', 'ad_domain', 'display_url', 'link', 'engine'])
             writer.writeheader()
 
-    for i, keyword in enumerate(keywords):
-        logging.info(f"[{i+1}/{len(keywords)}] Scanning for: '{keyword}'")
-        
-        # Create temp config for just this keyword
-        config_data = {
-            "queries": [{"query": keyword}],
-            "concurrency": 1, # Strict Serial to save RAM
-        }
-        
-        import yaml
-        temp_config = f"temp_seads_{i}.yaml"
-        with open(temp_config, 'w') as f:
-            yaml.dump(config_data, f)
-            
-        cmd = [
-            seads_bin,
-            "-config", temp_config,
-            "-out", OUTPUT_JSON,  # This will be overwritten each time
-            "-screenshot", "",
-            "-noredirect"
-        ]
-        
-        try:
-            # Enforce 2-minute timeout per keyword
-            subprocess.run(cmd, check=False, timeout=120) 
-            # Parse immediately and append
-            parse_seads_output(keyword)
-        except subprocess.TimeoutExpired:
-            logging.error(f"Timeout expired for keyword '{keyword}'. Skipping...")
-        except Exception as e:
-            logging.error(f"Error running seads for '{keyword}': {e}")
-        finally:
-            if os.path.exists(temp_config):
-                os.remove(temp_config)
-            # Clean up json output to avoid duplicates
-            if os.path.exists(OUTPUT_JSON):
-                os.remove(OUTPUT_JSON)
+    scan_keywords(keywords, seads_bin, budget_seconds=args.budget_seconds)
 
 
 

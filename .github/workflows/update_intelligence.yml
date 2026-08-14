@@ -20,8 +20,8 @@ jobs:
         run: pip install -r requirements.txt
       
       - name: Seads Ad Scan
-        timeout-minutes: 20
-        run: python scripts/run_seads.py
+        timeout-minutes: 30
+        run: python scripts/run_seads.py --budget-seconds 1500
         
       - name: Dnstwist Proactive Hunt
         run: python scripts/generate_permutations.py
