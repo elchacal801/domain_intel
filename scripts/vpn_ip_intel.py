@@ -123,7 +123,7 @@ class MullvadProvider(BaseProvider):
     name = "mullvad"
     display_name = "Mullvad VPN"
     collection_method = "Public API"
-    threat_relevance = "Verified no-logs (2023 Swedish police raid); privacy-focused"
+    threat_relevance = "SECONDARY DPRK (Kudelski: 2nd most-used VPN by DPRK IT workers after Astrill); verified no-logs (2023 Swedish police raid)"
     API_URL = "https://api.mullvad.net/www/relays/all/"
 
     def fetch(self) -> List[Dict]:
