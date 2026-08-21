@@ -83,6 +83,10 @@ def get_targets(limit: int) -> List[str]:
     # Return top N
     return [c[0] for c in candidates[:limit]]
 
+# Hard ceiling per domain. Without it a single unresponsive site can stall
+# the batch and blow the CI step's wall-clock budget (see run 32459415652).
+PER_DOMAIN_TIMEOUT = 45
+
 async def capture_and_hash(domains: List[str], concurrency: int) -> List[dict]:
     results = []
     
@@ -92,47 +96,62 @@ async def capture_and_hash(domains: List[str], concurrency: int) -> List[dict]:
         
         sem = asyncio.Semaphore(concurrency)
 
-        async def process(domain):
+        async def _capture_one(domain):
             url = f"http://{domain}" # Try HTTP first
-            async with sem:
-                page = await context.new_page()
+            page = await context.new_page()
+            try:
+                logging.info(f"Screenshotting {domain}...")
                 try:
-                    logging.info(f"Screenshotting {domain}...")
+                    await page.goto(url, timeout=10000, wait_until="domcontentloaded")
+                    await asyncio.sleep(1) # Render
+                except PlaywrightError as e:
+                    logging.debug("HTTP failed for %s, trying HTTPS: %s", domain, e)
+                    # Try HTTPS
                     try:
+                        url = f"https://{domain}"
                         await page.goto(url, timeout=10000, wait_until="domcontentloaded")
-                        await asyncio.sleep(1) # Render
+                        await asyncio.sleep(1)
                     except PlaywrightError as e:
-                        logging.debug("HTTP failed for %s, trying HTTPS: %s", domain, e)
-                        # Try HTTPS
-                        try:
-                            url = f"https://{domain}"
-                            await page.goto(url, timeout=10000, wait_until="domcontentloaded")
-                            await asyncio.sleep(1)
-                        except PlaywrightError as e:
-                            logging.warning("Both HTTP and HTTPS failed for %s: %s", domain, e)
-                            return None
+                        logging.warning("Both HTTP and HTTPS failed for %s: %s", domain, e)
+                        return None
 
-                    # Screenshot (JPEG for smaller size)
-                    # We capture as PNG in memory for hashing (better precision), but save as JPEG for web display
-                    png_bytes = await page.screenshot(full_page=False)
-                    img = Image.open(BytesIO(png_bytes))
+                # Screenshot (JPEG for smaller size)
+                # We capture as PNG in memory for hashing (better precision), but save as JPEG for web display
+                png_bytes = await page.screenshot(full_page=False)
+                img = Image.open(BytesIO(png_bytes))
 
-                    # Save to disk for dashboard (Convert to JPEG)
-                    screenshot_path = f"data/screenshots/{domain}.jpg"
-                    os.makedirs("data/screenshots", exist_ok=True)
-                    
-                    rgb_im = img.convert('RGB')
-                    rgb_im.save(screenshot_path, format='JPEG', quality=70, optimize=True)
-                    
-                    # Hash
-                    phash = str(imagehash.phash(img))
-                    
-                    await page.close()
-                    return {"domain": domain, "url": url, "phash": phash}
-                    
-                except Exception as e:
-                    logging.error(f"Error {domain}: {e}")
-                    await page.close()
+                # Save to disk for dashboard (Convert to JPEG)
+                screenshot_path = f"data/screenshots/{domain}.jpg"
+                os.makedirs("data/screenshots", exist_ok=True)
+                
+                rgb_im = img.convert('RGB')
+                rgb_im.save(screenshot_path, format='JPEG', quality=70, optimize=True)
+                
+                # Hash
+                phash = str(imagehash.phash(img))
+                
+                return {"domain": domain, "url": url, "phash": phash}
+                
+            except Exception as e:
+                logging.error(f"Error {domain}: {e}")
+                return None
+            finally:
+                # Always close: a leaked page per unreachable domain
+                # accumulates and degrades the browser over a long scan.
+                await page.close()
+
+
+        async def process(domain):
+            async with sem:
+                try:
+                    return await asyncio.wait_for(
+                        _capture_one(domain), PER_DOMAIN_TIMEOUT
+                    )
+                except asyncio.TimeoutError:
+                    # One unresponsive domain must not consume the step's budget.
+                    logging.warning(
+                        "Timed out on %s after %ss", domain, PER_DOMAIN_TIMEOUT
+                    )
                     return None
 
         tasks = [process(d) for d in domains]
