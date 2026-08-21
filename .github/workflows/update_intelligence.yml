@@ -376,6 +376,8 @@ jobs:
 
       - name: AI Analysis (Optional)
         timeout-minutes: 40
+        # Optional by design: see the Visual Fingerprinting note above.
+        continue-on-error: true
         env:
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
           GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
