@@ -280,6 +280,10 @@ jobs:
 
       - name: Visual Fingerprinting (Optional)
         timeout-minutes: 30
+        # Optional by design: a timeout must not discard the run's commit.
+        # Without this, one stalled screenshot skips every downstream step,
+        # including "Commit and Push changes" (see run 32459415652).
+        continue-on-error: true
         run: |
           # Install browser dependencies
           python -m playwright install chromium
