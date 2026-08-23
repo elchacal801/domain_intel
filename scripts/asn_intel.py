@@ -178,8 +178,40 @@ class ASNIntel:
             full_results = list(tqdm(executor.map(self.enrich_asn, asns_list), total=len(asns_list), unit="asn"))
             self.enriched_data = full_results
 
-        # 3. Output
+        # 3. Apply persistent operator-ASN seed overrides (survive each regeneration)
+        self.apply_seed_overrides()
+
+        # 4. Output
         self.save_csv()
+
+    def apply_seed_overrides(self, seed_file="data/kadnap_operator_asns.csv"):
+        """Merge a curated operator-ASN seed so hand-set flags survive rebuilds.
+        Matches on ASN: updates Source_List / Is_High_Value_Target / Target_Type in
+        place, or appends the ASN if the external lists did not include it."""
+        if not os.path.exists(seed_file):
+            return
+        by_asn = {r.get("ASN"): r for r in self.enriched_data}
+        applied = 0
+        with open(seed_file, newline="", encoding="utf-8") as f:
+            for s in csv.DictReader(f):
+                asn = (s.get("ASN") or "").strip()
+                if not asn:
+                    continue
+                hv = str(s.get("Is_High_Value_Target", "True")).strip().lower() in ("true", "1", "yes")
+                if asn in by_asn:
+                    row = by_asn[asn]
+                    row["Source_List"] = s.get("Source_List") or row.get("Source_List")
+                    row["Is_High_Value_Target"] = hv
+                    row["Target_Type"] = s.get("Target_Type") or row.get("Target_Type")
+                    row["Name"] = row.get("Name") or s.get("Name", "")
+                else:
+                    self.enriched_data.append({
+                        "ASN": asn, "Name": s.get("Name", ""), "Country": s.get("Country", ""),
+                        "Source_List": s.get("Source_List", "KadNap"),
+                        "Is_High_Value_Target": hv, "Target_Type": s.get("Target_Type", ""),
+                    })
+                applied += 1
+        logger.info(f"Applied {applied} operator-ASN seed overrides from {seed_file}")
 
     def save_csv(self):
         # Sort: High Value (True -> False), then ASN
