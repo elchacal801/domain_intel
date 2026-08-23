@@ -272,6 +272,20 @@ jobs:
           "
           python scripts/enrich_spf.py -i /tmp/actor_mx_domains.txt -o data/spf_enrichment.csv -c 200
 
+      - name: RMM / IP-KVM Exposure Enrichment
+        timeout-minutes: 15
+        continue-on-error: true
+        env:
+          SHODAN_API_KEY: ${{ secrets.SHODAN_API_KEY }}
+        run: |
+          # Must precede Infrastructure Fingerprinting: FP-0011 matches the
+          # kvm_detected / rmm_detected columns this step writes, so running it
+          # afterwards would defer every match to the following day's run.
+          if [ -n "$SHODAN_API_KEY" ]; then
+            python scripts/enrich_rmm_exposure.py               --ip-list data/known_campaign_ips.txt               --asn-seed data/kadnap_operator_asns.csv               --output data/rmm_exposure.csv               --annotate data/dea_domains_probed.csv               --budget 300
+          fi
+          cp data/rmm_exposure.csv docs/data/ || true
+
       - name: Infrastructure Fingerprinting
         run: python scripts/match_fingerprints.py
 

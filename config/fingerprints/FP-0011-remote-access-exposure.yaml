@@ -1,0 +1,125 @@
+id: "FP-0011"
+name: "IP-KVM / Remote-Management Exposure"
+description: >
+  Infrastructure exposing IP-KVM hardware or remote-management (RMM) services
+  to the public internet. 2026 reporting on DPRK IT-worker operations describes
+  laptop farms built on IP-KVM devices -- PiKVM, TinyPilot, JetKVM -- with RMM
+  tooling (AnyDesk, TeamViewer, RustDesk, Chrome Remote Desktop, GoTo/LogMeIn)
+  as the fallback layer where KVM hardware is unavailable. Those connections are
+  reported to originate predominantly from Astrill VPN addresses, a population
+  this pipeline already resolves.
+
+  MITRE ATT&CK covers the technique as T1219.003 (Remote Access Hardware);
+  detection strategy DET0159 targets TinyPilot and PiKVM specifically, but is
+  host-based (USB enumeration, EDID announcements, mount paths) and therefore
+  unavailable to an external pipeline. This fingerprint is the complementary
+  network-side view.
+
+  Populated by scripts/enrich_rmm_exposure.py. Signatures (HTTP titles and
+  favicon hashes) come from runZero, "Out-of-Band, Part 1: the new gen of IP
+  KVMs & how to find them"; ports are vendor defaults.
+
+  SCOPING NOTE: an IP-KVM on the public internet is unusual and worth a look;
+  RDP and VNC are ubiquitous and are scored far lower on purpose. A hit inside
+  a large shared-hosting ASN is a lead, not an attribution -- the ASN's other
+  customers are unrelated.
+version: 1
+
+indicators:
+  # Either class of exposure qualifies the row for scoring; neither is required
+  # on its own, so the fingerprint does not demand both.
+  - field: kvm_detected
+    match_type: exact
+    value: "yes"
+    required: false
+  - field: rmm_detected
+    match_type: exact
+    value: "yes"
+    required: false
+
+confidence_base: 40
+
+confidence_modifiers:
+  # --- IP-KVM hardware: rare on the public internet, high signal ---
+  - field: kvm_products
+    match_type: contains
+    value: "PiKVM"
+    delta: 30
+  - field: kvm_products
+    match_type: contains
+    value: "TinyPilot"
+    delta: 30
+  - field: kvm_products
+    match_type: contains
+    value: "JetKVM"
+    delta: 30
+  - field: kvm_products
+    match_type: contains
+    value: "NanoKVM"
+    delta: 30
+  - field: kvm_products
+    match_type: contains
+    value: "GLKVM"
+    delta: 30
+  - field: kvm_products
+    match_type: contains
+    value: "BliKVM"
+    delta: 30
+  # Guacamole is a legitimate enterprise gateway as well as a farm component,
+  # so it scores below dedicated KVM hardware.
+  - field: kvm_products
+    match_type: contains
+    value: "Apache Guacamole"
+    delta: 15
+
+  # --- RMM: named in DPRK reporting, but also ordinary IT tooling ---
+  - field: rmm_products
+    match_type: contains
+    value: "RustDesk"
+    delta: 20
+  - field: rmm_products
+    match_type: contains
+    value: "AnyDesk"
+    delta: 20
+  - field: rmm_products
+    match_type: contains
+    value: "TeamViewer"
+    delta: 20
+
+  # --- Corroboration from other enrichments already in the pipeline ---
+  # Remote access reachable from a VPN egress is the pattern the reporting
+  # actually describes; on its own, remote access is just remote access.
+  - field: vpn_provider
+    match_type: contains
+    value: "astrill"
+    delta: 25
+  - field: vpn_provider
+    match_type: contains
+    value: "mullvad"
+    delta: 10
+  - field: proxy_detected
+    match_type: exact
+    value: "yes"
+    delta: 10
+
+  # --- Deliberate negatives: ubiquitous services, heavy false-positive risk ---
+  # RDP and VNC appear on a large share of the internet. They are recorded for
+  # completeness but must not, alone, push a row toward a confident match.
+  - field: rmm_products
+    match_type: exact
+    value: "RDP"
+    delta: -25
+  - field: rmm_products
+    match_type: exact
+    value: "VNC"
+    delta: -20
+
+ttl_days: 30
+
+tags:
+  - "dprk"
+  - "it-worker"
+  - "remote-access"
+  - "ip-kvm"
+  - "T1219.003"
+  - "infrastructure"
