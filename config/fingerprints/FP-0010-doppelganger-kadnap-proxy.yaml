@@ -1,0 +1,121 @@
+id: "FP-0010"
+name: "Doppelganger / KadNap Residential Proxy Infrastructure"
+description: >
+  Domains associated with the Doppelganger criminal residential-proxy service
+  (doppelganger.shop) — the customer-facing storefront for the KadNap botnet
+  (~14K compromised Asus/edge devices; Spur shows ~26.5K total active proxy IPs,
+  peaking ~42K in Apr 2026). Doppelganger is assessed (Lumen Black Lotus Labs,
+  Spur) to be a rebrand of the defunct Faceless service, historically powered by
+  TheMoon malware and run by the Russian-speaking actor "MrMurza" (iSocks 2014 ->
+  Faceless 2016). SOCKS, no-log, crypto-only, buy-individual-IP web portal;
+  launched ~May/June 2025.
+  NOTE: KadNap C2 discovery is BitTorrent-DHT / IP based, NOT domain based. This
+  fingerprint targets the STOREFRONT + operator domain surface only. C2/node
+  tracking is IP/ASN/Shodan/DHT — see data/kadnap_doppelganger_infra.txt and the
+  hunt package.
+  Source: Lumen "Silence of the hops: the KadNap botnet" (Mar 2026); Spur
+  DOPPELGANGER_PROXY tag; Krebs "Giving a Face to ... Faceless" (Apr 2023).
+version: 1
+
+indicators:
+  # Storefront / brand
+  - field: domain
+    match_type: contains
+    value: "doppelganger"
+    required: false
+  # proxycheck.io enrichment (enrich_proxy_check.py)
+  - field: proxy_detected
+    match_type: exact
+    value: "yes"
+    required: false
+  - field: proxy_type
+    match_type: contains
+    value: "Residential"
+    required: false
+
+confidence_base: 65
+
+confidence_modifiers:
+  - field: domain
+    match_type: contains
+    value: "doppelganger"
+    delta: 20
+  - field: proxy_type
+    match_type: contains
+    value: "Residential"
+    delta: 15
+  - field: proxy_detected
+    match_type: exact
+    value: "yes"
+    delta: 10
+  # Storefront co-hosted in the operator control-layer ASNs raises confidence.
+  # (A-record ASN of the domain; only fires if the shop/panel sits in C2 space.)
+  - field: asn
+    match_type: exact
+    value: "202015"          # HZ Hosting / HostZealot (BG) — C2 cluster
+    delta: 15
+  - field: asn
+    match_type: exact
+    value: "43641"           # Sollutium EU (PL/NL) — fixed final-hop nodes
+    delta: 15
+  - field: asn
+    match_type: exact
+    value: "12989"           # Black HOST Ltd (ex-StackPath) — loader + C2
+    delta: 15
+  - field: asn
+    match_type: exact
+    value: "397423"          # Tier.Net (US) — C2
+    delta: 10
+  - field: vt_malicious_count
+    match_type: range
+    value: "3-100"
+    delta: 20
+  - field: phishtank_match
+    match_type: exact
+    value: "True"
+    delta: 10
+  - field: ssl_present
+    match_type: exact
+    value: "True"
+    delta: 5
+  # Legitimate corporate entity strongly reduces confidence
+  - field: gleif_status
+    match_type: exact
+    value: "ACTIVE"
+    delta: -25
+
+ttl_days: 180
+
+tags:
+  - "doppelganger"
+  - "kadnap"
+  - "residential-proxy"
+  - "faceless-successor"
+  - "themoon-lineage"
+  - "proxy-as-a-service"
+  - "bulletproof-adjacent"
+
+# ---------------------------------------------------------------------------
+# Reference only — operator CONTROL-LAYER infrastructure (IP + BitTorrent DHT).
+# These are NOT domain indicators; track via hunt_campaign.py + Shodan + a DHT
+# enumerator. ASNs cross-validated in domain_intel (DB-IP + MaxMind GeoLite2).
+# C2s rotate — re-pull github.com/blacklotuslabs/IOCs before block/sinkhole.
+# ---------------------------------------------------------------------------
+known_c2_prefixes:
+  - "212.104.140.0/23"   # AS12989 BlackHOST  — loader 212.104.141.140 + C2 .88
+  - "85.158.111.0/24"    # AS202015 HostZealot — C2 .100
+  - "89.46.38.0/24"      # AS202015 HostZealot — C2 .74
+  - "91.193.19.0/24"     # AS202015 HostZealot — C2 .226 / prev .51
+  - "79.141.160.0/22"    # AS202015 HostZealot — C2 .161.152 / prev .163.155
+  - "154.7.253.0/24"     # AS397423 Tier.Net   — C2 .12
+  - "23.227.192.0/20"    # AS29802 Hivelocity  — PREVIOUS C2 .203.221 (abandoned)
+
+known_fixed_nodes:       # chokepoint — every victim traverses one before a C2
+  - "45.135.180.38"      # AS43641 Sollutium
+  - "45.135.180.177"     # AS43641 Sollutium
+
+dht_seed_0x40: "6YL5aNSQv9hLJ42aDKqmnArjES4jxRbfPTnZDdBdpRhJkHJdxqMQmeyCrkg2CBQg"
+
+sample_sha256:
+  - "0b3dbb951de7a216dd5032d783ba7d0a5ecda2bf872643c3a4ddd1667fb38ffe"  # MIPS
+  - "ebf9de6b67e94b2bd2b0dcda1941e04fef1a1dad830404813e468ab8744b7ed8"  # ARM
