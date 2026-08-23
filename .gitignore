@@ -54,3 +54,15 @@ data/vpn_seeds/expressvpn_sdkcache.json
 
 # Git worktrees
 .worktrees/
+
+# Generated binaries and artifacts -- regenerated every run, no consumer.
+# Screenshots are captured by visual_fingerprint.py for perceptual hashing;
+# the hashing works from the in-memory image, and nothing reads the JPEGs back
+# (not the frontend, not generate_evidence.py). Filenames are {domain}.jpg with
+# no timestamp, so rescans overwrite and they never formed an evidence archive.
+# 23,506 tracked files across the two directories were ~1.1 GB of the repo.
+data/screenshots/
+docs/data/screenshots/
+
+# CI debug logs captured from workflow runs
+logs/
