@@ -14,14 +14,26 @@ sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', 'scripts'))
 # test suite can run without API keys or optional dependencies.
 from unittest.mock import MagicMock, patch
 
-# Patch shared modules *before* importing ai_classify_web so module-level code
-# doesn't blow up when OPENAI_API_KEY is absent.
-sys.modules.setdefault("shared.llm_client", MagicMock())
-sys.modules.setdefault("shared.flame_client", MagicMock())
-sys.modules.setdefault("dotenv", MagicMock())
+# Stub heavy/optional imports ONLY while importing the script under test.
+# These modules have import-time side effects (LLMClient instantiation,
+# load_dotenv) that need no API keys here. The previous sys.modules state is
+# restored immediately afterwards -- leaving the stubs in place leaks them into
+# every later test module, which is what caused 66 spurious failures when the
+# suite ran in alphabetical order.
+_stubbed = ("shared.llm_client", "shared.flame_client", "dotenv")
+_saved = {n: sys.modules.get(n) for n in _stubbed}
+for _n in _stubbed:
+    sys.modules.setdefault(_n, MagicMock())
 
-import ai_classify_web  # noqa: E402
-from ai_classify_web import classify_rules  # noqa: E402
+try:
+    import ai_classify_web  # noqa: E402
+    from ai_classify_web import classify_rules  # noqa: E402
+finally:
+    for _n, _prev in _saved.items():
+        if _prev is None:
+            sys.modules.pop(_n, None)
+        else:
+            sys.modules[_n] = _prev
 
 
 # ---------------------------------------------------------------------------
