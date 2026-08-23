@@ -222,6 +222,12 @@ jobs:
           # Was causing 3+ hour runtimes on full dataset.
 
       - name: Infrastructure Intel (ASN/VPN/Tor)
+        env:
+          # vpn_ip_intel.py discovers Astrill, Urban VPN, ExpressVPN and
+          # Hotspot Shield IPs via Shodan org search. Without this the search
+          # silently returns nothing and those providers fall back to their
+          # seed lists -- Astrill's is from 2024.
+          SHODAN_API_KEY: ${{ secrets.SHODAN_API_KEY }}
         run: |
           python scripts/asn_intel.py
           python scripts/vpn_intel.py
