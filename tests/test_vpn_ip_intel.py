@@ -1387,3 +1387,64 @@ class TestLogScaleLookup:
         text = open(path, encoding="utf-8").read()
         # compact separators -> no ", " or ": " whitespace
         assert ", " not in text and ": " not in text
+
+
+# === Shodan org search (provider discovery) ===
+
+class TestShodanOrgSearch:
+    """Astrill, Urban VPN, ExpressVPN and Hotspot Shield all discover IPs
+    through BaseProvider.shodan_org_search.
+
+    It used to shell out to the `shodan` CLI, which authenticates from
+    ~/.shodan/api_key rather than the environment. The CI step running
+    vpn_ip_intel.py set no SHODAN_API_KEY at all, so the search returned
+    nothing -- and because only FileNotFoundError and TimeoutExpired were
+    caught, an auth failure was indistinguishable from "no results". Every
+    committed dataset had zero rows from a shodan source.
+    """
+
+    def test_returns_ips_from_api(self):
+        from unittest.mock import patch, MagicMock
+        fake = MagicMock()
+        fake.search_cursor.return_value = iter([
+            {"ip_str": "1.2.3.4"}, {"ip_str": "5.6.7.8"}, {"ip_str": "1.2.3.4"},
+        ])
+        with patch.dict(os.environ, {"SHODAN_API_KEY": "k"}):
+            with patch("vpn_ip_intel.shodan") as mod:
+                mod.Shodan.return_value = fake
+                ips = BaseProvider.shodan_org_search("Astrill Systems Corp")
+        assert ips == {"1.2.3.4", "5.6.7.8"}
+
+    def test_missing_key_returns_empty_and_does_not_raise(self):
+        from unittest.mock import patch
+        env = {k: v for k, v in os.environ.items() if k != "SHODAN_API_KEY"}
+        with patch.dict(os.environ, env, clear=True):
+            assert BaseProvider.shodan_org_search("Astrill Systems Corp") == set()
+
+    def test_api_error_returns_empty_and_does_not_raise(self):
+        from unittest.mock import patch, MagicMock
+        fake = MagicMock()
+        fake.search_cursor.side_effect = RuntimeError("boom")
+        with patch.dict(os.environ, {"SHODAN_API_KEY": "k"}):
+            with patch("vpn_ip_intel.shodan") as mod:
+                mod.Shodan.return_value = fake
+                assert BaseProvider.shodan_org_search("X") == set()
+
+    def test_respects_limit(self):
+        from unittest.mock import patch, MagicMock
+        fake = MagicMock()
+        fake.search_cursor.return_value = iter(
+            [{"ip_str": f"10.0.0.{i}"} for i in range(1, 60)])
+        with patch.dict(os.environ, {"SHODAN_API_KEY": "k"}):
+            with patch("vpn_ip_intel.shodan") as mod:
+                mod.Shodan.return_value = fake
+                ips = BaseProvider.shodan_org_search("X", limit=10)
+        assert len(ips) == 10
+
+    def test_does_not_shell_out_to_the_cli(self):
+        """The CLI reads ~/.shodan/api_key, not the environment, so CI could
+        never authenticate it."""
+        import inspect
+        src = inspect.getsource(BaseProvider.shodan_org_search)
+        assert "subprocess" not in src, "org search must use the API, not the CLI"
+

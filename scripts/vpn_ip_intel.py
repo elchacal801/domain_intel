@@ -19,6 +19,11 @@ import os
 import re
 import subprocess
 import requests
+
+try:
+    import shodan
+except ImportError:  # optional at import time; guarded at call site
+    shodan = None
 from abc import ABC, abstractmethod
 from collections import defaultdict
 from concurrent.futures import ThreadPoolExecutor
@@ -98,24 +103,52 @@ class BaseProvider(ABC):
         raise NotImplementedError
 
     @staticmethod
-    def shodan_org_search(org_name: str) -> set:
-        """Use Shodan CLI search (free query) to find IPs attributed to an org."""
-        try:
-            result = subprocess.run(
-                ["shodan", "search", "--fields", "ip_str",
-                 f'org:"{org_name}"', "--limit", "1000"],
-                capture_output=True, text=True, timeout=60
+    def shodan_org_search(org_name: str, limit: int = 1000) -> set:
+        """Find IPs Shodan attributes to an organisation.
+
+        Uses the Python API rather than the `shodan` CLI. The CLI reads its key
+        from ~/.shodan/api_key, written by `shodan init`, and ignores the
+        environment -- so in CI it was never authenticated and this returned an
+        empty set for every provider that relies on it (Astrill, Urban VPN,
+        ExpressVPN, Hotspot Shield). Because only FileNotFoundError and
+        TimeoutExpired were caught, that was indistinguishable from a genuine
+        "no results", and every committed dataset carried zero rows from a
+        shodan source while Astrill fell back entirely to a 2024 seed.
+
+        Failures are logged at ERROR and return an empty set, so the caller
+        degrades to its seed rather than crashing -- but the log now says which
+        happened.
+        """
+        api_key = os.getenv("SHODAN_API_KEY")
+        if not api_key:
+            logger.error(
+                f"SHODAN_API_KEY not set - org search for '{org_name}' skipped. "
+                f"Providers relying on it will fall back to their seed lists."
             )
-            ips = set()
-            for line in result.stdout.splitlines():
-                ip = line.strip().split("\t")[0] if "\t" in line else line.strip()
-                if ip and ip[0].isdigit():
-                    ips.add(ip)
-            logger.info(f"  Shodan org:{org_name}: {len(ips)} IPs")
-            return ips
-        except (FileNotFoundError, subprocess.TimeoutExpired) as e:
-            logger.warning(f"Shodan CLI not available or timed out: {e}")
             return set()
+        if shodan is None:
+            logger.error("shodan package not installed; org search skipped")
+            return set()
+
+        ips = set()
+        try:
+            api = shodan.Shodan(api_key)
+            for match in api.search_cursor(f'org:"{org_name}"'):
+                ip = match.get("ip_str")
+                if ip:
+                    ips.add(ip)
+                if len(ips) >= limit:
+                    logger.info(f"  Shodan org:{org_name}: hit limit of {limit}")
+                    break
+        except Exception as e:
+            logger.error(f"Shodan org search for '{org_name}' failed: {type(e).__name__}: {e}")
+            return set()
+
+        if ips:
+            logger.info(f"  Shodan org:{org_name}: {len(ips)} IPs")
+        else:
+            logger.warning(f"  Shodan org:{org_name}: 0 IPs - verify the org name is current")
+        return ips
 
 
 class MullvadProvider(BaseProvider):
