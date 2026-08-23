@@ -281,8 +281,15 @@ class TestExtractCreationDate:
         assert _extract_creation_date(data) == ("", "")
 
     def test_age_calculation(self):
-        """Verify age_days is roughly correct."""
-        yesterday = (datetime.datetime.now() - datetime.timedelta(days=1)).strftime("%Y-%m-%dT00:00:00Z")
+        """Verify age_days is roughly correct.
+
+        The input must be built from UTC, not local time: _extract_creation_date
+        measures age against datetime.now(timezone.utc), so constructing
+        "yesterday" from a local clock behind UTC yields an age of 2 late in the
+        local day.
+        """
+        utc_now = datetime.datetime.now(datetime.timezone.utc)
+        yesterday = (utc_now - datetime.timedelta(days=1)).strftime("%Y-%m-%dT00:00:00Z")
         data = {"events": [{"eventAction": "registration", "eventDate": yesterday}]}
         creation, age = _extract_creation_date(data)
         assert int(age) == 1
