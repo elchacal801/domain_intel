@@ -132,3 +132,55 @@ class TestExitCode:
         monkeypatch.setitem(sys.modules, "shodan",
                             types.SimpleNamespace(Shodan=lambda k: fake))
         assert hunt_kvm.main() == 0, "findings must not fail the build"
+
+
+class TestPagination:
+    """api.search() returns only the first 100 matches. Our queries expose
+    ~39,000 hosts but a run retrieved ~1,500, so coverage plateaued as soon as
+    dedup caught up with page 1. Credits are spent per page, so the page cap is
+    the real budget control."""
+
+    def _api(self, total, per_page=100):
+        from unittest.mock import MagicMock
+        api = MagicMock()
+        pages = []
+        made = 0
+        while made < total:
+            n = min(per_page, total - made)
+            pages.append({"total": total,
+                          "matches": [{"ip_str": f"10.{made//65536%256}.{(made//256)%256}.{made%256}",
+                                       "port": 443, "org": "x",
+                                       "location": {"country_name": "US"},
+                                       "http": {"title": "PiKVM"}}
+                                      for made in range(made, made + n)]})
+            made += n
+        api.search.side_effect = pages + [{"total": total, "matches": []}] * 5
+        return api
+
+    def test_fetches_beyond_the_first_page(self, tmp_path, monkeypatch):
+        import types, sys, hunt_kvm
+        api = self._api(250)
+        monkeypatch.setattr(hunt_kvm, "SHODAN_API_KEY", "k")
+        monkeypatch.setattr(hunt_kvm, "HISTORY_FILE", str(tmp_path / "h.csv"))
+        monkeypatch.setattr(hunt_kvm, "BASELINE_FILES", [])
+        monkeypatch.setattr(hunt_kvm, "QUERIES", ['http.title:"pikvm"'])
+        monkeypatch.setattr(sys, "argv",
+                            ["hunt_kvm.py", "--budget", "10", "--pages", "3"])
+        monkeypatch.setitem(sys.modules, "shodan",
+                            types.SimpleNamespace(Shodan=lambda k: api))
+        assert hunt_kvm.main() == 0
+        assert api.search.call_count >= 2, "must request more than one page"
+
+    def test_page_cap_is_respected(self, tmp_path, monkeypatch):
+        import types, sys, hunt_kvm
+        api = self._api(1000)
+        monkeypatch.setattr(hunt_kvm, "SHODAN_API_KEY", "k")
+        monkeypatch.setattr(hunt_kvm, "HISTORY_FILE", str(tmp_path / "h.csv"))
+        monkeypatch.setattr(hunt_kvm, "BASELINE_FILES", [])
+        monkeypatch.setattr(hunt_kvm, "QUERIES", ['http.title:"pikvm"'])
+        monkeypatch.setattr(sys, "argv",
+                            ["hunt_kvm.py", "--budget", "50", "--pages", "2"])
+        monkeypatch.setitem(sys.modules, "shodan",
+                            types.SimpleNamespace(Shodan=lambda k: api))
+        hunt_kvm.main()
+        assert api.search.call_count <= 2, "must not exceed --pages per query"

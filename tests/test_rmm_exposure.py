@@ -149,8 +149,11 @@ class TestSignatureTables:
             assert sig.get("titles") or sig.get("favicons"), f"{name} has no matcher"
 
     def test_every_rmm_signature_has_a_matcher(self):
+        """Ports, product banners and titles are all valid matchers. Title
+        matching was added for MeshCentral, which has no fixed port; Remotely
+        is title-only for the same reason."""
         for name, sig in RMM_SIGNATURES.items():
-            assert sig.get("ports") or sig.get("products"), f"{name} has no matcher"
+            assert sig.get("ports") or sig.get("products") or sig.get("titles"),                 f"{name} has no matcher"
 
 
 class TestSearchQuerySyntax:
@@ -482,3 +485,52 @@ class TestHardwareIdentifiers:
         rows = list(csv.DictReader(io.open(p, encoding="utf-8", newline="")))
         assert {"PiKVM", "TinyPilot"} <= {r["product"] for r in rows}
         assert {"mac_prefix", "usb_vendor_id", "usb_serial"} <= {r["identifier_type"] for r in rows}
+
+
+class TestAdditionalRMMProducts:
+    """Products present in C2IntelFeeds' RMM feed that we did not detect.
+
+    Their 90-day feed carries 61,115 RMM IPs across nine products; we covered
+    only ScreenConnect and MeshCentral of those. Signature volumes below were
+    measured against live Shodan before adoption.
+    """
+
+    def test_splashtop_by_port(self):
+        """Default ports 6783-6785 (374 hosts on 6783)."""
+        for port in (6783, 6784, 6785):
+            r = classify_host(host(svc(port)))
+            assert "Splashtop" in r["rmm_products"], port
+
+    def test_splashtop_by_title(self):
+        assert "Splashtop" in classify_host(host(svc(443, title="Splashtop Gateway")))["rmm_products"]
+
+    def test_simplehelp_by_title(self):
+        assert "SimpleHelp" in classify_host(host(svc(443, title="SimpleHelp")))["rmm_products"]
+
+    def test_tactical_rmm_by_title(self):
+        assert "Tactical RMM" in classify_host(host(svc(443, title="Tactical RMM")))["rmm_products"]
+
+    def test_komari_by_title(self):
+        assert "Komari" in classify_host(host(svc(443, title="Komari Monitor")))["rmm_products"]
+
+    def test_nable_by_title(self):
+        assert "N-able" in classify_host(host(svc(443, title="N-able N-central")))["rmm_products"]
+
+    def test_kaseya_by_title(self):
+        assert "Kaseya" in classify_host(host(svc(443, title="Kaseya VSA")))["rmm_products"]
+
+    def test_remotely_by_title(self):
+        assert "Remotely" in classify_host(host(svc(443, title="Remotely")))["rmm_products"]
+
+    def test_ordinary_page_mentioning_remotely_is_not_matched(self):
+        """'remotely' is an ordinary English word: http.html:"remotely" matches
+        14,611 hosts against 425 for the title. Body matching would be noise,
+        so Remotely is title-only and must not fire on prose."""
+        r = classify_host(host(svc(80, product="nginx",
+                                   title="Work From Home - Access Your PC")))
+        assert "Remotely" not in r["rmm_products"]
+
+    def test_all_new_products_are_in_the_table(self):
+        for p in ("Splashtop", "SimpleHelp", "Tactical RMM", "Komari",
+                  "N-able", "Kaseya", "Remotely"):
+            assert p in RMM_SIGNATURES, f"{p} missing from RMM_SIGNATURES"

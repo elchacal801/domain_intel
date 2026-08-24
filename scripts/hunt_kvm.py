@@ -101,6 +101,17 @@ QUERIES = [
     # is scored well below dedicated KVM hardware in FP-0011.
     'http.html:"guacamole" http.title:"Guacamole"',
 
+    # RMM products. Two collapsed title filters rather than one query each,
+    # since comma-OR works inside http.title. Measured 2026-08-24:
+    #   existing set (ScreenConnect/MeshCentral/RustDesk/AnyDesk/TeamViewer) 25,363
+    #   newer set (SimpleHelp/Tactical/Komari/N-able/Remotely/Splashtop/Kaseya) 9,141
+    'http.title:"ScreenConnect","ConnectWise Control","MeshCentral","RustDesk","AnyDesk","TeamViewer"',
+    'http.title:"SimpleHelp","Tactical RMM","Komari","N-able","Remotely","Splashtop","Kaseya"',
+    # Splashtop's default port; its product banner is not indexed by Shodan.
+    'port:6783',
+    # Kaseya's title barely registers (15); the body marker finds 96.
+    'http.html:"kaseya"',
+
     # Favicons: a rebranded device still serves the stock icon (runZero)
     'http.favicon.hash:-1040945478',   # PiKVM
     'http.favicon.hash:-692926325',    # PiKVM alt
@@ -192,6 +203,8 @@ def log_hit(match: dict, query: str, path: str = HISTORY_FILE) -> None:
 def main() -> int:
     parser = argparse.ArgumentParser(description="Hunt internet-exposed IP-KVM devices")
     parser.add_argument("--budget", type=int, default=BUDGET_LIMIT)
+    parser.add_argument("--pages", type=int, default=1,
+                        help="Max pages per query (100 results each). Our queries expose ~39,000 hosts; at one page each a run retrieves ~1,500 and coverage plateaus once dedup catches up. One credit per page.")
     parser.add_argument("--dry-run", action="store_true",
                         help="List the queries without calling Shodan")
     args = parser.parse_args()
@@ -220,16 +233,27 @@ def main() -> int:
             print(f"[!] Budget of {args.budget} reached; {len(QUERIES) - spent} "
                   f"queries not run")
             break
-        try:
-            results = api.search(query)
-            spent += 1
-        except Exception as e:
-            print(f"[!] Query failed ({query}): {type(e).__name__}: {e}")
-            continue
+        total = 0
+        matches = []
+        for page in range(1, args.pages + 1):
+            if spent >= args.budget:
+                break
+            try:
+                # Shodan bills per page, so the budget counts pages.
+                results = api.search(query, page=page)
+                spent += 1
+            except Exception as e:
+                print(f"[!] Query failed ({query}, page {page}): "
+                      f"{type(e).__name__}: {e}")
+                break
+            total = results.get("total", total)
+            page_matches = results.get("matches", [])
+            matches.extend(page_matches)
+            if len(page_matches) < 100:
+                break  # last page
 
-        total = results.get("total", 0)
-        matches = results.get("matches", [])
-        print(f"Query: {query}\n   {total} total, {len(matches)} on first page")
+        print(f"Query: {query}")
+        print(f"   {total} total, {len(matches)} retrieved")
 
         for m in matches:
             ip = m.get("ip_str", "")
