@@ -32,6 +32,11 @@ jobs:
           ALIENVAULT_OTX_API_KEY: ${{ secrets.ALIENVAULT_OTX_API_KEY }}
         run: python scripts/hunt_campaign.py
 
+      - name: IP-KVM Exposure Hunt
+        env:
+          SHODAN_API_KEY: ${{ secrets.SHODAN_API_KEY }}
+        run: python scripts/hunt_kvm.py
+
       - name: Run CT Discovery
         env:
           CENSYS_API_KEY: ${{ secrets.CENSYS_API_KEY }}

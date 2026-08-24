@@ -79,7 +79,14 @@ RMM_SIGNATURES: Dict[str, Dict] = {
     "RustDesk":   {"ports": [21115, 21116, 21117, 21118, 21119], "products": ["rustdesk"]},
     "AnyDesk":    {"ports": [7070],  "products": ["anydesk"]},
     "TeamViewer": {"ports": [5938],  "products": ["teamviewer"]},
-    "VNC":        {"ports": [5900, 5901], "products": ["vnc", "realvnc", "tightvnc"]},
+    # 5900-5905: the article documents farms using the full display range, not
+    # just :0 and :1.
+    "VNC":        {"ports": [5900, 5901, 5902, 5903, 5904, 5905],
+                   "products": ["vnc", "realvnc", "tightvnc"]},
+    # ScreenConnect / ConnectWise Control, named in laptop-farm reporting and
+    # absent until now. Shodan fingerprints it as a product (19,685 hosts).
+    "ScreenConnect": {"ports": [8172], "products": ["screenconnect", "connectwise"],
+                      "titles": ["screenconnect", "connectwise control"]},
     "RDP":        {"ports": [3389],  "products": ["remote desktop", "ms-wbt-server"]},
     # Self-hosted RMM. Surfaced by passive DNS on 23.227.173.144, which served
     # mesh.<domain> beside rust.<domain> -- MeshCentral running next to

@@ -431,3 +431,54 @@ class TestMultipleSources:
         from enrich_rmm_exposure import parse_source
         assert parse_source(r"C:\data\x.csv:ip") == (r"C:\data\x.csv", "ip")
         assert parse_source(r"C:\data\x.csv") == (r"C:\data\x.csv", "a_record")
+
+
+class TestLaptopFarmArtifacts:
+    """Indicators from mattysplo.it's laptop-farm write-up (2025-06-13)."""
+
+    def test_screenconnect_by_port(self):
+        r = classify_host(host(svc(8172)))
+        assert r["rmm_detected"] is True
+        assert "ScreenConnect" in r["rmm_products"]
+
+    def test_screenconnect_by_product_banner(self):
+        r = classify_host(host(svc(443, product="ScreenConnect")))
+        assert "ScreenConnect" in r["rmm_products"]
+
+    def test_connectwise_control_by_title(self):
+        r = classify_host(host(svc(443, title="ConnectWise Control")))
+        assert "ScreenConnect" in r["rmm_products"]
+
+    @pytest.mark.parametrize("port", [5900, 5901, 5902, 5903, 5904, 5905])
+    def test_full_vnc_display_range(self, port):
+        """Farms were documented using the whole 5900-5905 range, not just :0/:1."""
+        r = classify_host(host(svc(port)))
+        assert r["rmm_detected"] is True
+        assert "VNC" in r["rmm_products"]
+
+    def test_port_5906_is_not_claimed_as_vnc(self):
+        r = classify_host(host(svc(5906)))
+        assert "VNC" not in r["rmm_products"]
+
+
+class TestHardwareIdentifiers:
+    """Host-side identifiers this pipeline cannot query, recorded for the
+    LogScale/EDR side (ARP tables, USB enumeration)."""
+
+    def test_reference_file_is_wellformed(self):
+        import csv, io, os
+        p = os.path.join(os.path.dirname(__file__), "..", "data",
+                         "kvm_hardware_identifiers.csv")
+        rows = list(csv.DictReader(io.open(p, encoding="utf-8", newline="")))
+        assert len(rows) >= 15
+        for r in rows:
+            assert r["product"] and r["identifier_type"] and r["value"]
+            assert r["source"], "every identifier must cite its source"
+
+    def test_covers_both_kvm_products_and_key_types(self):
+        import csv, io, os
+        p = os.path.join(os.path.dirname(__file__), "..", "data",
+                         "kvm_hardware_identifiers.csv")
+        rows = list(csv.DictReader(io.open(p, encoding="utf-8", newline="")))
+        assert {"PiKVM", "TinyPilot"} <= {r["product"] for r in rows}
+        assert {"mac_prefix", "usb_vendor_id", "usb_serial"} <= {r["identifier_type"] for r in rows}
