@@ -9,79 +9,67 @@ description: >
   campaign (Jan 2026). Investigation origin: FS-ISAC (mysecurepasskey.com, Apr 2026).
 version: 2
 
-indicators:
+# No AND-gated indicators: this fingerprint is gated purely by any_of.
+indicators: []
+
+any_of:
+  # OR semantics: at least one of these must match. Previously these
+  # were indicators with required:false, which made the fingerprint
+  # match every row -- the engine had no OR until any_of was added.
   - field: primary_mx
     match_type: contains
     value: "pickelhost.com"
-    required: false
   - field: primary_mx
     match_type: contains
     value: "eye-mail.net"
-    required: false
   - field: primary_mx
     match_type: contains
     value: "h-email.net"
-    required: false
   - field: primary_mx
     match_type: contains
     value: "happyisp.com"
-    required: false
   - field: primary_mx
     match_type: contains
     value: "hope-mail.com"
-    required: false
   - field: primary_mx
     match_type: contains
     value: "mailerhost.net"
-    required: false
   - field: primary_mx
     match_type: contains
     value: "mailer-host.com"
-    required: false
   - field: primary_mx
     match_type: contains
     value: "nickstel.com"
-    required: false
   - field: primary_mx
     match_type: contains
     value: "yurtmail.com"
-    required: false
   - field: primary_mx
     match_type: contains
     value: "emailofsteel.com"
-    required: false
   - field: primary_mx
     match_type: contains
     value: "wallywatts.com"
-    required: false
   - field: primary_mx
     match_type: contains
     value: "flip-mail.com"
-    required: false
   - field: primary_mx
     match_type: contains
     value: "post-host.net"
-    required: false
   - field: primary_mx
     match_type: contains
     value: "mxproc.com"
-    required: false
   - field: primary_mx
     match_type: contains
     value: "mxhoppr.com"
-    required: false
   - field: primary_mx
     match_type: contains
     value: "mx-host.net"
-    required: false
   - field: primary_mx
     match_type: contains
     value: "skrimple.com"
-    required: false
   - field: primary_mx
     match_type: contains
     value: "b-io.co"
-    required: false
 
 confidence_base: 75
 
