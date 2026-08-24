@@ -85,6 +85,11 @@ confidence_modifiers:
     match_type: contains
     value: "TeamViewer"
     delta: 20
+  # ScreenConnect / ConnectWise Control, named in laptop-farm reporting.
+  - field: rmm_products
+    match_type: contains
+    value: "ScreenConnect"
+    delta: 20
 
   # --- Corroboration from other enrichments already in the pipeline ---
   # Remote access reachable from a VPN egress is the pattern the reporting
