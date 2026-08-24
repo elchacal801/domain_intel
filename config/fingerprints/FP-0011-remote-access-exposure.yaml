@@ -25,17 +25,21 @@ description: >
   customers are unrelated.
 version: 1
 
-indicators:
+# No AND-gated indicators: this fingerprint is gated purely by any_of.
+indicators: []
+
+any_of:
+  # OR semantics: at least one of these must match. Previously these
+  # were indicators with required:false, which made the fingerprint
+  # match every row -- the engine had no OR until any_of was added.
   # Either class of exposure qualifies the row for scoring; neither is required
   # on its own, so the fingerprint does not demand both.
   - field: kvm_detected
     match_type: exact
     value: "yes"
-    required: false
   - field: rmm_detected
     match_type: exact
     value: "yes"
-    required: false
 
 confidence_base: 40
 

@@ -385,3 +385,85 @@ class TestFP0007Typosquat:
         required_indicators = [i for i in result["indicators"] if i.get("required")]
         assert len(required_indicators) == 1
         assert required_indicators[0]["field"] == "dnstwist_match"
+
+
+# === any_of groups and the zero-required guard ===
+
+class TestAnyOfSemantics:
+    """The engine only had AND (`required: true`) semantics. Authors needing
+    "match any one of these" set every indicator to required: false -- which
+    made all_required_pass vacuously true, so the fingerprint matched EVERY
+    row. Four fingerprints did this (FP-0008, FP-0009, FP-0010, FP-0011),
+    producing 990,945 junk match rows and pushing fingerprint_matches.csv past
+    GitHub's 100 MB file limit, which broke the daily push.
+    """
+
+    def _fp(self, **kw):
+        base = {
+            "id": "FP-TEST", "name": "test", "description": "d", "version": 1,
+            "indicators": [], "confidence_base": 50,
+        }
+        base.update(kw)
+        return base
+
+    def test_any_of_matches_when_one_matches(self):
+        fp = validate_fingerprint(self._fp(
+            indicators=[{"field": "primary_mx", "match_type": "contains",
+                         "value": "anchor.example", "required": True}],
+            any_of=[{"field": "domain", "match_type": "contains", "value": "aaa"},
+                    {"field": "domain", "match_type": "contains", "value": "bbb"}],
+        ))
+        assert evaluate_fingerprint(fp, {"domain": "x-bbb-y", "primary_mx": "anchor.example"})
+
+    def test_any_of_rejects_when_none_match(self):
+        fp = validate_fingerprint(self._fp(
+            indicators=[{"field": "primary_mx", "match_type": "contains",
+                         "value": "anchor.example", "required": True}],
+            any_of=[{"field": "domain", "match_type": "contains", "value": "aaa"},
+                    {"field": "domain", "match_type": "contains", "value": "bbb"}],
+        ))
+        assert evaluate_fingerprint(fp, {"domain": "nothing", "primary_mx": "anchor.example"}) is None
+
+    def test_any_of_alone_is_sufficient_gating(self):
+        """A fingerprint may be entirely any_of -- that is still a real gate."""
+        fp = validate_fingerprint(self._fp(
+            indicators=[],
+            any_of=[{"field": "domain", "match_type": "contains", "value": "aaa"}],
+        ))
+        assert evaluate_fingerprint(fp, {"domain": "zzz-aaa"})
+        assert evaluate_fingerprint(fp, {"domain": "unrelated"}) is None
+
+    def test_required_and_any_of_are_anded_together(self):
+        fp = validate_fingerprint(self._fp(
+            indicators=[{"field": "asn", "match_type": "exact",
+                         "value": "16276", "required": True}],
+            any_of=[{"field": "domain", "match_type": "contains", "value": "aaa"}],
+        ))
+        assert evaluate_fingerprint(fp, {"asn": "16276", "domain": "aaa"})
+        assert evaluate_fingerprint(fp, {"asn": "99999", "domain": "aaa"}) is None
+        assert evaluate_fingerprint(fp, {"asn": "16276", "domain": "no"}) is None
+
+
+class TestNoUngatedFingerprints:
+    """A fingerprint that can match every row is never intentional."""
+
+    def test_zero_required_and_zero_any_of_is_rejected(self):
+        with pytest.raises(ValueError, match="(?i)required|any_of|gate"):
+            validate_fingerprint({
+                "id": "FP-BAD", "name": "n", "description": "d", "version": 1,
+                "confidence_base": 50,
+                "indicators": [{"field": "domain", "match_type": "contains",
+                                "value": "x", "required": False}],
+            })
+
+    def test_every_shipped_fingerprint_is_gated(self):
+        """Regression guard: no fingerprint in config/ may match every row."""
+        import glob, os, yaml, io
+        here = os.path.dirname(__file__)
+        ungated = []
+        for p in sorted(glob.glob(os.path.join(here, "..", "config", "fingerprints", "*.yaml"))):
+            d = yaml.safe_load(io.open(p, encoding="utf-8"))
+            req = [i for i in (d.get("indicators") or []) if i.get("required", True)]
+            if not req and not d.get("any_of"):
+                ungated.append(d.get("id", os.path.basename(p)))
+        assert not ungated, f"these match every row: {ungated}"

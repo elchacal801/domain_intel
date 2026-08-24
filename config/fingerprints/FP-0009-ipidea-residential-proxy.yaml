@@ -11,82 +11,70 @@ description: >
   Source: Google GTIG (Jan 2026), SecurityScorecard Operation Phantom Circuit.
 version: 1
 
-indicators:
+# No AND-gated indicators: this fingerprint is gated purely by any_of.
+indicators: []
+
+any_of:
+  # OR semantics: at least one of these must match. Previously these
+  # were indicators with required:false, which made the fingerprint
+  # match every row -- the engine had no OR until any_of was added.
   # C2 SDK domains
   - field: domain
     match_type: contains
     value: "packetsdk"
-    required: false
   - field: domain
     match_type: contains
     value: "hexsdk.com"
-    required: false
   - field: domain
     match_type: contains
     value: "castarsdk.com"
-    required: false
   - field: domain
     match_type: contains
     value: "holadns.com"
-    required: false
   - field: domain
     match_type: contains
     value: "martianinc.co"
-    required: false
   - field: domain
     match_type: contains
     value: "okamiboss.com"
-    required: false
   # Proxy brand domains
   - field: domain
     match_type: contains
     value: "ipidea.io"
-    required: false
   - field: domain
     match_type: contains
     value: "922proxy.com"
-    required: false
   - field: domain
     match_type: contains
     value: "abcproxy.com"
-    required: false
   - field: domain
     match_type: contains
     value: "ip2world.com"
-    required: false
   - field: domain
     match_type: contains
     value: "lunaproxy.com"
-    required: false
   - field: domain
     match_type: contains
     value: "piaproxy.com"
-    required: false
   - field: domain
     match_type: contains
     value: "pyproxy.com"
-    required: false
   - field: domain
     match_type: contains
     value: "360proxy.com"
-    required: false
   - field: domain
     match_type: contains
     value: "radishvpn.com"
-    required: false
   - field: domain
     match_type: contains
     value: "tabproxy.com"
-    required: false
   # Enrichment-based detection
   - field: ipidea_domain_match
     match_type: exact
     value: "TRUE"
-    required: false
   - field: proxy_detected
     match_type: exact
     value: "yes"
-    required: false
 
 confidence_base: 70
 

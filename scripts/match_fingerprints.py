@@ -81,7 +81,7 @@ def validate_fingerprint(fp: dict, source: str = "<unknown>") -> dict:
 
     # --- indicators ---
     indicators = fp.get("indicators", [])
-    if not indicators:
+    if not indicators and not fp.get("any_of"):
         raise ValueError(
             f"Fingerprint {fp.get('id', '?')} from {source} has no indicators"
         )
@@ -123,6 +123,44 @@ def validate_fingerprint(fp: dict, source: str = "<unknown>") -> dict:
                     f"Indicator {idx} in {fp['id']} from {source} has invalid "
                     f"regex '{ind['value']}': {exc}"
                 )
+
+    # --- any_of: OR semantics, at least one member must match ---
+    any_of = fp.get("any_of") or []
+    for idx, ind in enumerate(any_of):
+        missing_keys = REQUIRED_INDICATOR_KEYS - set(ind.keys())
+        if missing_keys:
+            raise ValueError(
+                f"any_of entry {idx} in {fp.get('id','?')} from {source} missing "
+                f"key(s): {', '.join(sorted(missing_keys))}"
+            )
+        if ind["match_type"] not in VALID_MATCH_TYPES:
+            raise ValueError(
+                f"any_of entry {idx} in {fp.get('id','?')} from {source} has "
+                f"invalid match_type '{ind['match_type']}'"
+            )
+        ind["field"] = resolve_field(ind["field"])
+        if ind["match_type"] == "regex":
+            try:
+                ind["_compiled"] = re.compile(ind["value"], re.IGNORECASE)
+            except re.error as exc:
+                raise ValueError(
+                    f"any_of entry {idx} in {fp.get('id','?')} from {source} has "
+                    f"invalid regex '{ind['value']}': {exc}"
+                )
+    fp["any_of"] = any_of
+
+    # --- refuse fingerprints that gate nothing ---
+    # With no required indicator and no any_of, all_required_pass is vacuously
+    # true and the fingerprint matches EVERY row. Four shipped in that state,
+    # producing ~990k junk match rows and pushing fingerprint_matches.csv past
+    # GitHub's 100 MB limit, which broke the daily push. Authors used
+    # required:false because the engine had no OR semantics; any_of supplies it.
+    if not [i for i in indicators if i.get("required", True)] and not any_of:
+        raise ValueError(
+            f"Fingerprint {fp.get('id','?')} from {source} has no required "
+            f"indicator and no any_of group, so it would match every row. "
+            f"Mark an indicator required, or express alternatives as any_of."
+        )
 
     # --- optional key defaults ---
     fp.setdefault("description", "")
@@ -230,6 +268,20 @@ def evaluate_fingerprint(fp: dict, row: dict) -> Optional[dict]:
 
     if not all_required_pass:
         return None
+
+    # any_of: at least one member must match
+    any_of = fp.get("any_of") or []
+    if any_of:
+        hit = False
+        for ind in any_of:
+            if check_indicator(str(row.get(ind["field"], "")), ind["match_type"],
+                               ind["value"], ind.get("_compiled")):
+                hit = True
+                sep = "~" if ind["match_type"] == "contains" else "="
+                evidence_parts.append(f"{ind['field']}{sep}{ind['value']}")
+                break
+        if not hit:
+            return None
 
     confidence = calculate_confidence(fp, row)
     evidence = "; ".join(evidence_parts) if evidence_parts else ""
