@@ -23,24 +23,64 @@ from shared.sanitize import sanitize_csv_value
 load_dotenv()
 SHODAN_API_KEY = os.getenv("SHODAN_API_KEY")
 
-if not SHODAN_API_KEY:
-    print("Error: SHODAN_API_KEY not found.")
-    sys.exit(1)
+# The key check lives in main(), not at import time: exiting on import makes the
+# module impossible to import for testing, which is why the query set had no
+# coverage despite driving all campaign discovery.
 
 # Configuration
 KNOWN_IPS_FILE = Path("data/known_campaign_ips.txt")
+# Query set. Every entry below was volume-checked against Shodan before being
+# added; every query removed had produced zero findings in six months of runs.
+#
+# Measured behaviour that shapes this list:
+#  - Comma-separated values act as OR *within* http.title, but NOT within
+#    http.html -- a collapsed http.html:"a","b" query returns 0 results, so
+#    body-content terms each need their own query.
+#  - http.html consistently outperforms http.title for the same term, because a
+#    site can rename its <title> to something innocuous while the body still
+#    carries the words users read:
+#        temporary email   title 308  ->  html 463
+#        disposable email  title  93  ->  html 308
+#        temp mail         title 117  ->  html 246
+#        临时邮箱           title 115  ->  html 266
+#  - "Temp Mail"/"TempMail" were absent entirely and overlap the existing
+#    "Temporary Email" query by only 36 hosts, i.e. ~202 hosts were invisible.
+#
+# KNOWN LIMITATION: api.search() returns only the first page (100 matches), so
+# a query matching 651 hosts surfaces 100 of them. Dedup means later runs
+# re-see the same page and find nothing new, so coverage plateaus. Paginating
+# would multiply credit cost and is left as a deliberate follow-up.
 QUERIES = [
-    'net:51.254.35.0/24 "Public Email Service"',
-    'http.title:"Public Email Service"',
-    'ssl:"in.mail.tm"',
-    'http.title:"Disposable Email"',
-    'http.title:"Disposable Temporary Email"',
-    'http.title:"Disposable Emails"', 
-    'http.title:"Temporary Email"',
-    'http.title:"Temporary Emails"',
-    'http.title:"disposable and free domain"'
+    # --- English titles, collapsed into one OR'd filter (~651 hosts) ---
+    'http.title:"temporary email","temp mail","tempmail","temp email",'
+    '"disposable email","disposable mailbox","temporary mailbox",'
+    '"email generator","anonymous email","fake email","10 minute mail","mailinator"',
+
+    # --- Non-English titles (~159 hosts). Chinese dominates, which fits DEA
+    # infrastructure clustering on Alibaba Cloud and China Telecom ranges. ---
+    'http.title:"临时邮箱","临时邮件","Email sementara","Correo temporal",'
+    '"Временная почта","Email temporário","Geçici e-posta","Wegwerf"',
+
+    # --- Body content: obfuscation-resistant, one query per term ---
+    'http.html:"temporary email"',
+    'http.html:"disposable email"',
+    'http.html:"temp mail"',
+    'http.html:"tempmail"',
+    'http.html:"临时邮箱"',
+    'http.html:"Email sementara"',
+
+    # --- Retained from the original set: 76 findings historically ---
+    'http.title:"disposable and free domain"',
 ]
-BUDGET_LIMIT = 20 # credits
+
+# Removed after six months of zero findings each:
+#   'http.title:"Public Email Service"'          (global volume: 1)
+#   'net:51.254.35.0/24 "Public Email Service"'  (range now inactive)
+#   'ssl:"in.mail.tm"'
+# Also folded in: "Temporary Emails"/"Disposable Emails" (2 global hosts each)
+# are covered by the collapsed English title query above.
+
+BUDGET_LIMIT = 30 # credits; 9 queries plus headroom for retries
 
 import csv
 from datetime import datetime
@@ -147,6 +187,10 @@ def main():
     print("--- Automated Campaign Hunt ---")
 
     # 1. Setup Budget
+    if not SHODAN_API_KEY:
+        print("Error: SHODAN_API_KEY not found.")
+        return 1
+
     budget = CreditBudget()
     budget.set_budget(BUDGET_LIMIT)
 
