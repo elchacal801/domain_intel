@@ -45,6 +45,7 @@ import json
 import logging
 import os
 import sys
+import time
 from typing import Dict, List, Optional
 
 sys.path.insert(0, os.path.dirname(__file__))
@@ -90,6 +91,89 @@ RMM_SIGNATURES: Dict[str, Dict] = {
 # 21118/21119 are RustDesk web-client ports only in some deployments; excluded
 # from the default port match to avoid claiming any high port is RustDesk.
 RUSTDESK_CORE_PORTS = {21115, 21116, 21117}
+
+
+class Throttle:
+    """Paces requests to a minimum interval.
+
+    Shodan Basic allows roughly one request per second. A 143-IP run never hit
+    that ceiling; ~90k will immediately.
+    """
+
+    def __init__(self, min_interval: float = 1.05):
+        self.min_interval = min_interval
+        self._last = None
+
+    def wait(self):
+        # One clock read per call: reading again after sleeping would also
+        # charge the sleep itself against the next interval.
+        now = time.monotonic()
+        if self._last is not None:
+            delta = now - self._last
+            if delta < self.min_interval:
+                pause = self.min_interval - delta
+                time.sleep(pause)
+                now += pause
+        self._last = now
+
+
+def parse_source(spec: str):
+    """Split a "path[:column]" source spec, tolerating Windows drive letters."""
+    head, sep, tail = spec.rpartition(":")
+    if sep and tail and "/" not in tail and "\\" not in tail and len(tail) > 1:
+        return head, tail
+    return spec, "a_record"
+
+
+def load_existing_results(path: str) -> Dict[str, Dict]:
+    """Read the results ledger, keyed by IP. Missing file is simply empty."""
+    out: Dict[str, Dict] = {}
+    if not os.path.exists(path):
+        return out
+    try:
+        with open(path, newline="", encoding="utf-8") as f:
+            for row in csv.DictReader(f):
+                ip = (row.get("ip") or "").strip()
+                if ip:
+                    out[ip] = row
+    except Exception as e:
+        log.warning(f"Could not read existing results {path}: {e}")
+    return out
+
+
+def merge_results(existing: Dict[str, Dict], new: List[Dict]) -> List[Dict]:
+    """Merge new findings into the ledger, newest record per IP winning.
+
+    Rows not revisited this run are preserved untouched -- the ledger only ever
+    grows or refreshes, never loses coverage.
+    """
+    merged = dict(existing)
+    for row in new:
+        ip = (row.get("ip") or "").strip()
+        if ip:
+            merged[ip] = row
+    return [merged[k] for k in sorted(merged)]
+
+
+def filter_unchecked(ips: List[str], existing: Dict[str, Dict], today: str,
+                     max_age_days: int = 30) -> List[str]:
+    """Drop IPs already checked within max_age_days.
+
+    This is what makes progress independent of the SQLite cache: the ledger
+    itself records what has been covered, so cache expiry cannot silently
+    restart the sweep from the beginning.
+    """
+    from datetime import date
+    def _stale(rec):
+        d = (rec.get("checked_date") or "").strip()
+        if not d:
+            return True
+        try:
+            a = date.fromisoformat(today) - date.fromisoformat(d)
+        except ValueError:
+            return True
+        return a.days >= max_age_days
+    return [ip for ip in ips if ip not in existing or _stale(existing[ip])]
 
 
 def _iter_services(host: Dict):
@@ -252,7 +336,7 @@ def asn_sweep_queries(asn: str) -> List[str]:
     return [f"asn:{asn} {kvm_search_query()}"] + [f"asn:{asn} {q}" for q in kvm_favicon_queries()]
 
 
-def lookup_host(api, ip: str, cache=None):
+def lookup_host(api, ip: str, cache=None, retries: int = 3, throttle=None):
     """Shodan host lookup, cached.
 
     Returns (record, used_api). record is None when the IP is unknown to
@@ -265,16 +349,28 @@ def lookup_host(api, ip: str, cache=None):
         hit = cache.get(key, max_age_days=30)
         if hit is not None:
             return hit, False
-    try:
-        # minify=False: the per-service banner detail (product, http.title,
-        # favicon) is exactly what the signatures match on.
-        rec = api.host(ip, minify=False)
-    except Exception as e:
-        msg = str(e)
-        if "No information available" in msg:
-            log.debug(f"{ip}: not in Shodan")
-            return None, True
-        log.warning(f"{ip}: lookup failed: {type(e).__name__}: {msg}")
+    rec = None
+    for attempt in range(1, retries + 1):
+        if throttle is not None:
+            throttle.wait()
+        try:
+            # minify=False: the per-service banner detail (product, http.title,
+            # favicon) is exactly what the signatures match on.
+            rec = api.host(ip, minify=False)
+            break
+        except Exception as e:
+            msg = str(e)
+            if "No information available" in msg:
+                # A genuine "not in Shodan" is an answer, not a failure; do not
+                # spend retries on it.
+                log.debug(f"{ip}: not in Shodan")
+                return None, True
+            if attempt >= retries:
+                log.warning(f"{ip}: lookup failed after {retries} attempts: "
+                            f"{type(e).__name__}: {msg}")
+                return None, True
+            time.sleep(min(2 ** attempt, 30))
+    if rec is None:
         return None, True
     if cache is not None:
         try:
@@ -352,11 +448,16 @@ def main():
                         help="Maximum Shodan calls this run")
     parser.add_argument("--skip-asn-sweep", action="store_true",
                         help="Host lookups only; makes no search queries")
+    parser.add_argument("--source", action="append", default=[],
+                        metavar="PATH[:COLUMN]",
+                        help="CSV to source IPs from, repeatable. Column defaults "
+                             "to a_record, e.g. data/vpn_relay_ips.csv:ip")
     parser.add_argument("--domain-csv", default=None,
-                        help="Domain CSV to source IPs from (uses --ip-column). "
-                             "Processed after --ip-list, budget permitting; the "
-                             "30-day cache makes successive runs pick up where "
-                             "the last left off.")
+                        help="Deprecated alias for a single --source")
+    parser.add_argument("--recheck-days", type=int, default=30,
+                        help="Skip IPs already checked within this many days")
+    parser.add_argument("--checkpoint-every", type=int, default=100,
+                        help="Flush the results ledger every N lookups")
     parser.add_argument("--annotate", default=None,
                         help="Domain CSV to join findings onto (adds columns in place)")
     parser.add_argument("--ip-column", default="a_record",
@@ -389,12 +490,54 @@ def main():
     results: List[Dict] = []
     spent = 0
 
-    # --- 1. Known campaign IPs -------------------------------------------
-    for ip in load_ip_list(args.ip_list):
+    # The results file is the progress ledger. Basing resumption on it rather
+    # than on the SQLite cache means a cache expiry or loss cannot silently
+    # restart the sweep from the beginning.
+    existing = load_existing_results(args.output)
+    log.info(f"Ledger: {len(existing)} IPs already recorded in {args.output}")
+
+    throttle = Throttle()
+    results: List[Dict] = []
+
+    def checkpoint():
+        rows = merge_results(existing, results)
+        os.makedirs(os.path.dirname(args.output) or ".", exist_ok=True)
+        with open(args.output, "w", newline="", encoding="utf-8") as f:
+            w = csv.DictWriter(f, fieldnames=FIELDS, extrasaction="ignore")
+            w.writeheader()
+            w.writerows(rows)
+        return len(rows)
+
+    # --- Assemble the work list ------------------------------------------
+    sources = [(args.ip_list, None)]
+    if args.domain_csv:
+        sources.append((args.domain_csv, args.ip_column))
+    for spec in args.source:
+        sources.append(parse_source(spec))
+
+    work: List[tuple] = []
+    seen = set()
+    for path, column in sources:
+        ips = load_ip_list(path) if column is None else load_ips_from_csv(path, column)
+        label = os.path.basename(path)
+        for ip in ips:
+            if ip not in seen:
+                seen.add(ip)
+                work.append((ip, label))
+
+    todo = filter_unchecked([ip for ip, _ in work], existing, today, args.recheck_days)
+    todo_set = set(todo)
+    label_of = dict(work)
+    log.info(f"{len(work)} unique IPs across {len(sources)} source(s); "
+             f"{len(todo)} need checking, {len(work) - len(todo)} already fresh")
+
+    # --- Look up ----------------------------------------------------------
+    for i, ip in enumerate(todo, 1):
         if spent >= args.budget:
-            log.warning(f"Budget of {args.budget} reached; {ip} onwards not checked")
+            log.info(f"Budget of {args.budget} reached; {len(todo) - i + 1} IPs "
+                     f"deferred to the next run (the ledger carries progress)")
             break
-        rec, used_api = lookup_host(api, ip, cache)
+        rec, used_api = lookup_host(api, ip, cache, throttle=throttle)
         if used_api:
             spent += 1
         if rec is None:
@@ -404,36 +547,16 @@ def main():
             log.info(f"  {ip}: {found['exposure_evidence']}")
         results.append({
             "ip": ip,
-            "source": os.path.basename(args.ip_list),
+            "source": label_of.get(ip, ""),
             "asn": rec.get("asn", ""),
             "checked_date": today,
             **found,
         })
+        if args.checkpoint_every and len(results) % args.checkpoint_every == 0:
+            n = checkpoint()
+            log.info(f"  checkpoint: {n} rows in ledger ({spent} lookups this run)")
 
-    # --- 1b. IPs from a domain CSV ---------------------------------------
-    if args.domain_csv:
-        for ip in load_ips_from_csv(args.domain_csv, args.ip_column):
-            if spent >= args.budget:
-                log.info(f"Budget of {args.budget} reached; remaining IPs deferred "
-                         f"to the next run (cache carries progress forward)")
-                break
-            rec, used_api = lookup_host(api, ip, cache)
-            if used_api:
-                spent += 1
-            if rec is None:
-                continue
-            found = classify_host(rec)
-            if found["kvm_detected"] or found["rmm_detected"]:
-                log.info(f"  {ip}: {found['exposure_evidence']}")
-            results.append({
-                "ip": ip,
-                "source": os.path.basename(args.domain_csv),
-                "asn": rec.get("asn", ""),
-                "checked_date": today,
-                **found,
-            })
-
-    # --- 2. Operator ASN sweep -------------------------------------------
+    # --- Operator ASN sweep ------------------------------------------------
     if not args.skip_asn_sweep:
         for row in load_asn_seed(args.asn_seed):
             if spent >= args.budget:
@@ -445,6 +568,7 @@ def main():
             for q in asn_sweep_queries(asn):
                 if spent >= args.budget:
                     break
+                throttle.wait()
                 try:
                     res = api.search(q, limit=100)
                     spent += 1
@@ -464,18 +588,19 @@ def main():
                     **found,
                 })
 
-    os.makedirs(os.path.dirname(args.output) or ".", exist_ok=True)
-    with open(args.output, "w", newline="", encoding="utf-8") as f:
-        w = csv.DictWriter(f, fieldnames=FIELDS)
-        w.writeheader()
-        w.writerows(results)
+    # Write through the ledger merge, never the raw run results: writing
+    # `results` alone would discard every IP checked on previous runs.
+    total = checkpoint()
 
     if args.annotate:
-        by_ip = {r["ip"]: r for r in results if r.get("ip")}
-        annotate_csv(args.annotate, args.annotate, by_ip, args.ip_column)
+        # Annotate from the whole ledger, not just this run, so domains whose
+        # IPs were checked days ago keep their columns.
+        annotate_csv(args.annotate, args.annotate,
+                     load_existing_results(args.output), args.ip_column)
 
-    hits = [r for r in results if r["kvm_detected"] or r["rmm_detected"]]
-    log.info(f"Wrote {len(results)} rows to {args.output} ({len(hits)} with exposure)")
+    hits = [r for r in results if r.get("kvm_detected") or r.get("rmm_detected")]
+    log.info(f"Ledger holds {total} IPs in {args.output}; "
+             f"{len(results)} checked this run, {len(hits)} with exposure")
     log.info(f"Shodan calls used: {spent}")
     return 0
 
