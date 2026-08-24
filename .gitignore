@@ -66,3 +66,10 @@ docs/data/screenshots/
 
 # CI debug logs captured from workflow runs
 logs/
+
+# Master probed dataset: 63 MB and regenerated from shards every run, so it is
+# never carried state. The compressed copy (.csv.gz, ~7 MB) is committed
+# instead; run `gunzip -k data/dea_domains_probed.csv.gz` to work with it
+# locally, or regenerate it with merge_results.py.
+data/dea_domains_probed.csv
+docs/data/dea_domains_probed.csv

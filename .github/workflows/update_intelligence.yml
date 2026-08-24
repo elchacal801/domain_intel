@@ -305,9 +305,6 @@ jobs:
       - name: Infrastructure Fingerprinting
         run: python scripts/match_fingerprints.py
 
-      - name: Build Frontend Data
-        run: python scripts/build_frontend_data.py
-
       - name: Visual Fingerprinting (Optional)
         timeout-minutes: 30
         # Optional by design: a timeout must not discard the run's commit.
@@ -425,6 +422,15 @@ jobs:
           cp data/ai_typosquats.csv docs/data/ || true
           cp data/ai_classifications.csv docs/data/ || true
 
+      # Moved after the in-place enrichments. enrich_proxy_check.py writes
+      # proxy_detected/proxy_type/proxy_provider/proxy_risk straight back into
+      # dea_domains_probed.csv, and build_frontend_data.py passes every CSV
+      # column through to the dashboard shards. Building the frontend first
+      # meant those columns -- which FP-0009 and FP-0010 gate on -- never
+      # reached the dashboard at all.
+      - name: Build Frontend Data
+        run: python scripts/build_frontend_data.py
+
       - name: Generate Pivots & Stats
         run: |
           # Now runs AFTER all enrichment to reflect accurate High Risk counts
@@ -458,8 +464,26 @@ jobs:
           
           mkdir -p docs/data
           touch docs/.nojekyll
-          cp data/*.csv docs/data/
+
+          # Publish CSVs to docs/, excluding the master probed dataset. Nothing
+          # reads it there: the dashboard consumes the JSON shards produced by
+          # build_frontend_data.py (domain_shards.json, clusters.json,
+          # fingerprint_matches.json, infra_index.json, stats.json). Copying it
+          # meant rewriting 63 MB in data/ AND another 63 MB in docs/data/ every
+          # single day, for a file with no reader.
+          for f in data/*.csv; do
+            if [ "$(basename "$f")" != "dea_domains_probed.csv" ]; then
+              cp "$f" docs/data/
+            fi
+          done
+
           gzip -f data/domain_intel_bundle.json
+
+          # Compress the master dataset before committing: 63 MB -> 7.4 MB (88%).
+          # Same pattern already used for domain_intel_bundle.json above. -k keeps
+          # the plain file on disk for anything later in the run; only the .gz is
+          # tracked (data/dea_domains_probed.csv is gitignored).
+          gzip -c data/dea_domains_probed.csv > data/dea_domains_probed.csv.gz
           cp data/*.json.gz docs/data/
           cp data/openclaw_stix.json docs/data/
           cp data/openclaw_sigma.yml docs/data/
