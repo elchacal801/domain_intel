@@ -293,7 +293,7 @@ jobs:
             # the limit here is wall clock at ~1 req/s, not cost. The domain set
             # resolves to ~31.7k unique IPs; a bounded slice runs each day and
             # the 30-day cache carries progress forward.
-            python scripts/enrich_rmm_exposure.py               --ip-list data/known_campaign_ips.txt               --domain-csv data/dea_domains_probed.csv               --ip-column a_record               --asn-seed data/kadnap_operator_asns.csv               --output data/rmm_exposure.csv               --annotate data/dea_domains_probed.csv               --budget 1000
+            python scripts/enrich_rmm_exposure.py               --ip-list data/known_campaign_ips.txt               --source data/dea_domains_probed.csv:a_record               --source data/vpn_relay_ips.csv:ip               --asn-seed data/kadnap_operator_asns.csv               --output data/rmm_exposure.csv               --annotate data/dea_domains_probed.csv               --budget 1000
           fi
           cp data/rmm_exposure.csv docs/data/ || true
 

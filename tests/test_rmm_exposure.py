@@ -310,3 +310,124 @@ class TestDomainCsvSourcing:
         from enrich_rmm_exposure import load_ips_from_csv
         src = self._csv(tmp_path, [{"domain": "a.example", "a_record": "203.0.113.1", "priority": "x"}])
         assert load_ips_from_csv(src, "no_such_column") == []
+
+
+class TestResultsLedger:
+    """The results CSV is the progress ledger, not the SQLite cache.
+
+    The cache expires at 30 days; if progress depended on it, day 31 would
+    silently restart the sweep from the top. Recording checked_date per IP and
+    skipping recently-checked addresses makes progress survive cache loss.
+    """
+
+    def _write(self, path, rows):
+        import csv
+        from enrich_rmm_exposure import FIELDS
+        with open(path, "w", newline="", encoding="utf-8") as f:
+            w = csv.DictWriter(f, fieldnames=FIELDS, extrasaction="ignore")
+            w.writeheader()
+            for r in rows:
+                w.writerow(r)
+
+    def test_load_existing_returns_ip_keyed_map(self, tmp_path):
+        from enrich_rmm_exposure import load_existing_results
+        p = str(tmp_path / "r.csv")
+        self._write(p, [
+            {"ip": "1.1.1.1", "checked_date": "2026-08-20", "kvm_detected": "False"},
+            {"ip": "2.2.2.2", "checked_date": "2026-08-21", "kvm_detected": "True"},
+        ])
+        got = load_existing_results(p)
+        assert set(got) == {"1.1.1.1", "2.2.2.2"}
+        assert got["2.2.2.2"]["kvm_detected"] == "True"
+
+    def test_missing_file_is_empty_not_error(self, tmp_path):
+        from enrich_rmm_exposure import load_existing_results
+        assert load_existing_results(str(tmp_path / "nope.csv")) == {}
+
+    def test_merge_dedupes_by_ip_newest_wins(self):
+        from enrich_rmm_exposure import merge_results
+        existing = {"1.1.1.1": {"ip": "1.1.1.1", "checked_date": "2026-08-01",
+                                "rmm_products": "", "rmm_detected": "False"}}
+        new = [{"ip": "1.1.1.1", "checked_date": "2026-08-23",
+                "rmm_products": "RustDesk", "rmm_detected": "True"},
+               {"ip": "9.9.9.9", "checked_date": "2026-08-23",
+                "rmm_products": "", "rmm_detected": "False"}]
+        merged = merge_results(existing, new)
+        assert len(merged) == 2
+        by_ip = {r["ip"]: r for r in merged}
+        assert by_ip["1.1.1.1"]["rmm_products"] == "RustDesk", "newer record must win"
+        assert by_ip["1.1.1.1"]["checked_date"] == "2026-08-23"
+
+    def test_merge_never_loses_prior_rows(self):
+        from enrich_rmm_exposure import merge_results
+        existing = {f"10.0.0.{i}": {"ip": f"10.0.0.{i}", "checked_date": "2026-08-01"}
+                    for i in range(1, 51)}
+        merged = merge_results(existing, [{"ip": "10.0.0.1", "checked_date": "2026-08-23"}])
+        assert len(merged) == 50, "appending must not drop untouched rows"
+
+    def test_recently_checked_ips_are_skipped(self):
+        from enrich_rmm_exposure import filter_unchecked
+        existing = {"1.1.1.1": {"ip": "1.1.1.1", "checked_date": "2026-08-23"},
+                    "2.2.2.2": {"ip": "2.2.2.2", "checked_date": "2026-01-01"}}
+        todo = filter_unchecked(["1.1.1.1", "2.2.2.2", "3.3.3.3"], existing,
+                                today="2026-08-23", max_age_days=30)
+        assert todo == ["2.2.2.2", "3.3.3.3"], "fresh skipped, stale and new kept"
+
+    def test_blank_checked_date_is_treated_as_stale(self):
+        from enrich_rmm_exposure import filter_unchecked
+        existing = {"1.1.1.1": {"ip": "1.1.1.1", "checked_date": ""}}
+        assert filter_unchecked(["1.1.1.1"], existing, today="2026-08-23") == ["1.1.1.1"]
+
+
+class TestRateLimiting:
+    """~31.7k lookups at Shodan's ~1 req/s needs pacing and resilience; a
+    143-IP test was too small to expose either need."""
+
+    def test_throttle_sleeps_to_maintain_interval(self):
+        from unittest.mock import patch
+        from enrich_rmm_exposure import Throttle
+        slept = []
+        with patch("enrich_rmm_exposure.time.sleep", side_effect=slept.append):
+            with patch("enrich_rmm_exposure.time.monotonic", side_effect=[100.0, 100.2, 100.2]):
+                t = Throttle(min_interval=1.0)
+                t.wait()   # first call: no wait
+                t.wait()   # 0.2s later: must sleep ~0.8s
+        assert slept and 0.7 < slept[0] <= 1.0, slept
+
+    def test_lookup_retries_then_succeeds(self):
+        from unittest.mock import MagicMock, patch
+        from enrich_rmm_exposure import lookup_host
+        api = MagicMock()
+        api.host.side_effect = [Exception("rate limit"), {"ip_str": "1.2.3.4", "data": []}]
+        with patch("enrich_rmm_exposure.time.sleep"):
+            rec, used = lookup_host(api, "1.2.3.4", cache=None, retries=2)
+        assert rec is not None and used is True
+        assert api.host.call_count == 2
+
+    def test_unknown_ip_is_not_retried(self):
+        from unittest.mock import MagicMock, patch
+        from enrich_rmm_exposure import lookup_host
+        api = MagicMock()
+        api.host.side_effect = Exception("No information available for that IP.")
+        with patch("enrich_rmm_exposure.time.sleep"):
+            rec, used = lookup_host(api, "1.2.3.4", cache=None, retries=3)
+        assert rec is None
+        assert api.host.call_count == 1, "a genuine 'not found' must not burn retries"
+
+
+class TestMultipleSources:
+    """Both the domain set and the VPN relay set are swept, and they key their
+    IPs in differently-named columns (a_record vs ip)."""
+
+    def test_parses_path_and_column(self):
+        from enrich_rmm_exposure import parse_source
+        assert parse_source("data/x.csv:ip") == ("data/x.csv", "ip")
+
+    def test_defaults_column_when_omitted(self):
+        from enrich_rmm_exposure import parse_source
+        assert parse_source("data/x.csv") == ("data/x.csv", "a_record")
+
+    def test_windows_drive_letter_is_not_split(self):
+        from enrich_rmm_exposure import parse_source
+        assert parse_source(r"C:\data\x.csv:ip") == (r"C:\data\x.csv", "ip")
+        assert parse_source(r"C:\data\x.csv") == (r"C:\data\x.csv", "a_record")
