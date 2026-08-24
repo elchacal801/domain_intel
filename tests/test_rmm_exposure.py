@@ -225,3 +225,88 @@ class TestAnnotateCsv:
 
         header = next(csv.reader(open(out, encoding="utf-8")))
         assert header.count("kvm_detected") == 1, header
+
+
+class TestFaviconSweepQueries:
+    """The ASN sweep searched only http.title, while host lookups also matched
+    favicon hashes. A retitled device inside a swept ASN was therefore invisible
+    to the sweep but would have been caught by a direct lookup -- an asymmetry
+    worth closing, since retitling is trivial and replacing the favicon is not.
+    """
+
+    def test_favicon_query_is_built(self):
+        from enrich_rmm_exposure import kvm_favicon_queries
+        qs = kvm_favicon_queries()
+        assert qs, "expected at least one favicon query"
+        for q in qs:
+            assert q.startswith("http.favicon.hash:"), q
+            assert " OR " not in q and "(" not in q
+
+    def test_covers_every_known_favicon(self):
+        from enrich_rmm_exposure import kvm_favicon_queries, KVM_SIGNATURES
+        known = {h for s in KVM_SIGNATURES.values() for h in s.get("favicons", [])}
+        joined = " ".join(kvm_favicon_queries())
+        for h in known:
+            assert str(h) in joined, f"favicon {h} not covered by sweep"
+
+    def test_sweep_queries_combine_title_and_favicon(self):
+        from enrich_rmm_exposure import asn_sweep_queries
+        qs = asn_sweep_queries("AS29802")
+        assert all(q.startswith("asn:AS29802 ") for q in qs), qs
+        assert any("http.title:" in q for q in qs)
+        assert any("http.favicon.hash:" in q for q in qs)
+
+
+class TestMeshCentral:
+    """Found by passive DNS on 23.227.173.144: a mesh.<domain> hostname
+    alongside rust.<domain>, i.e. MeshCentral running next to RustDesk.
+    MeshCentral is a self-hosted RMM and was missing from the signatures.
+    """
+
+    def test_meshcentral_by_title(self):
+        r = classify_host(host(svc(443, title="MeshCentral")))
+        assert r["rmm_detected"] is True
+        assert "MeshCentral" in r["rmm_products"]
+
+    def test_meshcentral_by_product(self):
+        r = classify_host(host(svc(8086, product="MeshCentral")))
+        assert r["rmm_detected"] is True
+
+
+class TestDomainCsvSourcing:
+    """FP-0011 matches domain rows, so the IPs worth checking are the ones
+    those rows resolve to. dea_domains_probed.csv holds 330k rows resolving to
+    ~31.7k unique IPs -- roughly 8.8h at Shodan's ~1 req/s, so runs must be
+    budgeted and incremental rather than exhaustive.
+    """
+
+    def _csv(self, tmp_path, rows):
+        import csv
+        p = tmp_path / "domains.csv"
+        with open(p, "w", newline="", encoding="utf-8") as f:
+            w = csv.DictWriter(f, fieldnames=["domain", "a_record", "priority"])
+            w.writeheader()
+            for r in rows:
+                w.writerow(r)
+        return str(p)
+
+    def test_extracts_unique_valid_ips(self, tmp_path):
+        from enrich_rmm_exposure import load_ips_from_csv
+        src = self._csv(tmp_path, [
+            {"domain": "a.example", "a_record": "203.0.113.1", "priority": "high"},
+            {"domain": "b.example", "a_record": "203.0.113.2", "priority": "low"},
+            {"domain": "c.example", "a_record": "203.0.113.1", "priority": "high"},
+            {"domain": "d.example", "a_record": "", "priority": "low"},
+            {"domain": "e.example", "a_record": "not-an-ip", "priority": "low"},
+        ])
+        ips = load_ips_from_csv(src, "a_record")
+        assert ips == ["203.0.113.1", "203.0.113.2"]
+
+    def test_missing_file_returns_empty(self, tmp_path):
+        from enrich_rmm_exposure import load_ips_from_csv
+        assert load_ips_from_csv(str(tmp_path / "nope.csv"), "a_record") == []
+
+    def test_missing_column_returns_empty_not_error(self, tmp_path):
+        from enrich_rmm_exposure import load_ips_from_csv
+        src = self._csv(tmp_path, [{"domain": "a.example", "a_record": "203.0.113.1", "priority": "x"}])
+        assert load_ips_from_csv(src, "no_such_column") == []

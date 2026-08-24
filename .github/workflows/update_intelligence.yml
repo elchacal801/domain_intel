@@ -279,7 +279,7 @@ jobs:
           python scripts/enrich_spf.py -i /tmp/actor_mx_domains.txt -o data/spf_enrichment.csv -c 200
 
       - name: RMM / IP-KVM Exposure Enrichment
-        timeout-minutes: 15
+        timeout-minutes: 20
         continue-on-error: true
         env:
           SHODAN_API_KEY: ${{ secrets.SHODAN_API_KEY }}
@@ -288,7 +288,12 @@ jobs:
           # kvm_detected / rmm_detected columns this step writes, so running it
           # afterwards would defer every match to the following day's run.
           if [ -n "$SHODAN_API_KEY" ]; then
-            python scripts/enrich_rmm_exposure.py               --ip-list data/known_campaign_ips.txt               --asn-seed data/kadnap_operator_asns.csv               --output data/rmm_exposure.csv               --annotate data/dea_domains_probed.csv               --budget 300
+            # Shodan host lookups consume no query credits (measured: 145
+            # lookups + 15 searches cost 99 credits, all from the searches), so
+            # the limit here is wall clock at ~1 req/s, not cost. The domain set
+            # resolves to ~31.7k unique IPs; a bounded slice runs each day and
+            # the 30-day cache carries progress forward.
+            python scripts/enrich_rmm_exposure.py               --ip-list data/known_campaign_ips.txt               --domain-csv data/dea_domains_probed.csv               --ip-column a_record               --asn-seed data/kadnap_operator_asns.csv               --output data/rmm_exposure.csv               --annotate data/dea_domains_probed.csv               --budget 1000
           fi
           cp data/rmm_exposure.csv docs/data/ || true
 
