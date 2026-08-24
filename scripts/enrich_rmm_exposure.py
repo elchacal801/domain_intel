@@ -80,6 +80,11 @@ RMM_SIGNATURES: Dict[str, Dict] = {
     "TeamViewer": {"ports": [5938],  "products": ["teamviewer"]},
     "VNC":        {"ports": [5900, 5901], "products": ["vnc", "realvnc", "tightvnc"]},
     "RDP":        {"ports": [3389],  "products": ["remote desktop", "ms-wbt-server"]},
+    # Self-hosted RMM. Surfaced by passive DNS on 23.227.173.144, which served
+    # mesh.<domain> beside rust.<domain> -- MeshCentral running next to
+    # RustDesk. It has no fixed port worth matching (commonly 443 or 8086), so
+    # it is identified by title and banner only.
+    "MeshCentral": {"ports": [], "products": ["meshcentral"], "titles": ["meshcentral"]},
 }
 
 # 21118/21119 are RustDesk web-client ports only in some deployments; excluded
@@ -128,10 +133,12 @@ def classify_host(host: Dict) -> Dict:
             if name == "RustDesk":
                 ports = [p for p in ports if p in RUSTDESK_CORE_PORTS]
             hit = None
-            if port in ports:
+            if ports and port in ports:
                 hit = "port"
             elif product and any(p in product for p in sig.get("products", [])):
                 hit = "product"
+            elif title and any(x in title for x in sig.get("titles", [])):
+                hit = "title"
             if hit:
                 if name not in rmm_found:
                     rmm_found.append(name)
@@ -167,6 +174,37 @@ def load_ip_list(path: str) -> List[str]:
     return ips
 
 
+def load_ips_from_csv(path: str, column: str) -> List[str]:
+    """Unique, valid IPs from a column of a domain CSV, in first-seen order.
+
+    FP-0011 matches domain rows, so the addresses worth checking are the ones
+    those rows resolve to. Invalid and blank values are skipped rather than
+    raising -- a_record legitimately holds CNAMEs and error strings.
+    """
+    ips: List[str] = []
+    seen = set()
+    if not os.path.exists(path):
+        log.warning(f"CSV not found: {path}")
+        return ips
+    with open(path, newline="", encoding="utf-8") as f:
+        reader = csv.DictReader(f)
+        if column not in (reader.fieldnames or []):
+            log.warning(f"Column '{column}' not in {path}; columns: {reader.fieldnames}")
+            return ips
+        for row in reader:
+            v = (row.get(column) or "").strip()
+            if not v or v in seen:
+                continue
+            try:
+                ipaddress.ip_address(v)
+            except ValueError:
+                continue
+            seen.add(v)
+            ips.append(v)
+    log.info(f"Loaded {len(ips)} unique IPs from {column} in {path}")
+    return ips
+
+
 def load_asn_seed(path: str) -> List[Dict]:
     """Read the curated operator-ASN seed (ASN,Name,... )."""
     rows: List[Dict] = []
@@ -193,6 +231,25 @@ def kvm_search_query() -> str:
     """
     titles = sorted({t for sig in KVM_SIGNATURES.values() for t in sig.get("titles", [])})
     return "http.title:" + ",".join(f'"{t}"' for t in titles)
+
+
+def kvm_favicon_queries() -> List[str]:
+    """One query per known KVM favicon hash.
+
+    Shodan cannot OR multiple values for http.favicon.hash the way it can for
+    http.title, so each hash needs its own query. Favicons matter because a
+    title is trivially customised while the stock favicon usually survives --
+    a retitled PiKVM is invisible to a title-only sweep.
+    """
+    hashes = sorted({h for sig in KVM_SIGNATURES.values() for h in sig.get("favicons", [])})
+    return [f"http.favicon.hash:{h}" for h in hashes]
+
+
+def asn_sweep_queries(asn: str) -> List[str]:
+    """Every sweep query for one ASN: the combined title filter, then one per
+    favicon hash. Costs len(favicons)+1 searches per ASN instead of 1, which is
+    still far cheaper than a host lookup per address in the range."""
+    return [f"asn:{asn} {kvm_search_query()}"] + [f"asn:{asn} {q}" for q in kvm_favicon_queries()]
 
 
 def lookup_host(api, ip: str, cache=None):
@@ -295,6 +352,11 @@ def main():
                         help="Maximum Shodan calls this run")
     parser.add_argument("--skip-asn-sweep", action="store_true",
                         help="Host lookups only; makes no search queries")
+    parser.add_argument("--domain-csv", default=None,
+                        help="Domain CSV to source IPs from (uses --ip-column). "
+                             "Processed after --ip-list, budget permitting; the "
+                             "30-day cache makes successive runs pick up where "
+                             "the last left off.")
     parser.add_argument("--annotate", default=None,
                         help="Domain CSV to join findings onto (adds columns in place)")
     parser.add_argument("--ip-column", default="a_record",
@@ -348,24 +410,51 @@ def main():
             **found,
         })
 
+    # --- 1b. IPs from a domain CSV ---------------------------------------
+    if args.domain_csv:
+        for ip in load_ips_from_csv(args.domain_csv, args.ip_column):
+            if spent >= args.budget:
+                log.info(f"Budget of {args.budget} reached; remaining IPs deferred "
+                         f"to the next run (cache carries progress forward)")
+                break
+            rec, used_api = lookup_host(api, ip, cache)
+            if used_api:
+                spent += 1
+            if rec is None:
+                continue
+            found = classify_host(rec)
+            if found["kvm_detected"] or found["rmm_detected"]:
+                log.info(f"  {ip}: {found['exposure_evidence']}")
+            results.append({
+                "ip": ip,
+                "source": os.path.basename(args.domain_csv),
+                "asn": rec.get("asn", ""),
+                "checked_date": today,
+                **found,
+            })
+
     # --- 2. Operator ASN sweep -------------------------------------------
     if not args.skip_asn_sweep:
-        query_sigs = kvm_search_query()
         for row in load_asn_seed(args.asn_seed):
             if spent >= args.budget:
                 log.warning("Budget reached; ASN sweep truncated")
                 break
             asn = row["ASN"].strip()
-            q = f"asn:{asn} {query_sigs}"
-            try:
-                res = api.search(q, limit=100)
-                spent += 1
-            except Exception as e:
-                log.warning(f"{asn}: search failed: {type(e).__name__}: {e}")
-                continue
-            total = res.get("total", 0)
-            log.info(f"  {asn} ({row.get('Name','')}): {total} KVM-signature match(es)")
-            for match in res.get("matches", []):
+            found_total = 0
+            matches = []
+            for q in asn_sweep_queries(asn):
+                if spent >= args.budget:
+                    break
+                try:
+                    res = api.search(q, limit=100)
+                    spent += 1
+                except Exception as e:
+                    log.warning(f"{asn}: search failed ({q}): {type(e).__name__}: {e}")
+                    continue
+                found_total += res.get("total", 0)
+                matches.extend(res.get("matches", []))
+            log.info(f"  {asn} ({row.get('Name','')}): {found_total} KVM-signature match(es)")
+            for match in matches:
                 found = classify_host({"data": [match]})
                 results.append({
                     "ip": match.get("ip_str", ""),
