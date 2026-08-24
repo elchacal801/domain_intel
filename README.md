@@ -37,6 +37,7 @@
 - [Data Dictionary](#data-dictionary)
 - [Responsible Use & Security](#responsible-use--security)
 - [Contributing](#contributing)
+- [Documentation](#documentation)
 - [Acknowledgments](#acknowledgments)
 - [License](#license)
 
@@ -49,10 +50,11 @@
 | **Automated Pipeline** | Daily GitHub Actions workflow with 10-shard parallel processing, artifact passing, and auto-commit to GitHub Pages |
 | **AI-Powered Analysis** | Multi-model LLM chain (Claude Sonnet 4.5 / Gemini 3 Pro / GPT-4o) with automatic fallback, SQLite caching, and cost tracking |
 | **Infrastructure Clustering** | Groups domains by shared MX hosts, MX IPs, web hosting IPs, and registrar+NS — with confidence scoring that penalizes known shared providers |
-| **Fingerprint Detection** | 9 YAML-driven fingerprint rules with confidence modifiers, entity screening boosts, and FLAME threat-path mapping |
+| **Fingerprint Detection** | 11 YAML-driven fingerprint rules with confidence modifiers, entity screening boosts, and FLAME threat-path mapping |
 | **FLAME Integration** | Maps clusters to [FLAME](https://github.com/elchacal801/flame-fraud) fraud threat paths with evidence package generation |
 | **STIX 2.1 Export** | Full STIX bundle generation for direct ingestion into OpenCTI, MISP, or any CTI platform |
 | **Shadow AI Scanner** | Detects exposed OpenClaw/Moltbot/Gateway AI agents on port 18789 via Shodan with STIX + Sigma rule export |
+| **Remote Access Detection** | Finds internet-exposed IP-KVM hardware (PiKVM, TinyPilot, JetKVM, NanoKVM, GLKVM) and RMM tooling (RustDesk, AnyDesk, TeamViewer, ScreenConnect, MeshCentral) — the laptop-farm pattern behind DPRK IT-worker operations, mapped to MITRE T1219.003 |
 | **Investigation Dashboard** | React 19 + Vite 7 + Tailwind CSS 4 frontend with Sigma.js graph visualization, TanStack Table, and fuzzy search |
 | **Proactive Discovery** | SEADS ad scanning, dnstwist permutation generation, Certificate Transparency log streaming, and Shodan campaign hunts |
 | **Entity Screening** | Cross-references domains against GLEIF (corporate registry), OpenSanctions (PEPs/sanctions), and ICIJ OffshoreLeaks |
@@ -312,6 +314,10 @@ For GitHub Actions, add these as **Repository Secrets** in Settings > Secrets an
 ### Running the Pipeline Locally
 
 ```bash
+# 0. Proactive discovery (optional; requires SHODAN_API_KEY)
+python scripts/hunt_campaign.py     # disposable-email infrastructure
+python scripts/hunt_kvm.py          # internet-exposed IP-KVM devices
+
 # 1. Merge and deduplicate source lists
 python scripts/merge_lists_v3b.py --include-stopforumspam
 
@@ -343,6 +349,8 @@ python scripts/ai_classify_web.py --limit 2000 --batch-size 50
 python scripts/ai_briefing.py
 
 # 8. Detection & scoring
+#    Must precede match_fingerprints.py: FP-0011 matches the columns it writes.
+python scripts/enrich_rmm_exposure.py   --ip-list data/known_campaign_ips.txt   --source data/dea_domains_probed.csv:a_record   --source data/vpn_relay_ips.csv:ip   --output data/rmm_exposure.csv   --annotate data/dea_domains_probed.csv   --budget 1000
 python scripts/match_fingerprints.py
 python scripts/build_frontend_data.py
 python scripts/generate_pivots.py --input data/dea_domains_probed.csv
@@ -599,7 +607,7 @@ domain_intel/
 
 ### Daily Data Update (`update_intelligence.yml`)
 
-Runs daily at 11:00 UTC (6:00 AM EST) with manual dispatch support.
+Runs daily at **07:00 UTC** (2:00 AM EST / 12:00 AM MST) with manual dispatch support.
 
 ```mermaid
 graph LR
@@ -636,7 +644,14 @@ pytest
 pytest tests/test_llm_client.py -v
 ```
 
-The test suite covers 37 modules. Key test areas:
+**846 tests across 44 modules**, run automatically on every push and pull
+request by the `Tests` workflow (`.github/workflows/tests.yml`) on Python 3.11.
+
+`pytest.ini` sets `testpaths = tests`, so a bare `pytest` never collects
+`scripts/probe_*.py` — those are interactive capability probes that build live
+API clients at import time.
+
+Key test areas:
 
 | Test Module | Coverage |
 |---|---|
@@ -649,6 +664,10 @@ The test suite covers 37 modules. Key test areas:
 | `test_classify_rules.py` | Web classification rules |
 | `test_typosquat_scoring.py` | Typosquat confidence scoring |
 | `test_pivots.py` | Pivot generation (SOA/SSL selectors) |
+| `test_rmm_exposure.py` | IP-KVM/RMM signature matching, results ledger, throttling |
+| `test_hunt_kvm.py` | IP-KVM discovery queries and Shodan syntax constraints |
+| `test_hunt_campaign.py` | Campaign hunt query set and budget |
+| `test_suite_hygiene.py` | Guards against sys.modules leakage between test modules |
 | `test_gleif.py` | GLEIF corporate entity verification |
 | `test_opensanctions.py` | OpenSanctions PEP/sanctions screening |
 | `test_virustotal.py` | VirusTotal enrichment |
@@ -743,6 +762,16 @@ Contributions are welcome. Please follow these guidelines:
 2. Define `indicators` (required + optional), `confidence_base`, `confidence_modifiers`, and `flame_tp_ids`
 3. Run `python scripts/match_fingerprints.py` to test
 4. Run `python scripts/generate_fp_registry.py` to update the frontend registry
+
+---
+
+## Documentation
+
+| Guide | Covers |
+|---|---|
+| [Remote Access & IP-KVM Detection](docs/remote-access-detection.md) | FP-0011, laptop-farm infrastructure, Shodan query constraints, MITRE T1219.003 |
+| [VPN IP Intelligence Operations](docs/vpn-ip-intel-operations.md) | 20 providers, manual refresh cadence, DPRK scoring, Shodan org discovery |
+| [Detection Logic](docs/detection_logic.md) | Vendor-agnostic SOC detection patterns for DEA abuse |
 
 ---
 

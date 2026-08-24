@@ -59,12 +59,26 @@ git add data/vpn_seeds/protonvpn/ && git commit -m "data: refresh ProtonVPN cach
 
 ### Mullvad Exit Probe
 
-Requires an active Mullvad WireGuard connection:
+Requires an active Mullvad WireGuard connection — the SOCKS5 relays are only
+reachable from inside the tunnel.
 
 ```bash
 python scripts/mullvad_exit_probe.py
 git add data/vpn_seeds/mullvad_exit_ips.csv && git commit -m "data: refresh Mullvad exit IPs" && git push
 ```
+
+**Last refreshed: 2026-08-24** — 526 → **550 relays**, 550 unique exit IPs,
+matching every currently active relay with SOCKS5.
+
+Worth knowing before trusting the output: the script **overwrites** the seed
+wholesale at the end of a run, so a tunnel drop mid-probe silently shrinks the
+file. Probe to a temporary path and reconcile against the previous seed before
+replacing it. In the last refresh, 545/550 probed clean, 3 recovered on retry,
+and 2 (`fi-hel-wg-001`, `gb-lon-wg-008`) were retained at their older
+`probe_date` — still active but consistently unreachable via SOCKS5. Keeping
+those rows preserves known-good exit IPs and dates them honestly rather than
+dropping coverage. 27 relays were dropped only after confirming against the API
+that they are no longer active.
 
 ---
 
@@ -72,6 +86,67 @@ git add data/vpn_seeds/mullvad_exit_ips.csv && git commit -m "data: refresh Mull
 
 - **Astrill seed**: obtain from Spur Intelligence, save to `data/vpn_seeds/spur_astrill_YYYY.txt`
 - The script warns when the seed file exceeds **180 days old**
+
+> [!IMPORTANT]
+> The current seed is `spur_astrill_2024.txt` — roughly two years old, and **no
+> newer Spur seed is available**. Astrill is the highest-weighted indicator in
+> `vpn_provider_scores.csv` (25 pre-hire / 30 post-hire), so the strongest
+> signal in the pipeline rests on the oldest data.
+>
+> Shodan org discovery partly compensates: see below.
+
+---
+
+## Shodan Org Discovery
+
+Four providers discover IPs beyond their seed lists via Shodan organisation
+search: **Astrill, Urban VPN, ExpressVPN, Hotspot Shield**.
+
+This path produced **nothing at all** until 2026-08-24. Every committed dataset
+had zero rows with a `shodan` source. Two causes, both silent:
+
+1. The search shelled out to the `shodan` CLI, which authenticates from
+   `~/.shodan/api_key` written by `shodan init` — it does **not** read the
+   environment. The workflow step running `vpn_ip_intel.py` set no
+   `SHODAN_API_KEY` at all, so no key existed in any form.
+2. Only `FileNotFoundError` and `TimeoutExpired` were caught. An
+   unauthenticated CLI exits non-zero with empty stdout, which the parser read
+   as "no results" — a dead credential was indistinguishable from a genuine
+   empty answer. The step is `continue-on-error`, so nothing surfaced.
+
+It now uses the Python API, which reads `SHODAN_API_KEY` from the environment,
+and pages with `search_cursor`. Failure modes are distinguishable: a missing key
+logs at ERROR naming the consequence, an empty result warns that the org name
+may be stale, and exceptions degrade to the seed rather than crashing.
+
+**The `Infrastructure Intel (ASN/VPN/Tor)` workflow step must pass
+`SHODAN_API_KEY`.** Without it these four providers fall back to seed lists
+only — which for Astrill means 2024 data.
+
+First results after the fix:
+
+| Provider | IPs discovered |
+|---|---|
+| ExpressVPN | 360 |
+| Hotspot Shield | 16 |
+| Astrill | 4 |
+
+Urban VPN returns **0**, which now emits a warning — the configured org string
+(`Urban VPN`) is likely wrong. Left visible rather than guessed at.
+
+### Checking it still works
+
+```bash
+# Should be non-zero. Zero means discovery has silently broken again.
+python -c "
+import csv, io, collections
+c = collections.Counter()
+for r in csv.DictReader(io.open('data/vpn_relay_ips.csv', encoding='utf-8', newline='')):
+    if 'shodan' in (r.get('source') or ''):
+        c[r['provider']] += 1
+print(sum(c.values()), dict(c))
+"
+```
 
 ---
 
@@ -105,6 +180,7 @@ gh run view $(gh run list --workflow=update_intelligence.yml --limit 1 --json da
 | Provider | Pre-hire Score | Post-hire Score | Tier | Evidence |
 |----------|---------------|----------------|------|----------|
 | Astrill | 25 | 30 | anchor | Mandiant, Microsoft, Spur, Unit42, SecurityScorecard |
+| Mullvad | 20 | 25 | anchor | Kudelski: 2nd most-used by DPRK IT workers, after Astrill |
 | ExpressVPN | 15 | 25 | anchor | Mandiant: RGB ORB tunnels |
 | NordVPN | 15 | 25 | anchor | Mandiant: UNC4899 JumpCloud |
 | TorGuard | 15 | 25 | anchor | Mandiant: UNC4899 JumpCloud |
