@@ -94,6 +94,36 @@ confidence_modifiers:
     match_type: contains
     value: "ScreenConnect"
     delta: 20
+  # Managed-service RMM platforms. Legitimate in enterprise fleets, so these
+  # score below the tools named directly in DPRK reporting.
+  - field: rmm_products
+    match_type: contains
+    value: "SimpleHelp"
+    delta: 12
+  - field: rmm_products
+    match_type: contains
+    value: "Splashtop"
+    delta: 12
+  - field: rmm_products
+    match_type: contains
+    value: "Tactical RMM"
+    delta: 12
+  - field: rmm_products
+    match_type: contains
+    value: "N-able"
+    delta: 10
+  - field: rmm_products
+    match_type: contains
+    value: "Kaseya"
+    delta: 10
+  - field: rmm_products
+    match_type: contains
+    value: "Komari"
+    delta: 10
+  - field: rmm_products
+    match_type: contains
+    value: "Remotely"
+    delta: 8
 
   # --- Corroboration from other enrichments already in the pipeline ---
   # Remote access reachable from a VPN egress is the pattern the reporting

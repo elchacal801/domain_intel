@@ -93,6 +93,25 @@ RMM_SIGNATURES: Dict[str, Dict] = {
     # RustDesk. It has no fixed port worth matching (commonly 443 or 8086), so
     # it is identified by title and banner only.
     "MeshCentral": {"ports": [], "products": ["meshcentral"], "titles": ["meshcentral"]},
+
+    # --- Products carried by C2IntelFeeds' RMM feed that we did not detect. ---
+    # Their 90-day feed holds 61,115 RMM IPs across nine products; we covered
+    # only ScreenConnect and MeshCentral. Shodan volumes measured 2026-08-24.
+    # Splashtop: default ports 6783-6785 (374 hosts on 6783 alone).
+    "Splashtop":    {"ports": [6783, 6784, 6785], "products": ["splashtop"],
+                     "titles": ["splashtop"]},
+    "SimpleHelp":   {"ports": [], "products": ["simplehelp"],
+                     "titles": ["simplehelp"]},
+    "Tactical RMM": {"ports": [], "products": ["tacticalrmm"],
+                     "titles": ["tactical rmm", "tacticalrmm"]},
+    "Komari":       {"ports": [], "products": ["komari"], "titles": ["komari"]},
+    "N-able":       {"ports": [], "products": ["n-able", "n-central"],
+                     "titles": ["n-able", "n-central"]},
+    "Kaseya":       {"ports": [], "products": ["kaseya"], "titles": ["kaseya"]},
+    # Title-only on purpose. "remotely" is an ordinary English word:
+    # http.html:"remotely" matches 14,611 hosts against 425 for the title, so
+    # body matching would be almost entirely prose.
+    "Remotely":     {"ports": [], "products": [], "titles": ["remotely"]},
 }
 
 # 21118/21119 are RustDesk web-client ports only in some deployments; excluded
