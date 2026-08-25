@@ -534,3 +534,43 @@ class TestAdditionalRMMProducts:
         for p in ("Splashtop", "SimpleHelp", "Tactical RMM", "Komari",
                   "N-able", "Kaseya", "Remotely"):
             assert p in RMM_SIGNATURES, f"{p} missing from RMM_SIGNATURES"
+
+
+class TestGzippedSources:
+    """data/dea_domains_probed.csv is gitignored and only the .csv.gz is
+    committed, so a fresh clone has no plain CSV. Without transparent gzip
+    reading, --source silently loads zero IPs from it and the sweep quietly
+    covers two of three sources -- a missing 31,700 addresses."""
+
+    def _write_gz(self, path, rows):
+        import gzip, csv, io
+        with gzip.open(path, "wt", encoding="utf-8", newline="") as f:
+            w = csv.DictWriter(f, fieldnames=["domain", "a_record"])
+            w.writeheader()
+            for r in rows:
+                w.writerow(r)
+
+    def test_reads_gz_when_plain_csv_absent(self, tmp_path):
+        from enrich_rmm_exposure import load_ips_from_csv
+        gz = tmp_path / "probed.csv.gz"
+        self._write_gz(gz, [{"domain": "a.example", "a_record": "203.0.113.1"},
+                            {"domain": "b.example", "a_record": "203.0.113.2"}])
+        # caller asks for the plain path, which does not exist
+        assert load_ips_from_csv(str(tmp_path / "probed.csv"), "a_record") == \
+            ["203.0.113.1", "203.0.113.2"]
+
+    def test_plain_csv_wins_when_both_exist(self, tmp_path):
+        import csv, io
+        from enrich_rmm_exposure import load_ips_from_csv
+        plain = tmp_path / "probed.csv"
+        with io.open(plain, "w", encoding="utf-8", newline="") as f:
+            w = csv.DictWriter(f, fieldnames=["domain", "a_record"])
+            w.writeheader(); w.writerow({"domain": "x", "a_record": "198.51.100.9"})
+        self._write_gz(tmp_path / "probed.csv.gz",
+                       [{"domain": "stale", "a_record": "203.0.113.99"}])
+        assert load_ips_from_csv(str(plain), "a_record") == ["198.51.100.9"], \
+            "the freshly written plain file must take precedence over the archive"
+
+    def test_neither_present_is_still_empty_not_error(self, tmp_path):
+        from enrich_rmm_exposure import load_ips_from_csv
+        assert load_ips_from_csv(str(tmp_path / "nope.csv"), "a_record") == []
