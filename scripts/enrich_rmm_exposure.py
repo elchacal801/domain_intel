@@ -203,6 +203,18 @@ def filter_unchecked(ips: List[str], existing: Dict[str, Dict], today: str,
     return [ip for ip in ips if ip not in existing or _stale(existing[ip])]
 
 
+def is_true(value) -> bool:
+    """Interpret a flag that may be a real bool or a CSV round-tripped string.
+
+    classify_host returns booleans, but the ledger stores them as "True"/"False"
+    text. bool("False") is True, so a plain truthiness test marked every
+    annotated domain as exposed -- 40,218 of them against 114 real findings.
+    """
+    if isinstance(value, bool):
+        return value
+    return str(value).strip().lower() in ("true", "yes", "1")
+
+
 def _iter_services(host: Dict):
     for entry in host.get("data") or []:
         if isinstance(entry, dict):
@@ -451,12 +463,14 @@ def annotate_csv(input_path: str, output_path: str, findings: Dict[str, Dict],
         ip = (row.get(ip_column) or "").strip()
         found = findings.get(ip)
         if found:
-            row["kvm_detected"] = "yes" if found["kvm_detected"] else "no"
-            row["rmm_detected"] = "yes" if found["rmm_detected"] else "no"
+            kvm = is_true(found.get("kvm_detected"))
+            rmm = is_true(found.get("rmm_detected"))
+            row["kvm_detected"] = "yes" if kvm else "no"
+            row["rmm_detected"] = "yes" if rmm else "no"
             row["kvm_products"] = found["kvm_products"]
             row["rmm_products"] = found["rmm_products"]
             row["exposure_evidence"] = found["exposure_evidence"]
-            if found["kvm_detected"] or found["rmm_detected"]:
+            if kvm or rmm:
                 annotated += 1
         else:
             row.setdefault("kvm_detected", "no")
@@ -636,7 +650,8 @@ def main():
         annotate_csv(args.annotate, args.annotate,
                      load_existing_results(args.output), args.ip_column)
 
-    hits = [r for r in results if r.get("kvm_detected") or r.get("rmm_detected")]
+    hits = [r for r in results
+            if is_true(r.get("kvm_detected")) or is_true(r.get("rmm_detected"))]
     log.info(f"Ledger holds {total} IPs in {args.output}; "
              f"{len(results)} checked this run, {len(hits)} with exposure")
     log.info(f"Shodan calls used: {spent}")
