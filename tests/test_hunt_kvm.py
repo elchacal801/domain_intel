@@ -184,3 +184,29 @@ class TestPagination:
                             types.SimpleNamespace(Shodan=lambda k: api))
         hunt_kvm.main()
         assert api.search.call_count <= 2, "must not exceed --pages per query"
+
+
+class TestHuntThrottle:
+    """A 390-page run shares Shodan's ~1 req/s limit with the enrichment sweep.
+    Without pacing, a 429 breaks out of the page loop and silently truncates
+    that query's retrieval -- the failure looks like "fewer results exist"."""
+
+    def test_hunt_paces_requests(self, tmp_path, monkeypatch):
+        import types, sys, hunt_kvm
+        from unittest.mock import MagicMock, patch
+        api = MagicMock()
+        api.search.return_value = {"total": 250, "matches": [
+            {"ip_str": f"10.0.0.{i}", "port": 443, "org": "x",
+             "location": {"country_name": "US"}, "http": {"title": "PiKVM"}}
+            for i in range(100)]}
+        monkeypatch.setattr(hunt_kvm, "SHODAN_API_KEY", "k")
+        monkeypatch.setattr(hunt_kvm, "HISTORY_FILE", str(tmp_path / "h.csv"))
+        monkeypatch.setattr(hunt_kvm, "BASELINE_FILES", [])
+        monkeypatch.setattr(hunt_kvm, "QUERIES", ['http.title:"pikvm"'])
+        monkeypatch.setattr(sys, "argv", ["hunt_kvm.py", "--budget", "5", "--pages", "3"])
+        monkeypatch.setitem(sys.modules, "shodan",
+                            types.SimpleNamespace(Shodan=lambda k: api))
+        slept = []
+        with patch("hunt_kvm.time.sleep", side_effect=slept.append):
+            hunt_kvm.main()
+        assert slept, "consecutive pages must be paced"
