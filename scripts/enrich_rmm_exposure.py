@@ -40,6 +40,7 @@ Usage:
 
 import argparse
 import csv
+import gzip
 import ipaddress
 import json
 import logging
@@ -293,10 +294,21 @@ def load_ips_from_csv(path: str, column: str) -> List[str]:
     """
     ips: List[str] = []
     seen = set()
+
+    # Fall back to a .gz sibling. data/dea_domains_probed.csv is gitignored and
+    # only the compressed copy is committed, so a fresh clone has no plain CSV.
+    # Without this the source silently yields zero IPs and the sweep quietly
+    # covers fewer addresses than asked for.
+    opener = open
     if not os.path.exists(path):
-        log.warning(f"CSV not found: {path}")
-        return ips
-    with open(path, newline="", encoding="utf-8") as f:
+        if os.path.exists(path + ".gz"):
+            path = path + ".gz"
+            opener = lambda p, **kw: gzip.open(p, "rt", **kw)
+            log.info(f"Reading compressed source: {path}")
+        else:
+            log.warning(f"CSV not found: {path} (and no .gz alongside it)")
+            return ips
+    with opener(path, newline="", encoding="utf-8") as f:
         reader = csv.DictReader(f)
         if column not in (reader.fieldnames or []):
             log.warning(f"Column '{column}' not in {path}; columns: {reader.fieldnames}")
