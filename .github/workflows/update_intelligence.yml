@@ -302,9 +302,6 @@ jobs:
           fi
           cp data/rmm_exposure.csv docs/data/ || true
 
-      - name: Infrastructure Fingerprinting
-        run: python scripts/match_fingerprints.py
-
       - name: Visual Fingerprinting (Optional)
         timeout-minutes: 30
         # Optional by design: a timeout must not discard the run's commit.
@@ -428,6 +425,15 @@ jobs:
       # column through to the dashboard shards. Building the frontend first
       # meant those columns -- which FP-0009 and FP-0010 gate on -- never
       # reached the dashboard at all.
+      # Moved after the in-place enrichments, for the same reason Build
+      # Frontend Data was: enrich_proxy_check.py writes proxy_detected back
+      # into dea_domains_probed.csv, and FP-0009 and FP-0010 gate on it.
+      # Running the engine first meant those fingerprints evaluated an empty
+      # column and could never match on a proxy signal -- 0 matches each in the
+      # 2026-08-25 run, against 562 and 566 when run against data that had it.
+      - name: Infrastructure Fingerprinting
+        run: python scripts/match_fingerprints.py
+
       - name: Build Frontend Data
         run: python scripts/build_frontend_data.py
 

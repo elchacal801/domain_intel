@@ -574,3 +574,61 @@ class TestGzippedSources:
     def test_neither_present_is_still_empty_not_error(self, tmp_path):
         from enrich_rmm_exposure import load_ips_from_csv
         assert load_ips_from_csv(str(tmp_path / "nope.csv"), "a_record") == []
+
+
+class TestLedgerBooleanRoundTrip:
+    """classify_host returns real booleans, but the ledger round-trips them
+    through CSV as the strings 'True'/'False'. bool('False') is True, so
+    annotate_csv marked every annotated domain as exposed: 40,218 domains
+    carried kvm_detected=yes against a ledger holding 114 real exposures.
+    """
+
+    def _domains(self, tmp_path):
+        import csv
+        p = tmp_path / "domains.csv"
+        with open(p, "w", newline="", encoding="utf-8") as f:
+            w = csv.DictWriter(f, fieldnames=["domain", "a_record"])
+            w.writeheader()
+            w.writerow({"domain": "clean.example", "a_record": "203.0.113.1"})
+            w.writerow({"domain": "hit.example", "a_record": "203.0.113.2"})
+        return str(p)
+
+    def test_string_false_from_the_ledger_is_not_treated_as_true(self, tmp_path):
+        import csv
+        from enrich_rmm_exposure import annotate_csv
+        src = self._domains(tmp_path)
+        out = str(tmp_path / "out.csv")
+        # exactly what load_existing_results returns after a CSV round-trip
+        findings = {
+            "203.0.113.1": {"ip": "203.0.113.1", "kvm_detected": "False",
+                            "rmm_detected": "False", "kvm_products": "",
+                            "rmm_products": "", "exposure_evidence": ""},
+            "203.0.113.2": {"ip": "203.0.113.2", "kvm_detected": "True",
+                            "rmm_detected": "False", "kvm_products": "PiKVM",
+                            "rmm_products": "", "exposure_evidence": "443:PiKVM(title)"},
+        }
+        n = annotate_csv(src, out, findings, ip_column="a_record")
+        rows = {r["domain"]: r for r in csv.DictReader(open(out, encoding="utf-8"))}
+        assert rows["clean.example"]["kvm_detected"] == "no", \
+            "the string 'False' must not annotate as exposed"
+        assert rows["hit.example"]["kvm_detected"] == "yes"
+        assert n == 1, "only genuinely exposed rows count as annotated"
+
+    def test_real_booleans_still_work(self, tmp_path):
+        import csv
+        from enrich_rmm_exposure import annotate_csv
+        src = self._domains(tmp_path)
+        out = str(tmp_path / "out.csv")
+        findings = {"203.0.113.2": {"ip": "203.0.113.2", "kvm_detected": True,
+                                    "rmm_detected": False, "kvm_products": "PiKVM",
+                                    "rmm_products": "", "exposure_evidence": "x"}}
+        annotate_csv(src, out, findings, ip_column="a_record")
+        rows = {r["domain"]: r for r in csv.DictReader(open(out, encoding="utf-8"))}
+        assert rows["hit.example"]["kvm_detected"] == "yes"
+        assert rows["hit.example"]["rmm_detected"] == "no"
+
+    def test_hit_counting_survives_the_round_trip(self):
+        from enrich_rmm_exposure import is_true
+        assert is_true(True) and is_true("True") and is_true("true") and is_true("yes")
+        assert not is_true(False) and not is_true("False") and not is_true("false")
+        assert not is_true("") and not is_true(None) and not is_true("no")
