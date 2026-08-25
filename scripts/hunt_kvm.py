@@ -54,6 +54,7 @@ import csv
 import ipaddress
 import os
 import sys
+import time
 from datetime import datetime, timezone
 from pathlib import Path
 
@@ -240,6 +241,11 @@ def main() -> int:
                 break
             try:
                 # Shodan bills per page, so the budget counts pages.
+                # Pace requests: Shodan allows ~1 req/s and the enrichment sweep
+                # shares that budget. An unpaced 429 breaks the page loop and
+                # silently truncates retrieval for this query.
+                if page > 1:
+                    time.sleep(1.1)
                 results = api.search(query, page=page)
                 spent += 1
             except Exception as e:
