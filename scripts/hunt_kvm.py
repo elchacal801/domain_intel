@@ -122,6 +122,10 @@ QUERIES = [
     'http.favicon.hash:-186012304',    # GLKVM
 ]
 
+# Shodan permits ~1 request/second and the enrichment sweep may be sharing
+# it, so pace conservatively rather than at exactly the documented limit.
+RATE_INTERVAL = 1.2
+
 BUDGET_LIMIT = 20  # one credit per query, plus headroom
 
 FIELDS = ["first_seen", "ip", "port", "query", "product", "org", "country", "title"]
@@ -239,18 +243,29 @@ def main() -> int:
         for page in range(1, args.pages + 1):
             if spent >= args.budget:
                 break
-            try:
-                # Shodan bills per page, so the budget counts pages.
-                # Pace requests: Shodan allows ~1 req/s and the enrichment sweep
-                # shares that budget. An unpaced 429 breaks the page loop and
-                # silently truncates retrieval for this query.
-                if page > 1:
-                    time.sleep(1.1)
-                results = api.search(query, page=page)
-                spent += 1
-            except Exception as e:
-                print(f"[!] Query failed ({query}, page {page}): "
-                      f"{type(e).__name__}: {e}")
+            # Pace EVERY request, not just pages 2+. Pacing only subsequent pages
+            # still left one unthrottled burst per query -- 18 of them -- and the
+            # enrichment sweep may be consuming the same ~1 req/s concurrently.
+            results = None
+            for attempt in range(1, 5):
+                time.sleep(RATE_INTERVAL * attempt)
+                try:
+                    results = api.search(query, page=page)
+                    spent += 1
+                    break
+                except Exception as exc:
+                    msg = str(exc)
+                    if "ate limit" not in msg:
+                        # Only rate limits are transient. A malformed or
+                        # unsupported query will never succeed on retry.
+                        print(f"[!] Query failed ({query}, page {page}): "
+                              f"{type(exc).__name__}: {msg}")
+                        break
+                    print(f"[~] Rate limited: {query[:40]} page {page}, "
+                          f"attempt {attempt}; backing off")
+            if results is None:
+                # Exhausted retries or hit a permanent error; stop this query but
+                # carry on with the rest rather than aborting the whole hunt.
                 break
             total = results.get("total", total)
             page_matches = results.get("matches", [])

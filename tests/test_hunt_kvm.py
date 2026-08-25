@@ -210,3 +210,62 @@ class TestHuntThrottle:
         with patch("hunt_kvm.time.sleep", side_effect=slept.append):
             hunt_kvm.main()
         assert slept, "consecutive pages must be paced"
+
+
+class TestRateLimitResilience:
+    """A full-retrieval run hit 'Rate limit reached' and returned 0 total for
+    the 25,360-host ScreenConnect query -- a rate limit was indistinguishable
+    from an empty result. Two causes: only pages 2+ were paced, so 18 queries
+    meant 18 unthrottled first-page bursts; and any error broke the whole page
+    loop, so one transient 429 killed 254 pages of retrieval."""
+
+    def _run(self, monkeypatch, tmp_path, api, argv):
+        import types, sys, hunt_kvm
+        monkeypatch.setattr(hunt_kvm, "SHODAN_API_KEY", "k")
+        monkeypatch.setattr(hunt_kvm, "HISTORY_FILE", str(tmp_path / "h.csv"))
+        monkeypatch.setattr(hunt_kvm, "BASELINE_FILES", [])
+        monkeypatch.setattr(hunt_kvm, "QUERIES", ['http.title:"pikvm"'])
+        monkeypatch.setattr(sys, "argv", argv)
+        monkeypatch.setitem(sys.modules, "shodan",
+                            types.SimpleNamespace(Shodan=lambda k: api))
+        return hunt_kvm
+
+    def test_first_page_is_also_paced(self, tmp_path, monkeypatch):
+        from unittest.mock import MagicMock, patch
+        api = MagicMock()
+        api.search.return_value = {"total": 10, "matches": []}
+        hk = self._run(monkeypatch, tmp_path, api,
+                       ["hunt_kvm.py", "--budget", "5", "--pages", "1"])
+        slept = []
+        with patch("hunt_kvm.time.sleep", side_effect=slept.append):
+            hk.main()
+        assert slept, "the first request of a query must be paced too"
+
+    def test_rate_limit_is_retried_not_fatal(self, tmp_path, monkeypatch):
+        from unittest.mock import MagicMock, patch
+        api = MagicMock()
+        page = {"total": 250, "matches": [
+            {"ip_str": f"10.1.1.{i}", "port": 443, "org": "x",
+             "location": {"country_name": "US"}, "http": {"title": "PiKVM"}}
+            for i in range(100)]}
+        api.search.side_effect = [
+            Exception("Rate limit reached. Please throttle your requests"),
+            page,
+            {"total": 250, "matches": page["matches"][:50]},
+        ]
+        hk = self._run(monkeypatch, tmp_path, api,
+                       ["hunt_kvm.py", "--budget", "10", "--pages", "2"])
+        with patch("hunt_kvm.time.sleep"):
+            assert hk.main() == 0
+        assert api.search.call_count >= 2, "a 429 must be retried, not abandoned"
+
+    def test_non_rate_limit_error_still_stops_the_query(self, tmp_path, monkeypatch):
+        """Only rate limits are worth retrying; a malformed query is not."""
+        from unittest.mock import MagicMock, patch
+        api = MagicMock()
+        api.search.side_effect = Exception("Invalid query")
+        hk = self._run(monkeypatch, tmp_path, api,
+                       ["hunt_kvm.py", "--budget", "10", "--pages", "5"])
+        with patch("hunt_kvm.time.sleep"):
+            hk.main()
+        assert api.search.call_count <= 2, "must not retry a permanent error"
