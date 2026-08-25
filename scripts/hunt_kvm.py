@@ -135,7 +135,26 @@ def _valid_ip(value: str) -> bool:
     try:
         ipaddress.ip_address(value)
         return True
-    except ValueError:
+    except (ValueError, TypeError):
+        return False
+
+
+def is_routable_ip(value) -> bool:
+    """True only for addresses reachable on the public internet.
+
+    Shodan's index carries records that are not real internet hosts: a single
+    2026-08-24 `http.title:"pikvm"` batch contributed 351 rows inside
+    10.0.0.0/24 and 10.1.1.0/24, every one org='x'. Because bogons cluster
+    densely they outrank genuine findings in any per-subnet analysis -- they
+    were the top two /24 "clusters" until filtered.
+
+    `is_global` already excludes RFC1918, loopback, link-local, CGNAT,
+    unspecified, reserved and IPv6 ULA, for both address families. Global IPv6
+    is kept: the Silent Push seed is largely IPv6.
+    """
+    try:
+        return ipaddress.ip_address(value).is_global
+    except (ValueError, TypeError):
         return False
 
 
@@ -155,12 +174,12 @@ def load_baseline_ips(paths=None) -> set:
                 with p.open(newline="", encoding="utf-8") as f:
                     for row in csv.DictReader(f):
                         ip = (row.get("ip") or "").strip()
-                        if ip and _valid_ip(ip):
+                        if ip and is_routable_ip(ip):
                             out.add(ip)
             else:
                 for line in p.read_text(encoding="utf-8").splitlines():
                     line = line.strip()
-                    if line and not line.startswith("#") and _valid_ip(line):
+                    if line and not line.startswith("#") and is_routable_ip(line):
                         out.add(line)
         except Exception as e:
             print(f"[!] Could not read baseline {path}: {e}")
@@ -177,7 +196,7 @@ def load_history_ips(path: str = HISTORY_FILE) -> set:
         with p.open(newline="", encoding="utf-8") as f:
             for row in csv.DictReader(f):
                 ip = (row.get("ip") or "").strip()
-                if ip:
+                if ip and is_routable_ip(ip):
                     out.add(ip)
     except Exception as e:
         print(f"[!] Could not read history {path}: {e}")
@@ -185,6 +204,9 @@ def load_history_ips(path: str = HISTORY_FILE) -> set:
 
 
 def log_hit(match: dict, query: str, path: str = HISTORY_FILE) -> None:
+    if not is_routable_ip(match.get("ip_str", "")):
+        # Guard at the write so no caller can reintroduce a bogon.
+        return
     p = Path(path)
     p.parent.mkdir(parents=True, exist_ok=True)
     new_file = not p.exists()
@@ -278,7 +300,7 @@ def main() -> int:
 
         for m in matches:
             ip = m.get("ip_str", "")
-            if not ip or ip in baseline or ip in history:
+            if not is_routable_ip(ip) or ip in baseline or ip in history:
                 continue
             history.add(ip)
             new_count += 1

@@ -12,7 +12,8 @@ import pytest
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "scripts"))
 
-from hunt_kvm import QUERIES, BUDGET_LIMIT, load_baseline_ips, load_history_ips
+from hunt_kvm import (QUERIES, BUDGET_LIMIT, load_baseline_ips, load_history_ips,
+                      is_routable_ip, log_hit)
 
 
 class TestQuerySyntax:
@@ -269,3 +270,61 @@ class TestRateLimitResilience:
         with patch("hunt_kvm.time.sleep"):
             hk.main()
         assert api.search.call_count <= 2, "must not retry a permanent error"
+
+
+class TestBogonFiltering:
+    """Shodan's index contains records with unroutable addresses.
+
+    A single 2026-08-24 `http.title:"pikvm"` batch contributed 351 rows in
+    10.0.0.0/24 and 10.1.1.0/24, all org='x'. They cannot be real internet
+    hosts, and because they are densely packed they dominated /24 clustering
+    -- the top two "clusters" were both artifacts.
+    """
+
+    def test_public_addresses_are_routable(self):
+        for ip in ("8.8.8.8", "1.13.21.238", "45.154.159.10"):
+            assert is_routable_ip(ip) is True, ip
+
+    def test_rfc1918_is_rejected(self):
+        for ip in ("10.0.0.0", "10.1.1.100", "192.168.1.1", "172.16.0.1"):
+            assert is_routable_ip(ip) is False, ip
+
+    def test_loopback_linklocal_and_unspecified_are_rejected(self):
+        for ip in ("127.0.0.1", "169.254.1.1", "0.0.0.0", "255.255.255.255"):
+            assert is_routable_ip(ip) is False, ip
+
+    def test_cgnat_is_rejected(self):
+        assert is_routable_ip("100.64.0.1") is False
+
+    def test_global_ipv6_is_kept(self):
+        """The Silent Push seed is largely IPv6; filtering it would make the
+        hunt re-report those hosts as new on every run."""
+        assert is_routable_ip("2003:ee:37ff:226a:d624:ddff:fe96:60d1") is True
+
+    def test_ipv6_loopback_and_ula_are_rejected(self):
+        for ip in ("::1", "fd00::1", "fe80::1"):
+            assert is_routable_ip(ip) is False, ip
+
+    def test_garbage_is_rejected_not_raised(self):
+        for value in ("", "not-an-ip", "10.0.0", None):
+            assert is_routable_ip(value) is False, repr(value)
+
+    def test_log_hit_skips_bogons(self, tmp_path):
+        """The filter must sit at the write, so no path can reintroduce them."""
+        path = tmp_path / "hist.csv"
+        log_hit({"ip_str": "10.0.0.5", "port": 443, "org": "x"}, "q", str(path))
+        assert not path.exists(), "bogon was written to history"
+        log_hit({"ip_str": "8.8.8.8", "port": 443, "org": "real"}, "q", str(path))
+        assert path.exists()
+        assert "8.8.8.8" in path.read_text(encoding="utf-8")
+
+    def test_load_history_ignores_bogons(self, tmp_path):
+        """Existing files already contain 351 of them; reads must exclude."""
+        path = tmp_path / "hist.csv"
+        path.write_text(
+            "first_seen,ip,port,query,product,org,country,title\n"
+            "2026-08-24 14:58:14,10.0.0.0,443,q,,x,US,PiKVM\n"
+            "2026-08-24 14:58:14,8.8.8.8,443,q,,real,US,PiKVM\n",
+            encoding="utf-8",
+        )
+        assert load_history_ips(str(path)) == {"8.8.8.8"}
