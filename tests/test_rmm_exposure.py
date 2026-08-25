@@ -12,10 +12,11 @@ import pytest
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "scripts"))
 
-from enrich_rmm_exposure import classify_host, KVM_SIGNATURES, RMM_SIGNATURES
+from enrich_rmm_exposure import (classify_host, KVM_SIGNATURES, RMM_SIGNATURES,
+                                 load_ips_from_csv, load_ip_list)
 
 
-def host(*services, ip="203.0.113.10", ports=None):
+def host(*services, ip="93.184.216.10", ports=None):
     """Build a minimal Shodan host record."""
     return {
         "ip_str": ip,
@@ -103,12 +104,12 @@ class TestNoFalsePositives:
         assert r["rmm_products"] == ""
 
     def test_empty_host_record_is_clean(self):
-        r = classify_host({"ip_str": "203.0.113.1", "ports": [], "data": []})
+        r = classify_host({"ip_str": "93.184.216.1", "ports": [], "data": []})
         assert r["kvm_detected"] is False
         assert r["rmm_detected"] is False
 
     def test_missing_data_key_does_not_raise(self):
-        r = classify_host({"ip_str": "203.0.113.1"})
+        r = classify_host({"ip_str": "93.184.216.1"})
         assert r["kvm_detected"] is False
 
     def test_unrelated_high_port_is_clean(self):
@@ -188,8 +189,8 @@ class TestAnnotateCsv:
         with open(p, "w", newline="", encoding="utf-8") as f:
             w = csv.DictWriter(f, fieldnames=["domain", "a_record"])
             w.writeheader()
-            w.writerow({"domain": "bad.example", "a_record": "203.0.113.10"})
-            w.writerow({"domain": "clean.example", "a_record": "203.0.113.99"})
+            w.writerow({"domain": "bad.example", "a_record": "93.184.216.10"})
+            w.writerow({"domain": "clean.example", "a_record": "93.184.216.99"})
             w.writerow({"domain": "noip.example", "a_record": ""})
         return str(p)
 
@@ -200,7 +201,7 @@ class TestAnnotateCsv:
         src = self._domains(tmp_path)
         out = str(tmp_path / "out.csv")
         findings = {
-            "203.0.113.10": {
+            "93.184.216.10": {
                 "kvm_detected": True, "kvm_products": "PiKVM",
                 "rmm_detected": False, "rmm_products": "",
                 "exposure_evidence": "443:PiKVM(title)",
@@ -296,14 +297,14 @@ class TestDomainCsvSourcing:
     def test_extracts_unique_valid_ips(self, tmp_path):
         from enrich_rmm_exposure import load_ips_from_csv
         src = self._csv(tmp_path, [
-            {"domain": "a.example", "a_record": "203.0.113.1", "priority": "high"},
-            {"domain": "b.example", "a_record": "203.0.113.2", "priority": "low"},
-            {"domain": "c.example", "a_record": "203.0.113.1", "priority": "high"},
+            {"domain": "a.example", "a_record": "93.184.216.1", "priority": "high"},
+            {"domain": "b.example", "a_record": "93.184.216.2", "priority": "low"},
+            {"domain": "c.example", "a_record": "93.184.216.1", "priority": "high"},
             {"domain": "d.example", "a_record": "", "priority": "low"},
             {"domain": "e.example", "a_record": "not-an-ip", "priority": "low"},
         ])
         ips = load_ips_from_csv(src, "a_record")
-        assert ips == ["203.0.113.1", "203.0.113.2"]
+        assert ips == ["93.184.216.1", "93.184.216.2"]
 
     def test_missing_file_returns_empty(self, tmp_path):
         from enrich_rmm_exposure import load_ips_from_csv
@@ -311,7 +312,7 @@ class TestDomainCsvSourcing:
 
     def test_missing_column_returns_empty_not_error(self, tmp_path):
         from enrich_rmm_exposure import load_ips_from_csv
-        src = self._csv(tmp_path, [{"domain": "a.example", "a_record": "203.0.113.1", "priority": "x"}])
+        src = self._csv(tmp_path, [{"domain": "a.example", "a_record": "93.184.216.1", "priority": "x"}])
         assert load_ips_from_csv(src, "no_such_column") == []
 
 
@@ -537,7 +538,11 @@ class TestAdditionalRMMProducts:
 
 
 class TestGzippedSources:
-    """data/dea_domains_probed.csv is gitignored and only the .csv.gz is
+    """Fixtures below use routable addresses on purpose: the loaders now filter
+    on is_global, and RFC 5737 documentation ranges (203.0.113.0/24 etc.) are
+    not global, so they would be stripped and mask what these tests check.
+
+    data/dea_domains_probed.csv is gitignored and only the .csv.gz is
     committed, so a fresh clone has no plain CSV. Without transparent gzip
     reading, --source silently loads zero IPs from it and the sweep quietly
     covers two of three sources -- a missing 31,700 addresses."""
@@ -553,11 +558,11 @@ class TestGzippedSources:
     def test_reads_gz_when_plain_csv_absent(self, tmp_path):
         from enrich_rmm_exposure import load_ips_from_csv
         gz = tmp_path / "probed.csv.gz"
-        self._write_gz(gz, [{"domain": "a.example", "a_record": "203.0.113.1"},
-                            {"domain": "b.example", "a_record": "203.0.113.2"}])
+        self._write_gz(gz, [{"domain": "a.example", "a_record": "93.184.216.1"},
+                            {"domain": "b.example", "a_record": "93.184.216.2"}])
         # caller asks for the plain path, which does not exist
         assert load_ips_from_csv(str(tmp_path / "probed.csv"), "a_record") == \
-            ["203.0.113.1", "203.0.113.2"]
+            ["93.184.216.1", "93.184.216.2"]
 
     def test_plain_csv_wins_when_both_exist(self, tmp_path):
         import csv, io
@@ -565,10 +570,10 @@ class TestGzippedSources:
         plain = tmp_path / "probed.csv"
         with io.open(plain, "w", encoding="utf-8", newline="") as f:
             w = csv.DictWriter(f, fieldnames=["domain", "a_record"])
-            w.writeheader(); w.writerow({"domain": "x", "a_record": "198.51.100.9"})
+            w.writeheader(); w.writerow({"domain": "x", "a_record": "104.18.32.9"})
         self._write_gz(tmp_path / "probed.csv.gz",
-                       [{"domain": "stale", "a_record": "203.0.113.99"}])
-        assert load_ips_from_csv(str(plain), "a_record") == ["198.51.100.9"], \
+                       [{"domain": "stale", "a_record": "93.184.216.99"}])
+        assert load_ips_from_csv(str(plain), "a_record") == ["104.18.32.9"], \
             "the freshly written plain file must take precedence over the archive"
 
     def test_neither_present_is_still_empty_not_error(self, tmp_path):
@@ -589,8 +594,8 @@ class TestLedgerBooleanRoundTrip:
         with open(p, "w", newline="", encoding="utf-8") as f:
             w = csv.DictWriter(f, fieldnames=["domain", "a_record"])
             w.writeheader()
-            w.writerow({"domain": "clean.example", "a_record": "203.0.113.1"})
-            w.writerow({"domain": "hit.example", "a_record": "203.0.113.2"})
+            w.writerow({"domain": "clean.example", "a_record": "93.184.216.1"})
+            w.writerow({"domain": "hit.example", "a_record": "93.184.216.2"})
         return str(p)
 
     def test_string_false_from_the_ledger_is_not_treated_as_true(self, tmp_path):
@@ -600,10 +605,10 @@ class TestLedgerBooleanRoundTrip:
         out = str(tmp_path / "out.csv")
         # exactly what load_existing_results returns after a CSV round-trip
         findings = {
-            "203.0.113.1": {"ip": "203.0.113.1", "kvm_detected": "False",
+            "93.184.216.1": {"ip": "93.184.216.1", "kvm_detected": "False",
                             "rmm_detected": "False", "kvm_products": "",
                             "rmm_products": "", "exposure_evidence": ""},
-            "203.0.113.2": {"ip": "203.0.113.2", "kvm_detected": "True",
+            "93.184.216.2": {"ip": "93.184.216.2", "kvm_detected": "True",
                             "rmm_detected": "False", "kvm_products": "PiKVM",
                             "rmm_products": "", "exposure_evidence": "443:PiKVM(title)"},
         }
@@ -619,7 +624,7 @@ class TestLedgerBooleanRoundTrip:
         from enrich_rmm_exposure import annotate_csv
         src = self._domains(tmp_path)
         out = str(tmp_path / "out.csv")
-        findings = {"203.0.113.2": {"ip": "203.0.113.2", "kvm_detected": True,
+        findings = {"93.184.216.2": {"ip": "93.184.216.2", "kvm_detected": True,
                                     "rmm_detected": False, "kvm_products": "PiKVM",
                                     "rmm_products": "", "exposure_evidence": "x"}}
         annotate_csv(src, out, findings, ip_column="a_record")
@@ -632,3 +637,44 @@ class TestLedgerBooleanRoundTrip:
         assert is_true(True) and is_true("True") and is_true("true") and is_true("yes")
         assert not is_true(False) and not is_true("False") and not is_true("false")
         assert not is_true("") and not is_true(None) and not is_true("no")
+
+
+class TestUnroutableSourceAddresses:
+    """Both loaders accept any syntactically valid address, so sinkholed and
+    private values reach Shodan and fail there.
+
+    Measured across the three configured sources: 295 of 155,522 IPs are
+    unroutable, overwhelmingly 127.0.0.1 -- disposable-email domains that
+    resolve to a sinkhole. Each costs three lookup attempts with backoff
+    before being abandoned, so 885 calls are spent to learn nothing.
+    """
+
+    def test_csv_loader_skips_unroutable(self, tmp_path):
+        p = tmp_path / "d.csv"
+        p.write_text(
+            "domain,a_record\n"
+            "sink.example,127.0.0.1\n"
+            "priv.example,192.168.1.0\n"
+            "cgnat.example,100.64.0.1\n"
+            "real.example,8.8.8.8\n",
+            encoding="utf-8",
+        )
+        assert load_ips_from_csv(str(p), "a_record") == ["8.8.8.8"]
+
+    def test_csv_loader_keeps_global_ipv6(self, tmp_path):
+        p = tmp_path / "d.csv"
+        p.write_text(
+            "domain,a_record\nv6.example,2606:4700:4700::1111\n", encoding="utf-8")
+        assert load_ips_from_csv(str(p), "a_record") == ["2606:4700:4700::1111"]
+
+    def test_ip_list_skips_unroutable(self, tmp_path):
+        p = tmp_path / "ips.txt"
+        p.write_text(
+            "# comment\n127.0.0.1\n10.0.0.5\n169.254.1.1\n1.1.1.1\n",
+            encoding="utf-8")
+        assert load_ip_list(str(p)) == ["1.1.1.1"]
+
+    def test_ip_list_tolerates_garbage(self, tmp_path):
+        p = tmp_path / "ips.txt"
+        p.write_text("not-an-ip\n\n8.8.4.4\n", encoding="utf-8")
+        assert load_ip_list(str(p)) == ["8.8.4.4"]

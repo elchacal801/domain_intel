@@ -203,6 +203,24 @@ def filter_unchecked(ips: List[str], existing: Dict[str, Dict], today: str,
     return [ip for ip in ips if ip not in existing or _stale(existing[ip])]
 
 
+def is_routable_ip(value) -> bool:
+    """True only for addresses reachable on the public internet.
+
+    Sources carry addresses that Shodan can never resolve. Across the three
+    configured sources 295 of 155,522 IPs are unroutable, overwhelmingly
+    127.0.0.1 -- disposable-email domains resolving to a sinkhole, which is a
+    meaningful fact about the domain but useless for exposure lookup. Each one
+    costs three attempts with backoff before being abandoned.
+
+    `is_global` covers RFC1918, loopback, link-local, CGNAT, unspecified,
+    reserved and IPv6 ULA. Global IPv6 is kept.
+    """
+    try:
+        return ipaddress.ip_address(value).is_global
+    except (ValueError, TypeError):
+        return False
+
+
 def is_true(value) -> bool:
     """Interpret a flag that may be a real bool or a CSV round-tripped string.
 
@@ -287,9 +305,7 @@ def load_ip_list(path: str) -> List[str]:
             line = line.strip()
             if not line or line.startswith("#"):
                 continue
-            try:
-                ipaddress.ip_address(line)
-            except ValueError:
+            if not is_routable_ip(line):
                 continue
             if line not in ips:
                 ips.append(line)
@@ -329,9 +345,7 @@ def load_ips_from_csv(path: str, column: str) -> List[str]:
             v = (row.get(column) or "").strip()
             if not v or v in seen:
                 continue
-            try:
-                ipaddress.ip_address(v)
-            except ValueError:
+            if not is_routable_ip(v):
                 continue
             seen.add(v)
             ips.append(v)
