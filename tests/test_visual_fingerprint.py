@@ -5,6 +5,12 @@ import os
 import sys
 from unittest.mock import patch
 
+import pytest
+
+pytest.importorskip("playwright")
+pytest.importorskip("imagehash")
+pytest.importorskip("PIL")
+
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "scripts"))
 
 import visual_fingerprint as vf
