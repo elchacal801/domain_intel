@@ -25,7 +25,7 @@ domain,spf_record,spf_ula_match,spf_ula_range,spf_known_actor
 1978.com,v=spf1 ip6:fd43:c0d1:c090::/48 -all,True,fd43:c0d1:c090::/48,
 1981.com,v=spf1 ip6:fd1b:212c:a5f9::/48 -all,True,fd1b:212c:a5f9::/48,hotel (southafricaproject)
 1rms.com,v=spf1 ip6:fdec:ae16:fda7::/48 -all,True,fdec:ae16:fda7::/48,golf (eye-mail primary relay)
-1xbet-6uh.top,,False,,
+1xbet-6uh.top,v=spf1 ip6:fdec:ae16:fda7::/48 -all,True,fdec:ae16:fda7::/48,golf (eye-mail primary relay)
 1xbet-hwj.top,v=spf1 ip6:fdec:ae16:fda7::/48 -all,True,fdec:ae16:fda7::/48,golf (eye-mail primary relay)
 1xbet-idu.top,v=spf1 ip6:fdec:ae16:fda7::/48 -all,True,fdec:ae16:fda7::/48,golf (eye-mail primary relay)
 1xbet-iwe.top,v=spf1 ip6:fdec:ae16:fda7::/48 -all,True,fdec:ae16:fda7::/48,golf (eye-mail primary relay)
@@ -89,7 +89,6 @@ a.masum.cc,v=spf1 ip6:fd1b:212c:a5f9::/48 -all,True,fd1b:212c:a5f9::/48,hotel (s
 a.mx.pussport.com,v=spf1 ip6:fdec:ae16:fda7::/48 -all,True,fdec:ae16:fda7::/48,golf (eye-mail primary relay)
 a1plumbjax.com,v=spf1 ip6:fd1b:212c:a5f9::/48 -all,True,fd1b:212c:a5f9::/48,hotel (southafricaproject)
 a2ure.com,v=spf1 ip6:fdec:ae16:fda7::/48 -all,True,fdec:ae16:fda7::/48,golf (eye-mail primary relay)
-aamazzo.net,v=spf1 ip6:fdec:ae16:fda7::/48 -all,True,fdec:ae16:fda7::/48,golf (eye-mail primary relay)
 aballar.com,v=spf1 ip6:fd9c:d030:168c::/48 -all,True,fd9c:d030:168c::/48,
 abandonkeep.com,v=spf1 ip6:fdec:ae16:fda7::/48 -all,True,fdec:ae16:fda7::/48,golf (eye-mail primary relay)
 aberdeenpharmacy.com,v=spf1 ip6:fd68:85f0:7c72::/48 -all,True,fd68:85f0:7c72::/48,pickelhost-alpha (primary relay)
@@ -138,7 +137,7 @@ airbbnb.com,v=spf1 ip6:fd1b:212c:a5f9::/48 -all,True,fd1b:212c:a5f9::/48,hotel (
 airbnba.com,v=spf1 ip6:fd9c:d030:168c::/48 -all,True,fd9c:d030:168c::/48,
 airbnnb.com,v=spf1 ip6:fd1b:212c:a5f9::/48 -all,True,fd1b:212c:a5f9::/48,hotel (southafricaproject)
 airbrnb.com,v=spf1 ip6:fd9c:d030:168c::/48 -all,True,fd9c:d030:168c::/48,
-ajbsoftware.com,v=spf1 ip6:fd1b:212c:a5f9::/48 -all,True,fd1b:212c:a5f9::/48,hotel (southafricaproject)
+ajbsoftware.com,v=spf1 a mx ip4:78.46.152.77 ip4:78.46.5.205 ~all,False,,
 akk.ro,v=spf1 ip6:fd1b:212c:a5f9::/48 -all,True,fd1b:212c:a5f9::/48,hotel (southafricaproject)
 al3asma.com,v=spf1 ip6:fd68:85f0:7c72::/48 -all,True,fd68:85f0:7c72::/48,pickelhost-alpha (primary relay)
 alamalnazafh.com,v=spf1 ip6:fdec:ae16:fda7::/48 -all,True,fdec:ae16:fda7::/48,golf (eye-mail primary relay)
@@ -166,164 +165,165 @@ alyemenialyoum.com,v=spf1 ip6:fd68:85f0:7c72::/48 -all,True,fd68:85f0:7c72::/48,
 amaaon.com,v=spf1 ip6:fd1b:212c:a5f9::/48 -all,True,fd1b:212c:a5f9::/48,hotel (southafricaproject)
 amail3.com,v=spf1 ip6:fd36:7c64:44d0::/48 -all,True,fd36:7c64:44d0::/48,
 amason.com,,False,,
-amazon7.com,v=spf1 ip6:fd9c:d030:168c::/48 -all,True,fd9c:d030:168c::/48,
-ameramortgage.com,v=spf1 ip6:fd43:c0d1:c090::/48 -all,True,fd43:c0d1:c090::/48,
-american-conservativevalues.com,v=spf1 ip6:fdec:ae16:fda7::/48 -all,True,fdec:ae16:fda7::/48,golf (eye-mail primary relay)
-americanecpress.com,v=spf1 ip6:fd43:c0d1:c090::/48 -all,True,fd43:c0d1:c090::/48,
+amazon7.com,,False,,
+ameramortgage.com,,False,,
+american-conservativevalues.com,,False,,
+americanecpress.com,,False,,
 americanespress.com,v=spf1 ip6:fd43:c0d1:c090::/48 -all,True,fd43:c0d1:c090::/48,
-americanexlress.com,v=spf1 ip6:fd9c:d030:168c::/48 -all,True,fd9c:d030:168c::/48,
-americanexpfress.com,v=spf1 ip6:fd9c:d030:168c::/48 -all,True,fd9c:d030:168c::/48,
-americanexplress.com,v=spf1 ip6:fd9c:d030:168c::/48 -all,True,fd9c:d030:168c::/48,
-americanexprtess.com,v=spf1 ip6:fd9c:d030:168c::/48 -all,True,fd9c:d030:168c::/48,
-americangraphicboard.com,v=spf1 ip6:fd43:c0d1:c090::/48 -all,True,fd43:c0d1:c090::/48,
-americqanexpress.com,v=spf1 ip6:fd1b:212c:a5f9::/48 -all,True,fd1b:212c:a5f9::/48,hotel (southafricaproject)
-americqnexpress.com,v=spf1 ip6:fd43:c0d1:c090::/48 -all,True,fd43:c0d1:c090::/48,
-americsnexpress.com,v=spf1 ip6:fd43:c0d1:c090::/48 -all,True,fd43:c0d1:c090::/48,
+americanexlress.com,,False,,
+americanexpfress.com,,False,,
+americanexplress.com,,False,,
+americanexprtess.com,,False,,
+americangraphicboard.com,,False,,
+americqanexpress.com,,False,,
+americqnexpress.com,,False,,
+americsnexpress.com,,False,,
 amjad-stor.com,v=spf1 ip6:fd68:85f0:7c72::/48 -all,True,fd68:85f0:7c72::/48,pickelhost-alpha (primary relay)
-amrericanexpress.com,v=spf1 ip6:fd1b:212c:a5f9::/48 -all,True,fd1b:212c:a5f9::/48,hotel (southafricaproject)
-amsterdamhotelsmotels.info,v=spf1 ip6:fd1b:212c:a5f9::/48 -all,True,fd1b:212c:a5f9::/48,hotel (southafricaproject)
-amyadams.org,v=spf1 ip6:fdec:ae16:fda7::/48 -all,True,fdec:ae16:fda7::/48,golf (eye-mail primary relay)
-an.pointbuysys.com,v=spf1 ip6:fd1b:212c:a5f9::/48 -all,True,fd1b:212c:a5f9::/48,hotel (southafricaproject)
-and.pointbuysys.com,v=spf1 ip6:fd1b:212c:a5f9::/48 -all,True,fd1b:212c:a5f9::/48,hotel (southafricaproject)
-androidegis.com,v=spf1 ip6:fd68:85f0:7c72::/48 -all,True,fd68:85f0:7c72::/48,pickelhost-alpha (primary relay)
-anidub.xyz,v=spf1 ip6:fd68:85f0:7c72::/48 -all,True,fd68:85f0:7c72::/48,pickelhost-alpha (primary relay)
-animail.net,v=spf1 ip6:fd1b:212c:a5f9::/48 -all,True,fd1b:212c:a5f9::/48,hotel (southafricaproject)
-animalrightsportal.org,v=spf1 ip6:fd68:85f0:7c72::/48 -all,True,fd68:85f0:7c72::/48,pickelhost-alpha (primary relay)
-aniqmail.pussport.com,v=spf1 ip6:fdec:ae16:fda7::/48 -all,True,fdec:ae16:fda7::/48,golf (eye-mail primary relay)
-anmericanexpress.com,v=spf1 ip6:fd43:c0d1:c090::/48 -all,True,fd43:c0d1:c090::/48,
-anonymbox.com,v=spf1 ip6:fd9c:d030:168c::/48 -all,True,fd9c:d030:168c::/48,
-anonymous-email.net,v=spf1 ip6:fd9c:d030:168c::/48 -all,True,fd9c:d030:168c::/48,
-anonyms.online,v=spf1 ip6:fd68:85f0:7c72::/48 -all,True,fd68:85f0:7c72::/48,pickelhost-alpha (primary relay)
-antemedius.com,v=spf1 ip6:fd68:85f0:7c72::/48 -all,True,fd68:85f0:7c72::/48,pickelhost-alpha (primary relay)
-antheem.com,v=spf1 ip6:fd9c:d030:168c::/48 -all,True,fd9c:d030:168c::/48,
+amrericanexpress.com,,False,,
+amsterdamhotelsmotels.info,,False,,
+amyadams.org,,False,,
+an.pointbuysys.com,,False,,
+and.pointbuysys.com,,False,,
+androidegis.com,,False,,
+anidub.xyz,,False,,
+animail.net,,False,,
+animalrightsportal.org,,False,,
+aniqmail.pussport.com,,False,,
+anmericanexpress.com,,False,,
+anonymbox.com,,False,,
+anonymous-email.net,,False,,
+anonyms.online,,False,,
+antemedius.com,,False,,
+antheem.com,,False,,
 antherm.com,v=spf1 ip6:fd43:c0d1:c090::/48 -all,True,fd43:c0d1:c090::/48,
-anthhem.com,v=spf1 ip6:fd43:c0d1:c090::/48 -all,True,fd43:c0d1:c090::/48,
-anthrem.com,v=spf1 ip6:fd1b:212c:a5f9::/48 -all,True,fd1b:212c:a5f9::/48,hotel (southafricaproject)
-antispam.pussport.com,v=spf1 ip6:fdec:ae16:fda7::/48 -all,True,fdec:ae16:fda7::/48,golf (eye-mail primary relay)
-antylichwa.pl,v=spf1 ip6:fd1b:212c:a5f9::/48 -all,True,fd1b:212c:a5f9::/48,hotel (southafricaproject)
+anthhem.com,,False,,
+anthrem.com,,False,,
+antispam.pussport.com,,False,,
+antylichwa.pl,,False,,
 anum.com,v=spf1 ip6:fd43:c0d1:c090::/48 -all,True,fd43:c0d1:c090::/48,
-any.pointbuysys.com,v=spf1 ip6:fd1b:212c:a5f9::/48 -all,True,fd1b:212c:a5f9::/48,hotel (southafricaproject)
-anythem.com,v=spf1 ip6:fd1b:212c:a5f9::/48 -all,True,fd1b:212c:a5f9::/48,hotel (southafricaproject)
-aodbe.com,v=spf1 ip6:fd1b:212c:a5f9::/48 -all,True,fd1b:212c:a5f9::/48,hotel (southafricaproject)
+any.pointbuysys.com,,False,,
+anythem.com,,False,,
+aodbe.com,,False,,
 aoewd.com,v=spf1 ip6:fd1b:212c:a5f9::/48 -all,True,fd1b:212c:a5f9::/48,hotel (southafricaproject)
-aol.cm,v=spf1 ip6:fd9c:d030:168c::/48 -all,True,fd9c:d030:168c::/48,
-ap-ple.com,v=spf1 ip6:fd1b:212c:a5f9::/48 -all,True,fd1b:212c:a5f9::/48,hotel (southafricaproject)
-apdiv.com,v=spf1 ip6:fdec:ae16:fda7::/48 -all,True,fdec:ae16:fda7::/48,golf (eye-mail primary relay)
-apl.pussport.com,v=spf1 ip6:fdec:ae16:fda7::/48 -all,True,fdec:ae16:fda7::/48,golf (eye-mail primary relay)
-app.pointbuysys.com,v=spf1 ip6:fd1b:212c:a5f9::/48 -all,True,fd1b:212c:a5f9::/48,hotel (southafricaproject)
+aol.cm,,False,,
+ap-ple.com,,False,,
+apdiv.com,,False,,
+apl.pussport.com,,False,,
+app.pointbuysys.com,,False,,
 app.pussport.com,v=spf1 ip6:fdec:ae16:fda7::/48 -all,True,fdec:ae16:fda7::/48,golf (eye-mail primary relay)
-appinions.com,v=spf1 ip6:fd92:59f3:510e::/48 -all,True,fd92:59f3:510e::/48,delta (tertiary relay)
-appple.com,v=spf1 ip6:fd9c:d030:168c::/48 -all,True,fd9c:d030:168c::/48,
-apps.pussport.com,v=spf1 ip6:fdec:ae16:fda7::/48 -all,True,fdec:ae16:fda7::/48,golf (eye-mail primary relay)
-apsf.pro,v=spf1 ip6:fd43:c0d1:c090::/48 -all,True,fd43:c0d1:c090::/48,
-aqarmisrco.com,v=spf1 ip6:fd68:85f0:7c72::/48 -all,True,fd68:85f0:7c72::/48,pickelhost-alpha (primary relay)
-aquabrand.com,v=spf1 ip6:fd1b:212c:a5f9::/48 -all,True,fd1b:212c:a5f9::/48,hotel (southafricaproject)
-aquafria.org,v=spf1 ip6:fd1b:212c:a5f9::/48 -all,True,fd1b:212c:a5f9::/48,hotel (southafricaproject)
-aquatennial.org,v=spf1 ip6:fdec:ae16:fda7::/48 -all,True,fdec:ae16:fda7::/48,golf (eye-mail primary relay)
-arabi.fun,v=spf1 ip6:fd68:85f0:7c72::/48 -all,True,fd68:85f0:7c72::/48,pickelhost-alpha (primary relay)
-arabicapi.com,v=spf1 ip6:fdec:ae16:fda7::/48 -all,True,fdec:ae16:fda7::/48,golf (eye-mail primary relay)
-aracle.com,v=spf1 ip6:fd43:c0d1:c090::/48 -all,True,fd43:c0d1:c090::/48,
-archos-conseil.com,v=spf1 ip6:fdec:ae16:fda7::/48 -all,True,fdec:ae16:fda7::/48,golf (eye-mail primary relay)
-ardexamerica.com,v=spf1 ip6:fd43:c0d1:c090::/48 -all,True,fd43:c0d1:c090::/48,
-ardhmerianet.com,v=spf1 ip6:fd68:85f0:7c72::/48 -all,True,fd68:85f0:7c72::/48,pickelhost-alpha (primary relay)
-argenttrading.com,v=spf1 ip6:fd43:c0d1:c090::/48 -all,True,fd43:c0d1:c090::/48,
-ariamarketing.net,v=spf1 ip6:fd68:85f0:7c72::/48 -all,True,fd68:85f0:7c72::/48,pickelhost-alpha (primary relay)
-aribem.com,v=spf1 ip6:fd68:85f0:7c72::/48 -all,True,fd68:85f0:7c72::/48,pickelhost-alpha (primary relay)
-arkada-gold.buzz,v=spf1 ip6:fdec:ae16:fda7::/48 -all,True,fdec:ae16:fda7::/48,golf (eye-mail primary relay)
+appinions.com,,False,,
+appple.com,,False,,
+apps.pussport.com,,False,,
+apsf.pro,,False,,
+aqarmisrco.com,,False,,
+aquabrand.com,,False,,
+aquafria.org,,False,,
+aquatennial.org,,False,,
+arabi.fun,,False,,
+arabicapi.com,,False,,
+aracle.com,,False,,
+archos-conseil.com,,False,,
+ardexamerica.com,,False,,
+ardhmerianet.com,,False,,
+argenttrading.com,,False,,
+ariamarketing.net,,False,,
+aribem.com,,False,,
+arkada-gold.buzz,,False,,
 arlsri.org,v=spf1 ip6:fdec:ae16:fda7::/48 -all,True,fdec:ae16:fda7::/48,golf (eye-mail primary relay)
 armedforces-int.com,v=spf1 ip6:fdec:ae16:fda7::/48 -all,True,fdec:ae16:fda7::/48,golf (eye-mail primary relay)
-arrah.com,v=spf1 ip6:fd43:c0d1:c090::/48 -all,True,fd43:c0d1:c090::/48,
-arschloch.com,v=spf1 ip6:fd1b:212c:a5f9::/48 -all,True,fd1b:212c:a5f9::/48,hotel (southafricaproject)
-art.pussport.com,v=spf1 ip6:fdec:ae16:fda7::/48 -all,True,fdec:ae16:fda7::/48,golf (eye-mail primary relay)
+arrah.com,,False,,
+arschloch.com,,False,,
+art.pussport.com,,False,,
 arthen.com,,False,,
-artyshe.com,v=spf1 ip6:fdec:ae16:fda7::/48 -all,True,fdec:ae16:fda7::/48,golf (eye-mail primary relay)
-asaa.com,v=spf1 ip6:fd1b:212c:a5f9::/48 -all,True,fd1b:212c:a5f9::/48,hotel (southafricaproject)
-asalalqima.com,v=spf1 ip6:fd68:85f0:7c72::/48 -all,True,fd68:85f0:7c72::/48,pickelhost-alpha (primary relay)
-asas2.com,v=spf1 ip6:fdec:ae16:fda7::/48 -all,True,fdec:ae16:fda7::/48,golf (eye-mail primary relay)
-asiacomputerweekly.com,v=spf1 ip6:fdec:ae16:fda7::/48 -all,True,fdec:ae16:fda7::/48,golf (eye-mail primary relay)
-askmeaskmeaskme.com,v=spf1 ip6:fdec:ae16:fda7::/48 -all,True,fdec:ae16:fda7::/48,golf (eye-mail primary relay)
-aspectbench.org,v=spf1 ip6:fdec:ae16:fda7::/48 -all,True,fdec:ae16:fda7::/48,golf (eye-mail primary relay)
-at.pointbuysys.com,v=spf1 ip6:fd1b:212c:a5f9::/48 -all,True,fd1b:212c:a5f9::/48,hotel (southafricaproject)
-atalssian.com,v=spf1 ip6:fd1b:212c:a5f9::/48 -all,True,fd1b:212c:a5f9::/48,hotel (southafricaproject)
-atch.com,v=spf1 ip6:fd43:c0d1:c090::/48 -all,True,fd43:c0d1:c090::/48,
-athenm.com,v=spf1 ip6:fd9c:d030:168c::/48 -all,True,fd9c:d030:168c::/48,
-athine.com,v=spf1 ip6:fd1b:212c:a5f9::/48 -all,True,fd1b:212c:a5f9::/48,hotel (southafricaproject)
+artyshe.com,,False,,
+asaa.com,,False,,
+asalalqima.com,,False,,
+asas2.com,,False,,
+asiacomputerweekly.com,,False,,
+askmeaskmeaskme.com,,False,,
+aspectbench.org,,False,,
+at.pointbuysys.com,,False,,
+atalssian.com,,False,,
+atch.com,,False,,
+athenm.com,,False,,
+athine.com,,False,,
 athnee.com,v=spf1 ip6:fd1b:212c:a5f9::/48 -all,True,fd1b:212c:a5f9::/48,hotel (southafricaproject)
-atl.assian.com,v=spf1 ip6:fd1b:212c:a5f9::/48 -all,True,fd1b:212c:a5f9::/48,hotel (southafricaproject)
-atlantabravsjerseys.us,v=spf1 ip6:fdec:ae16:fda7::/48 -all,True,fdec:ae16:fda7::/48,golf (eye-mail primary relay)
-atlassin.com,v=spf1 ip6:fd9c:d030:168c::/48 -all,True,fd9c:d030:168c::/48,
-atlissian.com,v=spf1 ip6:fd9c:d030:168c::/48 -all,True,fd9c:d030:168c::/48,
-atritech.net,v=spf1 ip6:fd1b:212c:a5f9::/48 -all,True,fd1b:212c:a5f9::/48,hotel (southafricaproject)
-ature.com,v=spf1 ip6:fd1b:212c:a5f9::/48 -all,True,fd1b:212c:a5f9::/48,hotel (southafricaproject)
-auirbnb.com,v=spf1 ip6:fd43:c0d1:c090::/48 -all,True,fd43:c0d1:c090::/48,
-aurelianpress.com,v=spf1 ip6:fd68:85f0:7c72::/48 -all,True,fd68:85f0:7c72::/48,pickelhost-alpha (primary relay)
-ausersmanual.com,v=spf1 ip6:fdec:ae16:fda7::/48 -all,True,fdec:ae16:fda7::/48,golf (eye-mail primary relay)
-austinpug.org,v=spf1 ip6:fd68:85f0:7c72::/48 -all,True,fd68:85f0:7c72::/48,pickelhost-alpha (primary relay)
-auth.pussport.com,v=spf1 ip6:fdec:ae16:fda7::/48 -all,True,fdec:ae16:fda7::/48,golf (eye-mail primary relay)
-authsmtp.pussport.com,v=spf1 ip6:fdec:ae16:fda7::/48 -all,True,fdec:ae16:fda7::/48,golf (eye-mail primary relay)
-auti.st,v=spf1 ip6:fd1b:212c:a5f9::/48 -all,True,fd1b:212c:a5f9::/48,hotel (southafricaproject)
-autocapcut.email,v=spf1 ip6:fd68:85f0:7c72::/48 -all,True,fd68:85f0:7c72::/48,pickelhost-alpha (primary relay)
-autodiscover.pussport.com,v=spf1 ip6:fdec:ae16:fda7::/48 -all,True,fdec:ae16:fda7::/48,golf (eye-mail primary relay)
-avoin.ai,v=spf1 ip6:fd68:85f0:7c72::/48 -all,True,fd68:85f0:7c72::/48,pickelhost-alpha (primary relay)
+atl.assian.com,,False,,
+atlantabravsjerseys.us,,False,,
+atlassin.com,,False,,
+atlissian.com,,False,,
+atritech.net,,False,,
+ature.com,,False,,
+auirbnb.com,,False,,
+aurelianpress.com,,False,,
+ausersmanual.com,,False,,
+austinpug.org,,False,,
+auth.pussport.com,,False,,
+authsmtp.pussport.com,,False,,
+auti.st,,False,,
+autocapcut.email,,False,,
+autodiscover.pussport.com,,False,,
+avoin.ai,,False,,
 awdrt.com,,False,,
 awesomenator.com,,False,,
-awme.com,,False,,
-aws.amaaon.com,,False,,
-ayyr.com,,False,,
-aziu.com,,False,,
-aziure.com,,False,,
-azur3.com,,False,,
-azure.pussport.com,,False,,
-azurte.com,,False,,
+awme.com,v=spf1 ip6:fd43:c0d1:c090::/48 -all,True,fd43:c0d1:c090::/48,
+aws.amaaon.com,v=spf1 ip6:fd1b:212c:a5f9::/48 -all,True,fd1b:212c:a5f9::/48,hotel (southafricaproject)
+ayyr.com,v=spf1 ip6:fd68:85f0:7c72::/48 -all,True,fd68:85f0:7c72::/48,pickelhost-alpha (primary relay)
+aziu.com,v=spf1 ip6:fd43:c0d1:c090::/48 -all,True,fd43:c0d1:c090::/48,
+aziure.com,v=spf1 ip6:fd1b:212c:a5f9::/48 -all,True,fd1b:212c:a5f9::/48,hotel (southafricaproject)
+azur3.com,v=spf1 ip6:fdec:ae16:fda7::/48 -all,True,fdec:ae16:fda7::/48,golf (eye-mail primary relay)
+azure.pussport.com,v=spf1 ip6:fdec:ae16:fda7::/48 -all,True,fdec:ae16:fda7::/48,golf (eye-mail primary relay)
+azurte.com,v=spf1 ip6:fd9c:d030:168c::/48 -all,True,fd9c:d030:168c::/48,
 azxure.com,v=spf1 ip6:fd9c:d030:168c::/48 -all,True,fd9c:d030:168c::/48,
 b.ithumb.com,v=spf1 ip6:fd43:c0d1:c090::/48 -all,True,fd43:c0d1:c090::/48,
-baby.pointbuysys.com,,False,,
-bafanglaicai.sbs,,False,,
-bagelmaniamiami.com,,False,,
-balticonpodcast.org,,False,,
-banance.us,,False,,
-bandoppler.com,,False,,
+baby.pointbuysys.com,v=spf1 ip6:fd1b:212c:a5f9::/48 -all,True,fd1b:212c:a5f9::/48,hotel (southafricaproject)
+bafanglaicai.sbs,v=spf1 ip6:fdec:ae16:fda7::/48 -all,True,fdec:ae16:fda7::/48,golf (eye-mail primary relay)
+bagelmaniamiami.com,v=spf1 ip6:fd1b:212c:a5f9::/48 -all,True,fd1b:212c:a5f9::/48,hotel (southafricaproject)
+balticonpodcast.org,v=spf1 ip6:fdec:ae16:fda7::/48 -all,True,fdec:ae16:fda7::/48,golf (eye-mail primary relay)
+banance.us,v=spf1 ip6:fd43:c0d1:c090::/48 -all,True,fd43:c0d1:c090::/48,
+bandoppler.com,v=spf1 ip6:fdec:ae16:fda7::/48 -all,True,fdec:ae16:fda7::/48,golf (eye-mail primary relay)
 bankofam.erica.com,v=spf1 ip6:fd1b:212c:a5f9::/48 -all,True,fd1b:212c:a5f9::/48,hotel (southafricaproject)
-bankofameraca.com,,False,,
-bankofamericfa.com,,False,,
+bankofameraca.com,v=spf1 ip6:fd43:c0d1:c090::/48 -all,True,fd43:c0d1:c090::/48,
+bankofamericfa.com,v=spf1 ip6:fd43:c0d1:c090::/48 -all,True,fd43:c0d1:c090::/48,
 bankofameridca.com,v=spf1 ip6:fd1b:212c:a5f9::/48 -all,True,fd1b:212c:a5f9::/48,hotel (southafricaproject)
-bankofamerifca.com,,False,,
-bankofamerisa.com,,False,,
-bankofamirica.com,,False,,
+bankofamerifca.com,v=spf1 ip6:fd1b:212c:a5f9::/48 -all,True,fd1b:212c:a5f9::/48,hotel (southafricaproject)
+bankofamerisa.com,v=spf1 ip6:fd1b:212c:a5f9::/48 -all,True,fd1b:212c:a5f9::/48,hotel (southafricaproject)
+bankofamirica.com,v=spf1 ip6:fd43:c0d1:c090::/48 -all,True,fd43:c0d1:c090::/48,
+bankofarmerica.com,v=spf1 ip6:fd18:d113:9bed::/48 -all,True,fd18:d113:9bed::/48,
 bankofsmerica.com,v=spf1 ip6:fd1b:212c:a5f9::/48 -all,True,fd1b:212c:a5f9::/48,hotel (southafricaproject)
 bankofthecarolinas.com,v=spf1 ip6:fd43:c0d1:c090::/48 -all,True,fd43:c0d1:c090::/48,
-bankoifamerica.com,,False,,
-bankpofamerica.com,,False,,
-banksofamerica.com,,False,,
+bankoifamerica.com,v=spf1 ip6:fd43:c0d1:c090::/48 -all,True,fd43:c0d1:c090::/48,
+bankpofamerica.com,v=spf1 ip6:fd9c:d030:168c::/48 -all,True,fd9c:d030:168c::/48,
+banksofamerica.com,v=spf1 ip6:fd9c:d030:168c::/48 -all,True,fd9c:d030:168c::/48,
 banlkofamerica.com,v=spf1 ip6:fd43:c0d1:c090::/48 -all,True,fd43:c0d1:c090::/48,
-banokofamerica.com,,False,,
-banoofamerica.com,,False,,
-barracuda.pussport.com,,False,,
+banokofamerica.com,v=spf1 ip6:fd1b:212c:a5f9::/48 -all,True,fd1b:212c:a5f9::/48,hotel (southafricaproject)
+banoofamerica.com,v=spf1 ip6:fd9c:d030:168c::/48 -all,True,fd9c:d030:168c::/48,
+barracuda.pussport.com,v=spf1 ip6:fdec:ae16:fda7::/48 -all,True,fdec:ae16:fda7::/48,golf (eye-mail primary relay)
 barroulette.cool,v=spf1 ip6:fdec:ae16:fda7::/48 -all,True,fdec:ae16:fda7::/48,golf (eye-mail primary relay)
-base.pointbuysys.com,,False,,
-baynance.com,,False,,
+base.pointbuysys.com,v=spf1 ip6:fd1b:212c:a5f9::/48 -all,True,fd1b:212c:a5f9::/48,hotel (southafricaproject)
+baynance.com,v=spf1 ip6:fdec:ae16:fda7::/48 -all,True,fdec:ae16:fda7::/48,golf (eye-mail primary relay)
 bbcbbc.com,v=spf1 ip6:fd9c:d030:168c::/48 -all,True,fd9c:d030:168c::/48,
-bbitf.com,,False,,
+bbitf.com,v=spf1 ip6:fd9c:d030:168c::/48 -all,True,fd9c:d030:168c::/48,
 bboygarage.com,v=spf1 ip6:fdec:ae16:fda7::/48 -all,True,fdec:ae16:fda7::/48,golf (eye-mail primary relay)
 bbq2025.augmentcoderesearch.icu,v=spf1 ip6:fdec:ae16:fda7::/48 -all,True,fdec:ae16:fda7::/48,golf (eye-mail primary relay)
-bbqyy.com,,False,,
+bbqyy.com,v=spf1 ip6:fd68:85f0:7c72::/48 -all,True,fd68:85f0:7c72::/48,pickelhost-alpha (primary relay)
 bbwin99.com,v=spf1 ip6:fd68:85f0:7c72::/48 -all,True,fd68:85f0:7c72::/48,pickelhost-alpha (primary relay)
-bcast.ws,,False,,
-bcb.ro,,False,,
-bcbd.com,,False,,
+bcast.ws,v=spf1 ip6:fdd0:951e:ede7::/48 -all,True,fdd0:951e:ede7::/48,
+bcb.ro,v=spf1 ip6:fd1b:212c:a5f9::/48 -all,True,fd1b:212c:a5f9::/48,hotel (southafricaproject)
+bcbd.com,v=spf1 ip6:fd43:c0d1:c090::/48 -all,True,fd43:c0d1:c090::/48,
 bcbsk.com,v=spf1 ip6:fd43:c0d1:c090::/48 -all,True,fd43:c0d1:c090::/48,
-bcbsu.com,,False,,
-bcjs.com,,False,,
-bcsrmalaysia.org,,False,,
-bdas.com,,False,,
-bdigitalglobalcongress.net,,False,,
-bdsm-community.ch,,False,,
+bcbsu.com,v=spf1 ip6:fd1b:212c:a5f9::/48 -all,True,fd1b:212c:a5f9::/48,hotel (southafricaproject)
+bcjs.com,v=spf1 ip6:fd43:c0d1:c090::/48 -all,True,fd43:c0d1:c090::/48,
+bcsrmalaysia.org,v=spf1 ip6:fdec:ae16:fda7::/48 -all,True,fdec:ae16:fda7::/48,golf (eye-mail primary relay)
+bdas.com,v=spf1 ip6:fd43:c0d1:c090::/48 -all,True,fd43:c0d1:c090::/48,
+bdigitalglobalcongress.net,v=spf1 ip6:fdec:ae16:fda7::/48 -all,True,fdec:ae16:fda7::/48,golf (eye-mail primary relay)
+bdsm-community.ch,v=spf1 ip6:fd1b:212c:a5f9::/48 -all,True,fd1b:212c:a5f9::/48,hotel (southafricaproject)
 bdvy.com,,False,,
-beatoff.com,,False,,
-beiop.com,,False,,
-belmarlab.org,,False,,
-bendshapemask.com,,False,,
-benifitsaversusa.com,,False,,
+beatoff.com,v=spf1 ip6:fd43:c0d1:c090::/48 -all,True,fd43:c0d1:c090::/48,
+beiop.com,v=spf1 ip6:fd36:7c64:44d0::/48 -all,True,fd36:7c64:44d0::/48,
+belmarlab.org,v=spf1 ip6:fdec:ae16:fda7::/48 -all,True,fdec:ae16:fda7::/48,golf (eye-mail primary relay)
+bendshapemask.com,v=spf1 ip6:fd68:85f0:7c72::/48 -all,True,fd68:85f0:7c72::/48,pickelhost-alpha (primary relay)
+benifitsaversusa.com,v=spf1 ip6:fd43:c0d1:c090::/48 -all,True,fd43:c0d1:c090::/48,
 bestlistbase.com,v=spf1 ip6:fd91:27e6:2950::/48 -all,True,fd91:27e6:2950::/48,
 bestmailgen.com,v=spf1 ip6:fd1b:212c:a5f9::/48 -all,True,fd1b:212c:a5f9::/48,hotel (southafricaproject)
 bestofjqueryplugins.com,v=spf1 ip6:fdec:ae16:fda7::/48 -all,True,fdec:ae16:fda7::/48,golf (eye-mail primary relay)
@@ -340,6 +340,7 @@ bettertotravel.com,v=spf1 ip6:fdec:ae16:fda7::/48 -all,True,fdec:ae16:fda7::/48,
 bettinghouse88.com,v=spf1 ip6:fdec:ae16:fda7::/48 -all,True,fdec:ae16:fda7::/48,golf (eye-mail primary relay)
 beumont.org,v=spf1 ip6:fd1b:212c:a5f9::/48 -all,True,fd1b:212c:a5f9::/48,hotel (southafricaproject)
 bezaveganfood.com,v=spf1 ip6:fdec:ae16:fda7::/48 -all,True,fdec:ae16:fda7::/48,golf (eye-mail primary relay)
+bezill.com,v=spf1 ip6:fd36:7c64:44d0::/48 -all,True,fd36:7c64:44d0::/48,
 bfgtech.com,v=spf1 ip6:fd68:85f0:7c72::/48 -all,True,fd68:85f0:7c72::/48,pickelhost-alpha (primary relay)
 bfsrlycbefjdt.pussport.com,v=spf1 ip6:fdec:ae16:fda7::/48 -all,True,fdec:ae16:fda7::/48,golf (eye-mail primary relay)
 bgx.ro,v=spf1 ip6:fd1b:212c:a5f9::/48 -all,True,fd1b:212c:a5f9::/48,hotel (southafricaproject)
@@ -350,6 +351,7 @@ binajce.us,v=spf1 ip6:fd43:c0d1:c090::/48 -all,True,fd43:c0d1:c090::/48,
 binanae.us,v=spf1 ip6:fd43:c0d1:c090::/48 -all,True,fd43:c0d1:c090::/48,
 binance-us.com,v=spf1 ip6:fd9c:d030:168c::/48 -all,True,fd9c:d030:168c::/48,
 binancec.com,v=spf1 ip6:fd9c:d030:168c::/48 -all,True,fd9c:d030:168c::/48,
+binancek.com,v=spf1 ip6:fd18:d113:9bed::/48 -all,True,fd18:d113:9bed::/48,
 binanceo.com,v=spf1 ip6:fd9c:d030:168c::/48 -all,True,fd9c:d030:168c::/48,
 binancs.us,v=spf1 ip6:fd43:c0d1:c090::/48 -all,True,fd43:c0d1:c090::/48,
 binancve.com,v=spf1 ip6:fd43:c0d1:c090::/48 -all,True,fd43:c0d1:c090::/48,
@@ -389,13 +391,14 @@ boldbite.net,v=spf1 ip6:fdec:ae16:fda7::/48 -all,True,fdec:ae16:fda7::/48,golf (
 bolin-ding.com,v=spf1 ip6:fd68:85f0:7c72::/48 -all,True,fd68:85f0:7c72::/48,pickelhost-alpha (primary relay)
 bookinist.ai,v=spf1 ip6:fd68:85f0:7c72::/48 -all,True,fd68:85f0:7c72::/48,pickelhost-alpha (primary relay)
 books.pointbuysys.com,v=spf1 ip6:fd1b:212c:a5f9::/48 -all,True,fd1b:212c:a5f9::/48,hotel (southafricaproject)
+booty.com,v=spf1 ip6:fd43:c0d1:c090::/48 -all,True,fd43:c0d1:c090::/48,
 bottlefish.com,v=spf1 ip6:fd1b:212c:a5f9::/48 -all,True,fd1b:212c:a5f9::/48,hotel (southafricaproject)
 box.pussport.com,v=spf1 ip6:fdec:ae16:fda7::/48 -all,True,fdec:ae16:fda7::/48,golf (eye-mail primary relay)
 boxofficevideo.com,v=spf1 ip6:fd43:c0d1:c090::/48 -all,True,fd43:c0d1:c090::/48,
 bragatel.pt,v=spf1 ip6:fdf3:d665:9546::/48 -all,True,fdf3:d665:9546::/48,
 brbqx.com,v=spf1 ip6:fd36:7c64:44d0::/48 -all,True,fd36:7c64:44d0::/48,
 breathtakingathens.com,v=spf1 ip6:fdec:ae16:fda7::/48 -all,True,fdec:ae16:fda7::/48,golf (eye-mail primary relay)
-brendanmace.com,v=spf1 ip6:fdec:ae16:fda7::/48 -all,True,fdec:ae16:fda7::/48,golf (eye-mail primary relay)
+brendanmace.com,v=spf1 ip4:45.64.217.192/26 ip4:65.108.70.128/28 ip4:65.108.70.138 ip4:95.216.240.159 ip4:141.195.119.0/25 ip4:185.81.129.59 ip4:185.81.129.61 ip4:185.81.129.68 ip4:185.81.129.76 ip4:185.81.129.79 ip4:190.97.167.136/29 ip4:208.67.253.96/28 ip4:208.77.144.208/29 ip4:45.64.218.152/29 ip4:185.81.128.15 ip4:185.81.128.17 ip4:185.81.128.21 ip4:185.81.128.25 ip4:185.81.128.99 -all,False,,
 brightmentorship.com,v=spf1 ip6:fdec:ae16:fda7::/48 -all,True,fdec:ae16:fda7::/48,golf (eye-mail primary relay)
 brockport.com,v=spf1 ip6:fd43:c0d1:c090::/48 -all,True,fd43:c0d1:c090::/48,
 bronze.pointbuysys.com,v=spf1 ip6:fd1b:212c:a5f9::/48 -all,True,fd1b:212c:a5f9::/48,hotel (southafricaproject)
@@ -427,12 +430,13 @@ byoaudio.com,v=spf1 ip6:fd68:85f0:7c72::/48 -all,True,fd68:85f0:7c72::/48,pickel
 byteshark.com,v=spf1 ip6:fd43:c0d1:c090::/48 -all,True,fd43:c0d1:c090::/48,
 byubit.com,v=spf1 ip6:fdec:ae16:fda7::/48 -all,True,fdec:ae16:fda7::/48,golf (eye-mail primary relay)
 cacao.organic,v=spf1 ip6:fdec:ae16:fda7::/48 -all,True,fdec:ae16:fda7::/48,golf (eye-mail primary relay)
+cainbase.com,v=spf1 ip6:fd18:d113:9bed::/48 -all,True,fd18:d113:9bed::/48,
 caiptalone.com,v=spf1 ip6:fd43:c0d1:c090::/48 -all,True,fd43:c0d1:c090::/48,
 californiatacostogo.com,v=spf1 ip6:fd1b:212c:a5f9::/48 -all,True,fd1b:212c:a5f9::/48,hotel (southafricaproject)
 calitalone.com,v=spf1 ip6:fd1b:212c:a5f9::/48 -all,True,fd1b:212c:a5f9::/48,hotel (southafricaproject)
-campbisco.net,v=spf1 ip6:fd1b:212c:a5f9::/48 -all,True,fd1b:212c:a5f9::/48,hotel (southafricaproject)
 camscan.com,v=spf1 ip6:fd43:c0d1:c090::/48 -all,True,fd43:c0d1:c090::/48,
 can.pointbuysys.com,v=spf1 ip6:fd1b:212c:a5f9::/48 -all,True,fd1b:212c:a5f9::/48,hotel (southafricaproject)
+canalconcerts.com,v=spf1 ip6:fd1b:212c:a5f9::/48 -all,True,fd1b:212c:a5f9::/48,hotel (southafricaproject)
 candybouquet.com,v=spf1 ip6:fd1b:212c:a5f9::/48 -all,True,fd1b:212c:a5f9::/48,hotel (southafricaproject)
 cankofamerica.com,v=spf1 ip6:fd9c:d030:168c::/48 -all,True,fd9c:d030:168c::/48,
 cantina-1910.com,v=spf1 ip6:fd68:85f0:7c72::/48 -all,True,fd68:85f0:7c72::/48,pickelhost-alpha (primary relay)
@@ -474,6 +478,7 @@ celeb-networth.com,v=spf1 ip6:fd68:85f0:7c72::/48 -all,True,fd68:85f0:7c72::/48,
 ceq.us,v=spf1 ip6:fdec:ae16:fda7::/48 -all,True,fdec:ae16:fda7::/48,golf (eye-mail primary relay)
 cfhase.com,v=spf1 ip6:fd1b:212c:a5f9::/48 -all,True,fd1b:212c:a5f9::/48,hotel (southafricaproject)
 cfl.pussport.com,v=spf1 ip6:fdec:ae16:fda7::/48 -all,True,fdec:ae16:fda7::/48,golf (eye-mail primary relay)
+cgatgpt.com,v=spf1 ip6:fd18:d113:9bed::/48 -all,True,fd18:d113:9bed::/48,
 cgina.com,v=spf1 ip6:fd1b:212c:a5f9::/48 -all,True,fd1b:212c:a5f9::/48,hotel (southafricaproject)
 chaase.com,v=spf1 ip6:fd43:c0d1:c090::/48 -all,True,fd43:c0d1:c090::/48,
 chadse.com,v=spf1 ip6:fd43:c0d1:c090::/48 -all,True,fd43:c0d1:c090::/48,
@@ -496,170 +501,170 @@ checkout.pointbuysys.com,v=spf1 ip6:fd1b:212c:a5f9::/48 -all,True,fd1b:212c:a5f9
 chemicaloffer.com,v=spf1 ip6:fdec:ae16:fda7::/48 -all,True,fdec:ae16:fda7::/48,golf (eye-mail primary relay)
 chengshinv.com,v=spf1 ip6:fd1b:212c:a5f9::/48 -all,True,fd1b:212c:a5f9::/48,hotel (southafricaproject)
 chese.com,v=spf1 ip6:fd1b:212c:a5f9::/48 -all,True,fd1b:212c:a5f9::/48,hotel (southafricaproject)
-chinanew.com,v=spf1 ip6:fd43:c0d1:c090::/48 -all,True,fd43:c0d1:c090::/48,
-chinastarpdx.com,v=spf1 ip6:fdec:ae16:fda7::/48 -all,True,fdec:ae16:fda7::/48,golf (eye-mail primary relay)
-chokechaiprint.com,v=spf1 ip6:fd68:85f0:7c72::/48 -all,True,fd68:85f0:7c72::/48,pickelhost-alpha (primary relay)
-choosestory.ai,v=spf1 ip6:fd68:85f0:7c72::/48 -all,True,fd68:85f0:7c72::/48,pickelhost-alpha (primary relay)
-chqase.com,v=spf1 ip6:fd43:c0d1:c090::/48 -all,True,fd43:c0d1:c090::/48,
-christtabva.org,v=spf1 ip6:fd68:85f0:7c72::/48 -all,True,fd68:85f0:7c72::/48,pickelhost-alpha (primary relay)
-chromaticgallerie.com,v=spf1 ip6:fdec:ae16:fda7::/48 -all,True,fdec:ae16:fda7::/48,golf (eye-mail primary relay)
-chsp.com,v=spf1 ip6:fd43:c0d1:c090::/48 -all,True,fd43:c0d1:c090::/48,
-chunceauigroup.beauty,v=spf1 ip6:fdec:ae16:fda7::/48 -all,True,fdec:ae16:fda7::/48,golf (eye-mail primary relay)
-chundage.help,v=spf1 ip6:fdec:ae16:fda7::/48 -all,True,fdec:ae16:fda7::/48,golf (eye-mail primary relay)
-chwab.com,v=spf1 ip6:fd1b:212c:a5f9::/48 -all,True,fd1b:212c:a5f9::/48,hotel (southafricaproject)
+chinanew.com,,False,,
+chinastarpdx.com,,False,,
+chokechaiprint.com,,False,,
+choosestory.ai,,False,,
+chqase.com,,False,,
+christtabva.org,,False,,
+chromaticgallerie.com,,False,,
+chsp.com,,False,,
+chunceauigroup.beauty,,False,,
+chundage.help,,False,,
+chwab.com,,False,,
 chztgpt.com,v=spf1 ip6:fd43:c0d1:c090::/48 -all,True,fd43:c0d1:c090::/48,
 cign.com,v=spf1 ip6:fd43:c0d1:c090::/48 -all,True,fd43:c0d1:c090::/48,
-cignc.com,v=spf1 ip6:fd1b:212c:a5f9::/48 -all,True,fd1b:212c:a5f9::/48,hotel (southafricaproject)
-cigne.com,v=spf1 ip6:fd43:c0d1:c090::/48 -all,True,fd43:c0d1:c090::/48,
-ciit.com,v=spf1 ip6:fd43:c0d1:c090::/48 -all,True,fd43:c0d1:c090::/48,
+cignc.com,,False,,
+cigne.com,,False,,
+ciit.com,,False,,
 cinerix.net,v=spf1 ip6:fd68:85f0:7c72::/48 -all,True,fd68:85f0:7c72::/48,pickelhost-alpha (primary relay)
-cinnamonproductions.com,v=spf1 ip6:fd43:c0d1:c090::/48 -all,True,fd43:c0d1:c090::/48,
+cinnamonproductions.com,,False,,
 ciona.com,v=spf1 ip6:fd43:c0d1:c090::/48 -all,True,fd43:c0d1:c090::/48,
-cisco.pussport.com,v=spf1 ip6:fdec:ae16:fda7::/48 -all,True,fdec:ae16:fda7::/48,golf (eye-mail primary relay)
-cisneroscafe.org,v=spf1 ip6:fdec:ae16:fda7::/48 -all,True,fdec:ae16:fda7::/48,golf (eye-mail primary relay)
-citiensbank.com,v=spf1 ip6:fd9c:d030:168c::/48 -all,True,fd9c:d030:168c::/48,
+cisco.pussport.com,,False,,
+cisneroscafe.org,,False,,
+citiensbank.com,,False,,
 citiizensbank.com,v=spf1 ip6:fd9c:d030:168c::/48 -all,True,fd9c:d030:168c::/48,
-citizensbabnk.com,v=spf1 ip6:fd9c:d030:168c::/48 -all,True,fd9c:d030:168c::/48,
+citizensbabnk.com,,False,,
 citizensbak.com,v=spf1 ip6:fd9c:d030:168c::/48 -all,True,fd9c:d030:168c::/48,
-citiznesbank.com,v=spf1 ip6:fd9c:d030:168c::/48 -all,True,fd9c:d030:168c::/48,
-citziensbank.com,v=spf1 ip6:fd9c:d030:168c::/48 -all,True,fd9c:d030:168c::/48,
+citiznesbank.com,,False,,
+citziensbank.com,,False,,
 cizi.com,v=spf1 ip6:fd43:c0d1:c090::/48 -all,True,fd43:c0d1:c090::/48,
-cjsmicro.com,v=spf1 ip6:fd68:85f0:7c72::/48 -all,True,fd68:85f0:7c72::/48,pickelhost-alpha (primary relay)
-clan.pointbuysys.com,v=spf1 ip6:fd1b:212c:a5f9::/48 -all,True,fd1b:212c:a5f9::/48,hotel (southafricaproject)
-classicgamecreations.com,v=spf1 ip6:fdec:ae16:fda7::/48 -all,True,fdec:ae16:fda7::/48,golf (eye-mail primary relay)
-cleverfather.com,v=spf1 ip6:fdec:ae16:fda7::/48 -all,True,fdec:ae16:fda7::/48,golf (eye-mail primary relay)
-client.pointbuysys.com,v=spf1 ip6:fd1b:212c:a5f9::/48 -all,True,fd1b:212c:a5f9::/48,hotel (southafricaproject)
-clientjourney.ai,v=spf1 ip6:fd68:85f0:7c72::/48 -all,True,fd68:85f0:7c72::/48,pickelhost-alpha (primary relay)
-clock.com,v=spf1 ip6:fd43:c0d1:c090::/48 -all,True,fd43:c0d1:c090::/48,
-clubstudiob.com,v=spf1 ip6:fdec:ae16:fda7::/48 -all,True,fdec:ae16:fda7::/48,golf (eye-mail primary relay)
-clyde.net,v=spf1 ip6:fd43:c0d1:c090::/48 -all,True,fd43:c0d1:c090::/48,
-cmailing.com,v=spf1 ip6:fd36:7c64:44d0::/48 -all,True,fd36:7c64:44d0::/48,
+cjsmicro.com,,False,,
+clan.pointbuysys.com,,False,,
+classicgamecreations.com,,False,,
+cleverfather.com,,False,,
+client.pointbuysys.com,,False,,
+clientjourney.ai,,False,,
+clock.com,,False,,
+clubstudiob.com,,False,,
+clyde.net,,False,,
+cmailing.com,,False,,
 cmhr.com,v=spf1 ip6:fd43:c0d1:c090::/48 -all,True,fd43:c0d1:c090::/48,
-cmrs5a85i171btd0uphg.hotmuil.pussport.com,v=spf1 ip6:fdec:ae16:fda7::/48 -all,True,fdec:ae16:fda7::/48,golf (eye-mail primary relay)
+cmrs5a85i171btd0uphg.hotmuil.pussport.com,,False,,
 cn383rt6827jgh2d31dg.cfl.pussport.com,v=spf1 ip6:fdec:ae16:fda7::/48 -all,True,fdec:ae16:fda7::/48,golf (eye-mail primary relay)
-cn6vuu9g76c3la7f5qc0.net.pussport.com,v=spf1 ip6:fdec:ae16:fda7::/48 -all,True,fdec:ae16:fda7::/48,golf (eye-mail primary relay)
+cn6vuu9g76c3la7f5qc0.net.pussport.com,,False,,
 cnhase.com,v=spf1 ip6:fd9c:d030:168c::/48 -all,True,fd9c:d030:168c::/48,
-coachfactorybagsjp.com,v=spf1 ip6:fd9c:d030:168c::/48 -all,True,fd9c:d030:168c::/48,
-coachingdonebetter.com,v=spf1 ip6:fd68:85f0:7c72::/48 -all,True,fd68:85f0:7c72::/48,pickelhost-alpha (primary relay)
-coachpoint.com,v=spf1 ip6:fd92:59f3:510e::/48 -all,True,fd92:59f3:510e::/48,delta (tertiary relay)
-coachspark.ai,v=spf1 ip6:fd68:85f0:7c72::/48 -all,True,fd68:85f0:7c72::/48,pickelhost-alpha (primary relay)
-code.pointbuysys.com,v=spf1 ip6:fd1b:212c:a5f9::/48 -all,True,fd1b:212c:a5f9::/48,hotel (southafricaproject)
-codeacademy.org,v=spf1 ip6:fd68:85f0:7c72::/48 -all,True,fd68:85f0:7c72::/48,pickelhost-alpha (primary relay)
-codedogg.com,v=spf1 ip6:fdec:ae16:fda7::/48 -all,True,fdec:ae16:fda7::/48,golf (eye-mail primary relay)
-codefuture.org,v=spf1 ip6:fdec:ae16:fda7::/48 -all,True,fdec:ae16:fda7::/48,golf (eye-mail primary relay)
+coachfactorybagsjp.com,,False,,
+coachingdonebetter.com,,False,,
+coachpoint.com,,False,,
+coachspark.ai,,False,,
+code.pointbuysys.com,,False,,
+codeacademy.org,,False,,
+codedogg.com,,False,,
+codefuture.org,,False,,
 codeinevelvetclub.com,v=spf1 ip6:fd1b:212c:a5f9::/48 -all,True,fd1b:212c:a5f9::/48,hotel (southafricaproject)
-codifypro.ai,v=spf1 ip6:fd68:85f0:7c72::/48 -all,True,fd68:85f0:7c72::/48,pickelhost-alpha (primary relay)
-coi.nbase.com,v=spf1 ip6:fd1b:212c:a5f9::/48 -all,True,fd1b:212c:a5f9::/48,hotel (southafricaproject)
-coigna.com,v=spf1 ip6:fd1b:212c:a5f9::/48 -all,True,fd1b:212c:a5f9::/48,hotel (southafricaproject)
-coin4x.com,v=spf1 ip6:fd1b:212c:a5f9::/48 -all,True,fd1b:212c:a5f9::/48,hotel (southafricaproject)
-coinbasez.com,v=spf1 ip6:fd9c:d030:168c::/48 -all,True,fd9c:d030:168c::/48,
+codifypro.ai,,False,,
+coi.nbase.com,,False,,
+coigna.com,,False,,
+coin4x.com,,False,,
+coinbasez.com,,False,,
 coindex.com,v=spf1 ip6:fd1b:212c:a5f9::/48 -all,True,fd1b:212c:a5f9::/48,hotel (southafricaproject)
-colacambulance.com,v=spf1 ip6:fdec:ae16:fda7::/48 -all,True,fdec:ae16:fda7::/48,golf (eye-mail primary relay)
+colacambulance.com,,False,,
 coldairintake.co,v=spf1 ip6:fdec:ae16:fda7::/48 -all,True,fdec:ae16:fda7::/48,golf (eye-mail primary relay)
-coloniallif.com,v=spf1 ip6:fd1b:212c:a5f9::/48 -all,True,fd1b:212c:a5f9::/48,hotel (southafricaproject)
+coloniallif.com,,False,,
 coloniallifr.com,v=spf1 ip6:fd1b:212c:a5f9::/48 -all,True,fd1b:212c:a5f9::/48,hotel (southafricaproject)
-coloniallofe.com,v=spf1 ip6:fdec:ae16:fda7::/48 -all,True,fdec:ae16:fda7::/48,golf (eye-mail primary relay)
-coloroutofspacemovie.com,v=spf1 ip6:fdec:ae16:fda7::/48 -all,True,fdec:ae16:fda7::/48,golf (eye-mail primary relay)
+coloniallofe.com,,False,,
+coloroutofspacemovie.com,,False,,
 com.pussport.com,v=spf1 ip6:fdec:ae16:fda7::/48 -all,True,fdec:ae16:fda7::/48,golf (eye-mail primary relay)
-come.pointbuysys.com,v=spf1 ip6:fd1b:212c:a5f9::/48 -all,True,fd1b:212c:a5f9::/48,hotel (southafricaproject)
-communityhealthplan.org,v=spf1 ip6:fd1b:212c:a5f9::/48 -all,True,fd1b:212c:a5f9::/48,hotel (southafricaproject)
+come.pointbuysys.com,,False,,
+communityhealthplan.org,,False,,
 companynotifier.com,v=spf1 ip6:fdec:ae16:fda7::/48 -all,True,fdec:ae16:fda7::/48,golf (eye-mail primary relay)
-computersandcircuits.com,v=spf1 ip6:fdec:ae16:fda7::/48 -all,True,fdec:ae16:fda7::/48,golf (eye-mail primary relay)
-comune.pussport.com,v=spf1 ip6:fdec:ae16:fda7::/48 -all,True,fdec:ae16:fda7::/48,golf (eye-mail primary relay)
+computersandcircuits.com,,False,,
+comune.pussport.com,,False,,
 conbitcoin.com,v=spf1 ip6:fd68:85f0:7c72::/48 -all,True,fd68:85f0:7c72::/48,pickelhost-alpha (primary relay)
-concordhospitality.com,v=spf1 ip6:fd43:c0d1:c090::/48 -all,True,fd43:c0d1:c090::/48,
-concretecontractorscincinnati.com,v=spf1 ip6:fdec:ae16:fda7::/48 -all,True,fdec:ae16:fda7::/48,golf (eye-mail primary relay)
-congnigenx.ai,v=spf1 ip6:fd68:85f0:7c72::/48 -all,True,fd68:85f0:7c72::/48,pickelhost-alpha (primary relay)
-connect.pussport.com,v=spf1 ip6:fdec:ae16:fda7::/48 -all,True,fdec:ae16:fda7::/48,golf (eye-mail primary relay)
+concordhospitality.com,,False,,
+concretecontractorscincinnati.com,,False,,
+congnigenx.ai,,False,,
+connect.pussport.com,,False,,
 contabilitate.ws,v=spf1 ip6:fdd0:951e:ede7::/48 -all,True,fdd0:951e:ede7::/48,
-converys.com,v=spf1 ip6:fd43:c0d1:c090::/48 -all,True,fd43:c0d1:c090::/48,
+converys.com,,False,,
 correo.pussport.com,v=spf1 ip6:fdec:ae16:fda7::/48 -all,True,fdec:ae16:fda7::/48,golf (eye-mail primary relay)
-correu.pussport.com,v=spf1 ip6:fdec:ae16:fda7::/48 -all,True,fdec:ae16:fda7::/48,golf (eye-mail primary relay)
-couriernation.net,v=spf1 ip6:fd92:59f3:510e::/48 -all,True,fd92:59f3:510e::/48,delta (tertiary relay)
-covbase.com,v=spf1 ip6:fd36:7c64:44d0::/48 -all,True,fd36:7c64:44d0::/48,
-cown.com,v=spf1 ip6:fd43:c0d1:c090::/48 -all,True,fd43:c0d1:c090::/48,
-cp4us.org,v=spf1 ip6:fdec:ae16:fda7::/48 -all,True,fdec:ae16:fda7::/48,golf (eye-mail primary relay)
-cpmcast.net,v=spf1 ip6:fd43:c0d1:c090::/48 -all,True,fd43:c0d1:c090::/48,
-cpmr.com,v=spf1 ip6:fd43:c0d1:c090::/48 -all,True,fd43:c0d1:c090::/48,
-crackerbarrelcstores.com,v=spf1 ip6:fd1b:212c:a5f9::/48 -all,True,fd1b:212c:a5f9::/48,hotel (southafricaproject)
-craken.com,v=spf1 ip6:fd43:c0d1:c090::/48 -all,True,fd43:c0d1:c090::/48,
-crapsforward.com,v=spf1 ip6:fd1b:212c:a5f9::/48 -all,True,fd1b:212c:a5f9::/48,hotel (southafricaproject)
-cricfree.ws,v=spf1 ip6:fd1b:212c:a5f9::/48 -all,True,fd1b:212c:a5f9::/48,hotel (southafricaproject)
-cricutdesignspacedownloads.com,v=spf1 ip6:fdec:ae16:fda7::/48 -all,True,fdec:ae16:fda7::/48,golf (eye-mail primary relay)
-crug.org,v=spf1 ip6:fd68:85f0:7c72::/48 -all,True,fd68:85f0:7c72::/48,pickelhost-alpha (primary relay)
+correu.pussport.com,,False,,
+couriernation.net,,False,,
+covbase.com,,False,,
+cown.com,,False,,
+cp4us.org,,False,,
+cpmcast.net,,False,,
+cpmr.com,,False,,
+crackerbarrelcstores.com,,False,,
+craken.com,,False,,
+crapsforward.com,,False,,
+cricfree.ws,,False,,
+cricutdesignspacedownloads.com,,False,,
+crug.org,,False,,
 cruypto.com,v=spf1 ip6:fd9c:d030:168c::/48 -all,True,fd9c:d030:168c::/48,
-cryptfo.com,v=spf1 ip6:fd68:85f0:7c72::/48 -all,True,fd68:85f0:7c72::/48,pickelhost-alpha (primary relay)
-cryptoboss-blaze.top,v=spf1 ip6:fdec:ae16:fda7::/48 -all,True,fdec:ae16:fda7::/48,golf (eye-mail primary relay)
-cryptoboss-casino09qw.top,v=spf1 ip6:fdec:ae16:fda7::/48 -all,True,fdec:ae16:fda7::/48,golf (eye-mail primary relay)
-cryptoboss888casino8.buzz,v=spf1 ip6:fdec:ae16:fda7::/48 -all,True,fdec:ae16:fda7::/48,golf (eye-mail primary relay)
-cryptoconesnft.com,v=spf1 ip6:fdec:ae16:fda7::/48 -all,True,fdec:ae16:fda7::/48,golf (eye-mail primary relay)
-crystalsnightclub.com,v=spf1 ip6:fd68:85f0:7c72::/48 -all,True,fd68:85f0:7c72::/48,pickelhost-alpha (primary relay)
-cryto.com,v=spf1 ip6:fd43:c0d1:c090::/48 -all,True,fd43:c0d1:c090::/48,
-cs.pussport.com,v=spf1 ip6:fdec:ae16:fda7::/48 -all,True,fdec:ae16:fda7::/48,golf (eye-mail primary relay)
-cscl2005.org,v=spf1 ip6:fdec:ae16:fda7::/48 -all,True,fdec:ae16:fda7::/48,golf (eye-mail primary relay)
+cryptfo.com,,False,,
+cryptoboss-blaze.top,,False,,
+cryptoboss-casino09qw.top,,False,,
+cryptoboss888casino8.buzz,,False,,
+cryptoconesnft.com,,False,,
+crystalsnightclub.com,,False,,
+cryto.com,,False,,
+cs.pussport.com,,False,,
+cscl2005.org,,False,,
 cshwab.com,v=spf1 ip6:fd43:c0d1:c090::/48 -all,True,fd43:c0d1:c090::/48,
 csmc.org,v=spf1 ip6:fd1b:212c:a5f9::/48 -all,True,fd1b:212c:a5f9::/48,hotel (southafricaproject)
-cubanclassicalballet.org,,False,,
-custom-oil-painting.com,,False,,
-cvshe.alth.com,,False,,
-cwko.com,,False,,
-cyjd.top,,False,,
-cytec.ws,,False,,
+cubanclassicalballet.org,v=spf1 ip6:fdec:ae16:fda7::/48 -all,True,fdec:ae16:fda7::/48,golf (eye-mail primary relay)
+custom-oil-painting.com,v=spf1 ip6:fdec:ae16:fda7::/48 -all,True,fdec:ae16:fda7::/48,golf (eye-mail primary relay)
+cvshe.alth.com,v=spf1 ip6:fd43:c0d1:c090::/48 -all,True,fd43:c0d1:c090::/48,
+cwko.com,v=spf1 ip6:fd1b:212c:a5f9::/48 -all,True,fd1b:212c:a5f9::/48,hotel (southafricaproject)
+cyjd.top,v=spf1 ip6:fdec:ae16:fda7::/48 -all,True,fdec:ae16:fda7::/48,golf (eye-mail primary relay)
+cytec.ws,v=spf1 ip6:fdd0:951e:ede7::/48 -all,True,fdd0:951e:ede7::/48,
 czsdw.top,v=spf1 ip6:fdec:ae16:fda7::/48 -all,True,fdec:ae16:fda7::/48,golf (eye-mail primary relay)
 dadeschool.net,v=spf1 ip6:fd43:c0d1:c090::/48 -all,True,fd43:c0d1:c090::/48,
-dadschools.net,,False,,
-dallaisd.org,,False,,
-damyana.net,,False,,
-dana88.info,,False,,
+dadschools.net,v=spf1 ip6:fd43:c0d1:c090::/48 -all,True,fd43:c0d1:c090::/48,
+dallaisd.org,v=spf1 ip6:fd43:c0d1:c090::/48 -all,True,fd43:c0d1:c090::/48,
+damyana.net,v=spf1 ip6:fdec:ae16:fda7::/48 -all,True,fdec:ae16:fda7::/48,golf (eye-mail primary relay)
+dana88.info,v=spf1 ip6:fdec:ae16:fda7::/48 -all,True,fdec:ae16:fda7::/48,golf (eye-mail primary relay)
 daniel-lorencic.com,v=spf1 ip6:fdec:ae16:fda7::/48 -all,True,fdec:ae16:fda7::/48,golf (eye-mail primary relay)
 dark-markets.com,v=spf1 ip6:fdec:ae16:fda7::/48 -all,True,fdec:ae16:fda7::/48,golf (eye-mail primary relay)
-darkdruglink.com,,False,,
-darkdruglinks.com,,False,,
-darkmarket21.com,,False,,
-darkmarketinfo.com,,False,,
+darkdruglink.com,v=spf1 ip6:fdec:ae16:fda7::/48 -all,True,fdec:ae16:fda7::/48,golf (eye-mail primary relay)
+darkdruglinks.com,v=spf1 ip6:fdec:ae16:fda7::/48 -all,True,fdec:ae16:fda7::/48,golf (eye-mail primary relay)
+darkmarket21.com,v=spf1 ip6:fdec:ae16:fda7::/48 -all,True,fdec:ae16:fda7::/48,golf (eye-mail primary relay)
+darkmarketinfo.com,v=spf1 ip6:fdec:ae16:fda7::/48 -all,True,fdec:ae16:fda7::/48,golf (eye-mail primary relay)
 darkmarketnet.com,v=spf1 ip6:fdec:ae16:fda7::/48 -all,True,fdec:ae16:fda7::/48,golf (eye-mail primary relay)
-darkmarketpro.com,,False,,
-darkmarkets2022.com,,False,,
-darknet-drugstore.com,,False,,
+darkmarketpro.com,v=spf1 ip6:fdec:ae16:fda7::/48 -all,True,fdec:ae16:fda7::/48,golf (eye-mail primary relay)
+darkmarkets2022.com,v=spf1 ip6:fdec:ae16:fda7::/48 -all,True,fdec:ae16:fda7::/48,golf (eye-mail primary relay)
+darknet-drugstore.com,v=spf1 ip6:fdec:ae16:fda7::/48 -all,True,fdec:ae16:fda7::/48,golf (eye-mail primary relay)
 darknetdrugmarket.com,v=spf1 ip6:fdec:ae16:fda7::/48 -all,True,fdec:ae16:fda7::/48,golf (eye-mail primary relay)
-darkwebmarketlist.link,,False,,
-darkwebsitesit.com,,False,,
-databrics.com,,False,,
-datasoma.com,,False,,
+darkwebmarketlist.link,v=spf1 ip6:fdec:ae16:fda7::/48 -all,True,fdec:ae16:fda7::/48,golf (eye-mail primary relay)
+darkwebsitesit.com,v=spf1 ip6:fdec:ae16:fda7::/48 -all,True,fdec:ae16:fda7::/48,golf (eye-mail primary relay)
+databrics.com,v=spf1 ip6:fd1b:212c:a5f9::/48 -all,True,fd1b:212c:a5f9::/48,hotel (southafricaproject)
+datasoma.com,v=spf1 ip6:fd36:7c64:44d0::/48 -all,True,fd36:7c64:44d0::/48,
 datastrip.com,v=spf1 ip6:fd43:c0d1:c090::/48 -all,True,fd43:c0d1:c090::/48,
-date-a-sugar-mommy.com,,False,,
-datingmilfs.org,,False,,
-datingopinions.org,,False,,
+date-a-sugar-mommy.com,v=spf1 ip6:fd68:85f0:7c72::/48 -all,True,fd68:85f0:7c72::/48,pickelhost-alpha (primary relay)
+datingmilfs.org,v=spf1 ip6:fdec:ae16:fda7::/48 -all,True,fdec:ae16:fda7::/48,golf (eye-mail primary relay)
+datingopinions.org,v=spf1 ip6:fdec:ae16:fda7::/48 -all,True,fdec:ae16:fda7::/48,golf (eye-mail primary relay)
 datmer.com,v=spf1 ip6:fd68:85f0:7c72::/48 -all,True,fd68:85f0:7c72::/48,pickelhost-alpha (primary relay)
-daun.net,,False,,
-davebusters.com,,False,,
-db365.cc,,False,,
-dbz.com,,False,,
-dc-outlet.com,,False,,
+daun.net,v=spf1 ip6:fd43:c0d1:c090::/48 -all,True,fd43:c0d1:c090::/48,
+davebusters.com,v=spf1 ip6:fd1b:212c:a5f9::/48 -all,True,fd1b:212c:a5f9::/48,hotel (southafricaproject)
+db365.cc,v=spf1 ip6:fdec:ae16:fda7::/48 -all,True,fdec:ae16:fda7::/48,golf (eye-mail primary relay)
+dbz.com,v=spf1 ip6:fd43:c0d1:c090::/48 -all,True,fd43:c0d1:c090::/48,
+dc-outlet.com,v=spf1 ip6:fd68:85f0:7c72::/48 -all,True,fd68:85f0:7c72::/48,pickelhost-alpha (primary relay)
 dczinefest.com,v=spf1 ip6:fdec:ae16:fda7::/48 -all,True,fdec:ae16:fda7::/48,golf (eye-mail primary relay)
-dddddd.com,,False,,
+dddddd.com,v=spf1 ip6:fd1b:212c:a5f9::/48 -all,True,fd1b:212c:a5f9::/48,hotel (southafricaproject)
 debbycarreau.com,v=spf1 ip6:fdec:ae16:fda7::/48 -all,True,fdec:ae16:fda7::/48,golf (eye-mail primary relay)
-debbytalbot.com,,False,,
+debbytalbot.com,v=spf1 ip6:fd68:85f0:7c72::/48 -all,True,fd68:85f0:7c72::/48,pickelhost-alpha (primary relay)
 debtfixtoday.com,v=spf1 ip6:fd68:85f0:7c72::/48 -all,True,fd68:85f0:7c72::/48,pickelhost-alpha (primary relay)
 decelerator.ai,v=spf1 ip6:fd68:85f0:7c72::/48 -all,True,fd68:85f0:7c72::/48,pickelhost-alpha (primary relay)
 decipad.ai,v=spf1 ip6:fd68:85f0:7c72::/48 -all,True,fd68:85f0:7c72::/48,pickelhost-alpha (primary relay)
 dedi.pointbuysys.com,v=spf1 ip6:fd1b:212c:a5f9::/48 -all,True,fd1b:212c:a5f9::/48,hotel (southafricaproject)
 deell.com,v=spf1 ip6:fd1b:212c:a5f9::/48 -all,True,fd1b:212c:a5f9::/48,hotel (southafricaproject)
-deelp.com,,False,,
-deeopl.com,,False,,
-deepdrugstore.com,,False,,
-deephouse.pl,,False,,
-deeplk.com,,False,,
-deepwebsmarket.com,,False,,
-defensibleborders.org,,False,,
-dentonhospital.com,,False,,
-department.com,,False,,
-dermaadvancedskinserum.com,,False,,
-designmanual.ai,,False,,
-desktop.pointbuysys.com,,False,,
-destroyertactics.com,,False,,
-detectstudy.com,,False,,
-dev.pointbuysys.com,,False,,
+deelp.com,v=spf1 ip6:fd43:c0d1:c090::/48 -all,True,fd43:c0d1:c090::/48,
+deeopl.com,v=spf1 ip6:fd1b:212c:a5f9::/48 -all,True,fd1b:212c:a5f9::/48,hotel (southafricaproject)
+deepdrugstore.com,v=spf1 ip6:fdec:ae16:fda7::/48 -all,True,fdec:ae16:fda7::/48,golf (eye-mail primary relay)
+deephouse.pl,v=spf1 ip6:fd1b:212c:a5f9::/48 -all,True,fd1b:212c:a5f9::/48,hotel (southafricaproject)
+deeplk.com,v=spf1 ip6:fd1b:212c:a5f9::/48 -all,True,fd1b:212c:a5f9::/48,hotel (southafricaproject)
+deepwebsmarket.com,v=spf1 ip6:fdec:ae16:fda7::/48 -all,True,fdec:ae16:fda7::/48,golf (eye-mail primary relay)
+defensibleborders.org,v=spf1 ip6:fdec:ae16:fda7::/48 -all,True,fdec:ae16:fda7::/48,golf (eye-mail primary relay)
+dentonhospital.com,v=spf1 ip6:fd43:c0d1:c090::/48 -all,True,fd43:c0d1:c090::/48,
+department.com,v=spf1 ip6:fd43:c0d1:c090::/48 -all,True,fd43:c0d1:c090::/48,
+dermaadvancedskinserum.com,v=spf1 ip6:fd68:85f0:7c72::/48 -all,True,fd68:85f0:7c72::/48,pickelhost-alpha (primary relay)
+designmanual.ai,v=spf1 ip6:fd68:85f0:7c72::/48 -all,True,fd68:85f0:7c72::/48,pickelhost-alpha (primary relay)
+desktop.pointbuysys.com,v=spf1 ip6:fd1b:212c:a5f9::/48 -all,True,fd1b:212c:a5f9::/48,hotel (southafricaproject)
+destroyertactics.com,v=spf1 ip6:fdec:ae16:fda7::/48 -all,True,fdec:ae16:fda7::/48,golf (eye-mail primary relay)
+detectstudy.com,v=spf1 ip6:fd68:85f0:7c72::/48 -all,True,fd68:85f0:7c72::/48,pickelhost-alpha (primary relay)
+dev.pointbuysys.com,v=spf1 ip6:fd1b:212c:a5f9::/48 -all,True,fd1b:212c:a5f9::/48,hotel (southafricaproject)
 dewpl.com,v=spf1 ip6:fd9c:d030:168c::/48 -all,True,fd9c:d030:168c::/48,
 df2130.com,v=spf1 ip6:fdec:ae16:fda7::/48 -all,True,fdec:ae16:fda7::/48,golf (eye-mail primary relay)
 df8020.com,v=spf1 ip6:fdec:ae16:fda7::/48 -all,True,fdec:ae16:fda7::/48,golf (eye-mail primary relay)
@@ -682,7 +687,6 @@ djangocrashcourse.com,v=spf1 ip6:fdec:ae16:fda7::/48 -all,True,fdec:ae16:fda7::/
 dlack.com,v=spf1 ip6:fd1b:212c:a5f9::/48 -all,True,fd1b:212c:a5f9::/48,hotel (southafricaproject)
 dmv911.com,v=spf1 ip6:fd1b:212c:a5f9::/48 -all,True,fd1b:212c:a5f9::/48,hotel (southafricaproject)
 dnawr.com,v=spf1 ip6:fd36:7c64:44d0::/48 -all,True,fd36:7c64:44d0::/48,
-dnhpdcl.in,v=spf1 ip6:fd1b:212c:a5f9::/48 -all,True,fd1b:212c:a5f9::/48,hotel (southafricaproject)
 dnrc.com,v=spf1 ip6:fd43:c0d1:c090::/48 -all,True,fd43:c0d1:c090::/48,
 dns.pussport.com,v=spf1 ip6:fdec:ae16:fda7::/48 -all,True,fdec:ae16:fda7::/48,golf (eye-mail primary relay)
 doc-mail.net,v=spf1 ip6:fd36:7c64:44d0::/48 -all,True,fd36:7c64:44d0::/48,
@@ -709,6 +713,7 @@ dotrust.com,v=spf1 ip6:fd43:c0d1:c090::/48 -all,True,fd43:c0d1:c090::/48,
 downlowd.com,v=spf1 ip6:fd1b:212c:a5f9::/48 -all,True,fd1b:212c:a5f9::/48,hotel (southafricaproject)
 downtown88.com,v=spf1 ip6:fdec:ae16:fda7::/48 -all,True,fdec:ae16:fda7::/48,golf (eye-mail primary relay)
 doyougotinsurance.com,v=spf1 ip6:fd68:85f0:7c72::/48 -all,True,fd68:85f0:7c72::/48,pickelhost-alpha (primary relay)
+dr.opbox.com,v=spf1 ip6:fd1b:212c:a5f9::/48 -all,True,fd1b:212c:a5f9::/48,hotel (southafricaproject)
 dreamnowtravellater.com,,False,,
 dreesens.com,v=spf1 ip6:fd43:c0d1:c090::/48 -all,True,fd43:c0d1:c090::/48,
 drhorton.co,v=spf1 ip6:fd43:c0d1:c090::/48 -all,True,fd43:c0d1:c090::/48,
@@ -778,6 +783,7 @@ emailhost99.com,v=spf1 ip6:fd36:7c64:44d0::/48 -all,True,fd36:7c64:44d0::/48,
 emailnube.com,v=spf1 ip6:fd36:7c64:44d0::/48 -all,True,fd36:7c64:44d0::/48,
 emang.com,v=spf1 ip6:fd43:c0d1:c090::/48 -all,True,fd43:c0d1:c090::/48,
 emial.com,v=spf1 ip6:fd1b:212c:a5f9::/48 -all,True,fd1b:212c:a5f9::/48,hotel (southafricaproject)
+eml.pussport.com,v=spf1 ip6:fdec:ae16:fda7::/48 -all,True,fdec:ae16:fda7::/48,golf (eye-mail primary relay)
 emmail.com,v=spf1 ip6:fd43:c0d1:c090::/48 -all,True,fd43:c0d1:c090::/48,
 emoforum.org,v=spf1 ip6:fdec:ae16:fda7::/48 -all,True,fdec:ae16:fda7::/48,golf (eye-mail primary relay)
 endmalariaday.com,v=spf1 ip6:fdec:ae16:fda7::/48 -all,True,fdec:ae16:fda7::/48,golf (eye-mail primary relay)
@@ -805,15 +811,21 @@ espotify.com,v=spf1 ip6:fd1b:212c:a5f9::/48 -all,True,fd1b:212c:a5f9::/48,hotel 
 etade.com,v=spf1 ip6:fd1b:212c:a5f9::/48 -all,True,fd1b:212c:a5f9::/48,hotel (southafricaproject)
 etamask.io,v=spf1 ip6:fdec:ae16:fda7::/48 -all,True,fdec:ae16:fda7::/48,golf (eye-mail primary relay)
 eterade.com,v=spf1 ip6:fd9c:d030:168c::/48 -all,True,fd9c:d030:168c::/48,
-ethshanghai.org,v=spf1 ip6:fdec:ae16:fda7::/48 -all,True,fdec:ae16:fda7::/48,golf (eye-mail primary relay)
+ethshanghai.org,v=spf1 include:mailgun.org ~all,False,,
 etorof.com,v=spf1 ip6:fd9c:d030:168c::/48 -all,True,fd9c:d030:168c::/48,
 etorp.com,v=spf1 ip6:fd43:c0d1:c090::/48 -all,True,fd43:c0d1:c090::/48,
 etrad.com,v=spf1 ip6:fd1b:212c:a5f9::/48 -all,True,fd1b:212c:a5f9::/48,hotel (southafricaproject)
 etrada.com,v=spf1 ip6:fd9c:d030:168c::/48 -all,True,fd9c:d030:168c::/48,
+etrase.com,v=spf1 ip6:fd1b:212c:a5f9::/48 -all,True,fd1b:212c:a5f9::/48,hotel (southafricaproject)
 etrde.com,v=spf1 ip6:fd1b:212c:a5f9::/48 -all,True,fd1b:212c:a5f9::/48,hotel (southafricaproject)
 ettade.com,v=spf1 ip6:fd9c:d030:168c::/48 -all,True,fd9c:d030:168c::/48,
+ex02.pussport.com,v=spf1 ip6:fdec:ae16:fda7::/48 -all,True,fdec:ae16:fda7::/48,golf (eye-mail primary relay)
 examcraze.in,v=spf1 ip6:fd1b:212c:a5f9::/48 -all,True,fd1b:212c:a5f9::/48,hotel (southafricaproject)
 examplifies.net,v=spf1 ip6:fd92:59f3:510e::/48 -all,True,fd92:59f3:510e::/48,delta (tertiary relay)
+exch2016.pussport.com,v=spf1 ip6:fdec:ae16:fda7::/48 -all,True,fdec:ae16:fda7::/48,golf (eye-mail primary relay)
+exchange.pussport.com,v=spf1 ip6:fdec:ae16:fda7::/48 -all,True,fdec:ae16:fda7::/48,golf (eye-mail primary relay)
+exchangecorp.pussport.com,v=spf1 ip6:fdec:ae16:fda7::/48 -all,True,fdec:ae16:fda7::/48,golf (eye-mail primary relay)
+exchmail.pussport.com,v=spf1 ip6:fdec:ae16:fda7::/48 -all,True,fdec:ae16:fda7::/48,golf (eye-mail primary relay)
 exemplifies.net,v=spf1 ip6:fd92:59f3:510e::/48 -all,True,fd92:59f3:510e::/48,delta (tertiary relay)
 exfolieantiagingserum.net,v=spf1 ip6:fd68:85f0:7c72::/48 -all,True,fd68:85f0:7c72::/48,pickelhost-alpha (primary relay)
 exmail2.pussport.com,v=spf1 ip6:fdec:ae16:fda7::/48 -all,True,fdec:ae16:fda7::/48,golf (eye-mail primary relay)
@@ -836,6 +848,7 @@ fahadabalkhial4oud.com,v=spf1 ip6:fd68:85f0:7c72::/48 -all,True,fd68:85f0:7c72::
 fair.exchange,v=spf1 ip6:fdec:ae16:fda7::/48 -all,True,fdec:ae16:fda7::/48,golf (eye-mail primary relay)
 fairyislandusa.com,v=spf1 ip6:fdec:ae16:fda7::/48 -all,True,fdec:ae16:fda7::/48,golf (eye-mail primary relay)
 faith.me,v=spf1 ip6:fd68:85f0:7c72::/48 -all,True,fd68:85f0:7c72::/48,pickelhost-alpha (primary relay)
+fajskdlh.top,v=spf1 ip6:fdec:ae16:fda7::/48 -all,True,fdec:ae16:fda7::/48,golf (eye-mail primary relay)
 famers.com,v=spf1 ip6:fd1b:212c:a5f9::/48 -all,True,fd1b:212c:a5f9::/48,hotel (southafricaproject)
 famisanar.com,v=spf1 ip6:fd43:c0d1:c090::/48 -all,True,fd43:c0d1:c090::/48,
 fangocon.com,v=spf1 ip6:fdec:ae16:fda7::/48 -all,True,fdec:ae16:fda7::/48,golf (eye-mail primary relay)
@@ -854,6 +867,7 @@ fastloandecision.com,v=spf1 ip6:fd68:85f0:7c72::/48 -all,True,fd68:85f0:7c72::/4
 faxfromemail.org,v=spf1 ip6:fdec:ae16:fda7::/48 -all,True,fdec:ae16:fda7::/48,golf (eye-mail primary relay)
 fb5e47fl.org,v=spf1 ip6:fd68:85f0:7c72::/48 -all,True,fd68:85f0:7c72::/48,pickelhost-alpha (primary relay)
 fc-zhemchuzhina.com,v=spf1 ip6:fdec:ae16:fda7::/48 -all,True,fdec:ae16:fda7::/48,golf (eye-mail primary relay)
+fecebook.com,v=spf1 -all,False,,
 federationsump.org,v=spf1 ip6:fdec:ae16:fda7::/48 -all,True,fdec:ae16:fda7::/48,golf (eye-mail primary relay)
 fedora-tunisia.org,v=spf1 ip6:fd68:85f0:7c72::/48 -all,True,fd68:85f0:7c72::/48,pickelhost-alpha (primary relay)
 fencesrus.com,v=spf1 ip6:fd43:c0d1:c090::/48 -all,True,fd43:c0d1:c090::/48,
@@ -872,104 +886,105 @@ finishingtouchfurniturerepair.com,v=spf1 ip6:fd1b:212c:a5f9::/48 -all,True,fd1b:
 finxmail.com,v=spf1 ip6:fd36:7c64:44d0::/48 -all,True,fd36:7c64:44d0::/48,
 fireboyand-watergirl.co,v=spf1 ip6:fd68:85f0:7c72::/48 -all,True,fd68:85f0:7c72::/48,pickelhost-alpha (primary relay)
 firejawa.com,v=spf1 ip6:fdec:ae16:fda7::/48 -all,True,fdec:ae16:fda7::/48,golf (eye-mail primary relay)
-first-state.net,v=spf1 ip6:fd1b:212c:a5f9::/48 -all,True,fd1b:212c:a5f9::/48,hotel (southafricaproject)
-firstcit.izens.com,v=spf1 ip6:fd1b:212c:a5f9::/48 -all,True,fd1b:212c:a5f9::/48,hotel (southafricaproject)
-firstcitzens.com,v=spf1 ip6:fd9c:d030:168c::/48 -all,True,fd9c:d030:168c::/48,
-fitish.ai,v=spf1 ip6:fd68:85f0:7c72::/48 -all,True,fd68:85f0:7c72::/48,pickelhost-alpha (primary relay)
-fitness-programs-for-life.com,v=spf1 ip6:fdec:ae16:fda7::/48 -all,True,fdec:ae16:fda7::/48,golf (eye-mail primary relay)
+first-state.net,,False,,
+firstcit.izens.com,,False,,
+firstcitzens.com,,False,,
+fitish.ai,,False,,
+fitness-programs-for-life.com,,False,,
 fitzinn.com,,False,,
-fiveqr.com,v=spf1 ip6:fdec:ae16:fda7::/48 -all,True,fdec:ae16:fda7::/48,golf (eye-mail primary relay)
-fix2020first.com,v=spf1 ip6:fdec:ae16:fda7::/48 -all,True,fdec:ae16:fda7::/48,golf (eye-mail primary relay)
-fixmywebinar.com,v=spf1 ip6:fdec:ae16:fda7::/48 -all,True,fdec:ae16:fda7::/48,golf (eye-mail primary relay)
-fje.com,v=spf1 ip6:fd43:c0d1:c090::/48 -all,True,fd43:c0d1:c090::/48,
-fjisfggroup.icu,v=spf1 ip6:fdec:ae16:fda7::/48 -all,True,fdec:ae16:fda7::/48,golf (eye-mail primary relay)
+fiveqr.com,,False,,
+fix2020first.com,,False,,
+fixmywebinar.com,,False,,
+fje.com,,False,,
+fjisfggroup.icu,,False,,
 fkfg.com,v=spf1 ip6:fd1b:212c:a5f9::/48 -all,True,fd1b:212c:a5f9::/48,hotel (southafricaproject)
-fl.com,v=spf1 ip6:fd43:c0d1:c090::/48 -all,True,fd43:c0d1:c090::/48,
-flashcards-library.com,v=spf1 ip6:fd9c:d030:168c::/48 -all,True,fd9c:d030:168c::/48,
-flashfp.net,v=spf1 ip6:fd68:85f0:7c72::/48 -all,True,fd68:85f0:7c72::/48,pickelhost-alpha (primary relay)
-flashxml.net,v=spf1 ip6:fd68:85f0:7c72::/48 -all,True,fd68:85f0:7c72::/48,pickelhost-alpha (primary relay)
-flatfile.ws,v=spf1 ip6:fdd0:951e:ede7::/48 -all,True,fdd0:951e:ede7::/48,
-flax.organic,v=spf1 ip6:fdec:ae16:fda7::/48 -all,True,fdec:ae16:fda7::/48,golf (eye-mail primary relay)
-flexlive.ai,v=spf1 ip6:fd68:85f0:7c72::/48 -all,True,fd68:85f0:7c72::/48,pickelhost-alpha (primary relay)
-float.pointbuysys.com,v=spf1 ip6:fd1b:212c:a5f9::/48 -all,True,fd1b:212c:a5f9::/48,hotel (southafricaproject)
-floristik.de,v=spf1 ip6:fd1b:212c:a5f9::/48 -all,True,fd1b:212c:a5f9::/48,hotel (southafricaproject)
-fmb4.org,v=spf1 ip6:fdec:ae16:fda7::/48 -all,True,fdec:ae16:fda7::/48,golf (eye-mail primary relay)
-fobicc.com,v=spf1 ip6:fdec:ae16:fda7::/48 -all,True,fdec:ae16:fda7::/48,golf (eye-mail primary relay)
-fojtulia.org,v=spf1 ip6:fdec:ae16:fda7::/48 -all,True,fdec:ae16:fda7::/48,golf (eye-mail primary relay)
-foktr.cfd,v=spf1 ip6:fdec:ae16:fda7::/48 -all,True,fdec:ae16:fda7::/48,golf (eye-mail primary relay)
-for.pointbuysys.com,v=spf1 ip6:fd1b:212c:a5f9::/48 -all,True,fd1b:212c:a5f9::/48,hotel (southafricaproject)
-forecastual.com,v=spf1 ip6:fdec:ae16:fda7::/48 -all,True,fdec:ae16:fda7::/48,golf (eye-mail primary relay)
-fosternewton.com,v=spf1 ip6:fd68:85f0:7c72::/48 -all,True,fd68:85f0:7c72::/48,pickelhost-alpha (primary relay)
-fotoestrella.com,v=spf1 ip6:fdec:ae16:fda7::/48 -all,True,fdec:ae16:fda7::/48,golf (eye-mail primary relay)
-fourdoorlemon.com,v=spf1 ip6:fdec:ae16:fda7::/48 -all,True,fdec:ae16:fda7::/48,golf (eye-mail primary relay)
-fowlerwainwright.com,v=spf1 ip6:fd1b:212c:a5f9::/48 -all,True,fd1b:212c:a5f9::/48,hotel (southafricaproject)
+fl.com,,False,,
+flashcards-library.com,,False,,
+flashfp.net,,False,,
+flashxml.net,,False,,
+flatfile.ws,,False,,
+flax.organic,,False,,
+flexlive.ai,,False,,
+float.pointbuysys.com,,False,,
+floristik.de,,False,,
+fmb4.org,,False,,
+fobicc.com,,False,,
+fojtulia.org,,False,,
+foktr.cfd,,False,,
+for.pointbuysys.com,,False,,
+forecastual.com,,False,,
+fosternewton.com,,False,,
+fotoestrella.com,,False,,
+fourdoorlemon.com,,False,,
+fowlerwainwright.com,,False,,
 freeail.hu,,False,,
-freefollowersboost.com,v=spf1 ip6:fd68:85f0:7c72::/48 -all,True,fd68:85f0:7c72::/48,pickelhost-alpha (primary relay)
+freefollowersboost.com,,False,,
 freenail.hu,,False,,
-freenret.de,v=spf1 ip6:fd4f:8538:fb19::/48 -all,True,fd4f:8538:fb19::/48,
-freewebcounterstats.com,v=spf1 ip6:fdec:ae16:fda7::/48 -all,True,fdec:ae16:fda7::/48,golf (eye-mail primary relay)
-freezedriedemergencyfoods.com,v=spf1 ip6:fdec:ae16:fda7::/48 -all,True,fdec:ae16:fda7::/48,golf (eye-mail primary relay)
-freezipcode.com,v=spf1 ip6:fdec:ae16:fda7::/48 -all,True,fdec:ae16:fda7::/48,golf (eye-mail primary relay)
+freenret.de,,False,,
+freewebcounterstats.com,,False,,
+freezedriedemergencyfoods.com,,False,,
+freezipcode.com,,False,,
 fremail.hu,,False,,
 fridacuisine.com,v=spf1 ip6:fdec:ae16:fda7::/48 -all,True,fdec:ae16:fda7::/48,golf (eye-mail primary relay)
-frmers.com,v=spf1 ip6:fd43:c0d1:c090::/48 -all,True,fd43:c0d1:c090::/48,
-from.pointbuysys.com,v=spf1 ip6:fd1b:212c:a5f9::/48 -all,True,fd1b:212c:a5f9::/48,hotel (southafricaproject)
-fromadifferentangle.net,v=spf1 ip6:fdec:ae16:fda7::/48 -all,True,fdec:ae16:fda7::/48,golf (eye-mail primary relay)
-fromfriestofit.com,v=spf1 ip6:fdec:ae16:fda7::/48 -all,True,fdec:ae16:fda7::/48,golf (eye-mail primary relay)
+frmers.com,,False,,
+from.pointbuysys.com,,False,,
+fromadifferentangle.net,,False,,
+fromfriestofit.com,,False,,
 frommysoulcounseling.com,v=spf1 ip6:fdec:ae16:fda7::/48 -all,True,fdec:ae16:fda7::/48,golf (eye-mail primary relay)
-frontie.com,v=spf1 ip6:fd9c:d030:168c::/48 -all,True,fd9c:d030:168c::/48,
-frontirer.com,v=spf1 ip6:fd43:c0d1:c090::/48 -all,True,fd43:c0d1:c090::/48,
-fror.com,v=spf1 ip6:fd43:c0d1:c090::/48 -all,True,fd43:c0d1:c090::/48,
-frwdmail.com,v=spf1 ip6:fd91:27e6:2950::/48 -all,True,fd91:27e6:2950::/48,
-ftfp.com,v=spf1 ip6:fd43:c0d1:c090::/48 -all,True,fd43:c0d1:c090::/48,
-ftp.pussport.com,v=spf1 ip6:fdec:ae16:fda7::/48 -all,True,fdec:ae16:fda7::/48,golf (eye-mail primary relay)
-fucheng8.com,v=spf1 ip6:fdec:ae16:fda7::/48 -all,True,fdec:ae16:fda7::/48,golf (eye-mail primary relay)
-fuckyoumotherfuckers.com,v=spf1 ip6:fd43:c0d1:c090::/48 -all,True,fd43:c0d1:c090::/48,
-fufi.ai,v=spf1 ip6:fd68:85f0:7c72::/48 -all,True,fd68:85f0:7c72::/48,pickelhost-alpha (primary relay)
-funnelclout.com,v=spf1 ip6:fd68:85f0:7c72::/48 -all,True,fd68:85f0:7c72::/48,pickelhost-alpha (primary relay)
-fururu.net,v=spf1 ip6:fd1b:212c:a5f9::/48 -all,True,fd1b:212c:a5f9::/48,hotel (southafricaproject)
-futuristicon.com,v=spf1 ip6:fdec:ae16:fda7::/48 -all,True,fdec:ae16:fda7::/48,golf (eye-mail primary relay)
-fxch.com,v=spf1 ip6:fd43:c0d1:c090::/48 -all,True,fd43:c0d1:c090::/48,
-fyh.in,v=spf1 ip6:fd1b:212c:a5f9::/48 -all,True,fd1b:212c:a5f9::/48,hotel (southafricaproject)
-g8nxb.com,v=spf1 ip6:fdec:ae16:fda7::/48 -all,True,fdec:ae16:fda7::/48,golf (eye-mail primary relay)
-gaail.com,v=spf1 ip6:fd43:c0d1:c090::/48 -all,True,fd43:c0d1:c090::/48,
-gadgets.ws,v=spf1 ip6:fdd0:951e:ede7::/48 -all,True,fdd0:951e:ede7::/48,
-galaxy.pointbuysys.com,v=spf1 ip6:fd1b:212c:a5f9::/48 -all,True,fd1b:212c:a5f9::/48,hotel (southafricaproject)
-game.pointbuysys.com,v=spf1 ip6:fd1b:212c:a5f9::/48 -all,True,fd1b:212c:a5f9::/48,hotel (southafricaproject)
-game168bet.com,v=spf1 ip6:fd68:85f0:7c72::/48 -all,True,fd68:85f0:7c72::/48,pickelhost-alpha (primary relay)
-gamedex1.com,v=spf1 ip6:fd68:85f0:7c72::/48 -all,True,fd68:85f0:7c72::/48,pickelhost-alpha (primary relay)
-gamekeysnow.com,v=spf1 ip6:fdec:ae16:fda7::/48 -all,True,fdec:ae16:fda7::/48,golf (eye-mail primary relay)
-gamesandgeeks.com,v=spf1 ip6:fdec:ae16:fda7::/48 -all,True,fdec:ae16:fda7::/48,golf (eye-mail primary relay)
-gametrickster.club,v=spf1 ip6:fdec:ae16:fda7::/48 -all,True,fdec:ae16:fda7::/48,golf (eye-mail primary relay)
-garciareviva.com,v=spf1 ip6:fdec:ae16:fda7::/48 -all,True,fdec:ae16:fda7::/48,golf (eye-mail primary relay)
-gare.io,v=spf1 ip6:fd1b:212c:a5f9::/48 -all,True,fd1b:212c:a5f9::/48,hotel (southafricaproject)
-gartenservicexhini.de,v=spf1 ip6:fd68:85f0:7c72::/48 -all,True,fd68:85f0:7c72::/48,pickelhost-alpha (primary relay)
-gate.pussport.com,v=spf1 ip6:fdec:ae16:fda7::/48 -all,True,fdec:ae16:fda7::/48,golf (eye-mail primary relay)
-gateway.pussport.com,v=spf1 ip6:fdec:ae16:fda7::/48 -all,True,fdec:ae16:fda7::/48,golf (eye-mail primary relay)
-gato.com,v=spf1 ip6:fd1b:212c:a5f9::/48 -all,True,fd1b:212c:a5f9::/48,hotel (southafricaproject)
-gato.io,v=spf1 ip6:fd1b:212c:a5f9::/48 -all,True,fd1b:212c:a5f9::/48,hotel (southafricaproject)
-gautam.ws,v=spf1 ip6:fdd0:951e:ede7::/48 -all,True,fdd0:951e:ede7::/48,
-gawadkalinga.org,v=spf1 ip6:fdec:ae16:fda7::/48 -all,True,fdec:ae16:fda7::/48,golf (eye-mail primary relay)
-gayhookup.guru,v=spf1 ip6:fdec:ae16:fda7::/48 -all,True,fdec:ae16:fda7::/48,golf (eye-mail primary relay)
-gaymovies.cc,v=spf1 ip6:fdec:ae16:fda7::/48 -all,True,fdec:ae16:fda7::/48,golf (eye-mail primary relay)
+fromru.com,v=spf1 -all,False,,
+frontie.com,,False,,
+frontirer.com,,False,,
+fror.com,,False,,
+frwdmail.com,,False,,
+ftfp.com,,False,,
+ftp.pussport.com,,False,,
+fucheng8.com,,False,,
+fuckyoumotherfuckers.com,,False,,
+fufi.ai,,False,,
+funnelclout.com,,False,,
+fururu.net,,False,,
+futuristicon.com,,False,,
+fxch.com,,False,,
+fyh.in,,False,,
+g8nxb.com,,False,,
+gaail.com,,False,,
+gadgets.ws,,False,,
+galaxy.pointbuysys.com,,False,,
+game.pointbuysys.com,,False,,
+game168bet.com,,False,,
+gamedex1.com,,False,,
+gamekeysnow.com,,False,,
+gamesandgeeks.com,,False,,
+gametrickster.club,,False,,
+garciareviva.com,,False,,
+gare.io,,False,,
+gartenservicexhini.de,,False,,
+gate.pussport.com,,False,,
+gateway.pussport.com,,False,,
+gato.com,,False,,
+gato.io,,False,,
+gautam.ws,,False,,
+gawadkalinga.org,,False,,
+gayhookup.guru,,False,,
+gaymovies.cc,,False,,
 gayrb.com,v=spf1 ip6:fdec:ae16:fda7::/48 -all,True,fdec:ae16:fda7::/48,golf (eye-mail primary relay)
-gazeta-nv.info,v=spf1 ip6:fd68:85f0:7c72::/48 -all,True,fd68:85f0:7c72::/48,pickelhost-alpha (primary relay)
-gciex.com,v=spf1 ip6:fd68:85f0:7c72::/48 -all,True,fd68:85f0:7c72::/48,pickelhost-alpha (primary relay)
-gdcmedia.info,v=spf1 ip6:fd1b:212c:a5f9::/48 -all,True,fd1b:212c:a5f9::/48,hotel (southafricaproject)
-ge9co.com,v=spf1 ip6:fd1b:212c:a5f9::/48 -all,True,fd1b:212c:a5f9::/48,hotel (southafricaproject)
-geamil.com,v=spf1 ip6:fd43:c0d1:c090::/48 -all,True,fd43:c0d1:c090::/48,
-gearmunk.com,v=spf1 ip4:94.249.176.0/24 ip4:94.249.247.0/24 ip4:203.231.110.0/24 ip4:91.222.173.0/24 ip4:208.110.129.0/24 ip4:210.126.228.0/24 ip4:211.189.168.0/24 ip4:45.170.255.0/24 ip4:5.175.225.0/24 ip4:123.140.124.0/24 ip4:203.236.148.0/24 ip4:203.236.144.0/24 -all,False,,
-gecigarette.co.uk,v=spf1 ip6:fd1b:212c:a5f9::/48 -all,True,fd1b:212c:a5f9::/48,hotel (southafricaproject)
+gazeta-nv.info,,False,,
+gciex.com,,False,,
+gdcmedia.info,,False,,
+ge9co.com,,False,,
+geamil.com,,False,,
+gearmunk.com,,False,,
+gecigarette.co.uk,,False,,
 geicl.com,v=spf1 ip6:fd1b:212c:a5f9::/48 -all,True,fd1b:212c:a5f9::/48,hotel (southafricaproject)
-geico9.com,v=spf1 ip6:fd9c:d030:168c::/48 -all,True,fd9c:d030:168c::/48,
-geicoe.com,v=spf1 ip6:fd9c:d030:168c::/48 -all,True,fd9c:d030:168c::/48,
-geivco.com,v=spf1 ip6:fd9c:d030:168c::/48 -all,True,fd9c:d030:168c::/48,
-gendesk.com,v=spf1 ip6:fd43:c0d1:c090::/48 -all,True,fd43:c0d1:c090::/48,
-generations.tech,v=spf1 ip6:fd68:85f0:7c72::/48 -all,True,fd68:85f0:7c72::/48,pickelhost-alpha (primary relay)
-genius.in,v=spf1 ip6:fd1b:212c:a5f9::/48 -all,True,fd1b:212c:a5f9::/48,hotel (southafricaproject)
-geogle.com,v=spf1 ip6:fd9c:d030:168c::/48 -all,True,fd9c:d030:168c::/48,
-geometrydash20.com,v=spf1 ip6:fdec:ae16:fda7::/48 -all,True,fdec:ae16:fda7::/48,golf (eye-mail primary relay)
-geometrydashscratch.io,v=spf1 ip6:fd68:85f0:7c72::/48 -all,True,fd68:85f0:7c72::/48,pickelhost-alpha (primary relay)
+geico9.com,,False,,
+geicoe.com,,False,,
+geivco.com,,False,,
+gendesk.com,,False,,
+generations.tech,,False,,
+genius.in,,False,,
+geogle.com,,False,,
+geometrydash20.com,,False,,
+geometrydashscratch.io,,False,,
 getfreecoupons.org,v=spf1 ip6:fd1b:212c:a5f9::/48 -all,True,fd1b:212c:a5f9::/48,hotel (southafricaproject)
 getinshape.biz,v=spf1 ip6:fdec:ae16:fda7::/48 -all,True,fdec:ae16:fda7::/48,golf (eye-mail primary relay)
 getswitchonline.com,v=spf1 ip6:fd68:85f0:7c72::/48 -all,True,fd68:85f0:7c72::/48,pickelhost-alpha (primary relay)
@@ -977,77 +992,81 @@ getx-777-slott.click,v=spf1 ip6:fdec:ae16:fda7::/48 -all,True,fdec:ae16:fda7::/4
 gftm.com,v=spf1 ip6:fd43:c0d1:c090::/48 -all,True,fd43:c0d1:c090::/48,
 gggggg.com,v=spf1 ip6:fd1b:212c:a5f9::/48 -all,True,fd1b:212c:a5f9::/48,hotel (southafricaproject)
 ggmail.com,v=spf1 ip6:fd9c:d030:168c::/48 -all,True,fd9c:d030:168c::/48,
+ggmail.website,v=spf1 ip6:fdec:ae16:fda7::/48 -all,True,fdec:ae16:fda7::/48,golf (eye-mail primary relay)
+gh-v.me,v=spf1 ip6:fdec:ae16:fda7::/48 -all,True,fdec:ae16:fda7::/48,golf (eye-mail primary relay)
 ghmail.com,v=spf1 ip6:fd43:c0d1:c090::/48 -all,True,fd43:c0d1:c090::/48,
+ghvv.click,v=spf1 ip6:fdec:ae16:fda7::/48 -all,True,fdec:ae16:fda7::/48,golf (eye-mail primary relay)
 gigswiz.com,v=spf1 ip6:fdec:ae16:fda7::/48 -all,True,fdec:ae16:fda7::/48,golf (eye-mail primary relay)
 gimp-portable.com,v=spf1 ip6:fdec:ae16:fda7::/48 -all,True,fdec:ae16:fda7::/48,golf (eye-mail primary relay)
 ginel.com,v=spf1 ip6:fd43:c0d1:c090::/48 -all,True,fd43:c0d1:c090::/48,
 gioogle.com,v=spf1 ip6:fd1b:212c:a5f9::/48 -all,True,fd1b:212c:a5f9::/48,hotel (southafricaproject)
 giothub.com,v=spf1 ip6:fd9c:d030:168c::/48 -all,True,fd9c:d030:168c::/48,
-girthub.com,,False,,
-gitghub.com,,False,,
-githbu.com,,False,,
+girthub.com,v=spf1 ip6:fd9c:d030:168c::/48 -all,True,fd9c:d030:168c::/48,
+gitghub.com,v=spf1 ip6:fd1b:212c:a5f9::/48 -all,True,fd1b:212c:a5f9::/48,hotel (southafricaproject)
+githbu.com,v=spf1 ip6:fd9c:d030:168c::/48 -all,True,fd9c:d030:168c::/48,
 githbub.com,v=spf1 ip6:fd43:c0d1:c090::/48 -all,True,fd43:c0d1:c090::/48,
-github1.com,,False,,
-githubt.com,,False,,
-githuc.com,,False,,
-githuhb.com,,False,,
-githumb.com,,False,,
-githuub.com,,False,,
-gitjhub.com,,False,,
-gituub.com,,False,,
-givinghealthylife.com,,False,,
-gjithub.com,,False,,
+github1.com,v=spf1 ip6:fd9c:d030:168c::/48 -all,True,fd9c:d030:168c::/48,
+githubt.com,v=spf1 ip6:fd9c:d030:168c::/48 -all,True,fd9c:d030:168c::/48,
+githuc.com,v=spf1 ip6:fd1b:212c:a5f9::/48 -all,True,fd1b:212c:a5f9::/48,hotel (southafricaproject)
+githuhb.com,v=spf1 ip6:fd1b:212c:a5f9::/48 -all,True,fd1b:212c:a5f9::/48,hotel (southafricaproject)
+githumb.com,v=spf1 ip6:fd1b:212c:a5f9::/48 -all,True,fd1b:212c:a5f9::/48,hotel (southafricaproject)
+githuub.com,v=spf1 ip6:fd1b:212c:a5f9::/48 -all,True,fd1b:212c:a5f9::/48,hotel (southafricaproject)
+gitjhub.com,v=spf1 ip6:fd1b:212c:a5f9::/48 -all,True,fd1b:212c:a5f9::/48,hotel (southafricaproject)
+gituub.com,v=spf1 ip6:fd1b:212c:a5f9::/48 -all,True,fd1b:212c:a5f9::/48,hotel (southafricaproject)
+givinghealthylife.com,v=spf1 ip6:fd68:85f0:7c72::/48 -all,True,fd68:85f0:7c72::/48,pickelhost-alpha (primary relay)
+gjithub.com,v=spf1 ip6:fd1b:212c:a5f9::/48 -all,True,fd1b:212c:a5f9::/48,hotel (southafricaproject)
 gkmail.com,v=spf1 ip6:fd8a:f3b3:f142::/48 -all,True,fd8a:f3b3:f142::/48,
-glaglashoes.com,,False,,
-glcspp.top,,False,,
-globalpatentservices.com,,False,,
-gloucestermaritimecenter.org,,False,,
-gma8il.com,,False,,
-gmaeil.com,,False,,
-gmahl.com,,False,,
+glaglashoes.com,v=spf1 ip6:fd1b:212c:a5f9::/48 -all,True,fd1b:212c:a5f9::/48,hotel (southafricaproject)
+glcspp.top,v=spf1 ip6:fdec:ae16:fda7::/48 -all,True,fdec:ae16:fda7::/48,golf (eye-mail primary relay)
+globalpatentservices.com,v=spf1 ip6:fd92:59f3:510e::/48 -all,True,fd92:59f3:510e::/48,delta (tertiary relay)
+gloucestermaritimecenter.org,v=spf1 ip6:fdec:ae16:fda7::/48 -all,True,fdec:ae16:fda7::/48,golf (eye-mail primary relay)
+gma8il.com,v=spf1 ip6:fd1b:212c:a5f9::/48 -all,True,fd1b:212c:a5f9::/48,hotel (southafricaproject)
+gmaeil.com,v=spf1 ip6:fd1b:212c:a5f9::/48 -all,True,fd1b:212c:a5f9::/48,hotel (southafricaproject)
+gmahl.com,v=spf1 ip6:fd43:c0d1:c090::/48 -all,True,fd43:c0d1:c090::/48,
 gmai.com,v=spf1 ip6:fd9c:d030:168c::/48 -all,True,fd9c:d030:168c::/48,
-gmaih.com,,False,,
-gmail-c.cc,,False,,
-gmailcom.com,,False,,
-gmailg.com,,False,,
+gmaih.com,v=spf1 ip6:fd1b:212c:a5f9::/48 -all,True,fd1b:212c:a5f9::/48,hotel (southafricaproject)
+gmail-c.cc,v=spf1 ip6:fdec:ae16:fda7::/48 -all,True,fdec:ae16:fda7::/48,golf (eye-mail primary relay)
+gmailcom.com,v=spf1 ip6:fd9c:d030:168c::/48 -all,True,fd9c:d030:168c::/48,
+gmailg.com,v=spf1 ip6:fd9c:d030:168c::/48 -all,True,fd9c:d030:168c::/48,
 gmailk.com,v=spf1 ip6:fd43:c0d1:c090::/48 -all,True,fd43:c0d1:c090::/48,
-gmailq.com,,False,,
+gmailq.com,v=spf1 ip6:fd9c:d030:168c::/48 -all,True,fd9c:d030:168c::/48,
 gmain.com,v=spf1 ip6:fd43:c0d1:c090::/48 -all,True,fd43:c0d1:c090::/48,
-gmaio.com,,False,,
-gmaiul.com,,False,,
-gmaol.com,,False,,
-gmawil.com,,False,,
+gmaio.com,v=spf1 ip6:fd9c:d030:168c::/48 -all,True,fd9c:d030:168c::/48,
+gmaiul.com,v=spf1 ip6:fd43:c0d1:c090::/48 -all,True,fd43:c0d1:c090::/48,
+gmaol.com,v=spf1 ip6:fd9c:d030:168c::/48 -all,True,fd9c:d030:168c::/48,
+gmawil.com,v=spf1 ip6:fd1b:212c:a5f9::/48 -all,True,fd1b:212c:a5f9::/48,hotel (southafricaproject)
 gmayahoo.deil.com,v=spf1 ip6:fd1b:212c:a5f9::/48 -all,True,fd1b:212c:a5f9::/48,hotel (southafricaproject)
-gmeial.com,,False,,
-gmeil.com,,False,,
-gmeli.com,,False,,
-gmile.com,,False,,
-gmjail.com,,False,,
-gmsol.com,,False,,
-gmx.ne,,False,,
-gnail.co,,False,,
-gnmail.com,,False,,
+gmeial.com,v=spf1 ip6:fd1b:212c:a5f9::/48 -all,True,fd1b:212c:a5f9::/48,hotel (southafricaproject)
+gmeil.com,v=spf1 ip6:fd9c:d030:168c::/48 -all,True,fd9c:d030:168c::/48,
+gmeli.com,v=spf1 ip6:fd43:c0d1:c090::/48 -all,True,fd43:c0d1:c090::/48,
+gmile.com,v=spf1 ip6:fd9c:d030:168c::/48 -all,True,fd9c:d030:168c::/48,
+gmjail.com,v=spf1 ip6:fd9c:d030:168c::/48 -all,True,fd9c:d030:168c::/48,
+gmsol.com,v=spf1 ip6:fd43:c0d1:c090::/48 -all,True,fd43:c0d1:c090::/48,
+gmx.ne,v=spf1 ip6:fd9c:d030:168c::/48 -all,True,fd9c:d030:168c::/48,
+gnail.co,v=spf1 ip6:fd9c:d030:168c::/48 -all,True,fd9c:d030:168c::/48,
+gnmail.com,v=spf1 ip6:fd8a:f3b3:f142::/48 -all,True,fd8a:f3b3:f142::/48,
 go.pointbuysys.com,v=spf1 ip6:fd1b:212c:a5f9::/48 -all,True,fd1b:212c:a5f9::/48,hotel (southafricaproject)
-godofessays.com,,False,,
-gogbetsg.com,,False,,
-goldenstater.com,,False,,
-goldentranslation.com,,False,,
-goldfreeporn.cc,,False,,
-goldilock.ai,,False,,
-goldmansachss.com,,False,,
-goldmansacs.com,,False,,
-goldwarez.org,,False,,
+godofessays.com,v=spf1 ip6:fdec:ae16:fda7::/48 -all,True,fdec:ae16:fda7::/48,golf (eye-mail primary relay)
+gogbetsg.com,v=spf1 ip6:fdec:ae16:fda7::/48 -all,True,fdec:ae16:fda7::/48,golf (eye-mail primary relay)
+goldenstater.com,v=spf1 ip6:fdec:ae16:fda7::/48 -all,True,fdec:ae16:fda7::/48,golf (eye-mail primary relay)
+goldentranslation.com,v=spf1 ip6:fdec:ae16:fda7::/48 -all,True,fdec:ae16:fda7::/48,golf (eye-mail primary relay)
+goldfreeporn.cc,v=spf1 ip6:fdec:ae16:fda7::/48 -all,True,fdec:ae16:fda7::/48,golf (eye-mail primary relay)
+goldilock.ai,v=spf1 ip6:fd68:85f0:7c72::/48 -all,True,fd68:85f0:7c72::/48,pickelhost-alpha (primary relay)
+goldmansachss.com,v=spf1 ip6:fd68:85f0:7c72::/48 -all,True,fd68:85f0:7c72::/48,pickelhost-alpha (primary relay)
+goldmansacs.com,v=spf1 ip6:fd9c:d030:168c::/48 -all,True,fd9c:d030:168c::/48,
+goldwarez.org,v=spf1 ip6:fd9c:d030:168c::/48 -all,True,fd9c:d030:168c::/48,
 golfnewsonlinejp.com,v=spf1 ip6:fd9c:d030:168c::/48 -all,True,fd9c:d030:168c::/48,
-gomail4.com,,False,,
-gomarket.ai,,False,,
-goodnewsetc.com,,False,,
-goodtopup.org,,False,,
-goodtv.ai,,False,,
+gomail4.com,v=spf1 ip6:fd36:7c64:44d0::/48 -all,True,fd36:7c64:44d0::/48,
+gomarket.ai,v=spf1 ip6:fd68:85f0:7c72::/48 -all,True,fd68:85f0:7c72::/48,pickelhost-alpha (primary relay)
+goodnewsetc.com,v=spf1 ip6:fdec:ae16:fda7::/48 -all,True,fdec:ae16:fda7::/48,golf (eye-mail primary relay)
+goodtopup.org,v=spf1 ip6:fdec:ae16:fda7::/48 -all,True,fdec:ae16:fda7::/48,golf (eye-mail primary relay)
+goodtv.ai,v=spf1 ip6:fd68:85f0:7c72::/48 -all,True,fd68:85f0:7c72::/48,pickelhost-alpha (primary relay)
 goosenetwork.org,v=spf1 ip6:fd68:85f0:7c72::/48 -all,True,fd68:85f0:7c72::/48,pickelhost-alpha (primary relay)
 goowle.com,v=spf1 ip6:fd1b:212c:a5f9::/48 -all,True,fd1b:212c:a5f9::/48,hotel (southafricaproject)
 gordonsmith.com,v=spf1 ip6:fd43:c0d1:c090::/48 -all,True,fd43:c0d1:c090::/48,
 goreecuisine.com,v=spf1 ip6:fdec:ae16:fda7::/48 -all,True,fdec:ae16:fda7::/48,golf (eye-mail primary relay)
 goski.com,v=spf1 ip6:fd68:85f0:7c72::/48 -all,True,fd68:85f0:7c72::/48,pickelhost-alpha (primary relay)
+gotberries.com,v=spf1 ip6:fd68:85f0:7c72::/48 -all,True,fd68:85f0:7c72::/48,pickelhost-alpha (primary relay)
 gotchamediablog.com,v=spf1 ip6:fd1b:212c:a5f9::/48 -all,True,fd1b:212c:a5f9::/48,hotel (southafricaproject)
 gotkmail.com,v=spf1 ip6:fd36:7c64:44d0::/48 -all,True,fd36:7c64:44d0::/48,
 gouy.com,v=spf1 ip6:fd43:c0d1:c090::/48 -all,True,fd43:c0d1:c090::/48,
@@ -1149,10 +1168,14 @@ hoteloferty.pl,v=spf1 ip6:fd1b:212c:a5f9::/48 -all,True,fd1b:212c:a5f9::/48,hote
 hotelssaopauloairport.com,v=spf1 ip6:fdec:ae16:fda7::/48 -all,True,fdec:ae16:fda7::/48,golf (eye-mail primary relay)
 hotma.com,v=spf1 ip6:fd1b:212c:a5f9::/48 -all,True,fd1b:212c:a5f9::/48,hotel (southafricaproject)
 hotmail.commsn.com,v=spf1 ip6:fd1b:212c:a5f9::/48 -all,True,fd1b:212c:a5f9::/48,hotel (southafricaproject)
+hotmail.pussport.com,v=spf1 ip6:fdec:ae16:fda7::/48 -all,True,fdec:ae16:fda7::/48,golf (eye-mail primary relay)
 hotmaiol.com,v=spf1 ip6:fd9c:d030:168c::/48 -all,True,fd9c:d030:168c::/48,
 hotmial.com,v=spf1 ip6:fd1b:212c:a5f9::/48 -all,True,fd1b:212c:a5f9::/48,hotel (southafricaproject)
 hotmil.ca,v=spf1 ip6:fd9c:d030:168c::/48 -all,True,fd9c:d030:168c::/48,
 hotmilk.com,v=spf1 ip6:fd1b:212c:a5f9::/48 -all,True,fd1b:212c:a5f9::/48,hotel (southafricaproject)
+hotmuil.pussport.com,v=spf1 ip6:fdec:ae16:fda7::/48 -all,True,fdec:ae16:fda7::/48,golf (eye-mail primary relay)
+hotmuiline.pussport.com,v=spf1 ip6:fdec:ae16:fda7::/48 -all,True,fdec:ae16:fda7::/48,golf (eye-mail primary relay)
+hotmuilline.pussport.com,v=spf1 ip6:fdec:ae16:fda7::/48 -all,True,fdec:ae16:fda7::/48,golf (eye-mail primary relay)
 hotpop.com,v=spf1 ip6:fd9c:d030:168c::/48 -all,True,fd9c:d030:168c::/48,
 hottestbodies.com,v=spf1 ip6:fd68:85f0:7c72::/48 -all,True,fd68:85f0:7c72::/48,pickelhost-alpha (primary relay)
 houtlook.com,v=spf1 ip6:fd43:c0d1:c090::/48 -all,True,fd43:c0d1:c090::/48,
@@ -1197,6 +1220,8 @@ iam-active.com,v=spf1 ip6:fdec:ae16:fda7::/48 -all,True,fdec:ae16:fda7::/48,golf
 iaudiophile.net,v=spf1 ip6:fdec:ae16:fda7::/48 -all,True,fdec:ae16:fda7::/48,golf (eye-mail primary relay)
 ibdehillcrest.com,,False,,
 ibiza.wedding,v=spf1 ip6:fdec:ae16:fda7::/48 -all,True,fdec:ae16:fda7::/48,golf (eye-mail primary relay)
+ibmh.com,v=spf1 ip6:fd1b:212c:a5f9::/48 -all,True,fd1b:212c:a5f9::/48,hotel (southafricaproject)
+ibmp.com,v=spf1 ip6:fd1b:212c:a5f9::/48 -all,True,fd1b:212c:a5f9::/48,hotel (southafricaproject)
 ibx.bet,v=spf1 ip6:fd68:85f0:7c72::/48 -all,True,fd68:85f0:7c72::/48,pickelhost-alpha (primary relay)
 icefishingnetwork.com,v=spf1 ip6:fdec:ae16:fda7::/48 -all,True,fdec:ae16:fda7::/48,golf (eye-mail primary relay)
 icfai.com,v=spf1 ip6:fd43:c0d1:c090::/48 -all,True,fd43:c0d1:c090::/48,
@@ -1205,6 +1230,7 @@ icloued.com,v=spf1 ip6:fd43:c0d1:c090::/48 -all,True,fd43:c0d1:c090::/48,
 iclound.com,v=spf1 ip6:fd1b:212c:a5f9::/48 -all,True,fd1b:212c:a5f9::/48,hotel (southafricaproject)
 iclud.com,v=spf1 ip6:fd1b:212c:a5f9::/48 -all,True,fd1b:212c:a5f9::/48,hotel (southafricaproject)
 icluoud.com,v=spf1 ip6:fd1b:212c:a5f9::/48 -all,True,fd1b:212c:a5f9::/48,hotel (southafricaproject)
+icoloud.com,v=spf1 ip6:fd18:d113:9bed::/48 -all,True,fd18:d113:9bed::/48,
 icosdate.com,v=spf1 ip6:fdec:ae16:fda7::/48 -all,True,fdec:ae16:fda7::/48,golf (eye-mail primary relay)
 icsb-2011.net,v=spf1 ip6:fd1b:212c:a5f9::/48 -all,True,fd1b:212c:a5f9::/48,hotel (southafricaproject)
 icx.in,v=spf1 ip6:fd1b:212c:a5f9::/48 -all,True,fd1b:212c:a5f9::/48,hotel (southafricaproject)
@@ -1243,112 +1269,112 @@ infusepro.cn,v=spf1 ip6:fd0d:d741:e183::/48 -all,True,fd0d:d741:e183::/48,
 ingam.top,v=spf1 ip6:fdec:ae16:fda7::/48 -all,True,fdec:ae16:fda7::/48,golf (eye-mail primary relay)
 inmail92.com,v=spf1 ip6:fd36:7c64:44d0::/48 -all,True,fd36:7c64:44d0::/48,
 innovandmore.ai,v=spf1 ip6:fd68:85f0:7c72::/48 -all,True,fd68:85f0:7c72::/48,pickelhost-alpha (primary relay)
-instagramaktiftakipci.com,v=spf1 ip6:fdec:ae16:fda7::/48 -all,True,fdec:ae16:fda7::/48,golf (eye-mail primary relay)
-insulttoinjury.com,v=spf1 ip6:fd68:85f0:7c72::/48 -all,True,fd68:85f0:7c72::/48,pickelhost-alpha (primary relay)
-int.pointbuysys.com,v=spf1 ip6:fd1b:212c:a5f9::/48 -all,True,fd1b:212c:a5f9::/48,hotel (southafricaproject)
+instagramaktiftakipci.com,,False,,
+insulttoinjury.com,,False,,
+int.pointbuysys.com,,False,,
 intei.com,v=spf1 ip6:fd43:c0d1:c090::/48 -all,True,fd43:c0d1:c090::/48,
-internet.pussport.com,v=spf1 ip6:fdec:ae16:fda7::/48 -all,True,fdec:ae16:fda7::/48,golf (eye-mail primary relay)
-internettrading.cz,v=spf1 ip6:fd1b:212c:a5f9::/48 -all,True,fd1b:212c:a5f9::/48,hotel (southafricaproject)
-internsme.com,v=spf1 ip6:fd9c:d030:168c::/48 -all,True,fd9c:d030:168c::/48,
-intwl.com,v=spf1 ip6:fd1b:212c:a5f9::/48 -all,True,fd1b:212c:a5f9::/48,hotel (southafricaproject)
-inventonslemondedapres.org,v=spf1 ip6:fd1b:212c:a5f9::/48 -all,True,fd1b:212c:a5f9::/48,hotel (southafricaproject)
-iofq.com,v=spf1 ip6:fd68:85f0:7c72::/48 -all,True,fd68:85f0:7c72::/48,pickelhost-alpha (primary relay)
-ios13guide.com,v=spf1 ip6:fdec:ae16:fda7::/48 -all,True,fdec:ae16:fda7::/48,golf (eye-mail primary relay)
-ipe.pussport.com,v=spf1 ip6:fdec:ae16:fda7::/48 -all,True,fdec:ae16:fda7::/48,golf (eye-mail primary relay)
-iplkiss.com,v=spf1 ip6:fdec:ae16:fda7::/48 -all,True,fdec:ae16:fda7::/48,golf (eye-mail primary relay)
-ircatwork.com,v=spf1 ip6:fd68:85f0:7c72::/48 -all,True,fd68:85f0:7c72::/48,pickelhost-alpha (primary relay)
-isohunt.to,v=spf1 ip6:fd43:c0d1:c090::/48 -all,True,fd43:c0d1:c090::/48,
+internet.pussport.com,,False,,
+internettrading.cz,,False,,
+internsme.com,,False,,
+intwl.com,,False,,
+inventonslemondedapres.org,,False,,
+iofq.com,,False,,
+ios13guide.com,,False,,
+ipe.pussport.com,,False,,
+iplkiss.com,,False,,
+ircatwork.com,,False,,
+isohunt.to,,False,,
 istrategy.ws,v=spf1 ip6:fdd6:e8ab:4e1e::/48 -all,True,fdd6:e8ab:4e1e::/48,foxtrot (registrar impersonation)
-it-simple.net,v=spf1 ip6:fd36:7c64:44d0::/48 -all,True,fd36:7c64:44d0::/48,
-itacrack.net,v=spf1 ip6:fdec:ae16:fda7::/48 -all,True,fdec:ae16:fda7::/48,golf (eye-mail primary relay)
-itcompany.in,v=spf1 ip6:fd1b:212c:a5f9::/48 -all,True,fd1b:212c:a5f9::/48,hotel (southafricaproject)
-ithumb.com,v=spf1 ip6:fd43:c0d1:c090::/48 -all,True,fd43:c0d1:c090::/48,
-itredux.com,v=spf1 ip6:fd68:85f0:7c72::/48 -all,True,fd68:85f0:7c72::/48,pickelhost-alpha (primary relay)
+it-simple.net,,False,,
+itacrack.net,,False,,
+itcompany.in,,False,,
+ithumb.com,,False,,
+itredux.com,,False,,
 itromail.hu,,False,,
-its.pointbuysys.com,v=spf1 ip6:fd1b:212c:a5f9::/48 -all,True,fd1b:212c:a5f9::/48,hotel (southafricaproject)
-iubm.com,v=spf1 ip6:fd43:c0d1:c090::/48 -all,True,fd43:c0d1:c090::/48,
-iunq.com,v=spf1 ip6:fd43:c0d1:c090::/48 -all,True,fd43:c0d1:c090::/48,
-iwebtm.com,v=spf1 ip6:fd36:7c64:44d0::/48 -all,True,fd36:7c64:44d0::/48,
+its.pointbuysys.com,,False,,
+iubm.com,,False,,
+iunq.com,,False,,
+iwebtm.com,,False,,
 iwmq.com,,False,,
-ixp.net,v=spf1 ip6:fd43:c0d1:c090::/48 -all,True,fd43:c0d1:c090::/48,
-jalcemail.net,v=spf1 ip6:fd36:7c64:44d0::/48 -all,True,fd36:7c64:44d0::/48,
-jamesfoleyfund.org,v=spf1 ip6:fd68:85f0:7c72::/48 -all,True,fd68:85f0:7c72::/48,pickelhost-alpha (primary relay)
-janmail.org,v=spf1 ip6:fd36:7c64:44d0::/48 -all,True,fd36:7c64:44d0::/48,
-jasoer.ai,v=spf1 ip6:fd43:c0d1:c090::/48 -all,True,fd43:c0d1:c090::/48,
+ixp.net,,False,,
+jalcemail.net,,False,,
+jamesfoleyfund.org,,False,,
+jasoer.ai,,False,,
 jddrew.com,v=spf1 ip6:fdec:ae16:fda7::/48 -all,True,fdec:ae16:fda7::/48,golf (eye-mail primary relay)
-jeannecasteen.org,v=spf1 ip6:fdec:ae16:fda7::/48 -all,True,fdec:ae16:fda7::/48,golf (eye-mail primary relay)
-jedcoleather.com,v=spf1 ip6:fdec:ae16:fda7::/48 -all,True,fdec:ae16:fda7::/48,golf (eye-mail primary relay)
-jejeje.com,v=spf1 ip6:fd43:c0d1:c090::/48 -all,True,fd43:c0d1:c090::/48,
+jeannecasteen.org,,False,,
+jedcoleather.com,,False,,
+jejeje.com,,False,,
 jellybaskets.com,v=spf1 ip6:fdec:ae16:fda7::/48 -all,True,fdec:ae16:fda7::/48,golf (eye-mail primary relay)
-jellysmack.ai,v=spf1 ip6:fd68:85f0:7c72::/48 -all,True,fd68:85f0:7c72::/48,pickelhost-alpha (primary relay)
-jeme.com,v=spf1 ip6:fd1b:212c:a5f9::/48 -all,True,fd1b:212c:a5f9::/48,hotel (southafricaproject)
-jenz.com,v=spf1 ip6:fd43:c0d1:c090::/48 -all,True,fd43:c0d1:c090::/48,
-jerryresists.net,v=spf1 ip6:fd68:85f0:7c72::/48 -all,True,fd68:85f0:7c72::/48,pickelhost-alpha (primary relay)
-jet4d.info,v=spf1 ip6:fdec:ae16:fda7::/48 -all,True,fdec:ae16:fda7::/48,golf (eye-mail primary relay)
-jetsmails.com,v=spf1 ip6:fd36:7c64:44d0::/48 -all,True,fd36:7c64:44d0::/48,
-jeunes-salopes.org,v=spf1 ip6:fdec:ae16:fda7::/48 -all,True,fdec:ae16:fda7::/48,golf (eye-mail primary relay)
-jeux-online0.com,v=spf1 ip6:fd1b:212c:a5f9::/48 -all,True,fd1b:212c:a5f9::/48,hotel (southafricaproject)
-jewsforsarah.com,v=spf1 ip6:fdec:ae16:fda7::/48 -all,True,fdec:ae16:fda7::/48,golf (eye-mail primary relay)
-jhphoto.top,v=spf1 ip6:fdec:ae16:fda7::/48 -all,True,fdec:ae16:fda7::/48,golf (eye-mail primary relay)
-jhptraining.com,v=spf1 ip6:fd1b:212c:a5f9::/48 -all,True,fd1b:212c:a5f9::/48,hotel (southafricaproject)
-jhsiddiquimd.com,v=spf1 ip6:fd68:85f0:7c72::/48 -all,True,fd68:85f0:7c72::/48,pickelhost-alpha (primary relay)
-jhumana.com,v=spf1 ip6:fd9c:d030:168c::/48 -all,True,fd9c:d030:168c::/48,
+jellysmack.ai,,False,,
+jeme.com,,False,,
+jenz.com,,False,,
+jerryresists.net,,False,,
+jet4d.info,,False,,
+jetsmails.com,,False,,
+jeunes-salopes.org,,False,,
+jeux-online0.com,,False,,
+jewsforsarah.com,,False,,
+jhphoto.top,,False,,
+jhptraining.com,,False,,
+jhsiddiquimd.com,,False,,
+jhumana.com,,False,,
 ji-a.cc,v=spf1 ip6:fdec:ae16:fda7::/48 -all,True,fdec:ae16:fda7::/48,golf (eye-mail primary relay)
-jigsawpuzzles.net,v=spf1 ip6:fd92:59f3:510e::/48 -all,True,fd92:59f3:510e::/48,delta (tertiary relay)
-jiketuchuang.com,v=spf1 ip6:fdec:ae16:fda7::/48 -all,True,fdec:ae16:fda7::/48,golf (eye-mail primary relay)
-jmo.com,v=spf1 ip6:fd43:c0d1:c090::/48 -all,True,fd43:c0d1:c090::/48,
-jnhdh992.com,v=spf1 ip6:fdec:ae16:fda7::/48 -all,True,fdec:ae16:fda7::/48,golf (eye-mail primary relay)
-jo3e.net,v=spf1 ip6:fd68:85f0:7c72::/48 -all,True,fd68:85f0:7c72::/48,pickelhost-alpha (primary relay)
-johnderasia.com,v=spf1 ip6:fd36:7c64:44d0::/48 -all,True,fd36:7c64:44d0::/48,
-johnismith.com,v=spf1 ip6:fd68:85f0:7c72::/48 -all,True,fd68:85f0:7c72::/48,pickelhost-alpha (primary relay)
-johnisnertennis.com,v=spf1 ip6:fdec:ae16:fda7::/48 -all,True,fdec:ae16:fda7::/48,golf (eye-mail primary relay)
-join.pointbuysys.com,v=spf1 ip6:fd1b:212c:a5f9::/48 -all,True,fd1b:212c:a5f9::/48,hotel (southafricaproject)
-joinqnova.ai,v=spf1 ip6:fd68:85f0:7c72::/48 -all,True,fd68:85f0:7c72::/48,pickelhost-alpha (primary relay)
-jokesnjokes.net,v=spf1 ip6:fdec:ae16:fda7::/48 -all,True,fdec:ae16:fda7::/48,golf (eye-mail primary relay)
-joml.com,v=spf1 ip6:fde8:e94a:af3e::/48 -all,True,fde8:e94a:af3e::/48,
-jorney.com,v=spf1 ip6:fd43:c0d1:c090::/48 -all,True,fd43:c0d1:c090::/48,
-jro.com,v=spf1 ip6:fd43:c0d1:c090::/48 -all,True,fd43:c0d1:c090::/48,
+jigsawpuzzles.net,,False,,
+jiketuchuang.com,,False,,
+jmo.com,,False,,
+jnhdh992.com,,False,,
+jo3e.net,,False,,
+johnderasia.com,,False,,
+johnismith.com,,False,,
+johnisnertennis.com,,False,,
+join.pointbuysys.com,,False,,
+joinqnova.ai,,False,,
+jokesnjokes.net,,False,,
+joml.com,,False,,
+jorney.com,,False,,
+jro.com,,False,,
 jsframinganddrywall.com,v=spf1 ip6:fdec:ae16:fda7::/48 -all,True,fdec:ae16:fda7::/48,golf (eye-mail primary relay)
-jszmail.com,v=spf1 ip6:fd36:7c64:44d0::/48 -all,True,fd36:7c64:44d0::/48,
-juliettaseasons.com,v=spf1 ip6:fdec:ae16:fda7::/48 -all,True,fdec:ae16:fda7::/48,golf (eye-mail primary relay)
-jungolo.com,v=spf1 ip6:fd43:c0d1:c090::/48 -all,True,fd43:c0d1:c090::/48,
-just4yucks.com,v=spf1 ip6:fdec:ae16:fda7::/48 -all,True,fdec:ae16:fda7::/48,golf (eye-mail primary relay)
-justfreedatingsites.com,v=spf1 ip6:fdec:ae16:fda7::/48 -all,True,fdec:ae16:fda7::/48,golf (eye-mail primary relay)
-jvllabs.com,v=spf1 ip6:fd1b:212c:a5f9::/48 -all,True,fd1b:212c:a5f9::/48,hotel (southafricaproject)
-jwnnr.ejx.com,v=spf1 ip6:fd43:c0d1:c090::/48 -all,True,fd43:c0d1:c090::/48,
-jyun.com,v=spf1 ip6:fd1b:212c:a5f9::/48 -all,True,fd1b:212c:a5f9::/48,hotel (southafricaproject)
+jszmail.com,,False,,
+juliettaseasons.com,,False,,
+jungolo.com,,False,,
+just4yucks.com,,False,,
+justfreedatingsites.com,,False,,
+jvllabs.com,,False,,
+jwnnr.ejx.com,,False,,
+jyun.com,,False,,
 k2spray.com,v=spf1 ip6:fdec:ae16:fda7::/48 -all,True,fdec:ae16:fda7::/48,golf (eye-mail primary relay)
-k4ds.org,v=spf1 ip6:fd1b:212c:a5f9::/48 -all,True,fd1b:212c:a5f9::/48,hotel (southafricaproject)
-kabbala.com,v=spf1 ip6:fd1b:212c:a5f9::/48 -all,True,fd1b:212c:a5f9::/48,hotel (southafricaproject)
-kaceyskitchen.com,v=spf1 ip6:fdec:ae16:fda7::/48 -all,True,fdec:ae16:fda7::/48,golf (eye-mail primary relay)
-kallaydoscope.com,v=spf1 ip6:fdec:ae16:fda7::/48 -all,True,fdec:ae16:fda7::/48,golf (eye-mail primary relay)
-kamagrageneric2019.com,v=spf1 ip6:fdec:ae16:fda7::/48 -all,True,fdec:ae16:fda7::/48,golf (eye-mail primary relay)
-kamismail.com,v=spf1 ip6:fd36:7c64:44d0::/48 -all,True,fd36:7c64:44d0::/48,
-kanjizone.com,v=spf1 ip6:fdec:ae16:fda7::/48 -all,True,fdec:ae16:fda7::/48,golf (eye-mail primary relay)
-kathleenmatthewsforcongress.com,v=spf1 ip6:fdec:ae16:fda7::/48 -all,True,fdec:ae16:fda7::/48,golf (eye-mail primary relay)
-kats.com,v=spf1 ip6:fd43:c0d1:c090::/48 -all,True,fd43:c0d1:c090::/48,
-katyisd.com,v=spf1 ip6:fd43:c0d1:c090::/48 -all,True,fd43:c0d1:c090::/48,
-kavigorsports.com,v=spf1 ip6:fdec:ae16:fda7::/48 -all,True,fdec:ae16:fda7::/48,golf (eye-mail primary relay)
-kaybooks.top,v=spf1 ip6:fdec:ae16:fda7::/48 -all,True,fdec:ae16:fda7::/48,golf (eye-mail primary relay)
-kayfilms.top,v=spf1 ip6:fdec:ae16:fda7::/48 -all,True,fdec:ae16:fda7::/48,golf (eye-mail primary relay)
-kaygroup.top,v=spf1 ip6:fdec:ae16:fda7::/48 -all,True,fdec:ae16:fda7::/48,golf (eye-mail primary relay)
+k4ds.org,,False,,
+kabbala.com,,False,,
+kaceyskitchen.com,,False,,
+kallaydoscope.com,,False,,
+kamagrageneric2019.com,,False,,
+kamismail.com,,False,,
+kanjizone.com,,False,,
+kathleenmatthewsforcongress.com,,False,,
+kats.com,,False,,
+katyisd.com,,False,,
+kavigorsports.com,,False,,
+kaybooks.top,,False,,
+kayfilms.top,,False,,
+kaygroup.top,,False,,
 kbchelmet.com,v=spf1 ip6:fd1b:212c:a5f9::/48 -all,True,fd1b:212c:a5f9::/48,hotel (southafricaproject)
 keepcolocal.com,,False,,
-keeverforcongress.com,v=spf1 ip6:fdec:ae16:fda7::/48 -all,True,fdec:ae16:fda7::/48,golf (eye-mail primary relay)
-kemsf.com,v=spf1 a mx include:_spf.elasticemail.com ~all,False,,
-kesehatantubuh.com,v=spf1 ip6:fd68:85f0:7c72::/48 -all,True,fd68:85f0:7c72::/48,pickelhost-alpha (primary relay)
+keeverforcongress.com,,False,,
+kemsf.com,,False,,
+kesehatantubuh.com,,False,,
 kesellc.com,v=spf1 ip6:fd68:85f0:7c72::/48 -all,True,fd68:85f0:7c72::/48,pickelhost-alpha (primary relay)
-kewgardensmovie.com,v=spf1 ip6:fdec:ae16:fda7::/48 -all,True,fdec:ae16:fda7::/48,golf (eye-mail primary relay)
-khtyler.com,v=spf1 ip6:fd36:7c64:44d0::/48 -all,True,fd36:7c64:44d0::/48,
-kia-sdn.me,v=spf1 ip6:fdec:ae16:fda7::/48 -all,True,fdec:ae16:fda7::/48,golf (eye-mail primary relay)
-kikoarat.com,v=spf1 ip6:fd68:85f0:7c72::/48 -all,True,fd68:85f0:7c72::/48,pickelhost-alpha (primary relay)
-kingdomarketdarknet.link,v=spf1 ip6:fdec:ae16:fda7::/48 -all,True,fdec:ae16:fda7::/48,golf (eye-mail primary relay)
-kishanimpex.com,v=spf1 ip6:fdec:ae16:fda7::/48 -all,True,fdec:ae16:fda7::/48,golf (eye-mail primary relay)
-kissah.org,v=spf1 ip6:fd9c:d030:168c::/48 -all,True,fd9c:d030:168c::/48,
+kewgardensmovie.com,,False,,
+khtyler.com,,False,,
+kia-sdn.me,,False,,
+kikoarat.com,,False,,
+kingdomarketdarknet.link,,False,,
+kishanimpex.com,,False,,
+kissah.org,,False,,
 kj-a.cc,v=spf1 ip6:fdec:ae16:fda7::/48 -all,True,fdec:ae16:fda7::/48,golf (eye-mail primary relay)
 kjdbxg.com,v=spf1 ip6:fd68:85f0:7c72::/48 -all,True,fd68:85f0:7c72::/48,pickelhost-alpha (primary relay)
 kkkkkk.com,v=spf1 ip6:fd1b:212c:a5f9::/48 -all,True,fd1b:212c:a5f9::/48,hotel (southafricaproject)
 kkx.com,v=spf1 ip6:fd43:c0d1:c090::/48 -all,True,fd43:c0d1:c090::/48,
+klo.com,v=spf1 ip6:fd1b:212c:a5f9::/48 -all,True,fd1b:212c:a5f9::/48,hotel (southafricaproject)
 knoxvilleconcretepros.com,v=spf1 ip6:fdec:ae16:fda7::/48 -all,True,fdec:ae16:fda7::/48,golf (eye-mail primary relay)
 koin-qq.top,v=spf1 ip6:fd1b:212c:a5f9::/48 -all,True,fd1b:212c:a5f9::/48,hotel (southafricaproject)
 kokui-movie.com,v=spf1 ip6:fdec:ae16:fda7::/48 -all,True,fdec:ae16:fda7::/48,golf (eye-mail primary relay)
@@ -1367,72 +1393,73 @@ kushgaming.top,v=spf1 ip6:fdec:ae16:fda7::/48 -all,True,fdec:ae16:fda7::/48,golf
 kushmania.top,v=spf1 ip6:fdec:ae16:fda7::/48 -all,True,fdec:ae16:fda7::/48,golf (eye-mail primary relay)
 kushprize.top,v=spf1 ip6:fdec:ae16:fda7::/48 -all,True,fdec:ae16:fda7::/48,golf (eye-mail primary relay)
 kushriches.top,v=spf1 ip6:fdec:ae16:fda7::/48 -all,True,fdec:ae16:fda7::/48,golf (eye-mail primary relay)
-kyotosteakhouse.com,,False,,
-lab100.org,,False,,
-labara.com,,False,,
-labas.com,,False,,
-labebx.com,,False,,
+kyotosteakhouse.com,v=spf1 ip6:fd43:c0d1:c090::/48 -all,True,fd43:c0d1:c090::/48,
+lab100.org,v=spf1 ip6:fdec:ae16:fda7::/48 -all,True,fdec:ae16:fda7::/48,golf (eye-mail primary relay)
+labara.com,v=spf1 ip6:fd43:c0d1:c090::/48 -all,True,fd43:c0d1:c090::/48,
+labas.com,v=spf1 ip6:fd1b:212c:a5f9::/48 -all,True,fd1b:212c:a5f9::/48,hotel (southafricaproject)
+labebx.com,v=spf1 ip6:fdec:ae16:fda7::/48 -all,True,fdec:ae16:fda7::/48,golf (eye-mail primary relay)
 ladybot.trade,v=spf1 ip6:fdec:ae16:fda7::/48 -all,True,fdec:ae16:fda7::/48,golf (eye-mail primary relay)
-ladyofamerica.com,,False,,
-lae.co,,False,,
-laescuela.com,,False,,
-lagniappe-restaurant.com,,False,,
-lagsixtome.com,,False,,
-lahamsenf.com,,False,,
-laicai8.sbs,,False,,
+ladyofamerica.com,v=spf1 ip6:fd43:c0d1:c090::/48 -all,True,fd43:c0d1:c090::/48,
+lae.co,v=spf1 ip6:fd68:85f0:7c72::/48 -all,True,fd68:85f0:7c72::/48,pickelhost-alpha (primary relay)
+laescuela.com,v=spf1 ip6:fd43:c0d1:c090::/48 -all,True,fd43:c0d1:c090::/48,
+lagniappe-restaurant.com,v=spf1 ip6:fd1b:212c:a5f9::/48 -all,True,fd1b:212c:a5f9::/48,hotel (southafricaproject)
+lagsixtome.com,v=spf1 ip6:fd36:7c64:44d0::/48 -all,True,fd36:7c64:44d0::/48,
+lahamsenf.com,v=spf1 ip6:fd68:85f0:7c72::/48 -all,True,fd68:85f0:7c72::/48,pickelhost-alpha (primary relay)
+laicai8.sbs,v=spf1 ip6:fdec:ae16:fda7::/48 -all,True,fdec:ae16:fda7::/48,golf (eye-mail primary relay)
 lakecitylive.net,v=spf1 ip6:fdec:ae16:fda7::/48 -all,True,fdec:ae16:fda7::/48,golf (eye-mail primary relay)
-lancekellar.com,,False,,
-langlab.app,,False,,
-laocaishen.cc,,False,,
-laoyuanma.com,,False,,
-laposste.net,,False,,
-larchmontbungalow.com,,False,,
-lariojaturismorural.com,,False,,
-lassiettesteakfrites.com,,False,,
-latestcnnnews.com,,False,,
-latinoemojiapp.com,,False,,
-laud.net,,False,,
-laurenslater.com,,False,,
-lawsoflife.org,,False,,
+lancekellar.com,v=spf1 ip6:fd1b:212c:a5f9::/48 -all,True,fd1b:212c:a5f9::/48,hotel (southafricaproject)
+langlab.app,v=spf1 ip6:fdec:ae16:fda7::/48 -all,True,fdec:ae16:fda7::/48,golf (eye-mail primary relay)
+laocaishen.cc,v=spf1 ip6:fdec:ae16:fda7::/48 -all,True,fdec:ae16:fda7::/48,golf (eye-mail primary relay)
+laoyuanma.com,v=spf1 ip6:fdec:ae16:fda7::/48 -all,True,fdec:ae16:fda7::/48,golf (eye-mail primary relay)
+laposste.net,v=spf1 ip6:fd9c:d030:168c::/48 -all,True,fd9c:d030:168c::/48,
+larchmontbungalow.com,v=spf1 ip6:fdec:ae16:fda7::/48 -all,True,fdec:ae16:fda7::/48,golf (eye-mail primary relay)
+lariojaturismorural.com,v=spf1 ip6:fdec:ae16:fda7::/48 -all,True,fdec:ae16:fda7::/48,golf (eye-mail primary relay)
+lassiettesteakfrites.com,v=spf1 ip6:fd1b:212c:a5f9::/48 -all,True,fd1b:212c:a5f9::/48,hotel (southafricaproject)
+laszlomail.com,v=spf1 ip6:fd1b:212c:a5f9::/48 -all,True,fd1b:212c:a5f9::/48,hotel (southafricaproject)
+latestcnnnews.com,v=spf1 ip6:fd1b:212c:a5f9::/48 -all,True,fd1b:212c:a5f9::/48,hotel (southafricaproject)
+latinoemojiapp.com,v=spf1 ip6:fdec:ae16:fda7::/48 -all,True,fdec:ae16:fda7::/48,golf (eye-mail primary relay)
+laud.net,v=spf1 ip6:fd43:c0d1:c090::/48 -all,True,fd43:c0d1:c090::/48,
+laurenslater.com,v=spf1 ip6:fdec:ae16:fda7::/48 -all,True,fdec:ae16:fda7::/48,golf (eye-mail primary relay)
+lawsoflife.org,v=spf1 ip6:fdec:ae16:fda7::/48 -all,True,fdec:ae16:fda7::/48,golf (eye-mail primary relay)
 leaf-spine.com,v=spf1 ip4:45.128.75.52 ip4:45.128.75.53 ip4:45.128.75.54 ip4:45.128.75.55 ip4:45.128.75.56 ip4:45.90.97.140 ip4:45.90.97.226 ip4:45.90.97.245 ip4:84.54.51.9 ip4:84.54.51.46 ip4:84.54.51.239 -all,False,,
-leaseinfo.com,,False,,
-least.cc,v=spf1 ip6:fdec:ae16:fda7::/48 -all,True,fdec:ae16:fda7::/48,golf (eye-mail primary relay)
-lebertymutual.com,,False,,
-lege4h.com,,False,,
+leaseinfo.com,v=spf1 ip6:fdec:ae16:fda7::/48 -all,True,fdec:ae16:fda7::/48,golf (eye-mail primary relay)
+lebertymutual.com,v=spf1 ip6:fd1b:212c:a5f9::/48 -all,True,fd1b:212c:a5f9::/48,hotel (southafricaproject)
+lege4h.com,v=spf1 ip6:fd36:7c64:44d0::/48 -all,True,fd36:7c64:44d0::/48,
 legendaria.com,v=spf1 ip6:fd43:c0d1:c090::/48 -all,True,fd43:c0d1:c090::/48,
-lepartiesugar.com,,False,,
+lepartiesugar.com,v=spf1 ip6:fdec:ae16:fda7::/48 -all,True,fdec:ae16:fda7::/48,golf (eye-mail primary relay)
 lesbianhookups.app,v=spf1 ip6:fdec:ae16:fda7::/48 -all,True,fdec:ae16:fda7::/48,golf (eye-mail primary relay)
-lesbiansnearme.org,,False,,
-letsketogummies.net,,False,,
-levitratablet.com,,False,,
-lgiw.com,,False,,
-liamchzh.com,,False,,
-liberttmutual.com,,False,,
-libertymuftual.com,,False,,
-libertymutuawl.com,,False,,
-libra-ltd.net,,False,,
-lickmyballs.com,,False,,
-lifemusic.org,,False,,
-lifted.cc,,False,,
-like.no,,False,,
+lesbiansnearme.org,v=spf1 ip6:fdec:ae16:fda7::/48 -all,True,fdec:ae16:fda7::/48,golf (eye-mail primary relay)
+letsketogummies.net,v=spf1 ip6:fd68:85f0:7c72::/48 -all,True,fd68:85f0:7c72::/48,pickelhost-alpha (primary relay)
+levitratablet.com,v=spf1 ip6:fdec:ae16:fda7::/48 -all,True,fdec:ae16:fda7::/48,golf (eye-mail primary relay)
+lgiw.com,v=spf1 ip6:fd1b:212c:a5f9::/48 -all,True,fd1b:212c:a5f9::/48,hotel (southafricaproject)
+liamchzh.com,v=spf1 ip6:fd68:85f0:7c72::/48 -all,True,fd68:85f0:7c72::/48,pickelhost-alpha (primary relay)
+liberttmutual.com,v=spf1 ip6:fd1b:212c:a5f9::/48 -all,True,fd1b:212c:a5f9::/48,hotel (southafricaproject)
+libertymuftual.com,v=spf1 ip6:fd9c:d030:168c::/48 -all,True,fd9c:d030:168c::/48,
+libertymutuawl.com,v=spf1 ip6:fd9c:d030:168c::/48 -all,True,fd9c:d030:168c::/48,
+libra-ltd.net,v=spf1 ip6:fd1b:212c:a5f9::/48 -all,True,fd1b:212c:a5f9::/48,hotel (southafricaproject)
+lickmyballs.com,v=spf1 ip6:fd43:c0d1:c090::/48 -all,True,fd43:c0d1:c090::/48,
+lifemusic.org,v=spf1 ip6:fdec:ae16:fda7::/48 -all,True,fdec:ae16:fda7::/48,golf (eye-mail primary relay)
+like.no,v=spf1 ip6:fd1b:212c:a5f9::/48 -all,True,fd1b:212c:a5f9::/48,hotel (southafricaproject)
 likedog.sbs,v=spf1 ip6:fdec:ae16:fda7::/48 -all,True,fdec:ae16:fda7::/48,golf (eye-mail primary relay)
-lilbertymutual.com,,False,,
-lilly.co,,False,,
-link3mail.com,,False,,
-linkglory303.net,,False,,
-linozemtseva.com,,False,,
-linseyalexander.com,,False,,
-linux-mirror.org,,False,,
-lionex.com,,False,,
+lilbertymutual.com,v=spf1 ip6:fd9c:d030:168c::/48 -all,True,fd9c:d030:168c::/48,
+lilly.co,v=spf1 ip6:fd68:85f0:7c72::/48 -all,True,fd68:85f0:7c72::/48,pickelhost-alpha (primary relay)
+link3mail.com,v=spf1 ip6:fd36:7c64:44d0::/48 -all,True,fd36:7c64:44d0::/48,
+linkglory303.net,v=spf1 ip6:fdec:ae16:fda7::/48 -all,True,fdec:ae16:fda7::/48,golf (eye-mail primary relay)
+linozemtseva.com,v=spf1 ip6:fd1b:212c:a5f9::/48 -all,True,fd1b:212c:a5f9::/48,hotel (southafricaproject)
+linseyalexander.com,v=spf1 ip6:fd1b:212c:a5f9::/48 -all,True,fd1b:212c:a5f9::/48,hotel (southafricaproject)
+linux-mirror.org,v=spf1 ip6:fdec:ae16:fda7::/48 -all,True,fdec:ae16:fda7::/48,golf (eye-mail primary relay)
+lionex.com,v=spf1 ip6:fd1b:212c:a5f9::/48 -all,True,fd1b:212c:a5f9::/48,hotel (southafricaproject)
+liquidy.com,v=spf1 ip6:fd1b:212c:a5f9::/48 -all,True,fd1b:212c:a5f9::/48,hotel (southafricaproject)
 lithium.info,v=spf1 ip6:fd1b:212c:a5f9::/48 -all,True,fd1b:212c:a5f9::/48,hotel (southafricaproject)
 litseen.org,v=spf1 ip6:fdec:ae16:fda7::/48 -all,True,fdec:ae16:fda7::/48,golf (eye-mail primary relay)
-liveforyounow.com,,False,,
+liveforyounow.com,v=spf1 ip6:fd1b:212c:a5f9::/48 -all,True,fd1b:212c:a5f9::/48,hotel (southafricaproject)
 liverail.net,v=spf1 ip6:fdec:ae16:fda7::/48 -all,True,fdec:ae16:fda7::/48,golf (eye-mail primary relay)
 livescore24.io,v=spf1 ip6:fd68:85f0:7c72::/48 -all,True,fd68:85f0:7c72::/48,pickelhost-alpha (primary relay)
 livezencity.com,v=spf1 ip6:fd68:85f0:7c72::/48 -all,True,fd68:85f0:7c72::/48,pickelhost-alpha (primary relay)
 liwanag.net,v=spf1 ip6:fd68:85f0:7c72::/48 -all,True,fd68:85f0:7c72::/48,pickelhost-alpha (primary relay)
 llllll.com,v=spf1 ip6:fd1b:212c:a5f9::/48 -all,True,fd1b:212c:a5f9::/48,hotel (southafricaproject)
 local.pointbuysys.com,v=spf1 ip6:fd1b:212c:a5f9::/48 -all,True,fd1b:212c:a5f9::/48,hotel (southafricaproject)
+localss.com,v=spf1 ip6:fd18:d113:9bed::/48 -all,True,fd18:d113:9bed::/48,
 logisticsnation.net,,False,,
 logorank.com,v=spf1 ip6:fdec:ae16:fda7::/48 -all,True,fdec:ae16:fda7::/48,golf (eye-mail primary relay)
 long.pointbuysys.com,v=spf1 ip6:fd1b:212c:a5f9::/48 -all,True,fd1b:212c:a5f9::/48,hotel (southafricaproject)
@@ -1441,7 +1468,6 @@ losethed.com,v=spf1 ip6:fdec:ae16:fda7::/48 -all,True,fdec:ae16:fda7::/48,golf (
 love.info,v=spf1 ip6:fd1b:212c:a5f9::/48 -all,True,fd1b:212c:a5f9::/48,hotel (southafricaproject)
 lovebytes.ai,v=spf1 ip6:fd68:85f0:7c72::/48 -all,True,fd68:85f0:7c72::/48,pickelhost-alpha (primary relay)
 lovejeonghoon.com,v=spf1 ip6:fdec:ae16:fda7::/48 -all,True,fdec:ae16:fda7::/48,golf (eye-mail primary relay)
-lovemail.top,v=spf1 ip6:fdec:ae16:fda7::/48 -all,True,fdec:ae16:fda7::/48,golf (eye-mail primary relay)
 loveswork.com,v=spf1 ip6:fd68:85f0:7c72::/48 -all,True,fd68:85f0:7c72::/48,pickelhost-alpha (primary relay)
 lovingerimages.com,v=spf1 ip6:fdec:ae16:fda7::/48 -all,True,fdec:ae16:fda7::/48,golf (eye-mail primary relay)
 lrdger.com,v=spf1 ip6:fd9c:d030:168c::/48 -all,True,fd9c:d030:168c::/48,
@@ -1494,6 +1520,7 @@ maillei.com,v=spf1 ip6:fd36:7c64:44d0::/48 -all,True,fd36:7c64:44d0::/48,
 mailmyrss.com,v=spf1 ip6:fd36:7c64:44d0::/48 -all,True,fd36:7c64:44d0::/48,
 mailrelay.pussport.com,v=spf1 ip6:fdec:ae16:fda7::/48 -all,True,fdec:ae16:fda7::/48,golf (eye-mail primary relay)
 mailsrv.pussport.com,v=spf1 ip6:fdec:ae16:fda7::/48 -all,True,fdec:ae16:fda7::/48,golf (eye-mail primary relay)
+mailtie.com,v=spf1 ip6:fd91:27e6:2950::/48 -all,True,fd91:27e6:2950::/48,
 mailx.pussport.com,v=spf1 ip6:fdec:ae16:fda7::/48 -all,True,fdec:ae16:fda7::/48,golf (eye-mail primary relay)
 major.pointbuysys.com,v=spf1 ip6:fd1b:212c:a5f9::/48 -all,True,fd1b:212c:a5f9::/48,hotel (southafricaproject)
 make.pointbuysys.com,v=spf1 ip6:fd1b:212c:a5f9::/48 -all,True,fd1b:212c:a5f9::/48,hotel (southafricaproject)
@@ -1501,7 +1528,6 @@ makedifferences.org,v=spf1 ip6:fdec:ae16:fda7::/48 -all,True,fdec:ae16:fda7::/48
 makesharpstuff.com,v=spf1 ip6:fdec:ae16:fda7::/48 -all,True,fdec:ae16:fda7::/48,golf (eye-mail primary relay)
 malaya.me,v=spf1 ip6:fdec:ae16:fda7::/48 -all,True,fdec:ae16:fda7::/48,golf (eye-mail primary relay)
 malichimp.com,v=spf1 ip6:fd9c:d030:168c::/48 -all,True,fd9c:d030:168c::/48,
-malink.in,v=spf1 ip6:fd1b:212c:a5f9::/48 -all,True,fd1b:212c:a5f9::/48,hotel (southafricaproject)
 man-health-fitness-solutions.com,v=spf1 ip6:fdec:ae16:fda7::/48 -all,True,fdec:ae16:fda7::/48,golf (eye-mail primary relay)
 mangatoshokan.com,v=spf1 ip6:fd92:59f3:510e::/48 -all,True,fd92:59f3:510e::/48,delta (tertiary relay)
 mania99.org,v=spf1 ip6:fdec:ae16:fda7::/48 -all,True,fdec:ae16:fda7::/48,golf (eye-mail primary relay)
@@ -1569,10 +1595,10 @@ microisoft.com,v=spf1 ip6:fd43:c0d1:c090::/48 -all,True,fd43:c0d1:c090::/48,
 microsoct.com,v=spf1 ip6:fd43:c0d1:c090::/48 -all,True,fd43:c0d1:c090::/48,
 microsoftb.com,v=spf1 ip6:fdec:ae16:fda7::/48 -all,True,fdec:ae16:fda7::/48,golf (eye-mail primary relay)
 microsoftp.com,v=spf1 ip6:fdec:ae16:fda7::/48 -all,True,fdec:ae16:fda7::/48,golf (eye-mail primary relay)
+micsrosoft.com,v=spf1 ip6:fd1b:212c:a5f9::/48 -all,True,fd1b:212c:a5f9::/48,hotel (southafricaproject)
 midjourey.com,v=spf1 ip6:fd43:c0d1:c090::/48 -all,True,fd43:c0d1:c090::/48,
 midrosoft.com,v=spf1 ip6:fd43:c0d1:c090::/48 -all,True,fd43:c0d1:c090::/48,
 midwestdemocracynetwork.org,v=spf1 ip6:fdec:ae16:fda7::/48 -all,True,fdec:ae16:fda7::/48,golf (eye-mail primary relay)
-mignon-shop.com,v=spf1 ip6:fd1b:212c:a5f9::/48 -all,True,fd1b:212c:a5f9::/48,hotel (southafricaproject)
 mimireader.com,v=spf1 ip4:46.34.50.0/24 -all,False,,
 mind-makers.ai,v=spf1 ip6:fd68:85f0:7c72::/48 -all,True,fd68:85f0:7c72::/48,pickelhost-alpha (primary relay)
 mindstring.com,v=spf1 ip6:fd1b:212c:a5f9::/48 -all,True,fd1b:212c:a5f9::/48,hotel (southafricaproject)
@@ -1630,104 +1656,104 @@ mwrd.com,v=spf1 ip6:fd43:c0d1:c090::/48 -all,True,fd43:c0d1:c090::/48,
 mx.pussport.com,v=spf1 ip6:fdec:ae16:fda7::/48 -all,True,fdec:ae16:fda7::/48,golf (eye-mail primary relay)
 mx0.pussport.com,v=spf1 ip6:fdec:ae16:fda7::/48 -all,True,fdec:ae16:fda7::/48,golf (eye-mail primary relay)
 mx001.pussport.com,v=spf1 ip6:fdec:ae16:fda7::/48 -all,True,fdec:ae16:fda7::/48,golf (eye-mail primary relay)
-mx01.pussport.com,v=spf1 ip6:fdec:ae16:fda7::/48 -all,True,fdec:ae16:fda7::/48,golf (eye-mail primary relay)
-mx02.pussport.com,v=spf1 ip6:fdec:ae16:fda7::/48 -all,True,fdec:ae16:fda7::/48,golf (eye-mail primary relay)
+mx01.pussport.com,,False,,
+mx02.pussport.com,,False,,
 mx20.pussport.com,v=spf1 ip6:fdec:ae16:fda7::/48 -all,True,fdec:ae16:fda7::/48,golf (eye-mail primary relay)
-mx4.pussport.com,v=spf1 ip6:fdec:ae16:fda7::/48 -all,True,fdec:ae16:fda7::/48,golf (eye-mail primary relay)
-mx5.pussport.com,v=spf1 ip6:fdec:ae16:fda7::/48 -all,True,fdec:ae16:fda7::/48,golf (eye-mail primary relay)
-mx7.pussport.com,v=spf1 ip6:fdec:ae16:fda7::/48 -all,True,fdec:ae16:fda7::/48,golf (eye-mail primary relay)
-mxs.pussport.com,v=spf1 ip6:fdec:ae16:fda7::/48 -all,True,fdec:ae16:fda7::/48,golf (eye-mail primary relay)
-my-shop.com,v=spf1 ip6:fdec:ae16:fda7::/48 -all,True,fdec:ae16:fda7::/48,golf (eye-mail primary relay)
-my.stlcc.com,v=spf1 ip6:fd1b:212c:a5f9::/48 -all,True,fd1b:212c:a5f9::/48,hotel (southafricaproject)
+mx4.pussport.com,,False,,
+mx5.pussport.com,,False,,
+mx7.pussport.com,,False,,
+mxs.pussport.com,,False,,
+my-shop.com,,False,,
+my.stlcc.com,,False,,
 mybirthday.com,v=spf1 ip6:fd1b:212c:a5f9::/48 -all,True,fd1b:212c:a5f9::/48,hotel (southafricaproject)
-myethereallet.com,v=spf1 ip6:fdec:ae16:fda7::/48 -all,True,fdec:ae16:fda7::/48,golf (eye-mail primary relay)
-myetherw.allet.com,v=spf1 ip6:fd43:c0d1:c090::/48 -all,True,fd43:c0d1:c090::/48,
-myitguyllc.com,v=spf1 ip6:fd92:59f3:510e::/48 -all,True,fd92:59f3:510e::/48,delta (tertiary relay)
+myethereallet.com,,False,,
+myetherw.allet.com,,False,,
+myitguyllc.com,,False,,
 mylaptop.com,v=spf1 ip6:fd43:c0d1:c090::/48 -all,True,fd43:c0d1:c090::/48,
-mymail.pussport.com,v=spf1 ip6:fdec:ae16:fda7::/48 -all,True,fdec:ae16:fda7::/48,golf (eye-mail primary relay)
-myriadbrains.com,v=spf1 ip6:fdec:ae16:fda7::/48 -all,True,fdec:ae16:fda7::/48,golf (eye-mail primary relay)
-myrvradio.com,v=spf1 ip6:fdec:ae16:fda7::/48 -all,True,fdec:ae16:fda7::/48,golf (eye-mail primary relay)
-mysearchnetwork.com,v=spf1 ip6:fd1b:212c:a5f9::/48 -all,True,fd1b:212c:a5f9::/48,hotel (southafricaproject)
-myspuce.pussport.com,v=spf1 ip6:fdec:ae16:fda7::/48 -all,True,fdec:ae16:fda7::/48,golf (eye-mail primary relay)
-mytaxes.com,v=spf1 ip6:fd1b:212c:a5f9::/48 -all,True,fd1b:212c:a5f9::/48,hotel (southafricaproject)
-mytoccoa.com,v=spf1 ip6:fd68:85f0:7c72::/48 -all,True,fd68:85f0:7c72::/48,pickelhost-alpha (primary relay)
-mytrumail.com,v=spf1 ip6:fd36:7c64:44d0::/48 -all,True,fd36:7c64:44d0::/48,
-myub.com,v=spf1 ip6:fdec:ae16:fda7::/48 -all,True,fdec:ae16:fda7::/48,golf (eye-mail primary relay)
+mymail.pussport.com,,False,,
+myriadbrains.com,,False,,
+myrvradio.com,,False,,
+mysearchnetwork.com,,False,,
+myspuce.pussport.com,,False,,
+mytaxes.com,,False,,
+mytoccoa.com,,False,,
+mytrumail.com,,False,,
+myub.com,,False,,
 mywebmail.pussport.com,v=spf1 ip6:fdec:ae16:fda7::/48 -all,True,fdec:ae16:fda7::/48,golf (eye-mail primary relay)
-naginoda.com,v=spf1 ip6:fd1b:212c:a5f9::/48 -all,True,fd1b:212c:a5f9::/48,hotel (southafricaproject)
-nagoyameshi-expo.com,v=spf1 ip6:fd68:85f0:7c72::/48 -all,True,fd68:85f0:7c72::/48,pickelhost-alpha (primary relay)
-naili19.com,v=spf1 ip6:fdec:ae16:fda7::/48 -all,True,fdec:ae16:fda7::/48,golf (eye-mail primary relay)
-najdalizz.com,v=spf1 ip6:fd68:85f0:7c72::/48 -all,True,fd68:85f0:7c72::/48,pickelhost-alpha (primary relay)
-naka-interiors.com,v=spf1 ip6:fd68:85f0:7c72::/48 -all,True,fd68:85f0:7c72::/48,pickelhost-alpha (primary relay)
-nakelbeladi.com,v=spf1 ip6:fd68:85f0:7c72::/48 -all,True,fd68:85f0:7c72::/48,pickelhost-alpha (primary relay)
+naginoda.com,,False,,
+nagoyameshi-expo.com,,False,,
+naili19.com,,False,,
+najdalizz.com,,False,,
+naka-interiors.com,,False,,
+nakelbeladi.com,,False,,
 nameplanet.com,v=spf1 ip6:fd43:c0d1:c090::/48 -all,True,fd43:c0d1:c090::/48,
 nando1.com,v=spf1 ip6:fd36:7c64:44d0::/48 -all,True,fd36:7c64:44d0::/48,
-nannyharmony.com,v=spf1 ip6:fd68:85f0:7c72::/48 -all,True,fd68:85f0:7c72::/48,pickelhost-alpha (primary relay)
-natalia-v.net,v=spf1 ip4:199.249.171.148 ip4:61.4.121.101 ip4:103.176.20.151 ip4:172.99.216.143 ip4:173.252.229.91 -all,False,,
-nationwidde.com,v=spf1 ip6:fdec:ae16:fda7::/48 -all,True,fdec:ae16:fda7::/48,golf (eye-mail primary relay)
-nationwiide.com,v=spf1 ip6:fdec:ae16:fda7::/48 -all,True,fdec:ae16:fda7::/48,golf (eye-mail primary relay)
-naturesardine.com,v=spf1 ip6:fdec:ae16:fda7::/48 -all,True,fdec:ae16:fda7::/48,golf (eye-mail primary relay)
-natweat.com,v=spf1 ip6:fd43:c0d1:c090::/48 -all,True,fd43:c0d1:c090::/48,
-nazdem.info,v=spf1 ip6:fd1b:212c:a5f9::/48 -all,True,fd1b:212c:a5f9::/48,hotel (southafricaproject)
-nazyno.com,v=spf1 ip6:fd36:7c64:44d0::/48 -all,True,fd36:7c64:44d0::/48,
+nannyharmony.com,,False,,
+natalia-v.net,,False,,
+nationwidde.com,,False,,
+nationwiide.com,,False,,
+naturesardine.com,,False,,
+natweat.com,,False,,
+nazdem.info,,False,,
+nazyno.com,,False,,
 nbetflix.com,v=spf1 ip6:fd1b:212c:a5f9::/48 -all,True,fd1b:212c:a5f9::/48,hotel (southafricaproject)
-nbuilder.org,v=spf1 ip6:fdec:ae16:fda7::/48 -all,True,fdec:ae16:fda7::/48,golf (eye-mail primary relay)
-nbva.com,v=spf1 ip6:fd43:c0d1:c090::/48 -all,True,fd43:c0d1:c090::/48,
-ndiw.com,v=spf1 ip6:fd43:c0d1:c090::/48 -all,True,fd43:c0d1:c090::/48,
-ne4tflix.com,v=spf1 ip6:fd1b:212c:a5f9::/48 -all,True,fd1b:212c:a5f9::/48,hotel (southafricaproject)
-need53.sbs,v=spf1 ip6:fdec:ae16:fda7::/48 -all,True,fdec:ae16:fda7::/48,golf (eye-mail primary relay)
-neeman-medical.com,v=spf1 ip6:fd43:c0d1:c090::/48 -all,True,fd43:c0d1:c090::/48,
-neptunegpt.ai,v=spf1 ip6:fd68:85f0:7c72::/48 -all,True,fd68:85f0:7c72::/48,pickelhost-alpha (primary relay)
-net.pussport.com,v=spf1 ip6:fdec:ae16:fda7::/48 -all,True,fdec:ae16:fda7::/48,golf (eye-mail primary relay)
-net3mail.com,v=spf1 ip6:fd36:7c64:44d0::/48 -all,True,fd36:7c64:44d0::/48,
-net6flix.com,v=spf1 ip6:fd1b:212c:a5f9::/48 -all,True,fd1b:212c:a5f9::/48,hotel (southafricaproject)
-netblix.com,v=spf1 ip6:fd1b:212c:a5f9::/48 -all,True,fd1b:212c:a5f9::/48,hotel (southafricaproject)
-netfliux.com,v=spf1 ip6:fd9c:d030:168c::/48 -all,True,fd9c:d030:168c::/48,
-netflixe.com,v=spf1 ip6:fd9c:d030:168c::/48 -all,True,fd9c:d030:168c::/48,
+nbuilder.org,,False,,
+nbva.com,,False,,
+ndiw.com,,False,,
+ne4tflix.com,,False,,
+need53.sbs,,False,,
+neeman-medical.com,,False,,
+neptunegpt.ai,,False,,
+net.pussport.com,,False,,
+net3mail.com,,False,,
+net6flix.com,,False,,
+netblix.com,,False,,
+netfliux.com,,False,,
+netflixe.com,,False,,
 netka.com,v=spf1 ip6:fd68:85f0:7c72::/48 -all,True,fd68:85f0:7c72::/48,pickelhost-alpha (primary relay)
-netmail3.net,v=spf1 ip6:fd36:7c64:44d0::/48 -all,True,fd36:7c64:44d0::/48,
-netone.com,v=spf1 ip6:fd43:c0d1:c090::/48 -all,True,fd43:c0d1:c090::/48,
-netplus.ca,v=spf1 ip6:fd43:c0d1:c090::/48 -all,True,fd43:c0d1:c090::/48,
-netrlix.com,v=spf1 ip6:fd1b:212c:a5f9::/48 -all,True,fd1b:212c:a5f9::/48,hotel (southafricaproject)
+netmail3.net,,False,,
+netone.com,,False,,
+netplus.ca,,False,,
+netrlix.com,,False,,
 netsflix.com,v=spf1 ip6:fd9c:d030:168c::/48 -all,True,fd9c:d030:168c::/48,
-netski.eu,v=spf1 ip6:fd92:59f3:510e::/48 -all,True,fd92:59f3:510e::/48,delta (tertiary relay)
-nettimarkkinointi.net,v=spf1 ip6:fdec:ae16:fda7::/48 -all,True,fdec:ae16:fda7::/48,golf (eye-mail primary relay)
-network-source.com,v=spf1 ip6:fd36:7c64:44d0::/48 -all,True,fd36:7c64:44d0::/48,
+netski.eu,,False,,
+nettimarkkinointi.net,,False,,
+network-source.com,,False,,
 networker.pro,v=spf1 ip6:fd1b:212c:a5f9::/48 -all,True,fd1b:212c:a5f9::/48,hotel (southafricaproject)
-networksolution.ws,v=spf1 ip6:fdd0:951e:ede7::/48 -all,True,fdd0:951e:ede7::/48,
-neurobuild.ai,v=spf1 ip6:fd68:85f0:7c72::/48 -all,True,fd68:85f0:7c72::/48,pickelhost-alpha (primary relay)
-nevyxus.com,v=spf1 ip6:fd36:7c64:44d0::/48 -all,True,fd36:7c64:44d0::/48,
-new.pointbuysys.com,v=spf1 ip6:fd1b:212c:a5f9::/48 -all,True,fd1b:212c:a5f9::/48,hotel (southafricaproject)
-newamsterdampublic.org,v=spf1 ip6:fdec:ae16:fda7::/48 -all,True,fdec:ae16:fda7::/48,golf (eye-mail primary relay)
-newe-mail.com,v=spf1 ip6:fd36:7c64:44d0::/48 -all,True,fd36:7c64:44d0::/48,
-neweraexotics.com,v=spf1 ip6:fdec:ae16:fda7::/48 -all,True,fdec:ae16:fda7::/48,golf (eye-mail primary relay)
-newmail2013.pussport.com,v=spf1 ip6:fdec:ae16:fda7::/48 -all,True,fdec:ae16:fda7::/48,golf (eye-mail primary relay)
-newyearfreepas.ws,v=spf1 ip6:fdd0:951e:ede7::/48 -all,True,fdd0:951e:ede7::/48,
+networksolution.ws,,False,,
+neurobuild.ai,,False,,
+nevyxus.com,,False,,
+new.pointbuysys.com,,False,,
+newamsterdampublic.org,,False,,
+newe-mail.com,,False,,
+neweraexotics.com,,False,,
+newmail2013.pussport.com,,False,,
+newyearfreepas.ws,,False,,
 newyotklife.com,v=spf1 ip6:fd1b:212c:a5f9::/48 -all,True,fd1b:212c:a5f9::/48,hotel (southafricaproject)
-nextgenradiokjzz.org,v=spf1 ip6:fdec:ae16:fda7::/48 -all,True,fdec:ae16:fda7::/48,golf (eye-mail primary relay)
-nghiduong.com,v=spf1 ip6:fd68:85f0:7c72::/48 -all,True,fd68:85f0:7c72::/48,pickelhost-alpha (primary relay)
-ngopedia.com,v=spf1 ip6:fdec:ae16:fda7::/48 -all,True,fdec:ae16:fda7::/48,golf (eye-mail primary relay)
-nhhpc.org,v=spf1 ip6:fdec:ae16:fda7::/48 -all,True,fdec:ae16:fda7::/48,golf (eye-mail primary relay)
-nikeairjp.com,v=spf1 ip6:fd9c:d030:168c::/48 -all,True,fd9c:d030:168c::/48,
-nikefreerunshoes.com,v=spf1 ip6:fdec:ae16:fda7::/48 -all,True,fdec:ae16:fda7::/48,golf (eye-mail primary relay)
-nioya.work,v=spf1 ip6:fd68:85f0:7c72::/48 -all,True,fd68:85f0:7c72::/48,pickelhost-alpha (primary relay)
-nixenhaar.de,v=spf1 ip6:fd92:59f3:510e::/48 -all,True,fd92:59f3:510e::/48,delta (tertiary relay)
-nmo.com,v=spf1 ip6:fd43:c0d1:c090::/48 -all,True,fd43:c0d1:c090::/48,
-nmsr.com,v=spf1 ip6:fd43:c0d1:c090::/48 -all,True,fd43:c0d1:c090::/48,
-nmsu.com,v=spf1 ip6:fd43:c0d1:c090::/48 -all,True,fd43:c0d1:c090::/48,
-nnnnnn.com,v=spf1 ip6:fd1b:212c:a5f9::/48 -all,True,fd1b:212c:a5f9::/48,hotel (southafricaproject)
-noemail.com,v=spf1 ip6:fd1b:212c:a5f9::/48 -all,True,fd1b:212c:a5f9::/48,hotel (southafricaproject)
-nof-digitise.org,v=spf1 ip6:fd68:85f0:7c72::/48 -all,True,fd68:85f0:7c72::/48,pickelhost-alpha (primary relay)
-nongamstopukcasinos.com,v=spf1 ip6:fd68:85f0:7c72::/48 -all,True,fd68:85f0:7c72::/48,pickelhost-alpha (primary relay)
-nordbi.org,v=spf1 ip6:fd68:85f0:7c72::/48 -all,True,fd68:85f0:7c72::/48,pickelhost-alpha (primary relay)
-notely.net,v=spf1 ip6:fd68:85f0:7c72::/48 -all,True,fd68:85f0:7c72::/48,pickelhost-alpha (primary relay)
-notmail.com,v=spf1 ip6:fd1b:212c:a5f9::/48 -all,True,fd1b:212c:a5f9::/48,hotel (southafricaproject)
-novodisk.com,v=spf1 ip6:fd43:c0d1:c090::/48 -all,True,fd43:c0d1:c090::/48,
-npo-iasia.org,v=spf1 ip6:fd1b:212c:a5f9::/48 -all,True,fd1b:212c:a5f9::/48,hotel (southafricaproject)
+nextgenradiokjzz.org,,False,,
+nghiduong.com,,False,,
+ngopedia.com,,False,,
+nhhpc.org,,False,,
+nikeairjp.com,,False,,
+nikefreerunshoes.com,,False,,
+nioya.work,,False,,
+nixenhaar.de,,False,,
+nmo.com,,False,,
+nmsr.com,,False,,
+nmsu.com,,False,,
+nnnnnn.com,,False,,
+noemail.com,,False,,
+nof-digitise.org,,False,,
+nongamstopukcasinos.com,,False,,
+nordbi.org,,False,,
+notely.net,,False,,
+notmail.com,,False,,
+novodisk.com,,False,,
+npo-iasia.org,,False,,
 nribazzar.com,v=spf1 ip6:fdec:ae16:fda7::/48 -all,True,fdec:ae16:fda7::/48,golf (eye-mail primary relay)
-nrpb.org,v=spf1 ip6:fd92:59f3:510e::/48 -all,True,fd92:59f3:510e::/48,delta (tertiary relay)
+nrpb.org,,False,,
 ns.pussport.com,v=spf1 ip6:fdec:ae16:fda7::/48 -all,True,fdec:ae16:fda7::/48,golf (eye-mail primary relay)
-ns1.pussport.com,v=spf1 ip6:fdec:ae16:fda7::/48 -all,True,fdec:ae16:fda7::/48,golf (eye-mail primary relay)
+ns1.pussport.com,,False,,
 ns2.pussport.com,v=spf1 ip6:fdec:ae16:fda7::/48 -all,True,fdec:ae16:fda7::/48,golf (eye-mail primary relay)
 ntflix.com,v=spf1 ip6:fd9c:d030:168c::/48 -all,True,fd9c:d030:168c::/48,
 nuezhilian01.com,v=spf1 ip6:fd68:85f0:7c72::/48 -all,True,fd68:85f0:7c72::/48,pickelhost-alpha (primary relay)
@@ -1751,65 +1777,67 @@ ohdk.ws,v=spf1 ip6:fdd0:951e:ede7::/48 -all,True,fdd0:951e:ede7::/48,
 okjta.com,v=spf1 ip6:fd9c:d030:168c::/48 -all,True,fd9c:d030:168c::/48,
 oklahomachoice.com,v=spf1 ip6:fdec:ae16:fda7::/48 -all,True,fdec:ae16:fda7::/48,golf (eye-mail primary relay)
 oktoberfestdirndl.com,v=spf1 ip6:fdec:ae16:fda7::/48 -all,True,fdec:ae16:fda7::/48,golf (eye-mail primary relay)
-okxm.com,,False,,
-okxv.com,,False,,
-oleyvalleymennonite.org,,False,,
-olmail.com,,False,,
-omailo.top,,False,,
-omegaenergy.ai,,False,,
+okxm.com,v=spf1 ip6:fd1b:212c:a5f9::/48 -all,True,fd1b:212c:a5f9::/48,hotel (southafricaproject)
+okxv.com,v=spf1 ip6:fd68:85f0:7c72::/48 -all,True,fd68:85f0:7c72::/48,pickelhost-alpha (primary relay)
+oleyvalleymennonite.org,v=spf1 ip6:fdec:ae16:fda7::/48 -all,True,fdec:ae16:fda7::/48,golf (eye-mail primary relay)
+olmail.com,v=spf1 ip6:fd51:8718:a67c::/48 -all,True,fd51:8718:a67c::/48,
+omailo.top,v=spf1 ip6:fdec:ae16:fda7::/48 -all,True,fdec:ae16:fda7::/48,golf (eye-mail primary relay)
+omegaenergy.ai,v=spf1 ip6:fd68:85f0:7c72::/48 -all,True,fd68:85f0:7c72::/48,pickelhost-alpha (primary relay)
 omraneya.net,v=spf1 ip6:fdec:ae16:fda7::/48 -all,True,fdec:ae16:fda7::/48,golf (eye-mail primary relay)
-omrj.com,,False,,
-one4bet.com,,False,,
-onecloud.ws,,False,,
-onedonation.com,,False,,
-onestopwv.com,,False,,
-onety.pl,,False,,
-online-poker.info,,False,,
-oocgi.com,,False,,
-ooooooo.com,,False,,
+omrj.com,v=spf1 ip6:fd1b:212c:a5f9::/48 -all,True,fd1b:212c:a5f9::/48,hotel (southafricaproject)
+one4bet.com,v=spf1 ip6:fd68:85f0:7c72::/48 -all,True,fd68:85f0:7c72::/48,pickelhost-alpha (primary relay)
+onecloud.ws,v=spf1 ip6:fdd0:951e:ede7::/48 -all,True,fdd0:951e:ede7::/48,
+onedonation.com,v=spf1 ip6:fd1b:212c:a5f9::/48 -all,True,fd1b:212c:a5f9::/48,hotel (southafricaproject)
+onepiece-film.com,v=spf1 ip6:fd1b:212c:a5f9::/48 -all,True,fd1b:212c:a5f9::/48,hotel (southafricaproject)
+onestopwv.com,v=spf1 ip6:fd1b:212c:a5f9::/48 -all,True,fd1b:212c:a5f9::/48,hotel (southafricaproject)
+onety.pl,v=spf1 ip6:fd1b:212c:a5f9::/48 -all,True,fd1b:212c:a5f9::/48,hotel (southafricaproject)
+online-poker.info,v=spf1 ip6:fd1b:212c:a5f9::/48 -all,True,fd1b:212c:a5f9::/48,hotel (southafricaproject)
+ooaj.com,v=spf1 ip6:fd18:d113:9bed::/48 -all,True,fd18:d113:9bed::/48,
+oocgi.com,v=spf1 ip6:fd1b:212c:a5f9::/48 -all,True,fd1b:212c:a5f9::/48,hotel (southafricaproject)
+ooooooo.com,v=spf1 ip6:fd1b:212c:a5f9::/48 -all,True,fd1b:212c:a5f9::/48,hotel (southafricaproject)
 oorange.fr,v=spf1 ip6:fd1b:212c:a5f9::/48 -all,True,fd1b:212c:a5f9::/48,hotel (southafricaproject)
-ootlook.com,,False,,
-opemai.com,,False,,
-openinboxexperiment.com,,False,,
-openpgpkey.pussport.com,,False,,
+ootlook.com,v=spf1 ip6:fd43:c0d1:c090::/48 -all,True,fd43:c0d1:c090::/48,
+opemai.com,v=spf1 ip6:fd9c:d030:168c::/48 -all,True,fd9c:d030:168c::/48,
+openinboxexperiment.com,v=spf1 ip6:fd1b:212c:a5f9::/48 -all,True,fd1b:212c:a5f9::/48,hotel (southafricaproject)
+openpgpkey.pussport.com,v=spf1 ip6:fdec:ae16:fda7::/48 -all,True,fdec:ae16:fda7::/48,golf (eye-mail primary relay)
 opinionroad.com,v=spf1 ip6:fdec:ae16:fda7::/48 -all,True,fdec:ae16:fda7::/48,golf (eye-mail primary relay)
-optinum.net,,False,,
-optonlinr.net,,False,,
-oqut.com,,False,,
-or.acle.com,,False,,
-oranmoremaree.com,,False,,
-orcasoft.ai,,False,,
-organicfreshfood.net,,False,,
-oriellyautoparts.com,,False,,
-originalpie.com,,False,,
-originative.net,,False,,
-orogressive.com,,False,,
-orudential.com,,False,,
-otlook.de,,False,,
+optinum.net,v=spf1 ip6:fd43:c0d1:c090::/48 -all,True,fd43:c0d1:c090::/48,
+optonlinr.net,v=spf1 ip6:fd1b:212c:a5f9::/48 -all,True,fd1b:212c:a5f9::/48,hotel (southafricaproject)
+oqut.com,v=spf1 ip6:fd1b:212c:a5f9::/48 -all,True,fd1b:212c:a5f9::/48,hotel (southafricaproject)
+or.acle.com,v=spf1 ip6:fd1b:212c:a5f9::/48 -all,True,fd1b:212c:a5f9::/48,hotel (southafricaproject)
+oranmoremaree.com,v=spf1 ip6:fdec:ae16:fda7::/48 -all,True,fdec:ae16:fda7::/48,golf (eye-mail primary relay)
+orcasoft.ai,v=spf1 ip6:fd68:85f0:7c72::/48 -all,True,fd68:85f0:7c72::/48,pickelhost-alpha (primary relay)
+organicfreshfood.net,v=spf1 ip6:fd68:85f0:7c72::/48 -all,True,fd68:85f0:7c72::/48,pickelhost-alpha (primary relay)
+oriellyautoparts.com,v=spf1 ip6:fd43:c0d1:c090::/48 -all,True,fd43:c0d1:c090::/48,
+originalpie.com,v=spf1 ip6:fdec:ae16:fda7::/48 -all,True,fdec:ae16:fda7::/48,golf (eye-mail primary relay)
+originative.net,v=spf1 ip6:fdec:ae16:fda7::/48 -all,True,fdec:ae16:fda7::/48,golf (eye-mail primary relay)
+orogressive.com,v=spf1 ip6:fd1b:212c:a5f9::/48 -all,True,fd1b:212c:a5f9::/48,hotel (southafricaproject)
+orudential.com,v=spf1 ip6:fd1b:212c:a5f9::/48 -all,True,fd1b:212c:a5f9::/48,hotel (southafricaproject)
+otlook.de,v=spf1 ip6:fd1b:212c:a5f9::/48 -all,True,fd1b:212c:a5f9::/48,hotel (southafricaproject)
 ottawafuryfc.com,,False,,
-otwr.979.koin-qq.top,,False,,
-oultlook.com,,False,,
-ousoleil.com,,False,,
-out.pussport.com,,False,,
-outllok.com,,False,,
-outlo.com,,False,,
-outlokk.com,,False,,
-outlooc.com,,False,,
+otwr.979.koin-qq.top,v=spf1 ip6:fd1b:212c:a5f9::/48 -all,True,fd1b:212c:a5f9::/48,hotel (southafricaproject)
+oultlook.com,v=spf1 ip6:fd43:c0d1:c090::/48 -all,True,fd43:c0d1:c090::/48,
+ousoleil.com,v=spf1 ip6:fd1b:212c:a5f9::/48 -all,True,fd1b:212c:a5f9::/48,hotel (southafricaproject)
+out.pussport.com,v=spf1 ip6:fdec:ae16:fda7::/48 -all,True,fdec:ae16:fda7::/48,golf (eye-mail primary relay)
+outllok.com,v=spf1 ip6:fd43:c0d1:c090::/48 -all,True,fd43:c0d1:c090::/48,
+outlo.com,v=spf1 ip6:fd43:c0d1:c090::/48 -all,True,fd43:c0d1:c090::/48,
+outlokk.com,v=spf1 ip6:fd9c:d030:168c::/48 -all,True,fd9c:d030:168c::/48,
+outlooc.com,v=spf1 ip6:fd9c:d030:168c::/48 -all,True,fd9c:d030:168c::/48,
 outlook.pussport.com,v=spf1 ip6:fdec:ae16:fda7::/48 -all,True,fdec:ae16:fda7::/48,golf (eye-mail primary relay)
 outlookl.com,v=spf1 ip6:fd9c:d030:168c::/48 -all,True,fd9c:d030:168c::/48,
 outloook.com,v=spf1 ip6:fd9c:d030:168c::/48 -all,True,fd9c:d030:168c::/48,
 outluk.com,v=spf1 ip6:fd43:c0d1:c090::/48 -all,True,fd43:c0d1:c090::/48,
-outook.com,,False,,
-outrlook.com,,False,,
-outtlook.com,,False,,
-overturnroe.com,,False,,
-ovgo.com,,False,,
-ovo188a.org,,False,,
-owa.pussport.com,,False,,
-owbt.org,,False,,
-owlthemes.net,,False,,
-oxjl.com,,False,,
-oxk.com,,False,,
+outook.com,v=spf1 ip6:fd43:c0d1:c090::/48 -all,True,fd43:c0d1:c090::/48,
+outrlook.com,v=spf1 ip6:fd1b:212c:a5f9::/48 -all,True,fd1b:212c:a5f9::/48,hotel (southafricaproject)
+outtlook.com,v=spf1 ip6:fd9c:d030:168c::/48 -all,True,fd9c:d030:168c::/48,
+overturnroe.com,v=spf1 ip6:fdec:ae16:fda7::/48 -all,True,fdec:ae16:fda7::/48,golf (eye-mail primary relay)
+ovgo.com,v=spf1 ip6:fd1b:212c:a5f9::/48 -all,True,fd1b:212c:a5f9::/48,hotel (southafricaproject)
+ovo188a.org,v=spf1 ip6:fdec:ae16:fda7::/48 -all,True,fdec:ae16:fda7::/48,golf (eye-mail primary relay)
+owa.pussport.com,v=spf1 ip6:fdec:ae16:fda7::/48 -all,True,fdec:ae16:fda7::/48,golf (eye-mail primary relay)
+owbt.org,v=spf1 ip6:fdec:ae16:fda7::/48 -all,True,fdec:ae16:fda7::/48,golf (eye-mail primary relay)
+owlthemes.net,v=spf1 ip6:fd68:85f0:7c72::/48 -all,True,fd68:85f0:7c72::/48,pickelhost-alpha (primary relay)
+oxjl.com,v=spf1 ip6:fd1b:212c:a5f9::/48 -all,True,fd1b:212c:a5f9::/48,hotel (southafricaproject)
+oxk.com,v=spf1 ip6:fd43:c0d1:c090::/48 -all,True,fd43:c0d1:c090::/48,
 oy.gy,v=spf1 ip6:fd68:85f0:7c72::/48 -all,True,fd68:85f0:7c72::/48,pickelhost-alpha (primary relay)
 ozra.com,v=spf1 ip6:fd43:c0d1:c090::/48 -all,True,fd43:c0d1:c090::/48,
 p.k4ds.org,v=spf1 ip6:fd1b:212c:a5f9::/48 -all,True,fd1b:212c:a5f9::/48,hotel (southafricaproject)
@@ -1989,7 +2017,7 @@ ps126mat.com,v=spf1 ip6:fd1b:212c:a5f9::/48 -all,True,fd1b:212c:a5f9::/48,hotel 
 psnworld.com,v=spf1 ip6:fd43:c0d1:c090::/48 -all,True,fd43:c0d1:c090::/48,
 ptrogressive.com,v=spf1 ip6:fd9c:d030:168c::/48 -all,True,fd9c:d030:168c::/48,
 ptudential.com,v=spf1 ip6:fd1b:212c:a5f9::/48 -all,True,fd1b:212c:a5f9::/48,hotel (southafricaproject)
-puestabet.com,v=spf1 include:mailgun.org ~all,False,,
+puestabet.com,v=spf1 ip6:fd68:85f0:7c72::/48 -all,True,fd68:85f0:7c72::/48,pickelhost-alpha (primary relay)
 punctuationcorrector.net,v=spf1 ip6:fd68:85f0:7c72::/48 -all,True,fd68:85f0:7c72::/48,pickelhost-alpha (primary relay)
 puot.com,v=spf1 ip6:fd1b:212c:a5f9::/48 -all,True,fd1b:212c:a5f9::/48,hotel (southafricaproject)
 puppetmanaged.org,v=spf1 ip6:fdec:ae16:fda7::/48 -all,True,fdec:ae16:fda7::/48,golf (eye-mail primary relay)
@@ -1999,6 +2027,7 @@ puryearlogistics.com,v=spf1 ip6:fd68:85f0:7c72::/48 -all,True,fd68:85f0:7c72::/4
 pussport.com,v=spf1 ip6:fdec:ae16:fda7::/48 -all,True,fdec:ae16:fda7::/48,golf (eye-mail primary relay)
 puta.com,v=spf1 ip6:fd43:c0d1:c090::/48 -all,True,fd43:c0d1:c090::/48,
 puxs.com,v=spf1 ip6:fd1b:212c:a5f9::/48 -all,True,fd1b:212c:a5f9::/48,hotel (southafricaproject)
+pvitu.pussport.com,v=spf1 ip6:fdec:ae16:fda7::/48 -all,True,fdec:ae16:fda7::/48,golf (eye-mail primary relay)
 qalibstore.com,v=spf1 ip6:fd68:85f0:7c72::/48 -all,True,fd68:85f0:7c72::/48,pickelhost-alpha (primary relay)
 qaol.com,v=spf1 ip6:fd1b:212c:a5f9::/48 -all,True,fd1b:212c:a5f9::/48,hotel (southafricaproject)
 qbefirst.com,v=spf1 ip6:fd43:c0d1:c090::/48 -all,True,fd43:c0d1:c090::/48,
@@ -2008,102 +2037,107 @@ qnovapartners.ai,v=spf1 ip6:fd68:85f0:7c72::/48 -all,True,fd68:85f0:7c72::/48,pi
 qnxo.com,v=spf1 ip6:fd43:c0d1:c090::/48 -all,True,fd43:c0d1:c090::/48,
 qoppee.com,v=spf1 ip6:fd68:85f0:7c72::/48 -all,True,fd68:85f0:7c72::/48,pickelhost-alpha (primary relay)
 qq152.com,v=spf1 ip6:fdec:ae16:fda7::/48 -all,True,fdec:ae16:fda7::/48,golf (eye-mail primary relay)
-qqq.xyz,v=spf1 ip6:fd1b:212c:a5f9::/48 -all,True,fd1b:212c:a5f9::/48,hotel (southafricaproject)
-qteros.com,v=spf1 ip6:fdec:ae16:fda7::/48 -all,True,fdec:ae16:fda7::/48,golf (eye-mail primary relay)
-quality-baby-care-products.com,v=spf1 ip6:fdec:ae16:fda7::/48 -all,True,fdec:ae16:fda7::/48,golf (eye-mail primary relay)
-qualitybass.com,v=spf1 ip6:fd92:59f3:510e::/48 -all,True,fd92:59f3:510e::/48,delta (tertiary relay)
-queen.com,v=spf1 ip6:fd43:c0d1:c090::/48 -all,True,fd43:c0d1:c090::/48,
-queerwest.org,v=spf1 ip6:fd68:85f0:7c72::/48 -all,True,fd68:85f0:7c72::/48,pickelhost-alpha (primary relay)
-quer.com,v=spf1 ip6:fd43:c0d1:c090::/48 -all,True,fd43:c0d1:c090::/48,
-quiera.com,v=spf1 ip6:fd43:c0d1:c090::/48 -all,True,fd43:c0d1:c090::/48,
-quotescentral.net,v=spf1 ip6:fdec:ae16:fda7::/48 -all,True,fdec:ae16:fda7::/48,golf (eye-mail primary relay)
-qwe.com,v=spf1 ip6:fd43:c0d1:c090::/48 -all,True,fd43:c0d1:c090::/48,
-r7club-spins.top,v=spf1 ip6:fdec:ae16:fda7::/48 -all,True,fdec:ae16:fda7::/48,golf (eye-mail primary relay)
+qqq.xyz,,False,,
+qteros.com,,False,,
+quality-baby-care-products.com,,False,,
+qualitybass.com,,False,,
+queen.com,,False,,
+queerwest.org,,False,,
+quer.com,,False,,
+quiera.com,,False,,
+quotescentral.net,,False,,
+qwe.com,,False,,
+r7club-spins.top,,False,,
 raiet.com,v=spf1 ip6:fd1b:212c:a5f9::/48 -all,True,fd1b:212c:a5f9::/48,hotel (southafricaproject)
 rainbowchildrensacademy.com,v=spf1 ip6:fd1b:212c:a5f9::/48 -all,True,fd1b:212c:a5f9::/48,hotel (southafricaproject)
 rainbowdelegation.org,,False,,
-ratepubs.com,v=spf1 ip6:fdec:ae16:fda7::/48 -all,True,fdec:ae16:fda7::/48,golf (eye-mail primary relay)
-ratispa.com,v=spf1 ip6:fd68:85f0:7c72::/48 -all,True,fd68:85f0:7c72::/48,pickelhost-alpha (primary relay)
-raymondjames.co,v=spf1 ip6:fd43:c0d1:c090::/48 -all,True,fd43:c0d1:c090::/48,
-rdp.pussport.com,v=spf1 ip6:fdec:ae16:fda7::/48 -all,True,fdec:ae16:fda7::/48,golf (eye-mail primary relay)
-rdp1.pussport.com,v=spf1 ip6:fdec:ae16:fda7::/48 -all,True,fdec:ae16:fda7::/48,golf (eye-mail primary relay)
-rdropbox.com,v=spf1 ip6:fd9c:d030:168c::/48 -all,True,fd9c:d030:168c::/48,
-rds.pussport.com,v=spf1 ip6:fdec:ae16:fda7::/48 -all,True,fdec:ae16:fda7::/48,golf (eye-mail primary relay)
-rds1.pussport.com,v=spf1 ip6:fdec:ae16:fda7::/48 -all,True,fdec:ae16:fda7::/48,golf (eye-mail primary relay)
-rdsfs.icu,v=spf1 ip6:fdec:ae16:fda7::/48 -all,True,fdec:ae16:fda7::/48,golf (eye-mail primary relay)
-rdweb.pussport.com,v=spf1 ip6:fdec:ae16:fda7::/48 -all,True,fdec:ae16:fda7::/48,golf (eye-mail primary relay)
-real777money.com,v=spf1 ip6:fdec:ae16:fda7::/48 -all,True,fdec:ae16:fda7::/48,golf (eye-mail primary relay)
-realfashions.com,v=spf1 ip6:fdec:ae16:fda7::/48 -all,True,fdec:ae16:fda7::/48,golf (eye-mail primary relay)
-realfoodchallenge.org,v=spf1 ip6:fd68:85f0:7c72::/48 -all,True,fd68:85f0:7c72::/48,pickelhost-alpha (primary relay)
-realnewworld.com,v=spf1 ip6:fd68:85f0:7c72::/48 -all,True,fd68:85f0:7c72::/48,pickelhost-alpha (primary relay)
-recitable.com,v=spf1 ip6:fdec:ae16:fda7::/48 -all,True,fdec:ae16:fda7::/48,golf (eye-mail primary relay)
-reconstruction.ws,v=spf1 ip6:fd68:85f0:7c72::/48 -all,True,fd68:85f0:7c72::/48,pickelhost-alpha (primary relay)
-reddorz.com,v=spf1 ip6:fd1b:212c:a5f9::/48 -all,True,fd1b:212c:a5f9::/48,hotel (southafricaproject)
-redwoodscientific.co,v=spf1 ip6:fd1b:212c:a5f9::/48 -all,True,fd1b:212c:a5f9::/48,hotel (southafricaproject)
-reflect.ws,v=spf1 ip6:fd68:85f0:7c72::/48 -all,True,fd68:85f0:7c72::/48,pickelhost-alpha (primary relay)
-refused.com,v=spf1 ip6:fd43:c0d1:c090::/48 -all,True,fd43:c0d1:c090::/48,
-regencynetworks.net,v=spf1 ip6:fdec:ae16:fda7::/48 -all,True,fdec:ae16:fda7::/48,golf (eye-mail primary relay)
-reikiparatodos.blog,v=spf1 ip6:fd68:85f0:7c72::/48 -all,True,fd68:85f0:7c72::/48,pickelhost-alpha (primary relay)
-reinshaw.com,v=spf1 ip6:fd43:c0d1:c090::/48 -all,True,fd43:c0d1:c090::/48,
-relationshipbeast.com,v=spf1 ip6:fd1b:212c:a5f9::/48 -all,True,fd1b:212c:a5f9::/48,hotel (southafricaproject)
+ratepubs.com,,False,,
+ratispa.com,,False,,
+raymondjames.co,,False,,
+rdp.pussport.com,,False,,
+rdp1.pussport.com,,False,,
+rdropbox.com,,False,,
+rds.pussport.com,,False,,
+rds1.pussport.com,,False,,
+rdsfs.icu,,False,,
+rdweb.pussport.com,,False,,
+real777money.com,,False,,
+realfashions.com,,False,,
+realfoodchallenge.org,,False,,
+realnewworld.com,,False,,
+recitable.com,,False,,
+reconstruction.ws,,False,,
+reddorz.com,,False,,
+redwoodscientific.co,,False,,
+reflect.ws,,False,,
+refused.com,,False,,
+regencynetworks.net,,False,,
+reikiparatodos.blog,,False,,
+reinshaw.com,,False,,
+relationshipbeast.com,,False,,
+relay.pussport.com,,False,,
+relay1.pussport.com,,False,,
+relay2.pussport.com,,False,,
 remailed.ws,v=spf1 ip6:fdd0:951e:ede7::/48 -all,True,fdd0:951e:ede7::/48,
-remixreading.org,v=spf1 ip6:fdec:ae16:fda7::/48 -all,True,fdec:ae16:fda7::/48,golf (eye-mail primary relay)
-remote.pussport.com,v=spf1 ip6:fdec:ae16:fda7::/48 -all,True,fdec:ae16:fda7::/48,golf (eye-mail primary relay)
-remote2.pussport.com,v=spf1 ip6:fdec:ae16:fda7::/48 -all,True,fdec:ae16:fda7::/48,golf (eye-mail primary relay)
-remoteapp.pussport.com,v=spf1 ip6:fdec:ae16:fda7::/48 -all,True,fdec:ae16:fda7::/48,golf (eye-mail primary relay)
-replenix.net,v=spf1 ip6:fdec:ae16:fda7::/48 -all,True,fdec:ae16:fda7::/48,golf (eye-mail primary relay)
-reptech.org,v=spf1 ip6:fd36:7c64:44d0::/48 -all,True,fd36:7c64:44d0::/48,
-republicansoverseasfrance.com,v=spf1 ip6:fdec:ae16:fda7::/48 -all,True,fdec:ae16:fda7::/48,golf (eye-mail primary relay)
-republicorp.us,v=spf1 ip6:fd9c:d030:168c::/48 -all,True,fd9c:d030:168c::/48,
-resmail24.com,v=spf1 ip6:fd36:7c64:44d0::/48 -all,True,fd36:7c64:44d0::/48,
-restartwindows10.com,v=spf1 ip6:fdec:ae16:fda7::/48 -all,True,fdec:ae16:fda7::/48,golf (eye-mail primary relay)
-resurgeons.com,v=spf1 ip6:fd43:c0d1:c090::/48 -all,True,fd43:c0d1:c090::/48,
-resx.net,v=spf1 ip6:fd1b:212c:a5f9::/48 -all,True,fd1b:212c:a5f9::/48,hotel (southafricaproject)
-revampsalonspa.com,v=spf1 ip6:fd68:85f0:7c72::/48 -all,True,fd68:85f0:7c72::/48,pickelhost-alpha (primary relay)
-revlog.ai,v=spf1 ip6:fd68:85f0:7c72::/48 -all,True,fd68:85f0:7c72::/48,pickelhost-alpha (primary relay)
-reymisterio.com,v=spf1 ip6:fd43:c0d1:c090::/48 -all,True,fd43:c0d1:c090::/48,
+remixreading.org,,False,,
+remote.pussport.com,,False,,
+remote2.pussport.com,,False,,
+remoteapp.pussport.com,,False,,
+replenix.net,,False,,
+reptech.org,,False,,
+republicansoverseasfrance.com,,False,,
+republicorp.us,,False,,
+resmail24.com,,False,,
+restartwindows10.com,,False,,
+resurgeons.com,,False,,
+resx.net,,False,,
+revampsalonspa.com,,False,,
+revlog.ai,,False,,
+reymisterio.com,,False,,
 rhinoplastynashville.com,v=spf1 ip6:fdec:ae16:fda7::/48 -all,True,fdec:ae16:fda7::/48,golf (eye-mail primary relay)
-richmeter.com,v=spf1 ip6:fd68:85f0:7c72::/48 -all,True,fd68:85f0:7c72::/48,pickelhost-alpha (primary relay)
-richoute.com,v=spf1 ip6:fd68:85f0:7c72::/48 -all,True,fd68:85f0:7c72::/48,pickelhost-alpha (primary relay)
-rihkpyhtkdkwc.pussport.com,v=spf1 ip6:fdec:ae16:fda7::/48 -all,True,fdec:ae16:fda7::/48,golf (eye-mail primary relay)
-rindupoker.com,v=spf1 ip6:fd1b:212c:a5f9::/48 -all,True,fd1b:212c:a5f9::/48,hotel (southafricaproject)
-riobetcasino-fow.top,v=spf1 ip6:fdec:ae16:fda7::/48 -all,True,fdec:ae16:fda7::/48,golf (eye-mail primary relay)
-riobetcasino-kmt.top,v=spf1 ip6:fdec:ae16:fda7::/48 -all,True,fdec:ae16:fda7::/48,golf (eye-mail primary relay)
-risperdal24.com,v=spf1 ip6:fd68:85f0:7c72::/48 -all,True,fd68:85f0:7c72::/48,pickelhost-alpha (primary relay)
-riv3r.net,v=spf1 ip6:fd36:7c64:44d0::/48 -all,True,fd36:7c64:44d0::/48,
-riversidepapercompany.com,v=spf1 ip6:fdec:ae16:fda7::/48 -all,True,fdec:ae16:fda7::/48,golf (eye-mail primary relay)
-rlrcm.com,v=spf1 ip6:fd43:c0d1:c090::/48 -all,True,fd43:c0d1:c090::/48,
-rng.pointbuysys.com,v=spf1 ip6:fd1b:212c:a5f9::/48 -all,True,fd1b:212c:a5f9::/48,hotel (southafricaproject)
-rngala.com,v=spf1 ip6:fdec:ae16:fda7::/48 -all,True,fdec:ae16:fda7::/48,golf (eye-mail primary relay)
-ro2030.com,v=spf1 ip6:fd68:85f0:7c72::/48 -all,True,fd68:85f0:7c72::/48,pickelhost-alpha (primary relay)
-robloxdevelopers.com,v=spf1 ip6:fd68:85f0:7c72::/48 -all,True,fd68:85f0:7c72::/48,pickelhost-alpha (primary relay)
+richmeter.com,,False,,
+richoute.com,,False,,
+rihkpyhtkdkwc.pussport.com,,False,,
+rindupoker.com,,False,,
+riobetcasino-fow.top,,False,,
+riobetcasino-kmt.top,,False,,
+risperdal24.com,,False,,
+riv3r.net,,False,,
+riversidepapercompany.com,,False,,
+rlrcm.com,,False,,
+rng.pointbuysys.com,,False,,
+rngala.com,,False,,
+ro2030.com,,False,,
+robloxdevelopers.com,,False,,
 rockemail.com,v=spf1 ip6:fd1b:212c:a5f9::/48 -all,True,fd1b:212c:a5f9::/48,hotel (southafricaproject)
-roidbot.ai,v=spf1 ip6:fd68:85f0:7c72::/48 -all,True,fd68:85f0:7c72::/48,pickelhost-alpha (primary relay)
-roimax.io,v=spf1 ip6:fd68:85f0:7c72::/48 -all,True,fd68:85f0:7c72::/48,pickelhost-alpha (primary relay)
+roidbot.ai,,False,,
+roimax.io,,False,,
 roman-britain.org,v=spf1 ip6:fdec:ae16:fda7::/48 -all,True,fdec:ae16:fda7::/48,golf (eye-mail primary relay)
-roman189.ai,v=spf1 ip6:fd68:85f0:7c72::/48 -all,True,fd68:85f0:7c72::/48,pickelhost-alpha (primary relay)
-root.pointbuysys.com,v=spf1 ip6:fd1b:212c:a5f9::/48 -all,True,fd1b:212c:a5f9::/48,hotel (southafricaproject)
-roozic.org,v=spf1 ip6:fd68:85f0:7c72::/48 -all,True,fd68:85f0:7c72::/48,pickelhost-alpha (primary relay)
-royalslot228.com,v=spf1 ip6:fdec:ae16:fda7::/48 -all,True,fdec:ae16:fda7::/48,golf (eye-mail primary relay)
-rscrental.com,v=spf1 ip6:fd43:c0d1:c090::/48 -all,True,fd43:c0d1:c090::/48,
-rsocialmedialab.com,v=spf1 ip6:fd68:85f0:7c72::/48 -all,True,fd68:85f0:7c72::/48,pickelhost-alpha (primary relay)
-ru.hzxj.isgre.at,v=spf1 ip6:fd1b:212c:a5f9::/48 -all,True,fd1b:212c:a5f9::/48,hotel (southafricaproject)
+roman189.ai,,False,,
+root.pointbuysys.com,,False,,
+root.pussport.com,,False,,
+roozic.org,,False,,
+roundcube.pussport.com,,False,,
+royalslot228.com,,False,,
+rscrental.com,,False,,
+rsocialmedialab.com,,False,,
+ru.hzxj.isgre.at,,False,,
 rudy-urbanlegend.com,v=spf1 ip6:fd68:85f0:7c72::/48 -all,True,fd68:85f0:7c72::/48,pickelhost-alpha (primary relay)
-rupayamail.com,v=spf1 ip6:fd36:7c64:44d0::/48 -all,True,fd36:7c64:44d0::/48,
-russell-tovey.com,v=spf1 ip6:fd68:85f0:7c72::/48 -all,True,fd68:85f0:7c72::/48,pickelhost-alpha (primary relay)
-russianporno.tv,v=spf1 ip6:fdec:ae16:fda7::/48 -all,True,fdec:ae16:fda7::/48,golf (eye-mail primary relay)
-rustyload.com,v=spf1 ip6:fdec:ae16:fda7::/48 -all,True,fdec:ae16:fda7::/48,golf (eye-mail primary relay)
-rvabookbar.com,v=spf1 ip6:fdec:ae16:fda7::/48 -all,True,fdec:ae16:fda7::/48,golf (eye-mail primary relay)
-rvhometown.com,v=spf1 ip6:fdec:ae16:fda7::/48 -all,True,fdec:ae16:fda7::/48,golf (eye-mail primary relay)
-rvkc.com,v=spf1 ip6:fd1b:212c:a5f9::/48 -all,True,fd1b:212c:a5f9::/48,hotel (southafricaproject)
-ryanhillwrites.com,v=spf1 ip6:fdec:ae16:fda7::/48 -all,True,fdec:ae16:fda7::/48,golf (eye-mail primary relay)
-rzq.ai,v=spf1 ip6:fd68:85f0:7c72::/48 -all,True,fd68:85f0:7c72::/48,pickelhost-alpha (primary relay)
-s.chwab.com,v=spf1 ip6:fd1b:212c:a5f9::/48 -all,True,fd1b:212c:a5f9::/48,hotel (southafricaproject)
-sa-th.net,v=spf1 ip6:fd68:85f0:7c72::/48 -all,True,fd68:85f0:7c72::/48,pickelhost-alpha (primary relay)
-sachwab.com,v=spf1 ip6:fd9c:d030:168c::/48 -all,True,fd9c:d030:168c::/48,
-sack.com,v=spf1 ip6:fd1b:212c:a5f9::/48 -all,True,fd1b:212c:a5f9::/48,hotel (southafricaproject)
-saddlemans.com,v=spf1 ip6:fd68:85f0:7c72::/48 -all,True,fd68:85f0:7c72::/48,pickelhost-alpha (primary relay)
-safeqm.com,v=spf1 ip6:fd68:85f0:7c72::/48 -all,True,fd68:85f0:7c72::/48,pickelhost-alpha (primary relay)
+rupayamail.com,,False,,
+russell-tovey.com,,False,,
+russianporno.tv,,False,,
+rustyload.com,,False,,
+rvabookbar.com,,False,,
+rvhometown.com,,False,,
+rvkc.com,,False,,
+ryanhillwrites.com,,False,,
+rzq.ai,,False,,
+s.chwab.com,,False,,
+sa-th.net,,False,,
+sachwab.com,,False,,
+sack.com,,False,,
+saddlemans.com,,False,,
+safeqm.com,,False,,
 safetydirectory.com,v=spf1 ip6:fdec:ae16:fda7::/48 -all,True,fdec:ae16:fda7::/48,golf (eye-mail primary relay)
 saintmalachyparish.org,v=spf1 ip6:fdec:ae16:fda7::/48 -all,True,fdec:ae16:fda7::/48,golf (eye-mail primary relay)
 sakerhetsakuten.com,v=spf1 ip6:fdec:ae16:fda7::/48 -all,True,fdec:ae16:fda7::/48,golf (eye-mail primary relay)
@@ -2135,71 +2169,73 @@ scdsb.com,v=spf1 ip6:fd43:c0d1:c090::/48 -all,True,fd43:c0d1:c090::/48,
 scentesse.com,v=spf1 ip6:fdec:ae16:fda7::/48 -all,True,fdec:ae16:fda7::/48,golf (eye-mail primary relay)
 schooladept.ai,v=spf1 ip6:fd68:85f0:7c72::/48 -all,True,fd68:85f0:7c72::/48,pickelhost-alpha (primary relay)
 schswab.com,v=spf1 ip6:fd1b:212c:a5f9::/48 -all,True,fd1b:212c:a5f9::/48,hotel (southafricaproject)
-schwabt.com,,False,,
-schwac.com,,False,,
-schwawb.com,,False,,
-scottienellhughes.com,,False,,
-scudtv.com,,False,,
-scuwab.com,,False,,
-scwab.com,,False,,
-scwhab.com,,False,,
-scywab.com,,False,,
-sdarobotics.org,,False,,
-sdbbs.cc,,False,,
-sdchwab.com,,False,,
-sdfsdf.com,,False,,
-search-usa.ws,,False,,
-searchusphone.com,,False,,
-seaswiss.com,,False,,
-seattguru.com,,False,,
-seattle99.org,,False,,
-sebastienizambard.net,,False,,
-secure.pussport.com,,False,,
-sedexo.com,,False,,
-selectlaundry.com,,False,,
-selectlayers.com,,False,,
-selesforce.com,,False,,
+schwabt.com,v=spf1 ip6:fd1b:212c:a5f9::/48 -all,True,fd1b:212c:a5f9::/48,hotel (southafricaproject)
+schwac.com,v=spf1 ip6:fd1b:212c:a5f9::/48 -all,True,fd1b:212c:a5f9::/48,hotel (southafricaproject)
+schwawb.com,v=spf1 ip6:fd9c:d030:168c::/48 -all,True,fd9c:d030:168c::/48,
+scook.cfd,v=spf1 ip6:fdec:ae16:fda7::/48 -all,True,fdec:ae16:fda7::/48,golf (eye-mail primary relay)
+scottienellhughes.com,v=spf1 ip6:fdec:ae16:fda7::/48 -all,True,fdec:ae16:fda7::/48,golf (eye-mail primary relay)
+scudtv.com,v=spf1 ip4:136.0.179.0/24 ip4:5.83.150.0/24 ip4:89.18.24.0/24 ip4:102.219.65.0/24 ip4:77.90.49.0/24 ip4:5.230.178.0/24 ip4:38.72.159.0/24 -all,False,,
+scuwab.com,v=spf1 ip6:fd43:c0d1:c090::/48 -all,True,fd43:c0d1:c090::/48,
+scwab.com,v=spf1 ip6:fd1b:212c:a5f9::/48 -all,True,fd1b:212c:a5f9::/48,hotel (southafricaproject)
+scwhab.com,v=spf1 ip6:fd1b:212c:a5f9::/48 -all,True,fd1b:212c:a5f9::/48,hotel (southafricaproject)
+scywab.com,v=spf1 ip6:fd43:c0d1:c090::/48 -all,True,fd43:c0d1:c090::/48,
+sdale.com,v=spf1 ip6:fd18:d113:9bed::/48 -all,True,fd18:d113:9bed::/48,
+sdarobotics.org,v=spf1 ip6:fdec:ae16:fda7::/48 -all,True,fdec:ae16:fda7::/48,golf (eye-mail primary relay)
+sdbbs.cc,v=spf1 ip6:fdec:ae16:fda7::/48 -all,True,fdec:ae16:fda7::/48,golf (eye-mail primary relay)
+sdchwab.com,v=spf1 ip6:fd9c:d030:168c::/48 -all,True,fd9c:d030:168c::/48,
+sdfsdf.com,v=spf1 ip6:fd43:c0d1:c090::/48 -all,True,fd43:c0d1:c090::/48,
+search-usa.ws,v=spf1 ip6:fdd0:951e:ede7::/48 -all,True,fdd0:951e:ede7::/48,
+searchusphone.com,v=spf1 ip6:fd9c:d030:168c::/48 -all,True,fd9c:d030:168c::/48,
+seaswiss.com,v=spf1 ip6:fd68:85f0:7c72::/48 -all,True,fd68:85f0:7c72::/48,pickelhost-alpha (primary relay)
+seattguru.com,v=spf1 ip6:fd9c:d030:168c::/48 -all,True,fd9c:d030:168c::/48,
+seattle99.org,v=spf1 ip6:fdec:ae16:fda7::/48 -all,True,fdec:ae16:fda7::/48,golf (eye-mail primary relay)
+sebastienizambard.net,v=spf1 ip6:fdec:ae16:fda7::/48 -all,True,fdec:ae16:fda7::/48,golf (eye-mail primary relay)
+secure.pussport.com,v=spf1 ip6:fdec:ae16:fda7::/48 -all,True,fdec:ae16:fda7::/48,golf (eye-mail primary relay)
+sedexo.com,v=spf1 ip6:fd43:c0d1:c090::/48 -all,True,fd43:c0d1:c090::/48,
+selectlaundry.com,v=spf1 ip6:fd43:c0d1:c090::/48 -all,True,fd43:c0d1:c090::/48,
+selectlayers.com,v=spf1 ip6:fd68:85f0:7c72::/48 -all,True,fd68:85f0:7c72::/48,pickelhost-alpha (primary relay)
+selesforce.com,v=spf1 ip6:fd43:c0d1:c090::/48 -all,True,fd43:c0d1:c090::/48,
 selfie-est.com,v=spf1 ip6:fd68:85f0:7c72::/48 -all,True,fd68:85f0:7c72::/48,pickelhost-alpha (primary relay)
-sempatipetstore.net,,False,,
-seniordatingxp.com,,False,,
-serialbaba.co,,False,,
-servcienow.com,,False,,
-servicsenow.com,,False,,
-sevricenow.com,,False,,
-sexdatingsite.online,,False,,
-sexo.com,,False,,
-sexonlinelive.com,,False,,
-sexur.com,,False,,
-sexygpsshoes.com,,False,,
-sfai.com,,False,,
+sempatipetstore.net,v=spf1 ip6:fdec:ae16:fda7::/48 -all,True,fdec:ae16:fda7::/48,golf (eye-mail primary relay)
+send.pussport.com,v=spf1 ip6:fdec:ae16:fda7::/48 -all,True,fdec:ae16:fda7::/48,golf (eye-mail primary relay)
+seniordatingxp.com,v=spf1 ip6:fdec:ae16:fda7::/48 -all,True,fdec:ae16:fda7::/48,golf (eye-mail primary relay)
+serialbaba.co,v=spf1 ip6:fd9c:d030:168c::/48 -all,True,fd9c:d030:168c::/48,
+servcienow.com,v=spf1 ip6:fd9c:d030:168c::/48 -all,True,fd9c:d030:168c::/48,
+server1.pussport.com,v=spf1 ip6:fdec:ae16:fda7::/48 -all,True,fdec:ae16:fda7::/48,golf (eye-mail primary relay)
+servicsenow.com,v=spf1 ip6:fdec:ae16:fda7::/48 -all,True,fdec:ae16:fda7::/48,golf (eye-mail primary relay)
+sevricenow.com,v=spf1 ip6:fdec:ae16:fda7::/48 -all,True,fdec:ae16:fda7::/48,golf (eye-mail primary relay)
+sexdatingsite.online,v=spf1 ip6:fdec:ae16:fda7::/48 -all,True,fdec:ae16:fda7::/48,golf (eye-mail primary relay)
+sexo.com,v=spf1 ip6:fd43:c0d1:c090::/48 -all,True,fd43:c0d1:c090::/48,
+sexonlinelive.com,v=spf1 ip6:fdec:ae16:fda7::/48 -all,True,fdec:ae16:fda7::/48,golf (eye-mail primary relay)
+sexur.com,v=spf1 ip6:fdec:ae16:fda7::/48 -all,True,fdec:ae16:fda7::/48,golf (eye-mail primary relay)
+sexygpsshoes.com,v=spf1 ip6:fdec:ae16:fda7::/48 -all,True,fdec:ae16:fda7::/48,golf (eye-mail primary relay)
+sfai.com,v=spf1 ip6:fd43:c0d1:c090::/48 -all,True,fd43:c0d1:c090::/48,
 sfcsd.com,v=spf1 ip6:fd43:c0d1:c090::/48 -all,True,fd43:c0d1:c090::/48,
-sfhispanic.cc,,False,,
-sfhwab.com,,False,,
-shabazzacademy.com,,False,,
-shalsa3d.com,,False,,
+sfhispanic.cc,v=spf1 ip6:fdec:ae16:fda7::/48 -all,True,fdec:ae16:fda7::/48,golf (eye-mail primary relay)
+sfhwab.com,v=spf1 ip6:fd43:c0d1:c090::/48 -all,True,fd43:c0d1:c090::/48,
+shabazzacademy.com,v=spf1 ip6:fdec:ae16:fda7::/48 -all,True,fdec:ae16:fda7::/48,golf (eye-mail primary relay)
+shalsa3d.com,v=spf1 ip6:fd68:85f0:7c72::/48 -all,True,fd68:85f0:7c72::/48,pickelhost-alpha (primary relay)
 sharpsgroup.org,v=spf1 ip6:fd68:85f0:7c72::/48 -all,True,fd68:85f0:7c72::/48,pickelhost-alpha (primary relay)
 she.pointbuysys.com,v=spf1 ip6:fd1b:212c:a5f9::/48 -all,True,fd1b:212c:a5f9::/48,hotel (southafricaproject)
-sheep.pointbuysys.com,,False,,
-shimane.com,,False,,
-shiok888.com,,False,,
-shit.net,,False,,
-shitface.com,,False,,
-shjto.us,,False,,
-shlomoo.org,,False,,
+sheep.pointbuysys.com,v=spf1 ip6:fd1b:212c:a5f9::/48 -all,True,fd1b:212c:a5f9::/48,hotel (southafricaproject)
+shimane.com,v=spf1 ip6:fd43:c0d1:c090::/48 -all,True,fd43:c0d1:c090::/48,
+shit.net,v=spf1 ip6:fd43:c0d1:c090::/48 -all,True,fd43:c0d1:c090::/48,
+shitface.com,v=spf1 ip6:fd43:c0d1:c090::/48 -all,True,fd43:c0d1:c090::/48,
+shjto.us,v=spf1 ip6:fd9c:d030:168c::/48 -all,True,fd9c:d030:168c::/48,
+shlomoo.org,v=spf1 ip6:fdec:ae16:fda7::/48 -all,True,fdec:ae16:fda7::/48,golf (eye-mail primary relay)
 shoemee.com,v=spf1 ip6:fdec:ae16:fda7::/48 -all,True,fdec:ae16:fda7::/48,golf (eye-mail primary relay)
-shoes.net,,False,,
-shoha.cc,,False,,
-shopdonna.com,,False,,
-shopfy.com,,False,,
+shoes.net,v=spf1 ip6:fd43:c0d1:c090::/48 -all,True,fd43:c0d1:c090::/48,
+shoha.cc,v=spf1 ip6:fdec:ae16:fda7::/48 -all,True,fdec:ae16:fda7::/48,golf (eye-mail primary relay)
+shopdonna.com,v=spf1 ip6:fd1b:212c:a5f9::/48 -all,True,fd1b:212c:a5f9::/48,hotel (southafricaproject)
+shopfy.com,v=spf1 ip6:fd43:c0d1:c090::/48 -all,True,fd43:c0d1:c090::/48,
 shopingine.ai,v=spf1 ip6:fd68:85f0:7c72::/48 -all,True,fd68:85f0:7c72::/48,pickelhost-alpha (primary relay)
-shopwee.com,,False,,
-shopwerner.com,,False,,
-shouqbeuatyshop.com,,False,,
+shopwee.com,v=spf1 ip6:fdec:ae16:fda7::/48 -all,True,fdec:ae16:fda7::/48,golf (eye-mail primary relay)
+shopwerner.com,v=spf1 ip6:fd68:85f0:7c72::/48 -all,True,fd68:85f0:7c72::/48,pickelhost-alpha (primary relay)
+shouqbeuatyshop.com,v=spf1 ip6:fd68:85f0:7c72::/48 -all,True,fd68:85f0:7c72::/48,pickelhost-alpha (primary relay)
 showleap.com,v=spf1 ip6:fd68:85f0:7c72::/48 -all,True,fd68:85f0:7c72::/48,pickelhost-alpha (primary relay)
 siemans.com,v=spf1 ip6:fd1b:212c:a5f9::/48 -all,True,fd1b:212c:a5f9::/48,hotel (southafricaproject)
 sigir2001.org,v=spf1 ip6:fd1b:212c:a5f9::/48 -all,True,fd1b:212c:a5f9::/48,hotel (southafricaproject)
 signatourcampers.com,v=spf1 ip6:fd1b:212c:a5f9::/48 -all,True,fd1b:212c:a5f9::/48,hotel (southafricaproject)
-sikharchives.com,v=spf1 ip6:fd1b:212c:a5f9::/48 -all,True,fd1b:212c:a5f9::/48,hotel (southafricaproject)
 silentrant.com,v=spf1 ip6:fdec:ae16:fda7::/48 -all,True,fdec:ae16:fda7::/48,golf (eye-mail primary relay)
 silicon-sands.ai,v=spf1 ip6:fd68:85f0:7c72::/48 -all,True,fd68:85f0:7c72::/48,pickelhost-alpha (primary relay)
 silver.pointbuysys.com,v=spf1 ip6:fd1b:212c:a5f9::/48 -all,True,fd1b:212c:a5f9::/48,hotel (southafricaproject)
@@ -2229,7 +2265,7 @@ slsck.com,v=spf1 ip6:fd43:c0d1:c090::/48 -all,True,fd43:c0d1:c090::/48,
 slyzmud.com,v=spf1 ip6:fdec:ae16:fda7::/48 -all,True,fdec:ae16:fda7::/48,golf (eye-mail primary relay)
 smail.pussport.com,v=spf1 ip6:fdec:ae16:fda7::/48 -all,True,fdec:ae16:fda7::/48,golf (eye-mail primary relay)
 small.pointbuysys.com,v=spf1 ip6:fd1b:212c:a5f9::/48 -all,True,fd1b:212c:a5f9::/48,hotel (southafricaproject)
-smallbusinesslauncher.com,v=spf1 ip6:fdec:ae16:fda7::/48 -all,True,fdec:ae16:fda7::/48,golf (eye-mail primary relay)
+smallbusinesslauncher.com,v=spf1 include:mailgun.org ~all,False,,
 smartbitcoin.online,v=spf1 ip6:fd68:85f0:7c72::/48 -all,True,fd68:85f0:7c72::/48,pickelhost-alpha (primary relay)
 smartflowers.ai,v=spf1 ip6:fd68:85f0:7c72::/48 -all,True,fd68:85f0:7c72::/48,pickelhost-alpha (primary relay)
 smemarketing.com,v=spf1 ip6:fdec:ae16:fda7::/48 -all,True,fdec:ae16:fda7::/48,golf (eye-mail primary relay)
@@ -2266,7 +2302,6 @@ sotaysinhly.com,v=spf1 ip6:fdec:ae16:fda7::/48 -all,True,fdec:ae16:fda7::/48,gol
 soulsong.ai,v=spf1 ip6:fd68:85f0:7c72::/48 -all,True,fd68:85f0:7c72::/48,pickelhost-alpha (primary relay)
 soundcult.com,v=spf1 ip6:fdec:ae16:fda7::/48 -all,True,fdec:ae16:fda7::/48,golf (eye-mail primary relay)
 soundenergyalternatives.com,v=spf1 ip6:fd68:85f0:7c72::/48 -all,True,fd68:85f0:7c72::/48,pickelhost-alpha (primary relay)
-soundoff.org,v=spf1 ip6:fdec:ae16:fda7::/48 -all,True,fdec:ae16:fda7::/48,golf (eye-mail primary relay)
 southafricaproject.info,v=spf1 ip6:fd1b:212c:a5f9::/48 -all,True,fd1b:212c:a5f9::/48,hotel (southafricaproject)
 southbronxvision.org,v=spf1 ip6:fdec:ae16:fda7::/48 -all,True,fdec:ae16:fda7::/48,golf (eye-mail primary relay)
 southernevents.org,v=spf1 ip6:fdec:ae16:fda7::/48 -all,True,fdec:ae16:fda7::/48,golf (eye-mail primary relay)
@@ -2276,6 +2311,7 @@ spamfree24.org,v=spf1 ip6:fd1b:212c:a5f9::/48 -all,True,fd1b:212c:a5f9::/48,hote
 sparklearning.ai,v=spf1 ip6:fd68:85f0:7c72::/48 -all,True,fd68:85f0:7c72::/48,pickelhost-alpha (primary relay)
 sparklybud.com,v=spf1 ip6:fdec:ae16:fda7::/48 -all,True,fdec:ae16:fda7::/48,golf (eye-mail primary relay)
 sparkunlimited.com,v=spf1 ip6:fd68:85f0:7c72::/48 -all,True,fd68:85f0:7c72::/48,pickelhost-alpha (primary relay)
+special-operations-technology.com,v=spf1 ip6:fd1b:212c:a5f9::/48 -all,True,fd1b:212c:a5f9::/48,hotel (southafricaproject)
 specialistblog.com,v=spf1 ip6:fdec:ae16:fda7::/48 -all,True,fdec:ae16:fda7::/48,golf (eye-mail primary relay)
 spelaslotsonline.com,v=spf1 ip6:fdec:ae16:fda7::/48 -all,True,fdec:ae16:fda7::/48,golf (eye-mail primary relay)
 spiotify.com,v=spf1 ip6:fd1b:212c:a5f9::/48 -all,True,fd1b:212c:a5f9::/48,hotel (southafricaproject)
@@ -2289,6 +2325,7 @@ spotigfy.com,v=spf1 ip6:fd9c:d030:168c::/48 -all,True,fd9c:d030:168c::/48,
 spotitfy.com,v=spf1 ip6:fd1b:212c:a5f9::/48 -all,True,fd1b:212c:a5f9::/48,hotel (southafricaproject)
 spripe.com,v=spf1 ip6:fd9c:d030:168c::/48 -all,True,fd9c:d030:168c::/48,
 sprite.ws,v=spf1 ip6:fd38:d927:389a::/48 -all,True,fd38:d927:389a::/48,echo (walmart/.ws cluster)
+sptify.com,v=spf1 ip6:fd18:d113:9bed::/48 -all,True,fd18:d113:9bed::/48,
 spuareup.com,v=spf1 ip6:fd1b:212c:a5f9::/48 -all,True,fd1b:212c:a5f9::/48,hotel (southafricaproject)
 spymail.com,v=spf1 ip6:fd43:c0d1:c090::/48 -all,True,fd43:c0d1:c090::/48,
 sqauareup.com,v=spf1 ip6:fd1b:212c:a5f9::/48 -all,True,fd1b:212c:a5f9::/48,hotel (southafricaproject)
@@ -2384,102 +2421,107 @@ taseek.top,v=spf1 ip6:fdec:ae16:fda7::/48 -all,True,fdec:ae16:fda7::/48,golf (ey
 tastypizza.com,v=spf1 ip6:fd43:c0d1:c090::/48 -all,True,fd43:c0d1:c090::/48,
 taxrefundsoftware.com,v=spf1 ip6:fdec:ae16:fda7::/48 -all,True,fdec:ae16:fda7::/48,golf (eye-mail primary relay)
 tb777.org,v=spf1 ip6:fdec:ae16:fda7::/48 -all,True,fdec:ae16:fda7::/48,golf (eye-mail primary relay)
+tdq.com,v=spf1 ip6:fd18:d113:9bed::/48 -all,True,fd18:d113:9bed::/48,
 teamvortex.com,v=spf1 ip6:fd43:c0d1:c090::/48 -all,True,fd43:c0d1:c090::/48,
-techgear.io,v=spf1 ip6:fd68:85f0:7c72::/48 -all,True,fd68:85f0:7c72::/48,pickelhost-alpha (primary relay)
-technionmba.com,v=spf1 ip6:fdec:ae16:fda7::/48 -all,True,fdec:ae16:fda7::/48,golf (eye-mail primary relay)
-technolage.com,v=spf1 ip6:fd68:85f0:7c72::/48 -all,True,fd68:85f0:7c72::/48,pickelhost-alpha (primary relay)
-teckexperts.com,v=spf1 ip6:fdec:ae16:fda7::/48 -all,True,fdec:ae16:fda7::/48,golf (eye-mail primary relay)
-teebabaya.com,v=spf1 ip6:fd68:85f0:7c72::/48 -all,True,fd68:85f0:7c72::/48,pickelhost-alpha (primary relay)
-teemeurope.eu,v=spf1 ip6:fdec:ae16:fda7::/48 -all,True,fdec:ae16:fda7::/48,golf (eye-mail primary relay)
+techgear.io,,False,,
+technionmba.com,,False,,
+technolage.com,,False,,
+teckexperts.com,,False,,
+teebabaya.com,,False,,
+teemeurope.eu,,False,,
 teesla.com,v=spf1 ip6:fd1b:212c:a5f9::/48 -all,True,fd1b:212c:a5f9::/48,hotel (southafricaproject)
-terade.com,v=spf1 ip6:fd1b:212c:a5f9::/48 -all,True,fd1b:212c:a5f9::/48,hotel (southafricaproject)
-terasd.com,v=spf1 ip6:fd36:7c64:44d0::/48 -all,True,fd36:7c64:44d0::/48,
-teslas.com,v=spf1 ip6:fd1b:212c:a5f9::/48 -all,True,fd1b:212c:a5f9::/48,hotel (southafricaproject)
-tesoro.cl,v=spf1 ip6:fdf3:d665:9546::/48 -all,True,fdf3:d665:9546::/48,
-tex.xyz,v=spf1 ip6:fd68:85f0:7c72::/48 -all,True,fd68:85f0:7c72::/48,pickelhost-alpha (primary relay)
-tfmcguckin.com,v=spf1 ip6:fd1b:212c:a5f9::/48 -all,True,fd1b:212c:a5f9::/48,hotel (southafricaproject)
-tggp.com,v=spf1 ip6:fd68:85f0:7c72::/48 -all,True,fd68:85f0:7c72::/48,pickelhost-alpha (primary relay)
-that.pointbuysys.com,v=spf1 ip6:fd1b:212c:a5f9::/48 -all,True,fd1b:212c:a5f9::/48,hotel (southafricaproject)
+terade.com,,False,,
+terasd.com,,False,,
+teslas.com,,False,,
+tesoro.cl,,False,,
+tex.xyz,,False,,
+tfmcguckin.com,,False,,
+tggp.com,,False,,
+that.pointbuysys.com,,False,,
 thcimport.de,v=spf1 include:spf.easyname.com -all,False,,
-theantimarketing.com,v=spf1 ip6:fd68:85f0:7c72::/48 -all,True,fd68:85f0:7c72::/48,pickelhost-alpha (primary relay)
-theartspilgrimage.com,v=spf1 ip6:fdec:ae16:fda7::/48 -all,True,fdec:ae16:fda7::/48,golf (eye-mail primary relay)
+theantimarketing.com,,False,,
+theartspilgrimage.com,,False,,
 theatomiclounge.com,v=spf1 ip6:fd68:85f0:7c72::/48 -all,True,fd68:85f0:7c72::/48,pickelhost-alpha (primary relay)
-thebarbecuemaster.net,v=spf1 ip6:fdec:ae16:fda7::/48 -all,True,fdec:ae16:fda7::/48,golf (eye-mail primary relay)
-thebookblog.com,v=spf1 ip6:fdec:ae16:fda7::/48 -all,True,fdec:ae16:fda7::/48,golf (eye-mail primary relay)
-thechinesetimekeeper.com,v=spf1 ip6:fd68:85f0:7c72::/48 -all,True,fd68:85f0:7c72::/48,pickelhost-alpha (primary relay)
-thecompanyart.com,v=spf1 ip6:fdec:ae16:fda7::/48 -all,True,fdec:ae16:fda7::/48,golf (eye-mail primary relay)
-thedataevolution.com,v=spf1 ip6:fdec:ae16:fda7::/48 -all,True,fdec:ae16:fda7::/48,golf (eye-mail primary relay)
-thedatanerd.ai,v=spf1 ip6:fd68:85f0:7c72::/48 -all,True,fd68:85f0:7c72::/48,pickelhost-alpha (primary relay)
-thedmti.com,v=spf1 ip6:fd68:85f0:7c72::/48 -all,True,fd68:85f0:7c72::/48,pickelhost-alpha (primary relay)
-thehookupmaster.com,v=spf1 ip6:fdec:ae16:fda7::/48 -all,True,fdec:ae16:fda7::/48,golf (eye-mail primary relay)
-themoviefitna.com,v=spf1 ip6:fd1b:212c:a5f9::/48 -all,True,fd1b:212c:a5f9::/48,hotel (southafricaproject)
-thenavy.com,v=spf1 ip6:fd43:c0d1:c090::/48 -all,True,fd43:c0d1:c090::/48,
-thenorthfacejacket.org,v=spf1 ip6:fdec:ae16:fda7::/48 -all,True,fdec:ae16:fda7::/48,golf (eye-mail primary relay)
-thepandorian.com,v=spf1 ip6:fd68:85f0:7c72::/48 -all,True,fd68:85f0:7c72::/48,pickelhost-alpha (primary relay)
-thepickledtongue.com,v=spf1 ip6:fdec:ae16:fda7::/48 -all,True,fdec:ae16:fda7::/48,golf (eye-mail primary relay)
-theproductologist.com,v=spf1 ip6:fdec:ae16:fda7::/48 -all,True,fdec:ae16:fda7::/48,golf (eye-mail primary relay)
-thequill.blog,v=spf1 ip6:fdec:ae16:fda7::/48 -all,True,fdec:ae16:fda7::/48,golf (eye-mail primary relay)
-thermabattery.com,v=spf1 ip6:fd68:85f0:7c72::/48 -all,True,fd68:85f0:7c72::/48,pickelhost-alpha (primary relay)
-therydercup2020.live,v=spf1 ip6:fdec:ae16:fda7::/48 -all,True,fdec:ae16:fda7::/48,golf (eye-mail primary relay)
-these.pointbuysys.com,v=spf1 ip6:fd1b:212c:a5f9::/48 -all,True,fd1b:212c:a5f9::/48,hotel (southafricaproject)
-thesefootballtimes.net,v=spf1 ip6:fdec:ae16:fda7::/48 -all,True,fdec:ae16:fda7::/48,golf (eye-mail primary relay)
-thesmallcraft.com,v=spf1 ip6:fd68:85f0:7c72::/48 -all,True,fd68:85f0:7c72::/48,pickelhost-alpha (primary relay)
-thestudentbill.com,v=spf1 ip6:fdec:ae16:fda7::/48 -all,True,fdec:ae16:fda7::/48,golf (eye-mail primary relay)
-thevaporhut.com,v=spf1 ip6:fd1b:212c:a5f9::/48 -all,True,fd1b:212c:a5f9::/48,hotel (southafricaproject)
-theworldwidenetwork.net,v=spf1 ip6:fdec:ae16:fda7::/48 -all,True,fdec:ae16:fda7::/48,golf (eye-mail primary relay)
-they.pointbuysys.com,v=spf1 ip6:fd1b:212c:a5f9::/48 -all,True,fd1b:212c:a5f9::/48,hotel (southafricaproject)
-thisrecording.com,v=spf1 ip6:fd68:85f0:7c72::/48 -all,True,fd68:85f0:7c72::/48,pickelhost-alpha (primary relay)
-thougalkhaeal.com,v=spf1 ip6:fd68:85f0:7c72::/48 -all,True,fd68:85f0:7c72::/48,pickelhost-alpha (primary relay)
+thebarbecuemaster.net,,False,,
+thebookblog.com,,False,,
+thechinesetimekeeper.com,,False,,
+thecompanyart.com,,False,,
+thedataevolution.com,,False,,
+thedatanerd.ai,,False,,
+thedmti.com,,False,,
+thehookupmaster.com,,False,,
+themoviefitna.com,,False,,
+thenavy.com,,False,,
+thenorthfacejacket.org,,False,,
+thepandorian.com,,False,,
+thepickledtongue.com,,False,,
+theproductologist.com,,False,,
+thequill.blog,,False,,
+thermabattery.com,,False,,
+therydercup2020.live,,False,,
+these.pointbuysys.com,,False,,
+thesefootballtimes.net,,False,,
+thesenholding.com,,False,,
+thesmallcraft.com,,False,,
+thestudentbill.com,,False,,
+thevaporhut.com,,False,,
+theworldwidenetwork.net,,False,,
+they.pointbuysys.com,,False,,
+thisrecording.com,,False,,
+thor.pussport.com,,False,,
+thougalkhaeal.com,,False,,
 threadgenius.co,v=spf1 ip6:fd1b:212c:a5f9::/48 -all,True,fd1b:212c:a5f9::/48,hotel (southafricaproject)
-threadtree.work,v=spf1 ip6:fd68:85f0:7c72::/48 -all,True,fd68:85f0:7c72::/48,pickelhost-alpha (primary relay)
-tieusunguoinoitieng.com,v=spf1 ip6:fdec:ae16:fda7::/48 -all,True,fdec:ae16:fda7::/48,golf (eye-mail primary relay)
-tiger.pussport.com,v=spf1 ip6:fdec:ae16:fda7::/48 -all,True,fdec:ae16:fda7::/48,golf (eye-mail primary relay)
-tiger24.com,v=spf1 ip6:fd68:85f0:7c72::/48 -all,True,fd68:85f0:7c72::/48,pickelhost-alpha (primary relay)
-timberwolfpress.com,v=spf1 ip6:fd43:c0d1:c090::/48 -all,True,fd43:c0d1:c090::/48,
-tiny.pointbuysys.com,v=spf1 ip6:fd1b:212c:a5f9::/48 -all,True,fd1b:212c:a5f9::/48,hotel (southafricaproject)
-tinydef.com,v=spf1 ip6:fd36:7c64:44d0::/48 -all,True,fd36:7c64:44d0::/48,
-tinydinostudios.com,v=spf1 ip6:fdec:ae16:fda7::/48 -all,True,fdec:ae16:fda7::/48,golf (eye-mail primary relay)
-tioki.com,v=spf1 ip6:fdec:ae16:fda7::/48 -all,True,fdec:ae16:fda7::/48,golf (eye-mail primary relay)
-tionex.com,v=spf1 ip6:fd43:c0d1:c090::/48 -all,True,fd43:c0d1:c090::/48,
+threadtree.work,,False,,
+tieusunguoinoitieng.com,,False,,
+tiger.pussport.com,,False,,
+tiger24.com,,False,,
+timberwolfpress.com,,False,,
+tiny.pointbuysys.com,,False,,
+tinydef.com,,False,,
+tinydinostudios.com,,False,,
+tioki.com,,False,,
+tionex.com,,False,,
 tiv.cc,v=spf1 ip6:fdec:ae16:fda7::/48 -all,True,fdec:ae16:fda7::/48,golf (eye-mail primary relay)
-tivejo.com,v=spf1 ip6:fd9c:d030:168c::/48 -all,True,fd9c:d030:168c::/48,
-tlwmail.xyz,v=spf1 ip6:fdec:ae16:fda7::/48 -all,True,fdec:ae16:fda7::/48,golf (eye-mail primary relay)
-tmail.bio,v=spf1 ip6:fd68:85f0:7c72::/48 -all,True,fd68:85f0:7c72::/48,pickelhost-alpha (primary relay)
+tivejo.com,,False,,
+tlwmail.xyz,,False,,
+tmail.bio,,False,,
 tmet.com,v=spf1 ip6:fd1b:212c:a5f9::/48 -all,True,fd1b:212c:a5f9::/48,hotel (southafricaproject)
-tmvi.com,v=spf1 ip6:fd43:c0d1:c090::/48 -all,True,fd43:c0d1:c090::/48,
-to.pointbuysys.com,v=spf1 ip6:fd1b:212c:a5f9::/48 -all,True,fd1b:212c:a5f9::/48,hotel (southafricaproject)
+tmvi.com,,False,,
+to.pointbuysys.com,,False,,
+tolite.com,,False,,
 tollerpatiobar.com,v=spf1 ip6:fd68:85f0:7c72::/48 -all,True,fd68:85f0:7c72::/48,pickelhost-alpha (primary relay)
-toom.us,v=spf1 ip6:fd1b:212c:a5f9::/48 -all,True,fd1b:212c:a5f9::/48,hotel (southafricaproject)
-toppenishhospital.com,v=spf1 ip6:fd1b:212c:a5f9::/48 -all,True,fd1b:212c:a5f9::/48,hotel (southafricaproject)
-tor-proxy.net,v=spf1 ip4:66.7.223.178 ip4:66.7.223.180/31 ip4:207.32.219.80/29 ip4:198.20.112.5 -all,False,,
-torbolesulgarda.com,v=spf1 ip6:fdec:ae16:fda7::/48 -all,True,fdec:ae16:fda7::/48,golf (eye-mail primary relay)
-tordarkwebs.com,v=spf1 ip6:fdec:ae16:fda7::/48 -all,True,fdec:ae16:fda7::/48,golf (eye-mail primary relay)
-torontoluxuryhome.ca,v=spf1 ip6:fd92:59f3:510e::/48 -all,True,fd92:59f3:510e::/48,delta (tertiary relay)
-torsmarketplace.com,v=spf1 ip6:fdec:ae16:fda7::/48 -all,True,fdec:ae16:fda7::/48,golf (eye-mail primary relay)
-totaldeath.com,v=spf1 ip6:fd43:c0d1:c090::/48 -all,True,fd43:c0d1:c090::/48,
-totectors.net,v=spf1 ip6:fd1b:212c:a5f9::/48 -all,True,fd1b:212c:a5f9::/48,hotel (southafricaproject)
-tousma.com,v=spf1 ip6:fdec:ae16:fda7::/48 -all,True,fdec:ae16:fda7::/48,golf (eye-mail primary relay)
-tpws.com,v=spf1 ip6:fd43:c0d1:c090::/48 -all,True,fd43:c0d1:c090::/48,
-trade-pals.com,v=spf1 ip6:fdec:ae16:fda7::/48 -all,True,fdec:ae16:fda7::/48,golf (eye-mail primary relay)
-traderiders.net,v=spf1 ip6:fdec:ae16:fda7::/48 -all,True,fdec:ae16:fda7::/48,golf (eye-mail primary relay)
-tradetools.ai,v=spf1 ip6:fd68:85f0:7c72::/48 -all,True,fd68:85f0:7c72::/48,pickelhost-alpha (primary relay)
-traffmix.com,v=spf1 ip6:fd9c:d030:168c::/48 -all,True,fd9c:d030:168c::/48,
-tranhcathanoi.com,v=spf1 ip6:fd68:85f0:7c72::/48 -all,True,fd68:85f0:7c72::/48,pickelhost-alpha (primary relay)
-trashcanmail.com,v=spf1 ip6:fd1b:212c:a5f9::/48 -all,True,fd1b:212c:a5f9::/48,hotel (southafricaproject)
-traslalluvialiteraria.com,v=spf1 ip6:fd68:85f0:7c72::/48 -all,True,fd68:85f0:7c72::/48,pickelhost-alpha (primary relay)
-travelerz.com,v=spf1 ip6:fd1b:212c:a5f9::/48 -all,True,fd1b:212c:a5f9::/48,hotel (southafricaproject)
-traveles.com,v=spf1 ip6:fd1b:212c:a5f9::/48 -all,True,fd1b:212c:a5f9::/48,hotel (southafricaproject)
-travelmania-ireland.com,v=spf1 ip6:fdec:ae16:fda7::/48 -all,True,fdec:ae16:fda7::/48,golf (eye-mail primary relay)
-travelrs.com,v=spf1 ip6:fd43:c0d1:c090::/48 -all,True,fd43:c0d1:c090::/48,
-trbvn.com,v=spf1 ip6:fd9c:d030:168c::/48 -all,True,fd9c:d030:168c::/48,
-trd.com,v=spf1 ip6:fd43:c0d1:c090::/48 -all,True,fd43:c0d1:c090::/48,
+toom.us,,False,,
+toppenishhospital.com,,False,,
+tor-proxy.net,,False,,
+torbolesulgarda.com,,False,,
+tordarkwebs.com,,False,,
+torontoluxuryhome.ca,,False,,
+torsmarketplace.com,,False,,
+totaldeath.com,,False,,
+totectors.net,,False,,
+tousma.com,,False,,
+tpsautoparts.com,,False,,
+tpws.com,,False,,
+trade-pals.com,,False,,
+traderiders.net,,False,,
+tradetools.ai,,False,,
+traffmix.com,,False,,
+tranhcathanoi.com,,False,,
+trashcanmail.com,,False,,
+traslalluvialiteraria.com,,False,,
+travelerz.com,,False,,
+traveles.com,,False,,
+travelmania-ireland.com,,False,,
+travelrs.com,,False,,
+trbvn.com,,False,,
+trd.com,,False,,
 tree.pointbuysys.com,v=spf1 ip6:fd1b:212c:a5f9::/48 -all,True,fd1b:212c:a5f9::/48,hotel (southafricaproject)
 treehousefood.com,v=spf1 ip6:fd1b:212c:a5f9::/48 -all,True,fd1b:212c:a5f9::/48,hotel (southafricaproject)
-trevelers.com,v=spf1 ip6:fd1b:212c:a5f9::/48 -all,True,fd1b:212c:a5f9::/48,hotel (southafricaproject)
-trezer.io,v=spf1 ip6:fd1b:212c:a5f9::/48 -all,True,fd1b:212c:a5f9::/48,hotel (southafricaproject)
-trieudo.com,v=spf1 ip6:fdec:ae16:fda7::/48 -all,True,fdec:ae16:fda7::/48,golf (eye-mail primary relay)
-triggify.com,v=spf1 ip6:fdec:ae16:fda7::/48 -all,True,fdec:ae16:fda7::/48,golf (eye-mail primary relay)
-tru1st.com,v=spf1 ip6:fd1b:212c:a5f9::/48 -all,True,fd1b:212c:a5f9::/48,hotel (southafricaproject)
+trevelers.com,,False,,
+trezer.io,,False,,
+trieudo.com,,False,,
+triggify.com,,False,,
+tru1st.com,,False,,
 truits.com,v=spf1 ip6:fd43:c0d1:c090::/48 -all,True,fd43:c0d1:c090::/48,
 trusted.wine,v=spf1 ip6:fd1b:212c:a5f9::/48 -all,True,fd1b:212c:a5f9::/48,hotel (southafricaproject)
 trustsestateslaw.com,v=spf1 ip6:fdec:ae16:fda7::/48 -all,True,fdec:ae16:fda7::/48,golf (eye-mail primary relay)
@@ -2503,6 +2545,7 @@ tyu.com,v=spf1 ip6:fd1b:212c:a5f9::/48 -all,True,fd1b:212c:a5f9::/48,hotel (sout
 tyuo.com,v=spf1 ip6:fd1b:212c:a5f9::/48 -all,True,fd1b:212c:a5f9::/48,hotel (southafricaproject)
 tyuublog.sbs,v=spf1 ip6:fdec:ae16:fda7::/48 -all,True,fdec:ae16:fda7::/48,golf (eye-mail primary relay)
 u.jsc.ro,v=spf1 ip6:fd1b:212c:a5f9::/48 -all,True,fd1b:212c:a5f9::/48,hotel (southafricaproject)
+ua.flextronic.com,v=spf1 ip6:fd18:d113:9bed::/48 -all,True,fd18:d113:9bed::/48,
 ualbert.ca,v=spf1 ip6:fd43:c0d1:c090::/48 -all,True,fd43:c0d1:c090::/48,
 ubep.com,v=spf1 ip6:fd43:c0d1:c090::/48 -all,True,fd43:c0d1:c090::/48,
 uchs.com,v=spf1 ip6:fd43:c0d1:c090::/48 -all,True,fd43:c0d1:c090::/48,
@@ -2516,69 +2559,68 @@ uebr.com,v=spf1 ip6:fd43:c0d1:c090::/48 -all,True,fd43:c0d1:c090::/48,
 ufabetflixz.com,v=spf1 ip6:fd68:85f0:7c72::/48 -all,True,fd68:85f0:7c72::/48,pickelhost-alpha (primary relay)
 ufvjm.com,v=spf1 ip6:fd43:c0d1:c090::/48 -all,True,fd43:c0d1:c090::/48,
 uggbootssale.com,v=spf1 ip6:fd1b:212c:a5f9::/48 -all,True,fd1b:212c:a5f9::/48,hotel (southafricaproject)
-uhv.cc,v=spf1 ip6:fdec:ae16:fda7::/48 -all,True,fdec:ae16:fda7::/48,golf (eye-mail primary relay)
 uhzc.com,v=spf1 ip6:fd1b:212c:a5f9::/48 -all,True,fd1b:212c:a5f9::/48,hotel (southafricaproject)
-ujsc.979.koin-qq.top,,False,,
-ukirish.com,,False,,
-ulugayrimenkul.com,,False,,
-uncensoredsurvival.com,,False,,
-unclesamsretailoutlet.com,,False,,
-unem.com,,False,,
-unicefinnovations.org,,False,,
-uniliver.com,,False,,
-unioncitymirrortable.com,,False,,
-unkn0wn.ws,,False,,
-unmyic.com,,False,,
-unomail.com,,False,,
-unru.com,,False,,
-unsanity.org,,False,,
-uoregon.com,,False,,
-upcit.com,,False,,
-upcmaill.com,,False,,
-updater.in,,False,,
+ujsc.979.koin-qq.top,v=spf1 ip6:fd1b:212c:a5f9::/48 -all,True,fd1b:212c:a5f9::/48,hotel (southafricaproject)
+ukirish.com,v=spf1 ip6:fdc7:1c8b:063b::/48 -all,True,fdc7:1c8b:063b::/48,
+ulugayrimenkul.com,v=spf1 ip6:fd68:85f0:7c72::/48 -all,True,fd68:85f0:7c72::/48,pickelhost-alpha (primary relay)
+uncensoredsurvival.com,v=spf1 ip6:fd43:c0d1:c090::/48 -all,True,fd43:c0d1:c090::/48,
+unclesamsretailoutlet.com,v=spf1 ip6:fd9c:d030:168c::/48 -all,True,fd9c:d030:168c::/48,
+unem.com,v=spf1 ip6:fd1b:212c:a5f9::/48 -all,True,fd1b:212c:a5f9::/48,hotel (southafricaproject)
+unicefinnovations.org,v=spf1 ip6:fd68:85f0:7c72::/48 -all,True,fd68:85f0:7c72::/48,pickelhost-alpha (primary relay)
+uniliver.com,v=spf1 ip6:fd9c:d030:168c::/48 -all,True,fd9c:d030:168c::/48,
+unioncitymirrortable.com,v=spf1 ip6:fd43:c0d1:c090::/48 -all,True,fd43:c0d1:c090::/48,
+unkn0wn.ws,v=spf1 ip6:fdd0:951e:ede7::/48 -all,True,fdd0:951e:ede7::/48,
+unmyic.com,v=spf1 ip6:fdec:ae16:fda7::/48 -all,True,fdec:ae16:fda7::/48,golf (eye-mail primary relay)
+unomail.com,v=spf1 ip6:fd43:c0d1:c090::/48 -all,True,fd43:c0d1:c090::/48,
+unru.com,v=spf1 ip6:fd1b:212c:a5f9::/48 -all,True,fd1b:212c:a5f9::/48,hotel (southafricaproject)
+unsanity.org,v=spf1 ip6:fd68:85f0:7c72::/48 -all,True,fd68:85f0:7c72::/48,pickelhost-alpha (primary relay)
+uoregon.com,v=spf1 ip6:fd1b:212c:a5f9::/48 -all,True,fd1b:212c:a5f9::/48,hotel (southafricaproject)
+upcit.com,v=spf1 ip6:fd1b:212c:a5f9::/48 -all,True,fd1b:212c:a5f9::/48,hotel (southafricaproject)
+upcmaill.com,v=spf1 ip6:fd36:7c64:44d0::/48 -all,True,fd36:7c64:44d0::/48,
+updater.in,v=spf1 ip6:fd1b:212c:a5f9::/48 -all,True,fd1b:212c:a5f9::/48,hotel (southafricaproject)
 uploadhat.com,v=spf1 ip6:fdec:ae16:fda7::/48 -all,True,fdec:ae16:fda7::/48,golf (eye-mail primary relay)
-upstreamresearch.com,,False,,
-urban-agriculture.net,,False,,
-urbanforestryllc.com,,False,,
-urecloud.icu,,False,,
-urlre.com,,False,,
-urltc.com,,False,,
-ursula-haverbeck.info,,False,,
-urwifi.guru,,False,,
-urxv.com,,False,,
-us.armymil.com,,False,,
-us.pointbuysys.com,,False,,
-usa.isgre.at,,False,,
-usay.com,,False,,
-usbakn.com,,False,,
-usbankd.com,,False,,
-usbanmk.com,,False,,
-usbaqnk.com,,False,,
-usbnank.com,,False,,
-usbnk.com,,False,,
-usbsank.com,,False,,
-usbsnk.com,,False,,
-usbvank.com,,False,,
-useaa.com,,False,,
+upstreamresearch.com,v=spf1 ip6:fd68:85f0:7c72::/48 -all,True,fd68:85f0:7c72::/48,pickelhost-alpha (primary relay)
+urban-agriculture.net,v=spf1 ip6:fdec:ae16:fda7::/48 -all,True,fdec:ae16:fda7::/48,golf (eye-mail primary relay)
+urbanforestryllc.com,v=spf1 ip6:fd43:c0d1:c090::/48 -all,True,fd43:c0d1:c090::/48,
+urecloud.icu,v=spf1 ip6:fdec:ae16:fda7::/48 -all,True,fdec:ae16:fda7::/48,golf (eye-mail primary relay)
+urlre.com,v=spf1 ip6:fd68:85f0:7c72::/48 -all,True,fd68:85f0:7c72::/48,pickelhost-alpha (primary relay)
+urltc.com,v=spf1 ip6:fdec:ae16:fda7::/48 -all,True,fdec:ae16:fda7::/48,golf (eye-mail primary relay)
+ursula-haverbeck.info,v=spf1 ip6:fd1b:212c:a5f9::/48 -all,True,fd1b:212c:a5f9::/48,hotel (southafricaproject)
+urwifi.guru,v=spf1 ip6:fdec:ae16:fda7::/48 -all,True,fdec:ae16:fda7::/48,golf (eye-mail primary relay)
+urxv.com,v=spf1 ip6:fd1b:212c:a5f9::/48 -all,True,fd1b:212c:a5f9::/48,hotel (southafricaproject)
+us.armymil.com,v=spf1 ip6:fd1b:212c:a5f9::/48 -all,True,fd1b:212c:a5f9::/48,hotel (southafricaproject)
+us.pointbuysys.com,v=spf1 ip6:fd1b:212c:a5f9::/48 -all,True,fd1b:212c:a5f9::/48,hotel (southafricaproject)
+usa.isgre.at,v=spf1 ip6:fd1b:212c:a5f9::/48 -all,True,fd1b:212c:a5f9::/48,hotel (southafricaproject)
+usay.com,v=spf1 ip6:fd1b:212c:a5f9::/48 -all,True,fd1b:212c:a5f9::/48,hotel (southafricaproject)
+usbakn.com,v=spf1 ip6:fd43:c0d1:c090::/48 -all,True,fd43:c0d1:c090::/48,
+usbankd.com,v=spf1 ip6:fd9c:d030:168c::/48 -all,True,fd9c:d030:168c::/48,
+usbanmk.com,v=spf1 ip6:fd43:c0d1:c090::/48 -all,True,fd43:c0d1:c090::/48,
+usbaqnk.com,v=spf1 ip6:fd9c:d030:168c::/48 -all,True,fd9c:d030:168c::/48,
+usbnank.com,v=spf1 ip6:fd9c:d030:168c::/48 -all,True,fd9c:d030:168c::/48,
+usbnk.com,v=spf1 ip6:fd1b:212c:a5f9::/48 -all,True,fd1b:212c:a5f9::/48,hotel (southafricaproject)
+usbsank.com,v=spf1 ip6:fd9c:d030:168c::/48 -all,True,fd9c:d030:168c::/48,
+usbsnk.com,v=spf1 ip6:fd9c:d030:168c::/48 -all,True,fd9c:d030:168c::/48,
+usbvank.com,v=spf1 ip6:fd9c:d030:168c::/48 -all,True,fd9c:d030:168c::/48,
+useaa.com,v=spf1 ip6:fd9c:d030:168c::/48 -all,True,fd9c:d030:168c::/48,
 usharer.com,v=spf1 ip6:fd36:7c64:44d0::/48 -all,True,fd36:7c64:44d0::/48,
-usnewsarchives.com,,False,,
+usnewsarchives.com,v=spf1 ip6:fdec:ae16:fda7::/48 -all,True,fdec:ae16:fda7::/48,golf (eye-mail primary relay)
 utahconcretecontractors.com,v=spf1 ip6:fd68:85f0:7c72::/48 -all,True,fd68:85f0:7c72::/48,pickelhost-alpha (primary relay)
-utalent.io,,False,,
-utmail.com,,False,,
+utalent.io,v=spf1 ip6:fd68:85f0:7c72::/48 -all,True,fd68:85f0:7c72::/48,pickelhost-alpha (primary relay)
+utmail.com,v=spf1 ip6:fd43:c0d1:c090::/48 -all,True,fd43:c0d1:c090::/48,
 utsgeo.com,v=spf1 ip6:fdec:ae16:fda7::/48 -all,True,fdec:ae16:fda7::/48,golf (eye-mail primary relay)
-uusaa.com,,False,,
-uximg.com,,False,,
-vaachamber.org,,False,,
-vagina.com,,False,,
-validirano.com,,False,,
-vandaleindustries.com,,False,,
-vangilderhotel.com,,False,,
-vangogh.net,,False,,
-vant.pussport.com,,False,,
-vapemel.com,,False,,
-vasculardoctor.com,,False,,
-vav.com,,False,,
-vda.ro,,False,,
+uusaa.com,v=spf1 ip6:fd1b:212c:a5f9::/48 -all,True,fd1b:212c:a5f9::/48,hotel (southafricaproject)
+uximg.com,v=spf1 ip6:fdec:ae16:fda7::/48 -all,True,fdec:ae16:fda7::/48,golf (eye-mail primary relay)
+vaachamber.org,v=spf1 ip6:fdec:ae16:fda7::/48 -all,True,fdec:ae16:fda7::/48,golf (eye-mail primary relay)
+vagina.com,v=spf1 ip6:fd43:c0d1:c090::/48 -all,True,fd43:c0d1:c090::/48,
+validirano.com,v=spf1 ip6:fdec:ae16:fda7::/48 -all,True,fdec:ae16:fda7::/48,golf (eye-mail primary relay)
+vandaleindustries.com,v=spf1 ip6:fd9c:d030:168c::/48 -all,True,fd9c:d030:168c::/48,
+vangilderhotel.com,v=spf1 ip6:fdec:ae16:fda7::/48 -all,True,fdec:ae16:fda7::/48,golf (eye-mail primary relay)
+vangogh.net,v=spf1 ip6:fd92:59f3:510e::/48 -all,True,fd92:59f3:510e::/48,delta (tertiary relay)
+vant.pussport.com,v=spf1 ip6:fdec:ae16:fda7::/48 -all,True,fdec:ae16:fda7::/48,golf (eye-mail primary relay)
+vapemel.com,v=spf1 ip6:fdec:ae16:fda7::/48 -all,True,fdec:ae16:fda7::/48,golf (eye-mail primary relay)
+vasculardoctor.com,v=spf1 ip6:fd43:c0d1:c090::/48 -all,True,fd43:c0d1:c090::/48,
+vav.com,v=spf1 ip6:fd43:c0d1:c090::/48 -all,True,fd43:c0d1:c090::/48,
+vda.ro,v=spf1 ip6:fd1b:212c:a5f9::/48 -all,True,fd1b:212c:a5f9::/48,hotel (southafricaproject)
 vedioo.com,v=spf1 ip6:fd1b:212c:a5f9::/48 -all,True,fd1b:212c:a5f9::/48,hotel (southafricaproject)
 vegasdefined.com,v=spf1 ip6:fd9c:d030:168c::/48 -all,True,fd9c:d030:168c::/48,
 vegasraiderstailgatebus.com,v=spf1 ip6:fdec:ae16:fda7::/48 -all,True,fdec:ae16:fda7::/48,golf (eye-mail primary relay)
@@ -2616,6 +2658,11 @@ vovangames-lucky.top,v=spf1 ip6:fdec:ae16:fda7::/48 -all,True,fdec:ae16:fda7::/4
 vovangames-portal21.top,v=spf1 ip6:fdec:ae16:fda7::/48 -all,True,fdec:ae16:fda7::/48,golf (eye-mail primary relay)
 vovangames-spins.top,v=spf1 ip6:fdec:ae16:fda7::/48 -all,True,fdec:ae16:fda7::/48,golf (eye-mail primary relay)
 vovanslots-lucky.top,v=spf1 ip6:fdec:ae16:fda7::/48 -all,True,fdec:ae16:fda7::/48,golf (eye-mail primary relay)
+vpn.pussport.com,v=spf1 ip6:fdec:ae16:fda7::/48 -all,True,fdec:ae16:fda7::/48,golf (eye-mail primary relay)
+vpn1.pussport.com,v=spf1 ip6:fdec:ae16:fda7::/48 -all,True,fdec:ae16:fda7::/48,golf (eye-mail primary relay)
+vpn2.pussport.com,v=spf1 ip6:fdec:ae16:fda7::/48 -all,True,fdec:ae16:fda7::/48,golf (eye-mail primary relay)
+vpnadm.pussport.com,v=spf1 ip6:fdec:ae16:fda7::/48 -all,True,fdec:ae16:fda7::/48,golf (eye-mail primary relay)
+vps.pussport.com,v=spf1 ip6:fdec:ae16:fda7::/48 -all,True,fdec:ae16:fda7::/48,golf (eye-mail primary relay)
 vsmini.com,v=spf1 ip6:fdec:ae16:fda7::/48 -all,True,fdec:ae16:fda7::/48,golf (eye-mail primary relay)
 vuhf.com,v=spf1 ip6:fd1b:212c:a5f9::/48 -all,True,fd1b:212c:a5f9::/48,hotel (southafricaproject)
 vydn.com,v=spf1 ip6:fd1b:212c:a5f9::/48 -all,True,fd1b:212c:a5f9::/48,hotel (southafricaproject)
@@ -2630,13 +2677,14 @@ wallla.com,v=spf1 ip6:fd1b:212c:a5f9::/48 -all,True,fd1b:212c:a5f9::/48,hotel (s
 wallysonmills.com,v=spf1 ip6:fdec:ae16:fda7::/48 -all,True,fdec:ae16:fda7::/48,golf (eye-mail primary relay)
 walmart-service.ws,v=spf1 ip6:fd38:d927:389a::/48 -all,True,fd38:d927:389a::/48,echo (walmart/.ws cluster)
 wardherzog.com,v=spf1 ip6:fd1b:212c:a5f9::/48 -all,True,fd1b:212c:a5f9::/48,hotel (southafricaproject)
-wasapsim.com,v=spf1 ip6:fdec:ae16:fda7::/48 -all,True,fdec:ae16:fda7::/48,golf (eye-mail primary relay)
+wasapsim.com,v=spf1 ip4:173.252.229.91 -all,False,,
 washingtoncountyal.com,v=spf1 ip6:fdec:ae16:fda7::/48 -all,True,fdec:ae16:fda7::/48,golf (eye-mail primary relay)
 watchvideo.co,v=spf1 ip6:fd68:85f0:7c72::/48 -all,True,fd68:85f0:7c72::/48,pickelhost-alpha (primary relay)
 waterburytelephonefcu.com,v=spf1 ip6:fd1b:212c:a5f9::/48 -all,True,fd1b:212c:a5f9::/48,hotel (southafricaproject)
 wawan.org,v=spf1 ip6:fdec:ae16:fda7::/48 -all,True,fdec:ae16:fda7::/48,golf (eye-mail primary relay)
 wazoo.com,v=spf1 ip6:fd43:c0d1:c090::/48 -all,True,fd43:c0d1:c090::/48,
 wczasy.nad.morzem.pl,v=spf1 ip6:fd1b:212c:a5f9::/48 -all,True,fd1b:212c:a5f9::/48,hotel (southafricaproject)
+we-report.org,v=spf1 ip6:fd1b:212c:a5f9::/48 -all,True,fd1b:212c:a5f9::/48,hotel (southafricaproject)
 we3llsfargo.com,v=spf1 ip6:fd1b:212c:a5f9::/48 -all,True,fd1b:212c:a5f9::/48,hotel (southafricaproject)
 webbamail.com,v=spf1 ip6:fd36:7c64:44d0::/48 -all,True,fd36:7c64:44d0::/48,
 webmail.pussport.com,v=spf1 ip6:fdec:ae16:fda7::/48 -all,True,fdec:ae16:fda7::/48,golf (eye-mail primary relay)
@@ -2646,6 +2694,7 @@ webrobotica.ru,v=spf1 ip6:fd68:85f0:7c72::/48 -all,True,fd68:85f0:7c72::/48,pick
 webrootsafe.net,v=spf1 ip6:fd68:85f0:7c72::/48 -all,True,fd68:85f0:7c72::/48,pickelhost-alpha (primary relay)
 webryugaku.com,v=spf1 ip6:fdec:ae16:fda7::/48 -all,True,fdec:ae16:fda7::/48,golf (eye-mail primary relay)
 webtomizer.com,v=spf1 ip6:fd68:85f0:7c72::/48 -all,True,fd68:85f0:7c72::/48,pickelhost-alpha (primary relay)
+webvpn.pussport.com,v=spf1 ip6:fdec:ae16:fda7::/48 -all,True,fdec:ae16:fda7::/48,golf (eye-mail primary relay)
 webwolf.co.za,v=spf1 ip6:fd1b:212c:a5f9::/48 -all,True,fd1b:212c:a5f9::/48,hotel (southafricaproject)
 weifuli.net,v=spf1 ip6:fdec:ae16:fda7::/48 -all,True,fdec:ae16:fda7::/48,golf (eye-mail primary relay)
 weipai.ws,v=spf1 ip6:fdd0:951e:ede7::/48 -all,True,fdd0:951e:ede7::/48,
@@ -2718,6 +2767,7 @@ www.aerocondor.com.pe,v=spf1 ip6:fd1b:212c:a5f9::/48 -all,True,fd1b:212c:a5f9::/
 x3mailer.com,v=spf1 ip6:fd36:7c64:44d0::/48 -all,True,fd36:7c64:44d0::/48,
 xeaifcf.pussport.com,v=spf1 ip6:fdec:ae16:fda7::/48 -all,True,fdec:ae16:fda7::/48,golf (eye-mail primary relay)
 xegge.com,v=spf1 ip6:fdec:ae16:fda7::/48 -all,True,fdec:ae16:fda7::/48,golf (eye-mail primary relay)
+xhase.com,v=spf1 ip6:fd18:d113:9bed::/48 -all,True,fd18:d113:9bed::/48,
 xhyemail.com,v=spf1 ip6:fd36:7c64:44d0::/48 -all,True,fd36:7c64:44d0::/48,
 xiaotieba.com,v=spf1 ip6:fd68:85f0:7c72::/48 -all,True,fd68:85f0:7c72::/48,pickelhost-alpha (primary relay)
 xiaoting.cc,v=spf1 ip6:fdec:ae16:fda7::/48 -all,True,fdec:ae16:fda7::/48,golf (eye-mail primary relay)
@@ -2749,61 +2799,63 @@ y.bcb.ro,v=spf1 ip6:fd1b:212c:a5f9::/48 -all,True,fd1b:212c:a5f9::/48,hotel (sou
 y.gzb.ro,v=spf1 ip6:fd1b:212c:a5f9::/48 -all,True,fd1b:212c:a5f9::/48,hotel (southafricaproject)
 yaha.com,v=spf1 ip6:fd1b:212c:a5f9::/48 -all,True,fd1b:212c:a5f9::/48,hotel (southafricaproject)
 yahho.ca,v=spf1 ip6:fd43:c0d1:c090::/48 -all,True,fd43:c0d1:c090::/48,
+yahoomil.com,v=spf1 ip6:fd18:d113:9bed::/48 -all,True,fd18:d113:9bed::/48,
 yandex.ca,v=spf1 ip6:fd43:c0d1:c090::/48 -all,True,fd43:c0d1:c090::/48,
 yapmail.com,v=spf1 ip6:fd1b:212c:a5f9::/48 -all,True,fd1b:212c:a5f9::/48,hotel (southafricaproject)
 yasilkart.com,v=spf1 ip6:fdec:ae16:fda7::/48 -all,True,fdec:ae16:fda7::/48,golf (eye-mail primary relay)
 yaxoo.com,v=spf1 ip6:fd1b:212c:a5f9::/48 -all,True,fd1b:212c:a5f9::/48,hotel (southafricaproject)
 yayo.com,v=spf1 ip6:fd1b:212c:a5f9::/48 -all,True,fd1b:212c:a5f9::/48,hotel (southafricaproject)
-year.pointbuysys.com,v=spf1 ip6:fd1b:212c:a5f9::/48 -all,True,fd1b:212c:a5f9::/48,hotel (southafricaproject)
-yellowdoggereldemocrat.org,v=spf1 ip6:fdec:ae16:fda7::/48 -all,True,fdec:ae16:fda7::/48,golf (eye-mail primary relay)
-yemendays.com,v=spf1 ip6:fd68:85f0:7c72::/48 -all,True,fd68:85f0:7c72::/48,pickelhost-alpha (primary relay)
+year.pointbuysys.com,,False,,
+yellowdoggereldemocrat.org,,False,,
+yemendays.com,,False,,
 yepmail.ws,v=spf1 ip6:fdd0:951e:ede7::/48 -all,True,fdd0:951e:ede7::/48,
-yesprop52.org,v=spf1 ip6:fdec:ae16:fda7::/48 -all,True,fdec:ae16:fda7::/48,golf (eye-mail primary relay)
-yesseechamarajanagar.com,v=spf1 ip6:fd68:85f0:7c72::/48 -all,True,fd68:85f0:7c72::/48,pickelhost-alpha (primary relay)
-ygmail.com,v=spf1 ip6:fd9c:d030:168c::/48 -all,True,fd9c:d030:168c::/48,
-ygop.com,v=spf1 ip6:fd1b:212c:a5f9::/48 -all,True,fd1b:212c:a5f9::/48,hotel (southafricaproject)
-yl66.cfd,v=spf1 ip6:fdec:ae16:fda7::/48 -all,True,fdec:ae16:fda7::/48,golf (eye-mail primary relay)
-ymca-arlington.org,v=spf1 ip6:fd43:c0d1:c090::/48 -all,True,fd43:c0d1:c090::/48,
-ymcarocks.com,v=spf1 ip6:fdec:ae16:fda7::/48 -all,True,fdec:ae16:fda7::/48,golf (eye-mail primary relay)
-yoo.ro,v=spf1 ip6:fd1b:212c:a5f9::/48 -all,True,fd1b:212c:a5f9::/48,hotel (southafricaproject)
-yopmali.com,v=spf1 ip6:fd1b:212c:a5f9::/48 -all,True,fd1b:212c:a5f9::/48,hotel (southafricaproject)
+yesprop52.org,,False,,
+yesseechamarajanagar.com,,False,,
+ygmail.com,,False,,
+ygop.com,,False,,
+yl66.cfd,,False,,
+ymca-arlington.org,,False,,
+ymcarocks.com,,False,,
+yohho.com,,False,,
+yoo.ro,,False,,
+yopmali.com,,False,,
 you.pointbuysys.com,v=spf1 ip6:fd1b:212c:a5f9::/48 -all,True,fd1b:212c:a5f9::/48,hotel (southafricaproject)
-young-leigh.love,v=spf1 ip6:fd68:85f0:7c72::/48 -all,True,fd68:85f0:7c72::/48,pickelhost-alpha (primary relay)
-youngbizzy.com,v=spf1 ip6:fdec:ae16:fda7::/48 -all,True,fdec:ae16:fda7::/48,golf (eye-mail primary relay)
-yourconcord.com,v=spf1 ip6:fdec:ae16:fda7::/48 -all,True,fdec:ae16:fda7::/48,golf (eye-mail primary relay)
-yourhealthcare.com,v=spf1 ip6:fd43:c0d1:c090::/48 -all,True,fd43:c0d1:c090::/48,
-yourluck.com,v=spf1 ip6:fd43:c0d1:c090::/48 -all,True,fd43:c0d1:c090::/48,
+young-leigh.love,,False,,
+youngbizzy.com,,False,,
+yourconcord.com,,False,,
+yourhealthcare.com,,False,,
+yourluck.com,,False,,
 yoursuprise.com,v=spf1 ip6:fd43:c0d1:c090::/48 -all,True,fd43:c0d1:c090::/48,
-ytoof.app,v=spf1 ip6:fd68:85f0:7c72::/48 -all,True,fd68:85f0:7c72::/48,pickelhost-alpha (primary relay)
-ytruist.com,v=spf1 ip6:fd9c:d030:168c::/48 -all,True,fd9c:d030:168c::/48,
-yubc.com,v=spf1 ip6:fd43:c0d1:c090::/48 -all,True,fd43:c0d1:c090::/48,
-yujiehanjiao.cc,v=spf1 ip6:fdec:ae16:fda7::/48 -all,True,fdec:ae16:fda7::/48,golf (eye-mail primary relay)
-yukonriverbridge.com,v=spf1 ip6:fdec:ae16:fda7::/48 -all,True,fdec:ae16:fda7::/48,golf (eye-mail primary relay)
+ytoof.app,,False,,
+ytruist.com,,False,,
+yubc.com,,False,,
+yujiehanjiao.cc,,False,,
+yukonriverbridge.com,,False,,
 yunnanbbq.com,v=spf1 ip6:fdec:ae16:fda7::/48 -all,True,fdec:ae16:fda7::/48,golf (eye-mail primary relay)
-yuye8.com,v=spf1 ip6:fd68:85f0:7c72::/48 -all,True,fd68:85f0:7c72::/48,pickelhost-alpha (primary relay)
-z9om.us,v=spf1 ip6:fd43:c0d1:c090::/48 -all,True,fd43:c0d1:c090::/48,
-zahav.net,v=spf1 ip6:fd1b:212c:a5f9::/48 -all,True,fd1b:212c:a5f9::/48,hotel (southafricaproject)
-zaxby.com,v=spf1 ip6:fd43:c0d1:c090::/48 -all,True,fd43:c0d1:c090::/48,
-zemdesk.com,v=spf1 ip6:fd1b:212c:a5f9::/48 -all,True,fd1b:212c:a5f9::/48,hotel (southafricaproject)
-zendek.com,v=spf1 ip6:fd1b:212c:a5f9::/48 -all,True,fd1b:212c:a5f9::/48,hotel (southafricaproject)
-zendsk.com,v=spf1 ip6:fd1b:212c:a5f9::/48 -all,True,fd1b:212c:a5f9::/48,hotel (southafricaproject)
-zenesk.com,v=spf1 ip6:fd1b:212c:a5f9::/48 -all,True,fd1b:212c:a5f9::/48,hotel (southafricaproject)
-zengfo.com,v=spf1 ip6:fd1b:212c:a5f9::/48 -all,True,fd1b:212c:a5f9::/48,hotel (southafricaproject)
-zensesk.com,v=spf1 ip6:fd1b:212c:a5f9::/48 -all,True,fd1b:212c:a5f9::/48,hotel (southafricaproject)
+yuye8.com,,False,,
+z9om.us,,False,,
+zahav.net,,False,,
+zaxby.com,,False,,
+zemdesk.com,,False,,
+zendek.com,,False,,
+zendsk.com,,False,,
+zenesk.com,,False,,
+zengfo.com,,False,,
+zensesk.com,,False,,
 zerozaku.com,v=spf1 ip6:fdec:ae16:fda7::/48 -all,True,fdec:ae16:fda7::/48,golf (eye-mail primary relay)
-zhenniubia.top,v=spf1 ip6:fdec:ae16:fda7::/48 -all,True,fdec:ae16:fda7::/48,golf (eye-mail primary relay)
-zib.com,v=spf1 ip6:fd1b:212c:a5f9::/48 -all,True,fd1b:212c:a5f9::/48,hotel (southafricaproject)
-zimbra.pussport.com,v=spf1 ip6:fdec:ae16:fda7::/48 -all,True,fdec:ae16:fda7::/48,golf (eye-mail primary relay)
-zindesk.com,v=spf1 ip6:fd1b:212c:a5f9::/48 -all,True,fd1b:212c:a5f9::/48,hotel (southafricaproject)
-zippiex.com,v=spf1 ip6:fd36:7c64:44d0::/48 -all,True,fd36:7c64:44d0::/48,
-zmail.pussport.com,v=spf1 ip6:fdec:ae16:fda7::/48 -all,True,fdec:ae16:fda7::/48,golf (eye-mail primary relay)
+zhenniubia.top,,False,,
+zib.com,,False,,
+zimbra.pussport.com,,False,,
+zindesk.com,,False,,
+zippiex.com,,False,,
+zmail.pussport.com,,False,,
 znodog.com,v=spf1 ip6:fdec:ae16:fda7::/48 -all,True,fdec:ae16:fda7::/48,golf (eye-mail primary relay)
-zo0m.us,v=spf1 ip6:fd1b:212c:a5f9::/48 -all,True,fd1b:212c:a5f9::/48,hotel (southafricaproject)
+zo0m.us,,False,,
 zooim.us,v=spf1 ip6:fd43:c0d1:c090::/48 -all,True,fd43:c0d1:c090::/48,
-zoomk.us,v=spf1 ip6:fd1b:212c:a5f9::/48 -all,True,fd1b:212c:a5f9::/48,hotel (southafricaproject)
-zoomn.us,v=spf1 ip6:fd1b:212c:a5f9::/48 -all,True,fd1b:212c:a5f9::/48,hotel (southafricaproject)
-zorgtasjes-van-ooot.nl,v=spf1 ip6:fd68:85f0:7c72::/48 -all,True,fd68:85f0:7c72::/48,pickelhost-alpha (primary relay)
+zoomk.us,,False,,
+zoomn.us,,False,,
+zorgtasjes-van-ooot.nl,,False,,
 zoum.us,v=spf1 ip6:fd43:c0d1:c090::/48 -all,True,fd43:c0d1:c090::/48,
-zsoom.us,v=spf1 ip6:fd1b:212c:a5f9::/48 -all,True,fd1b:212c:a5f9::/48,hotel (southafricaproject)
-zumtobel.ai,v=spf1 ip6:fd68:85f0:7c72::/48 -all,True,fd68:85f0:7c72::/48,pickelhost-alpha (primary relay)
+zsoom.us,,False,,
+zumtobel.ai,,False,,
 zumy.dev,v=spf1 ip6:fd68:85f0:7c72::/48 -all,True,fd68:85f0:7c72::/48,pickelhost-alpha (primary relay)
