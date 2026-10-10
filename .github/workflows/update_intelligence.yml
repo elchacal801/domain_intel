@@ -50,7 +50,7 @@ jobs:
         run: python scripts/discover_mx_pivot.py --output data/mx_pivot_findings.csv
 
       - name: Upload Discovery Intel
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a  # v7.0.1
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9  # v7.0.2
         with:
           name: discovery-intel
           path: |
@@ -98,14 +98,14 @@ jobs:
           python scripts/split_data.py --input data/pipeline_input.csv --chunks 10 --output-prefix data/dea_part
 
       - name: Upload Shards
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a  # v7.0.1
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9  # v7.0.2
         with:
           name: shards
           path: data/dea_part_*.csv
           retention-days: 1
 
       - name: Upload Raw Lists
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a  # v7.0.1
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9  # v7.0.2
         with:
           name: raw-lists
           path: |
@@ -169,7 +169,7 @@ jobs:
           rm -f start_temp.csv reputation_temp.csv
 
       - name: Upload Result Shard
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a  # v7.0.1
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9  # v7.0.2
         with:
           name: result-shard-${{ matrix.shard }}
           path: data/result_part_${{ matrix.shard }}.csv
