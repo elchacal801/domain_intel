@@ -10,7 +10,7 @@
   <a href="https://github.com/elchacal801/domain_intel/actions/workflows/update_intelligence.yml"><img src="https://github.com/elchacal801/domain_intel/actions/workflows/update_intelligence.yml/badge.svg" alt="Daily Data Update" /></a>
   <a href="LICENSE"><img src="https://img.shields.io/badge/License-MIT-green.svg" alt="License: MIT" /></a>
   <img src="https://img.shields.io/badge/Python-3.10+-3776AB?logo=python&logoColor=white" alt="Python 3.10+" />
-  <img src="https://img.shields.io/badge/Node.js-20+-339933?logo=node.js&logoColor=white" alt="Node.js 20+" />
+  <img src="https://img.shields.io/badge/Node.js-22+-339933?logo=node.js&logoColor=white" alt="Node.js 22+" />
   <img src="https://img.shields.io/badge/React-19-61DAFB?logo=react&logoColor=black" alt="React 19" />
   <img src="https://img.shields.io/badge/STIX-2.1-005B94" alt="STIX 2.1" />
   <img src="https://img.shields.io/badge/Updates-Daily_(Automated)-blue" alt="Daily Updates" />
@@ -268,7 +268,7 @@ graph TD
 | Requirement | Version | Purpose |
 |---|---|---|
 | Python | 3.10+ | Pipeline scripts |
-| Node.js | 20+ | Dashboard build |
+| Node.js | 22+ | Dashboard build |
 | pip | Latest | Python dependency management |
 | npm | Latest | Frontend dependency management |
 
